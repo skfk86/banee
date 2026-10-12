@@ -1,6 +1,6 @@
 # بانِي — تطبيق أندرويد
 
-صف تطبيقك بالعربي، ونبنيه لك كاملاً. Capacitor 6 + Firebase (`bani-b28a0`) + اشتراكات Google Play.
+صف تطبيقك بالعربي، ونبنيه لك كاملاً. Capacitor 7 + Firebase (`bani-b28a0`) + اشتراكات Google Play.
 
 ---
 
@@ -139,7 +139,7 @@ base64 -w0 release.jks > release.b64
 |---|---|
 | `www/index.html` | بانِي كاملة |
 | `capacitor.config.json` | اسم التطبيق ومعرّفه |
-| `package.json` | Capacitor 6 + Filesystem + Share + مكتبة اشتراكات Google Play |
+| `package.json` | Capacitor 7 + Filesystem + Share + مكتبة اشتراكات Google Play |
 | `assets/` | الأيقونة وشاشة البداية |
 | `firestore.rules` · `firebase.json` · `.firebaserc` | قواعد الأمان ونشرها |
 | `server/` | خادم Gemini على Apps Script ودليله |

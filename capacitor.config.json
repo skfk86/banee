@@ -1,0 +1,20 @@
+{
+  "appId": "com.alloush.banee",
+  "appName": "بانِي",
+  "webDir": "www",
+  "server": {
+    "androidScheme": "https"
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 1200,
+      "launchAutoHide": true,
+      "backgroundColor": "#F6F7FB",
+      "showSpinner": false
+    },
+    "StatusBar": {
+      "style": "LIGHT",
+      "backgroundColor": "#F6F7FB"
+    }
+  }
+}

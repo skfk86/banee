@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 40
     env:
-      HAS_KEY: ${{ secrets.KEYSTORE_BASE64 != '' }}
+      KP: ${{ secrets.KEYSTORE_PASSWORD }}
     steps:
       - uses: actions/checkout@v4
 
@@ -52,21 +52,33 @@ jobs:
           chmod +x gradlew
           ./gradlew assembleDebug --no-daemon
 
-      - name: بناء نسخة النشر (عند وجود مفتاح التوقيع)
-        if: env.HAS_KEY == 'true'
+      - name: تجهيز مفتاح التوقيع
+        id: key
+        run: |
+          if [ -n "${{ secrets.KEYSTORE_BASE64 }}" ]; then
+            echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > release.jks
+          elif [ -f signing/release.jks.enc ] && [ -n "$KP" ]; then
+            openssl enc -d -aes-256-cbc -pbkdf2 -iter 200000 -in signing/release.jks.enc -out release.jks -pass env:KP
+          fi
+          if [ -s release.jks ]; then echo "has=true" >> "$GITHUB_OUTPUT"; else echo "has=false" >> "$GITHUB_OUTPUT"; fi
+
+      - name: بناء نسخة النشر
+        if: steps.key.outputs.has == 'true'
         working-directory: android
         run: ./gradlew assembleRelease bundleRelease --no-daemon
 
       - name: توقيع نسخة النشر
-        if: env.HAS_KEY == 'true'
+        if: steps.key.outputs.has == 'true'
+        env:
+          ALIAS: ${{ secrets.KEY_ALIAS || 'banee' }}
+          KEYP: ${{ secrets.KEY_PASSWORD || secrets.KEYSTORE_PASSWORD }}
         run: |
-          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > release.jks
           BT=$(ls -d $ANDROID_HOME/build-tools/* | sort -V | tail -1)
           $BT/zipalign -f -p 4 android/app/build/outputs/apk/release/app-release-unsigned.apk app-release-aligned.apk
-          $BT/apksigner sign --ks release.jks --ks-pass "pass:${{ secrets.KEYSTORE_PASSWORD }}" --ks-key-alias "${{ secrets.KEY_ALIAS }}" --key-pass "pass:${{ secrets.KEY_PASSWORD }}" --out banee-release.apk app-release-aligned.apk
-          jarsigner -keystore release.jks -storepass "${{ secrets.KEYSTORE_PASSWORD }}" -keypass "${{ secrets.KEY_PASSWORD }}" android/app/build/outputs/bundle/release/app-release.aab "${{ secrets.KEY_ALIAS }}"
+          $BT/apksigner sign --ks release.jks --ks-pass env:KP --ks-key-alias "$ALIAS" --key-pass env:KEYP --out banee-release.apk app-release-aligned.apk
+          jarsigner -keystore release.jks -storepass "$KP" -keypass "$KEYP" android/app/build/outputs/bundle/release/app-release.aab "$ALIAS"
           cp android/app/build/outputs/bundle/release/app-release.aab banee-release.aab
-          rm -f release.jks
+          rm -f release.jks app-release-aligned.apk
 
       - name: تجهيز الملفات
         run: cp android/app/build/outputs/apk/debug/app-debug.apk banee-debug.apk

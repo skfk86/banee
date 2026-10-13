@@ -2482,7 +2482,7 @@ function proxyCall(body){
   return FB.auth.currentUser.getIdToken().then(function(tok){
     body.idToken = tok;
     body.planToken = (S.profile && S.profile.planToken) || '';
-    var ctrl = new AbortController(), timer = setTimeout(function(){ ctrl.abort(); }, 90000);
+    var ctrl = new AbortController(), timer = setTimeout(function(){ ctrl.abort(); }, 330000); // أقصى مدة Apps Script ٦ دقائق: لا نعيد الطلب والخادم ما زال يعمل عليه فيُخصم مرتين
     return fetch(PROXY_URL, { method: 'POST', body: JSON.stringify(body), signal: ctrl.signal, redirect: 'follow' })
       .then(function(r){ clearTimeout(timer); return r.json(); }, function(e){ clearTimeout(timer); throw e; });
   });
@@ -4142,6 +4142,14 @@ function toast(msg, type) {
   clearTimeout(_toast);
   _toast = setTimeout(function(){ t.classList.remove('on'); setTimeout(function(){ t.remove(); }, 300); }, 3000);
 }
+</script>
+<script>
+// اتصال الإنترنت: تنبيه فوري عند الانقطاع والعودة
+window.addEventListener('offline',function(){ try{toast('انقطع الاتصال، سنكمل عند عودته','err');}catch(e){} });
+window.addEventListener('online',function(){ try{toast('عاد الاتصال');}catch(e){} });
+// إمكانية الوصول: أزرار الأيقونات بلا نص تأخذ اسماً لقارئ الشاشة
+(function(){ function fix(root){ (root||document).querySelectorAll('button:not([aria-label])').forEach(function(b){ if(!b.textContent.trim()){ var n=b.getAttribute('title')||b.dataset.tip; if(n) b.setAttribute('aria-label',n); } }); }
+ fix(); new MutationObserver(function(m){ m.forEach(function(r){ r.addedNodes.forEach(function(n){ if(n.nodeType===1) fix(n.parentNode||n); }); }); }).observe(document.body,{childList:true,subtree:true}); })();
 </script>
 </body>
 </html>

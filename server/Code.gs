@@ -15,7 +15,8 @@ var CFG = {
   PACKAGE_NAME: 'com.alloush.banee',
   POINT_USD: 0.00075,            // قيمة النقطة الواحدة بالدولار
   DAILY_CAP_USD: 5,              // أقصى إنفاق يومي لكل المستخدمين معاً
-  MAX_OUTPUT_TOKENS: 12000,      // حتى لا يتجاوز الطلب حد الـ 60 ثانية
+  MAX_OUTPUT_TOKENS: 12000,
+  MAX_INPUT_CHARS: 600000,       // حد حجم الطلب (≈١٥٠ ألف رمز) حتى لا يتجاوز طلب واحد رصيد صاحبه بكثير      // حتى لا يتجاوز الطلب حد الـ 60 ثانية
   ABUSE: { perMinute: 40, perHour: 300, monthPoints: 66000 }, // لا يصلها أي مستخدم حقيقي
   FREE_MODEL: 'gemini-3.5-flash-lite',
   // ── برنامج المؤسسين: أنت تتحمل تكلفة أول المستخدمين، بميزانية تحددها أنت ولا تتجاوزها أبداً ──
@@ -58,6 +59,17 @@ var PRICES = {
   'gemini-flash-lite-latest': { in: 0.30, out: 2.50 },
   'gemini-2.5-flash':         { in: 0.30, out: 2.50 },
   'gemini-2.5-flash-lite':    { in: 0.10, out: 0.40 }
+};
+
+// الموديل البديل عند الازدحام (بنفس التكلفة أو أرخص)
+var FALLBACK = {
+  'gemini-3.8-flash': ['gemini-3.7-flash', 'gemini-2.5-flash'],
+  'gemini-3.7-flash': ['gemini-3.6-flash', 'gemini-2.5-flash'],
+  'gemini-3.6-flash': ['gemini-3.7-flash', 'gemini-2.5-flash'],
+  'gemini-3.5-flash': ['gemini-3.7-flash', 'gemini-2.5-flash'],
+  'gemini-flash-latest': ['gemini-3.7-flash', 'gemini-2.5-flash'],
+  'gemini-3.5-flash-lite': ['gemini-3.1-flash-lite', 'gemini-2.5-flash-lite'],
+  'gemini-flash-lite-latest': ['gemini-3.5-flash-lite', 'gemini-2.5-flash-lite']
 };
 
 // ═════════════ نقطة الدخول ═════════════
@@ -199,22 +211,31 @@ function askGemini(user, req, t0) {
 
   // الموديل: المجانية على موديل اقتصادي، والباقي من القائمة المسموحة فقط
   var model = s.plan === 'free' && !(s.bonus > 0) ? CFG.FREE_MODEL : (PRICES[req.model] ? req.model : 'gemini-3.7-flash');
+  var reqSize = JSON.stringify(req.contents || []).length + JSON.stringify(req.systemInstruction || '').length;
+  if (reqSize > CFG.MAX_INPUT_CHARS) return { ok: false, error: { code: 'too_big', message: 'المحادثة طويلة جداً. ابدأ محادثة جديدة أو قلّل حجم الملفات المرسلة.' } };
   var gc = req.generationConfig || {};
   gc.maxOutputTokens = Math.min(Number(gc.maxOutputTokens) || CFG.MAX_OUTPUT_TOKENS, CFG.MAX_OUTPUT_TOKENS);
   var body = { contents: req.contents, generationConfig: gc };
   if (req.systemInstruction) body.systemInstruction = req.systemInstruction;
 
-  var r;
-  try {
-    r = UrlFetchApp.fetch('https://generativelanguage.googleapis.com/v1beta/models/' + model + ':generateContent', {
-      method: 'post', contentType: 'application/json', payload: JSON.stringify(body), muteHttpExceptions: true,
-      headers: { 'x-goog-api-key': prop('GEMINI_KEY') }
-    });
-  } catch (err) {
-    return { ok: false, error: { code: 'timeout', message: 'استغرق الطلب وقتاً طويلاً، سنعيد المحاولة' } };
+  // إذا كان الموديل مزدحماً (503/429/500) ننتقل تلقائياً لموديل بديل، فلا يشعر المستخدم بشيء
+  var chain = [model].concat((FALLBACK[model] || []).filter(function(m){ return PRICES[m]; })), r, code, data;
+  for (var ci = 0; ci < chain.length; ci++) {
+    model = chain[ci];
+    try {
+      r = UrlFetchApp.fetch('https://generativelanguage.googleapis.com/v1beta/models/' + model + ':generateContent', {
+        method: 'post', contentType: 'application/json', payload: JSON.stringify(body), muteHttpExceptions: true,
+        headers: { 'x-goog-api-key': prop('GEMINI_KEY') }
+      });
+    } catch (err) {
+      if (Date.now() - t0 > 40000 || ci === chain.length - 1) return { ok: false, error: { code: 'timeout', message: 'استغرق الطلب وقتاً طويلاً، سنعيد المحاولة' } };
+      continue;
+    }
+    code = r.getResponseCode();
+    try { data = JSON.parse(r.getContentText()); } catch (e2) { data = {}; }
+    if (!(code === 503 || code === 429 || code === 500 || code === 404) || Date.now() - t0 > 40000) break;
+    console.warn('busy', model, code);
   }
-  var code = r.getResponseCode(), data;
-  try { data = JSON.parse(r.getContentText()); } catch (e2) { data = {}; }
   if (code !== 200) {
     var busy = code === 429 || code === 503 || code === 500 || code === 404;
     return { ok: false, error: { code: busy ? 'busy' : 'gemini', status: code, message: (data.error && data.error.message) || 'خطأ من Gemini' }, model: model };
@@ -315,14 +336,19 @@ function appAsk(user, req, t0) {
   if (req.json) body.generationConfig.responseMimeType = 'application/json';
   var r;
   try {
-    r = UrlFetchApp.fetch('https://generativelanguage.googleapis.com/v1beta/models/' + CFG.APP_AI_MODEL + ':generateContent', {
-      method: 'post', contentType: 'application/json', payload: JSON.stringify(body), muteHttpExceptions: true, headers: { 'x-goog-api-key': prop('GEMINI_KEY') }
-    });
+    var aiM = [CFG.APP_AI_MODEL].concat(FALLBACK[CFG.APP_AI_MODEL] || []), am = CFG.APP_AI_MODEL;
+    for (var ai = 0; ai < aiM.length; ai++) {
+      am = aiM[ai];
+      r = UrlFetchApp.fetch('https://generativelanguage.googleapis.com/v1beta/models/' + am + ':generateContent', {
+        method: 'post', contentType: 'application/json', payload: JSON.stringify(body), muteHttpExceptions: true, headers: { 'x-goog-api-key': prop('GEMINI_KEY') }
+      });
+      if ([429, 500, 503, 404].indexOf(r.getResponseCode()) < 0) break;
+    }
   } catch (e) { return { ok: false, error: { code: 'timeout', message: 'استغرق الرد وقتاً طويلاً، حاول مرة أخرى' } }; }
   var data; try { data = JSON.parse(r.getContentText()); } catch (e2) { data = {}; }
   if (r.getResponseCode() !== 200) return { ok: false, error: { code: 'busy', message: 'الخدمة مشغولة، حاول بعد قليل' } };
   var c0 = (data.candidates || [])[0] || {}, text = ((c0.content && c0.content.parts) || []).map(function(p){ return p.thought ? '' : (p.text || ''); }).join('');
-  var u = data.usageMetadata || {}, p = PRICES[CFG.APP_AI_MODEL];
+  var u = data.usageMetadata || {}, p = PRICES[am] || PRICES[CFG.APP_AI_MODEL];
   var inT = u.promptTokenCount || 0, outT = (u.candidatesTokenCount || 0) + (u.thoughtsTokenCount || 0);
   var usd = (inT * p.in + outT * p.out) / 1e6, pts = usd / CFG.POINT_USD;
   var lock2 = LockService.getScriptLock(); lock2.waitLock(10000);
@@ -335,7 +361,7 @@ function appAsk(user, req, t0) {
     var dk = 'day:' + Utilities.formatDate(new Date(), 'UTC', 'yyyy-MM-dd');
     PropertiesService.getScriptProperties().setProperty(dk, String(Number(prop(dk) || 0) + usd));
   } finally { lock2.releaseLock(); }
-  logRow({ uid: m.owner, email: 'app:' + req.appId }, CFG.APP_AI_MODEL, 'appAsk', inT, outT, usd);
+  logRow({ uid: m.owner, email: 'app:' + req.appId }, am, 'appAsk', inT, outT, usd);
   return { ok: true, text: text, points: Math.round(pts) };
 }
 
@@ -403,12 +429,15 @@ function adReward(user) {
     if (s.adDay !== today) { s.adDay = today; s.adN = 0; }
     if (s.adN >= CFG.AD_PER_DAY) return { ok: false, error: { code: 'ad_limit', message: 'وصلت لحد الإعلانات اليوم، عُد غداً' }, credits: creditsView(user, s) };
     if (s.adLast && now - s.adLast < CFG.AD_MIN_GAP_MS) return { ok: false, error: { code: 'too_fast', message: 'انتظر قليلاً قبل الإعلان التالي' }, credits: creditsView(user, s) };
-    s.adN++; s.adLast = now; s.adTotal = (s.adTotal || 0) + 1; s.bonus = (s.bonus || 0) + CFG.AD_POINTS;
+    clearDebt(s); s.adN++; s.adLast = now; s.adTotal = (s.adTotal || 0) + 1; s.bonus = (s.bonus || 0) + CFG.AD_POINTS;
     saveState(user, s);
     logRow(user, 'AD', 'reward', 0, CFG.AD_POINTS, 0);
     return { ok: true, added: CFG.AD_POINTS, credits: creditsView(user, s) };
   } finally { lock.releaseLock(); }
 }
+
+// تجاوز بسيط للرصيد (آخر طلب كان أكبر من المتبقي) لا يأكل النقاط المشتراة أو المكتسبة
+function clearDebt(s) { var cap = planPoints(s) + (s.bonus || 0); if ((s.used || 0) > cap) s.used = cap; }
 
 // ═════════════ شراء رصيد إضافي ═════════════
 function topup(user, req) {
@@ -422,7 +451,7 @@ function topup(user, req) {
   var lock = LockService.getScriptLock(); lock.waitLock(10000);
   try {
     if (prop(key)) return { ok: true, already: true, credits: creditsView(user, loadState(user)) };
-    var s = loadState(user); s.bonus = (s.bonus || 0) + pts; saveState(user, s);
+    var s = loadState(user); clearDebt(s); s.bonus = (s.bonus || 0) + pts; saveState(user, s);
     PropertiesService.getScriptProperties().setProperty(key, user.uid);
     logRow(user, 'TOPUP', req.productId, 0, 0, 0);
     return { ok: true, added: pts, credits: creditsView(user, s) };
@@ -463,6 +492,12 @@ function report() {
   fr.appendRow(['الميزانية $', CFG.FREE_BUDGET_USD]);
   fr.appendRow(['المتبقي $', Math.max(0, Math.round((CFG.FREE_BUDGET_USD - Number(all['free:total'] || 0)) * 100) / 100)]);
   if (rows.length) sh.getRange(2, 1, rows.length, rows[0].length).setValues(rows);
+  // تنظيف المفاتيح اليومية الأقدم من ٩٠ يوماً (مساحة الخصائص محدودة بـ ٥٠٠ كيلوبايت)
+  var cut = Utilities.formatDate(new Date(Date.now() - 90 * 864e5), 'UTC', 'yyyy-MM-dd'), SP = PropertiesService.getScriptProperties();
+  Object.keys(all).forEach(function(k){ var m = k.match(/^(free)?day:(\d{4}-\d{2}-\d{2})$/); if (m && m[2] < cut) { SP.deleteProperty(k); delete all[k]; } });
+  var bytes = Object.keys(all).reduce(function(n, k){ return n + k.length + String(all[k]).length; }, 0);
+  fr.appendRow(['مساحة التخزين المستخدمة', Math.round(bytes / 1024) + ' KB من 500 KB (' + Math.round(bytes / 5120) + '%)']);
+  if (bytes > 400 * 1024) console.warn('⚠️ مساحة الخصائص تقترب من الحد: ' + Math.round(bytes / 1024) + 'KB');
   var days = Object.keys(all).filter(function(k){ return k.indexOf('day:') === 0; }).sort().slice(-31);
   var d = sheet('daily'); d.clear(); d.appendRow(['اليوم', 'الإنفاق $']);
   days.forEach(function(k){ d.appendRow([k.slice(4), Math.round(Number(all[k]) * 100) / 100]); });
@@ -485,11 +520,14 @@ function giveCredits(uid, points) {
   s.bonus = (s.bonus || 0) + points; PropertiesService.getScriptProperties().setProperty('u:' + uid, JSON.stringify(s)); Logger.log('الرصيد الإضافي: ' + s.bonus);
 }
 function testGemini() {
-  var r = UrlFetchApp.fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-3.7-flash:generateContent', {
-    method: 'post', contentType: 'application/json', muteHttpExceptions: true, headers: { 'x-goog-api-key': prop('GEMINI_KEY') },
-    payload: JSON.stringify({ contents: [{ role: 'user', parts: [{ text: 'قل مرحبا' }] }] })
+  ['gemini-3.7-flash', 'gemini-3.6-flash', 'gemini-3.5-flash-lite', 'gemini-2.5-flash'].forEach(function(m){
+    var r = UrlFetchApp.fetch('https://generativelanguage.googleapis.com/v1beta/models/' + m + ':generateContent', {
+      method: 'post', contentType: 'application/json', muteHttpExceptions: true, headers: { 'x-goog-api-key': prop('GEMINI_KEY') },
+      payload: JSON.stringify({ contents: [{ role: 'user', parts: [{ text: 'قل مرحبا' }] }] })
+    });
+    var c = r.getResponseCode();
+    Logger.log(m + ': ' + (c === 200 ? '✅ يعمل' : c === 503 || c === 429 ? '⏳ مزدحم مؤقتاً (من Google، سيُستخدم البديل تلقائياً)' : '❌ ' + c + ' ' + r.getContentText().slice(0, 200)));
   });
-  Logger.log(r.getResponseCode() + ' ' + r.getContentText().slice(0, 300));
 }
 
 function hash(s) {

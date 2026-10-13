@@ -14,7 +14,7 @@ jobs:
     timeout-minutes: 40
     env:
       KP: ${{ secrets.KEYSTORE_PASSWORD }}
-      ADMOB_APP_ID: ${{ vars.ADMOB_APP_ID || 'ca-app-pub-3940256099942544~3347511713' }}
+      ADMOB_APP_ID: ${{ vars.ADMOB_APP_ID || 'ca-app-pub-7608701150166997~5879396021' }}
     steps:
       - uses: actions/checkout@v4
 

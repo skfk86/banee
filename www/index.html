@@ -1199,7 +1199,7 @@ function authErr(e){ return AUTH_AR[e && e.code] || 'حدث خطأ، حاول م
 
 // ════ إعلانات بانِي: للمستخدم غير المشترك فقط ════
 // غيّر هذه المعرّفات لمعرّفاتك من AdMob قبل النشر (هذه معرّفات Google التجريبية)
-var ADMOB = { rewarded: 'ca-app-pub-3940256099942544/5224354917', interstitial: 'ca-app-pub-3940256099942544/1033173712', testing: true, interPerDay: 3 };
+var ADMOB = { rewarded: 'ca-app-pub-7608701150166997/5799679986', interstitial: 'ca-app-pub-7608701150166997/1860434975', testing: false, interPerDay: 3 };
 var Ads = {
   ready: false, busy: false,
   plugin: function(){ return window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform() && window.Capacitor.Plugins && window.Capacitor.Plugins.AdMob; },

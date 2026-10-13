@@ -14,6 +14,7 @@ jobs:
     timeout-minutes: 40
     env:
       KP: ${{ secrets.KEYSTORE_PASSWORD }}
+      ADMOB_APP_ID: ${{ vars.ADMOB_APP_ID || 'ca-app-pub-3940256099942544~3347511713' }}
     steps:
       - uses: actions/checkout@v4
 
@@ -32,11 +33,13 @@ jobs:
       - name: إنشاء مشروع أندرويد
         run: |
           npx cap add android
+          # معرّف تطبيق AdMob (إلزامي وإلا يتوقف التطبيق عند الفتح). ضع معرّفك الحقيقي في ADMOB_APP_ID
+          sed -i "s|</application>|<meta-data android:name=\"com.google.android.gms.ads.APPLICATION_ID\" android:value=\"${ADMOB_APP_ID}\"/></application>|" android/app/src/main/AndroidManifest.xml
           # صلاحية الإنترنت
           grep -q "android.permission.INTERNET" android/app/src/main/AndroidManifest.xml || sed -i "s|<application|<uses-permission android:name=\"android.permission.INTERNET\" />\n    <application|" android/app/src/main/AndroidManifest.xml
 
       - name: الأيقونة وشاشة البداية
-        run: npx @capacitor/assets generate --android --iconBackgroundColor "#3D7BF4" --splashBackgroundColor "#F6F7FB" --splashBackgroundColorDark "#0B1020"
+        run: npx @capacitor/assets generate --android --iconBackgroundColor "#011849" --splashBackgroundColor "#011849" --splashBackgroundColorDark "#011849"
 
       - name: رقم الإصدار
         run: |
@@ -60,7 +63,7 @@ jobs:
           elif [ -f signing/release.jks.enc ] && [ -n "$KP" ]; then
             openssl enc -d -aes-256-cbc -pbkdf2 -iter 200000 -in signing/release.jks.enc -out release.jks -pass env:KP
           fi
-          if [ -s release.jks ]; then echo "has=true" >> "$GITHUB_OUTPUT"; else echo "has=false" >> "$GITHUB_OUTPUT"; fi
+          if [ -s release.jks ]; then echo "has=true" >> "$GITHUB_OUTPUT"; else echo "has=false" >> "$GITHUB_OUTPUT"; echo "لا يوجد مفتاح توقيع: سيُبنى نسخة التجربة فقط"; fi
 
       - name: بناء نسخة النشر
         if: steps.key.outputs.has == 'true'

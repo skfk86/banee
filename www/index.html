@@ -1543,7 +1543,7 @@ function buildsUsed(){
   var b = (S.profile && S.profile.builds) || {};
   return PLANS[curPlan()].perMonth ? (b.month === monthKey() ? b.count || 0 : 0) : (b.total || 0);
 }
-function canBuild(){ if (proxyMode()) return !S.credits || S.credits.remaining >= 100; return buildsUsed() < PLANS[curPlan()].limit; }
+function canBuild(){ if (proxyMode()) return !S.credits || S.credits.remaining >= 25; /* البناء يكمل من حيث توقف إذا نفد الرصيد */ return buildsUsed() < PLANS[curPlan()].limit; }
 function countBuild(){
   S.profile = S.profile || { plan: 'free' };
   var b = S.profile.builds || {}, m = monthKey();

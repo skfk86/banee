@@ -26,6 +26,8 @@ var CFG = {
   // ── قدرات التطبيقات المبنية ──
   NET_PER_HOUR: 120,        // طلبات البيانات الحية لكل مستخدم في الساعة
   APP_AI_PER_HOUR: 20,      // أسئلة الذكاء الاصطناعي لكل مستخدم في كل تطبيق في الساعة (تُخصم من رصيد صاحب التطبيق)
+  APP_AI_PER_APP_HOUR: 200, // سقف كل تطبيق في الساعة (يحمي رصيدك من الحسابات المجهولة)
+  NET_PER_DAY_ALL: 15000,   // سقف يومي عام للبيانات الحية (يحمي حصة UrlFetch المشتركة مع Gemini)
   APP_AI_MODEL: 'gemini-3.5-flash-lite',
   PUSH_PER_DAY: 10,         // إشعارات يرسلها صاحب التطبيق يومياً
   // ── إعلانات بانِي للمستخدمين غير المشتركين ──
@@ -276,6 +278,7 @@ function netFetch(user, req) {
   if (!hit('net:' + user.uid + ':' + Utilities.formatDate(new Date(), 'UTC', 'yyyyMMddHH'), CFG.NET_PER_HOUR, 3700)) return { ok: false, error: { code: 'rate', message: 'طلبات كثيرة، حاول بعد قليل' } };
   var c = CacheService.getScriptCache(), ck = 'net:' + hash(url), cached = c.get(ck);
   if (cached) return JSON.parse(cached);
+  if (!hit('netall:' + Utilities.formatDate(new Date(), 'UTC', 'yyyyMMdd'), CFG.NET_PER_DAY_ALL, 90000)) return { ok: false, error: { code: 'rate', message: 'الخدمة مزدحمة اليوم، حاول لاحقاً' } };
   var r;
   try { r = UrlFetchApp.fetch(url, { muteHttpExceptions: true, followRedirects: true, headers: { 'User-Agent': 'Banee/1.0', Accept: 'application/json, text/plain, */*' } }); }
   catch (e) { return { ok: false, error: { code: 'net', message: 'تعذّر الوصول للمصدر' } }; }
@@ -293,6 +296,7 @@ function appAsk(user, req, t0) {
   var m = req.appId === 'preview' ? { owner: user.uid } : appMeta(req.appId);
   if (!m || !m.owner) return { ok: false, error: { code: 'no_app', message: 'التطبيق غير مفعّل على سحابة بانِي' } };
   if (!hit('ai:' + req.appId + ':' + user.uid + ':' + Utilities.formatDate(new Date(), 'UTC', 'yyyyMMddHH'), CFG.APP_AI_PER_HOUR, 3700)) return { ok: false, error: { code: 'rate', message: 'وصلت للحد المسموح من الأسئلة هذه الساعة' } };
+  if (!hit('aiapp:' + req.appId + ':' + Utilities.formatDate(new Date(), 'UTC', 'yyyyMMddHH'), CFG.APP_AI_PER_APP_HOUR, 3700)) return { ok: false, error: { code: 'rate', message: 'التطبيق مزدحم، حاول بعد قليل' } };
   var prompt = String(req.prompt || '').slice(0, 6000), system = String(req.system || '').slice(0, 3000);
   if (!prompt) return { ok: false, error: { code: 'bad_request', message: 'السؤال فارغ' } };
   var lock = LockService.getScriptLock(), s; lock.waitLock(10000);

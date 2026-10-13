@@ -442,6 +442,8 @@
     .msg.me .msg-b { background: var(--primary); color: #fff; border-radius: 16px 16px 4px 16px; }
     .msg.ai { align-self: flex-end; flex-direction: row; }
     .msg.ai .msg-b { background: var(--surface2); border-radius: 16px 16px 16px 4px; }
+    .msg-rep { display: block; margin-top: 6px; margin-inline-start: auto; background: none; border: 0; color: var(--text3); font: inherit; font-size: 11.5px; cursor: pointer; padding: 2px 0; }
+    .msg-rep:hover { color: var(--error); } .msg-rep:disabled { cursor: default; color: var(--text3); opacity: .7; }
     .msg-b { padding: 10px 13px; font-size: 14px; line-height: 1.65; min-width: 0; }
     .msg-av { width: 28px; height: 28px; border-radius: 9px; flex-shrink: 0; display: grid; place-items: center; color: #fff; background: linear-gradient(140deg, var(--primary), #5B5BF0 60%, var(--accent)); }
     .msg.sys { align-self: center; display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text3); background: var(--surface2); padding: 4px 12px; border-radius: 100px; }
@@ -964,9 +966,24 @@
             <span class="slbl">جولة تعريفية<small>كيف يعمل بانِي في ٣ خطوات</small></span>
             <svg class="i"><use href="#i-chev"/></svg>
           </button>
+          <button class="sitem" onclick="openLegal('privacy')">
+            <span class="sico b"><svg class="i"><use href="#i-shield"/></svg></span>
+            <span class="slbl">سياسة الخصوصية<small>كيف نحمي بياناتك</small></span>
+            <svg class="i"><use href="#i-chev"/></svg>
+          </button>
+          <button class="sitem" onclick="openLegal('terms')">
+            <span class="sico b"><svg class="i"><use href="#i-info"/></svg></span>
+            <span class="slbl">شروط الاستخدام<small>الاشتراكات والنقاط والاسترداد</small></span>
+            <svg class="i"><use href="#i-chev"/></svg>
+          </button>
           <button class="sitem" onclick="doLogout()">
             <span class="sico r"><svg class="i"><use href="#i-logout"/></svg></span>
             <span class="slbl" style="color:var(--error)">تسجيل الخروج</span>
+            <svg class="i"><use href="#i-chev"/></svg>
+          </button>
+          <button class="sitem" onclick="deleteAccountAsk()">
+            <span class="sico r"><svg class="i"><use href="#i-x-circle"/></svg></span>
+            <span class="slbl" style="color:var(--error)">حذف حسابي<small>يحذف حسابك وكل مشاريعك نهائياً</small></span>
             <svg class="i"><use href="#i-chev"/></svg>
           </button>
         </div>
@@ -1138,6 +1155,18 @@
     <button class="btn btn-ghost" style="margin-top:14px" onclick="closeModal('help-modal')">إغلاق</button>
   </div>
 </div>
+<div class="modal-bg" id="del-modal">
+  <div class="modal-sheet">
+    <div class="mhandle"></div>
+    <div class="mtitle" style="color:var(--error)"><svg class="i"><use href="#i-x-circle"/></svg>حذف الحساب نهائياً</div>
+    <p class="msub">سيُحذف حسابك، وكل تطبيقاتك ومشاريعك، وبيانات تطبيقاتك المنشورة على سحابة بانِي، ورصيدك. لا يمكن التراجع عن هذا.<br><b>الاشتراك لا يُلغى بالحذف:</b> ألغِه أولاً من Google Play ← الدفعات والاشتراكات.</p>
+    <div class="field"><label for="del-pass">كلمة المرور</label><div class="input-wrap"><svg class="i"><use href="#i-lock"/></svg><input type="password" id="del-pass" dir="ltr" autocomplete="current-password"></div></div>
+    <div class="field"><label for="del-confirm">اكتب «حذف» للتأكيد</label><div class="input-wrap"><svg class="i"><use href="#i-alert"/></svg><input id="del-confirm" autocomplete="off"></div></div>
+    <div class="err-box" id="del-err"></div>
+    <button class="btn btn-lg" id="del-go" style="background:var(--error);color:#fff" onclick="deleteAccountGo()">احذف حسابي نهائياً</button>
+    <button class="btn btn-ghost" style="margin-top:8px" onclick="closeModal('del-modal')">إلغاء</button>
+  </div>
+</div>
 <div class="modal-bg" id="key-modal">
   <div class="modal-sheet">
     <div class="mhandle"></div>
@@ -1244,6 +1273,60 @@ var Ads = {
       .then(function(){ return A.showInterstitial(); }).catch(function(){});
   }
 };
+
+// ════ متطلبات Google Play: سياسة الخصوصية، الشروط، حذف الحساب، الإبلاغ ════
+var LEGAL_BASE = 'https://skfk86.github.io/banee-site/';
+function openLegal(page){ var u = LEGAL_BASE + page + '.html'; try { window.open(u, '_blank'); } catch(e){ location.href = u; } }
+function deleteAccountAsk(){
+  if (!CLOUD || !FB || !FB.auth.currentUser) { toast('سجّل دخولك أولاً', 'err'); return; }
+  document.getElementById('del-pass').value = ''; document.getElementById('del-confirm').value = '';
+  document.getElementById('del-err').classList.remove('on');
+  openModal('del-modal');
+}
+function deleteAccountGo(){
+  var err = document.getElementById('del-err'), btn = document.getElementById('del-go');
+  if (document.getElementById('del-confirm').value.trim() !== 'حذف') { err.textContent = 'اكتب كلمة «حذف» للتأكيد'; err.classList.add('on'); return; }
+  var pass = document.getElementById('del-pass').value, u = FB.auth.currentUser, f = FB.f;
+  btn.disabled = true; btn.textContent = 'يحذف بياناتك...';
+  var cred = FB.a.EmailAuthProvider ? FB.a.EmailAuthProvider.credential(u.email, pass) : null;
+  (cred && FB.a.reauthenticateWithCredential ? FB.a.reauthenticateWithCredential(u, cred) : Promise.resolve())
+  .then(function(){ return proxyMode() ? proxyCall({ op: 'deleteAccount' }).catch(function(){}) : null; })
+  .then(function(){
+    // التطبيقات المنشورة على السحابة: بياناتها العامة ووثيقتها
+    var jobs = [];
+    (S.apps || []).forEach(function(a){
+      if (!a.cloudId) return;
+      (a.cloudCols || []).forEach(function(c){ jobs.push(f.getDocs(fcol('apps', a.cloudId, c)).then(function(q){ return Promise.all(q.docs.map(function(d){ return f.deleteDoc(fdoc('apps', a.cloudId, c, d.id)); })); }).catch(function(){})); });
+      jobs.push(f.deleteDoc(fdoc('apps', a.cloudId)).catch(function(){}));
+    });
+    return Promise.all(jobs);
+  })
+  .then(function(){ return f.getDocs(fcol('users', u.uid, 'apps')); })
+  .then(function(qs){ return Promise.all(qs.docs.map(function(d){
+    return f.getDocs(fcol('users', u.uid, 'apps', d.id, 'parts')).then(function(ps){ return Promise.all(ps.docs.map(function(p){ return f.deleteDoc(fdoc('users', u.uid, 'apps', d.id, 'parts', p.id)); })); })
+      .then(function(){ return f.deleteDoc(fdoc('users', u.uid, 'apps', d.id)); });
+  })); })
+  .then(function(){ return f.deleteDoc(fdoc('users', u.uid)); })
+  .then(function(){ return FB.a.deleteUser(u); })
+  .then(function(){
+    try { Object.keys(localStorage).forEach(function(k){ if (/^b/.test(k)) localStorage.removeItem(k); }); } catch(e){}
+    closeModal('del-modal'); S.apps = []; S.user = null; S.credits = null; showAuth();
+    toast('حُذف حسابك وكل بياناتك نهائياً', 'suc');
+  })
+  .catch(function(e){
+    var c = e && e.code;
+    err.textContent = c === 'auth/wrong-password' || c === 'auth/invalid-credential' ? 'كلمة المرور غير صحيحة' : c === 'auth/requires-recent-login' ? 'سجّل خروجك ثم دخولك مرة أخرى، ثم أعد المحاولة' : 'تعذّر الحذف: ' + ((e && e.message) || 'حاول مرة أخرى');
+    err.classList.add('on');
+  })
+  .then(function(){ btn.disabled = false; btn.textContent = 'احذف حسابي نهائياً'; });
+}
+// الإبلاغ عن رد غير لائق من الذكاء الاصطناعي (سياسة Google Play للمحتوى المولَّد)
+function reportAi(i){
+  var app = stApp(); if (!app) return; var m = app.chat[i]; if (!m || m.reported) return;
+  m.reported = true; saveApps(); stChat();
+  (proxyMode() ? proxyCall({ op: 'report', appId: app.id, text: String(m.text || '').slice(0, 1500) }) : Promise.resolve())
+    .then(function(){ toast('شكراً، وصل بلاغك وسنراجعه', 'suc'); }, function(){ toast('شكراً، سُجّل بلاغك', 'suc'); });
+}
 
 // ════ الترحيب والمساعدة ════
 var SUPPORT_CONTACT = ''; // ضع بريد أو رقم واتساب الدعم هنا، مثلاً: '+249 9xx xxx xxx'
@@ -3793,11 +3876,11 @@ function edPair(e, ta){
 // ── المساعد ──
 function stChat(){
   var app = stApp(), log = document.getElementById('chat-log');
-  log.innerHTML = app.chat.map(function(m){
+  log.innerHTML = app.chat.map(function(m, mi){
     if (m.role === 'sys') return '<div class="msg sys">'+ic('rotate','i-sm')+esc(m.text)+'</div>';
     var files = (m.files||[]).map(function(f){ return '<button class="fchip" onclick="stOpenFile(\''+f.id+'\')">'+ic(f.kind==='add'?'plus':f.kind==='remove'?'x-circle':'code','i-sm')+esc(f.id)+'.js</button>'; }).join('');
     return '<div class="msg '+m.role+'">'+(m.role==='ai'?'<span class="msg-av">'+ic('sparkles','i-sm')+'</span>':'')+
-      '<div class="msg-b">'+(m.role==='ai' ? '<div class="md">'+md(m.text)+'</div>' : '<p>'+esc(m.text).replace(/\n/g,'<br>')+'</p>')+(files?'<div class="fchips">'+files+'</div>':'')+'</div></div>';
+      '<div class="msg-b">'+(m.role==='ai' ? '<div class="md">'+md(m.text)+'</div>' : '<p>'+esc(m.text).replace(/\n/g,'<br>')+'</p>')+(files?'<div class="fchips">'+files+'</div>':'')+(m.role==='ai' ? '<button class="msg-rep" onclick="reportAi('+mi+')"'+(m.reported?' disabled':'')+'>'+(m.reported?'أُبلغ عنه':'إبلاغ')+'</button>' : '')+'</div></div>';
   }).join('') + (ST.busy ? '<div class="msg ai"><span class="msg-av">'+ic('sparkles','i-sm')+'</span><div class="msg-b typing"><i></i><i></i><i></i><span id="chat-stage">'+esc(ST.stage||'يقرأ ملفات التطبيق')+'</span></div></div>' : '');
   log.scrollTop = log.scrollHeight;
   document.getElementById('chat-send').disabled = ST.busy;

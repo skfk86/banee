@@ -72,6 +72,8 @@ function doPost(e) {
     if (req.op === 'topup') return out(topup(user, req));
     if (req.op === 'ask') return out(askGemini(user, req, t0));
     if (req.op === 'adReward') return out(adReward(user));
+    if (req.op === 'deleteAccount') { PropertiesService.getScriptProperties().deleteProperty('u:' + user.uid); logRow(user, 'DELETE_ACCOUNT', '', 0, 0, 0); return out({ ok: true }); }
+    if (req.op === 'report') { try { sheet('reports').appendRow([new Date(), user.uid, user.email, String(req.appId || ''), String(req.text || '').slice(0, 1500)]); } catch (e) {} return out({ ok: true }); }
     // ── قدرات التطبيقات المبنية ببانِي (يستدعيها مستخدمو تلك التطبيقات) ──
     if (req.op === 'fetch') return out(netFetch(user, req));
     if (req.op === 'appAsk') return out(appAsk(user, req, t0));
@@ -432,6 +434,7 @@ function sheet(name) {
   if (!sh) {
     sh = ss.insertSheet(name);
     if (name === 'log') sh.appendRow(['الوقت', 'uid', 'البريد', 'الموديل/الحدث', 'الدور', 'رموز داخلة', 'رموز خارجة', 'التكلفة $']);
+    if (name === 'reports') sh.appendRow(['الوقت', 'uid', 'البريد', 'التطبيق', 'الرد المُبلغ عنه']);
   }
   return sh;
 }

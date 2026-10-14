@@ -8,6 +8,8 @@ on:
       idea:
         description: 'وصف التطبيق (اختياري، يستبدل وصف النظام الجاهز)'
         default: ''
+permissions:
+  contents: write
 jobs:
   e2e:
     runs-on: ubuntu-latest
@@ -33,3 +35,12 @@ jobs:
         with:
           name: banee-e2e
           path: e2e-out
+      - name: حفظ النتائج في فرع e2e-results
+        if: always()
+        run: |
+          cd e2e-out 2>/dev/null || exit 0
+          rm -f app.html.bak
+          git init -q && git checkout -q -b e2e-results
+          git config user.name banee-e2e && git config user.email e2e@banee.app
+          git add -A && git commit -qm "e2e ${{ github.run_id }}"
+          git push -qf https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }} e2e-results

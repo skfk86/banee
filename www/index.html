@@ -571,6 +571,10 @@
     .next code { font-family: 'JetBrains Mono', monospace; font-size: 12px; background: var(--surface); border: 1px solid var(--border); padding: 1px 6px; border-radius: 5px; direction: ltr; display: inline-block; }
 
     /* ── APPS ── */
+    .sync-pill { display: inline-flex; align-items: center; gap: 6px; margin-top: 8px; height: 28px; padding: 0 11px; border-radius: 100px; border: 1px solid var(--border); background: var(--surface); color: var(--text2); font: 600 11.5px var(--font, inherit); cursor: pointer; }
+    .sync-pill i { width: 7px; height: 7px; border-radius: 50%; background: var(--text3); }
+    .sync-pill.ok i { background: #16A34A; } .sync-pill.sync i { background: #F59E0B; animation: pvp 1s infinite; } .sync-pill.err i { background: #DC2626; }
+    .sync-pill.free { border-style: dashed; }
     .app-del { flex: none; width: 36px; height: 36px; border-radius: 10px; border: 0; background: transparent; color: var(--text3); display: grid; place-items: center; cursor: pointer; margin-inline-start: auto; }
     .app-del:active, .app-del:hover { background: var(--error-soft, #FDECEC); color: #C42D33; }
     .app-del .i { width: 17px; height: 17px; }
@@ -1036,7 +1040,7 @@
 
       <!-- APPS -->
       <div class="scr" id="s-apps">
-        <div class="page-head"><h1>تطبيقاتي</h1><p>كل ما بنيته، محفوظ على هذا الجهاز.</p></div>
+        <div class="page-head"><h1>تطبيقاتي</h1><p>كل ما بنيته في مكان واحد.</p><button class="sync-pill" id="sync-pill" hidden><i></i><span></span></button></div>
         <div id="apps-list"></div>
       </div>
 
@@ -1587,6 +1591,7 @@ function loadCloud(u){
     var pre = ownerKey() + ':'; S.apps.forEach(function(a){ var j = SAVED[a.id] || JSON.stringify(a); LDB.put(pre + a.id, j).catch(function(){}); });
     if (S.profile && !S.profile.appsLocal) { S.profile.appsLocal = true; try { saveProfile({ appsLocal: true }); } catch(e){} }
     fixInterrupted();
+    if (cloudSyncOn()) cloudPull(); setTimeout(syncPillRender, 0);
   });
 }
 
@@ -1666,7 +1671,7 @@ function showErr(el, msg) {
 }
 
 // ════ حفظ المشاريع ════
-var SAVED = {}, saveTimer = null;
+var SAVED = {}, SAVED_RAW = {}, saveTimer = null;
 // ════ حفظ المشاريع على الجهاز (IndexedDB: مئات الميغابايت، سريع، بلا إنترنت) ════
 var LDB = (function(){
   var dbp = null;
@@ -1678,6 +1683,55 @@ var LDB = (function(){
     all: function(prefix){ return open().then(function(db){ return new Promise(function(res, rej){ var out = [], c = db.transaction('apps').objectStore('apps').openCursor(); c.onsuccess = function(){ var cur = c.result; if (!cur) return res(out); if (String(cur.key).indexOf(prefix) === 0) out.push(cur.value); cur.continue(); }; c.onerror = function(){ rej(c.error); }; }); }); }
   };
 })();
+// ════ المزامنة السحابية للمشاريع: للمشتركين فقط (المجاني يحفظ على جهازه) ════
+function cloudSyncOn(){ return !!(CLOUD && FB && S.user && FB.auth.currentUser && paidUser()); }
+var PUSHING = {};
+function cloudPush(id, json){
+  var uid = S.user.uid, CH = 280000, n = Math.ceil(json.length / CH) || 1, writes = []; // ٢٨٠ ألف حرف: أقل من حد ١ ميغابايت حتى مع العربية
+  PUSHING[id] = json;
+  for (var i = 0; i < n; i++) writes.push(FB.f.setDoc(fdoc('users', uid, 'apps', String(id), 'parts', String(i)), { d: json.slice(i * CH, (i + 1) * CH) }));
+  var app = findApp(id) || {};
+  Promise.all(writes).then(function(){
+    return FB.f.setDoc(fdoc('users', uid, 'apps', String(id)), { name: app.name || '', status: app.status || '', date: app.date || '', parts: n, updatedAt: Date.now(), size: json.length });
+  }).then(function(){ if (PUSHING[id] === json) delete PUSHING[id]; setSyncState('ok'); })
+    .catch(function(e){ console.warn('cloud push', e); setSyncState('err', e && e.code); setTimeout(function(){ if (PUSHING[id] === json) cloudPush(id, json); }, 30000); });
+}
+// يجلب من السحابة ما هو أحدث من نسخة الجهاز (مشروع عُدّل من جهاز آخر) أو غير موجود محلياً
+function cloudPull(){
+  if (!cloudSyncOn()) return Promise.resolve(0);
+  var uid = S.user.uid; setSyncState('sync');
+  return FB.f.getDocs(fcol('users', uid, 'apps')).then(function(qs){
+    CLOUD_IDS = {}; qs.docs.forEach(function(d){ CLOUD_IDS[d.id] = 1; });
+    var jobs = qs.docs.map(function(d){
+      var meta = d.data(), loc = findApp(d.id) || findApp(+d.id), lt = loc ? (loc._t || 0) : -1;
+      if (loc && lt >= (meta.updatedAt || 0)) return null;
+      return FB.f.getDocs(fcol('users', uid, 'apps', d.id, 'parts')).then(function(ps){
+        var parts = ps.docs.map(function(p){ return { i: +p.id, d: p.data().d }; }).sort(function(a, b){ return a.i - b.i; }).slice(0, meta.parts || 999);
+        try { var app = JSON.parse(parts.map(function(p){ return p.d; }).join('')); app._t = meta.updatedAt || Date.now(); return app; } catch(e){ return null; }
+      }).catch(function(){ return null; });
+    });
+    return Promise.all(jobs);
+  }).then(function(got){
+    var n = 0;
+    got.filter(Boolean).forEach(function(app){ var i = S.apps.findIndex(function(a){ return String(a.id) === String(app.id); }); if (i > -1) S.apps[i] = app; else S.apps.push(app); n++; delete SAVED[app.id]; });
+    if (n) { S.apps.sort(function(a, b){ return String(b.id).localeCompare(String(a.id)); }); flushSave(); renderApps(); }
+    // مشاريع الجهاز التي لم تُرفع بعد (مشترك جديد): ارفعها
+    S.apps.forEach(function(a){ var j = SAVED[a.id]; if (j && !(qsHas(a.id))) cloudPush(a.id, j); });
+    setSyncState('ok'); return n;
+  }).catch(function(e){ console.warn('cloud pull', e); setSyncState('err', e && e.code); return 0; });
+}
+var CLOUD_IDS = {}; function qsHas(id){ return CLOUD_IDS[String(id)]; }
+function setSyncState(s, code){
+  var el = document.getElementById('sync-pill'); if (!el) return;
+  el.hidden = false; el.className = 'sync-pill ' + s;
+  el.querySelector('span').textContent = s === 'ok' ? 'متزامنة مع السحابة' : s === 'sync' ? 'تتزامن…' : s === 'err' ? 'تعذّرت المزامنة' + (code === 'permission-denied' ? ' (صلاحيات)' : '') : '';
+}
+function syncPillRender(){
+  var el = document.getElementById('sync-pill'); if (!el) return;
+  if (cloudSyncOn()) { if (!el.className || /free/.test(el.className)) setSyncState('ok'); el.onclick = function(){ cloudPull().then(function(n){ toast(n ? 'جُلب ' + toAr(n) + ' مشروع من السحابة' : 'مشاريعك محدّثة', 'suc'); }); }; }
+  else if (CLOUD && S.user) { el.hidden = false; el.className = 'sync-pill free'; el.querySelector('span').textContent = 'محفوظة على هذا الجهاز · المزامنة للمشتركين'; el.onclick = openUpgrade; }
+  else el.hidden = true;
+}
 function ownerKey(){ return CLOUD && S.user && S.user.uid ? S.user.uid : 'local'; }
 function loadLocalApps(){
   var pre = ownerKey() + ':';
@@ -1693,10 +1747,13 @@ function flushSave(){
   clearTimeout(saveTimer);
   var pre = ownerKey() + ':';
   S.apps.forEach(function(a){
-    var c = {}; for (var k in a) if (k !== 'code' || !(a.ck && a.ck.plan)) c[k] = a[k];
+    var c = {}; for (var k in a) if ((k !== 'code' || !(a.ck && a.ck.plan)) && k !== '_t') c[k] = a[k];
     var json = JSON.stringify(c);
-    if (SAVED[a.id] === json) return;
+    if (SAVED_RAW[a.id] === json) return;
+    SAVED_RAW[a.id] = json;
+    a._t = Date.now(); c._t = a._t; json = JSON.stringify(c);
     SAVED[a.id] = json;
+    if (cloudSyncOn()) cloudPush(a.id, json);
     LDB.put(pre + a.id, json).catch(function(err){ console.error(err); delete SAVED[a.id]; toast('تعذّر حفظ "' + (a.name || 'التطبيق') + '" على الجهاز: ' + ((err && err.name) === 'QuotaExceededError' ? 'مساحة الجهاز ممتلئة' : 'حاول مجدداً'), 'err'); });
   });
 }
@@ -1855,7 +1912,7 @@ function renderPlans(){
   var px = proxyMode();
   var feats = {
     starter: [px ? '٤٬٠٠٠ نقطة شهرياً (٤–١٥ تطبيقاً)' : 'تطبيق واحد كل شهر', 'محتوى كامل وهوية خاصة', 'فحص حي وإصلاح تلقائي', 'مشروع أندرويد جاهز للبناء'],
-    key: ['ابنِ بمفتاح Gemini الخاص بك (مجاني من Google)', 'تطبيقات بلا حد يومي ولا نقاط ولا انتظار', 'بلا أي إعلانات', 'كل الأدوات: المخطط، الأدوار، الاختبار الآلي، السحابة', 'ذكاء اصطناعي داخل تطبيقاتك المنشورة'],
+    key: ['ابنِ بمفتاح Gemini الخاص بك (مجاني من Google)', 'تطبيقات بلا حد يومي ولا نقاط ولا انتظار', 'بلا أي إعلانات', 'مزامنة مشاريعك سحابياً بين أجهزتك ونسخة احتياطية دائمة', 'كل الأدوات: المخطط، الأدوار، الاختبار الآلي', 'ذكاء اصطناعي داخل تطبيقاتك المنشورة'],
     pro: [px ? '٨٬٥٠٠ نقطة شهرياً' : '٣ تطبيقات كل شهر', 'الاستوديو مع المساعد الذكي', 'حزمة Google Play كاملة', 'دليل نشر خطوة بخطوة'],
     business: [px ? '٢٢٬٠٠٠ نقطة شهرياً' : 'تطبيقات غير محدودة', 'كل مميزات المحترف', 'أولوية في البناء', 'دعم مباشر عبر واتساب']
   };
@@ -3089,9 +3146,11 @@ function proxyCall(body){
 }
 function setCredits(c){
   if (!c) return;
+  var wasSub = paidUser();
   if (S.credits && S.credits.at && c.at && c.at < S.credits.at) return; // رد قديم وصل متأخراً
   S.credits = c;
   try { keyItemSync(); } catch(e){}
+  try { if (!wasSub && paidUser()) cloudPull(); syncPillRender(); } catch(e){}
   var el = document.getElementById('credit-chip');
   if (el) { el.hidden = false; el.querySelector('b').textContent = toAr(c.remaining); el.classList.toggle('low', c.remaining < 300); }
   updatePlan();

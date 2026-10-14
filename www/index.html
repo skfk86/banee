@@ -1911,7 +1911,8 @@ var COLORS = {
   purple: { name:'بنفسجي',  p:'#7C3AED', d:'#6D28D9', s:'#F1EBFE' },
   orange: { name:'برتقالي', p:'#EA580C', d:'#C2410C', s:'#FDEEE6' }
 };
-var MODELS = ['gemini-3.8-flash','gemini-3.7-flash','gemini-3.6-flash','gemini-3.5-flash','gemini-flash-latest'];
+// حصة Google المجانية لكل موديل منفصلة (مثلاً ٢٠ طلباً يومياً)، فندور عليها كلها، والخفيفة احتياط أخير
+var MODELS = ['gemini-3.8-flash','gemini-3.7-flash','gemini-3.6-flash','gemini-3.5-flash','gemini-flash-latest','gemini-3.5-flash-lite','gemini-3.1-flash-lite','gemini-flash-lite-latest'];
 // موديلات أوقفتها Google لهذا المفتاح (404): لا نعيد المحاولة عليها في هذه الجلسة
 var DEAD_MODELS = {};
 // الموديل التالي عند الازدحام: ندور على كل القائمة ونتخطى الموديلات الموقوفة
@@ -2239,8 +2240,9 @@ function retryDelayMs(e){
   try { var d = ((e.error && e.error.details) || []).filter(function(x){ return x && x.retryDelay; })[0]; if (d) return Math.min(90000, parseFloat(d.retryDelay) * 1000 + 1000); } catch(_){}
   var m = /retry in ([\d.]+)s/i.exec((e.error && e.error.message) || ''); return m ? Math.min(90000, parseFloat(m[1]) * 1000 + 1000) : 30000;
 }
+function firstAlive(){ for (var i = 0; i < MODELS.length; i++) if (!DEAD_MODELS[MODELS[i]]) return i; return 0; }
 function ask(key, role, input, json){
-  var attempt = 0, mi = 0;
+  var attempt = 0, mi = firstAlive();
   if (key === 'PROXY') return askProxy(role, input, json);
   function once(){ return coolDown().then(send); }
   function send(){
@@ -2263,7 +2265,11 @@ function ask(key, role, input, json){
       return r.json().catch(function(){ return {}; }).then(function(e){
         var msg = (e.error && e.error.message) || '';
         if (r.status === 400 && /think/i.test(msg) && !THINK_OFF) { THINK_OFF = true; throw { retry: true, code: 400, msg: msg }; }
-        if (r.status === 429 && /per ?day|PerDay|daily/i.test(JSON.stringify(e))) throw { fatal: true, code: 429, msg: 'quota-day' };
+        if (r.status === 429 && (/per ?day|PerDay|daily/i.test(JSON.stringify(e)) || !/per ?minute|PerMinute|retry in|retryDelay/i.test(JSON.stringify(e)))) {
+          DEAD_MODELS[MODELS[mi]] = 1; // انتهت حصة هذا الموديل اليوم: ننتقل لموديل آخر له حصته
+          if (MODELS.every(function(m){ return DEAD_MODELS[m]; })) throw { fatal: true, code: 429, msg: 'quota-day' };
+          throw { retry: true, swap: true, code: 404, msg: msg };
+        }
         if (r.status === 429) { COOL_UNTIL = Math.max(COOL_UNTIL, Date.now() + retryDelayMs(e)); throw { retry: true, quota: true, code: 429, msg: msg }; }
         if ([429,500,503,504,404].indexOf(r.status) > -1) throw { retry: true, swap: true, code: r.status, msg: msg };
         throw { fatal: true, code: r.status, msg: msg };

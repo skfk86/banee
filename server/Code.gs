@@ -71,7 +71,7 @@ var FALLBACK = {
   'gemini-3.6-flash': ['gemini-3.7-flash', 'gemini-3.8-flash', 'gemini-3.5-flash'],
   'gemini-3.5-flash': ['gemini-3.7-flash', 'gemini-3.6-flash', 'gemini-3.8-flash'],
   'gemini-flash-latest': ['gemini-3.7-flash', 'gemini-3.6-flash'],
-  'gemini-3.5-flash-lite': ['gemini-3.1-flash-lite', 'gemini-flash-lite-latest'],
+  'gemini-3.5-flash-lite': ['gemini-3.1-flash-lite', 'gemini-flash-lite-latest', 'gemini-3.5-flash', 'gemini-3.6-flash', 'gemini-3.7-flash', 'gemini-3.8-flash'],
   'gemini-flash-lite-latest': ['gemini-3.5-flash-lite', 'gemini-3.1-flash-lite']
 };
 
@@ -224,7 +224,10 @@ function askGemini(user, req, t0) {
   if (req.systemInstruction) body.systemInstruction = req.systemInstruction;
 
   // إذا كان الموديل مزدحماً (503/429/500) ننتقل تلقائياً لموديل بديل، فلا يشعر المستخدم بشيء
-  var chain = [model].concat((FALLBACK[model] || []).filter(function(m){ return PRICES[m]; })), r, code, data;
+  // حصة Google المجانية لكل موديل منفصلة: الموديل الذي انتهت حصته اليوم يُتخطى حتى الغد
+  var cacheD = CacheService.getScriptCache(), today = Utilities.formatDate(new Date(), 'UTC', 'yyyyMMdd');
+  var chain = [model].concat((FALLBACK[model] || []).filter(function(m){ return PRICES[m]; })).filter(function(m){ return !cacheD.get('dead:' + today + ':' + m); }), r, code, data;
+  if (!chain.length) return { ok: false, error: { code: 'free_day', message: 'انتهت حصة الخدمة المجانية لليوم من Google. عُد غداً لتكمل من حيث توقفت، أو اشترك بمفتاحك الخاص لتبني الآن بلا توقف.' } };
   for (var ci = 0; ci < chain.length; ci++) {
     model = chain[ci];
     try {
@@ -238,11 +241,12 @@ function askGemini(user, req, t0) {
     }
     code = r.getResponseCode();
     try { data = JSON.parse(r.getContentText()); } catch (e2) { data = {}; }
+    if (code === 429 && (/PerDay|per ?day/i.test(r.getContentText()) || !/PerMinute|per ?minute|retry in|retryDelay/i.test(r.getContentText()))) cacheD.put('dead:' + today + ':' + model, '1', 21600);
     if (!(code === 503 || code === 429 || code === 500 || code === 404) || Date.now() - t0 > 40000) break;
     console.warn('busy', model, code);
   }
   if (code !== 200) {
-    if (code === 429 && /per ?day|PerDay|daily/i.test(JSON.stringify(data))) return { ok: false, error: { code: 'free_day', message: 'انتهت حصة الخدمة المجانية لليوم من Google. عُد غداً لتكمل من حيث توقفت، أو اشترك بمفتاحك الخاص لتبني الآن بلا توقف.' } };
+    if (code === 429 && chain.every(function(m){ return cacheD.get('dead:' + today + ':' + m); })) return { ok: false, error: { code: 'free_day', message: 'انتهت حصة الخدمة المجانية لليوم من Google. عُد غداً لتكمل من حيث توقفت، أو اشترك بمفتاحك الخاص لتبني الآن بلا توقف.' } };
     var busy = code === 429 || code === 503 || code === 500 || code === 404;
     return { ok: false, error: { code: busy ? 'busy' : 'gemini', status: code, message: (data.error && data.error.message) || 'خطأ من Gemini' }, model: model };
   }

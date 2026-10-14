@@ -954,7 +954,7 @@
             <span class="slbl">الخطط والأسعار<small>تطبيقات أكثر، وحزمة Google Play</small></span>
             <svg class="i"><use href="#i-chev"/></svg>
           </button>
-          <button class="sitem" id="key-item" onclick="openModal('key-modal')">
+          <button class="sitem" id="key-item" onclick="openKeyModal()">
             <span class="sico g"><svg class="i"><use href="#i-key"/></svg></span>
             <span class="slbl">مفتاح Gemini API<small>يُحفظ على جهازك فقط</small></span>
             <svg class="i"><use href="#i-chev"/></svg>
@@ -1174,9 +1174,11 @@
   <div class="modal-sheet">
     <div class="mhandle"></div>
     <div class="mtitle"><svg class="i"><use href="#i-key"/></svg>مفتاح Gemini API</div>
-    <p class="msub">احصل على مفتاح مجاني من aistudio.google.com. يُحفظ على جهازك فقط.</p>
+    <p class="msub">احصل على مفتاح من aistudio.google.com ← Get API key. يُحفظ على جهازك فقط.</p>
+    <p class="msub" id="kmod-note"></p>
     <div class="field"><label for="kmod">المفتاح</label><div class="input-wrap"><svg class="i"><use href="#i-key"/></svg><input type="password" id="kmod" placeholder="AIza..."></div></div>
-    <button class="btn btn-primary" onclick="saveKeyModal()">حفظ المفتاح</button>
+    <button class="btn btn-primary" id="kmod-btn" onclick="saveKeyModal()">حفظ المفتاح</button>
+    <button class="btn btn-ghost" id="kmod-rm" hidden style="margin-top:8px;color:#C42D33" onclick="removeKey()">حذف المفتاح والرجوع للنقاط</button>
     <button class="btn btn-ghost" style="margin-top:8px" onclick="closeModal('key-modal')">إلغاء</button>
   </div>
 </div>
@@ -1199,6 +1201,7 @@ var PACKS = { banee_credits_small: { points: 1360, fallbackPrice: '$3' }, banee_
 // معرّفات الاشتراكات كما تنشئها في Play Console ← Monetize ← Subscriptions
 var PLANS = {
   free:     { name: 'تجربة مجانية', limit: 1,        perMonth: false, product: null,              fallbackPrice: '$0' },
+  key:      { name: 'مفتاحك الخاص', limit: Infinity, perMonth: true,  product: 'banee_key',       fallbackPrice: '$4' },
   starter:  { name: 'مبتدئ',  limit: 1,        perMonth: true,  product: 'banee_starter',   fallbackPrice: '$9' },
   pro:      { name: 'محترف',  limit: 3,        perMonth: true,  product: 'banee_pro',       fallbackPrice: '$19' },
   business: { name: 'أعمال',  limit: Infinity, perMonth: true,  product: 'banee_business',  fallbackPrice: '$49' }
@@ -1235,7 +1238,7 @@ var ADMOB = { rewarded: 'ca-app-pub-7608701150166997/5799679986', interstitial: 
 var Ads = {
   ready: false, busy: false,
   plugin: function(){ return window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform() && window.Capacitor.Plugins && window.Capacitor.Plugins.AdMob; },
-  eligible: function(){ return proxyMode() && S.credits && S.credits.plan === 'free'; },
+  eligible: function(){ return proxyMode() && !ownKeyOn() && S.credits && S.credits.plan === 'free'; },
   init: function(){
     var A = this.plugin(); if (!A || this.ready) return Promise.resolve(!!this.ready);
     return A.initialize({ initializeForTesting: ADMOB.testing }).then(function(){ Ads.ready = true; return true; }).catch(function(){ return false; });
@@ -1369,7 +1372,7 @@ function openHelp(){
       FB.a.onAuthStateChanged(FB.auth, function(u){
         if (!u) { document.getElementById('boot').hidden = true; S.user = null; S.apps = []; showAuth(); return; }
         loadCloud(u).then(function(){ document.getElementById('boot').hidden = true; enterApp(S.user); Billing.init(); checkKey(); refreshCredits(); })
-          .catch(function(e){ console.error(e); document.getElementById('boot').hidden = true; toast('تعذّر تحميل بياناتك، تحقق من الاتصال','err'); enterApp(S.user); try { Billing.init(); } catch(_){} checkKey(); refreshCredits(); });
+          .catch(function(e){ console.error(e); document.getElementById('boot').hidden = true; BAD_LOAD = true; var cd = (e && e.code) || ''; toast(cd === 'permission-denied' ? 'تعذّر تحميل مشاريعك: صلاحيات قاعدة البيانات (permission-denied). أبلغ الدعم' : 'تعذّر تحميل مشاريعك' + (cd ? ' (' + cd + ')' : '') + '. تحقق من الاتصال ثم أعد فتح التطبيق','err'); enterApp(S.user); try { Billing.init(); } catch(_){} checkKey(); refreshCredits(); });
       });
     } else if (PROXY_URL) {
       document.getElementById('boot').hidden = true;
@@ -1391,7 +1394,9 @@ function fixInterrupted(){
 }
 
 // تحميل الحساب والمشاريع من Firestore
+var BAD_LOAD = false; // إذا فشل التحميل لا نحذف المشاريع السحابية بالخطأ
 function loadCloud(u){
+  BAD_LOAD = false;
   S.user = { uid: u.uid, name: u.displayName || (u.email||'').split('@')[0], email: u.email };
   var ref = fdoc('users', u.uid);
   return FB.f.getDoc(ref).then(function(snap){
@@ -1400,11 +1405,14 @@ function loadCloud(u){
     return FB.f.setDoc(ref, S.profile);
   }).then(function(){
     if (S.profile.name) S.user.name = S.profile.name;
-    return FB.f.getDocs(fcol('users', u.uid, 'apps'));
+    var q = function(){ return FB.f.getDocs(fcol('users', u.uid, 'apps')); };
+    return q().catch(function(e){ if (e && e.code === 'permission-denied') throw e; return sleep(1500).then(q); }); // إعادة محاولة واحدة عند ضعف الشبكة
   }).then(function(qs){
     return Promise.all(qs.docs.map(function(d){
       var meta = d.data();
-      return FB.f.getDocs(fcol('users', u.uid, 'apps', d.id, 'parts')).then(function(ps){
+      var gp = function(){ return FB.f.getDocs(fcol('users', u.uid, 'apps', d.id, 'parts')); };
+      return gp().catch(function(){ return sleep(1200).then(gp); }).catch(function(e){ console.warn('تعذّر تحميل مشروع', d.id, e); BAD_LOAD = true; return { docs: [] }; }).then(function(ps){
+        if (!ps.docs.length) return null;
         var parts = ps.docs.map(function(p){ return { i: +p.id, d: p.data().d }; }).sort(function(a,b){ return a.i - b.i; }).slice(0, meta.parts || 999);
         try { var app = JSON.parse(parts.map(function(p){ return p.d; }).join('')); SAVED[app.id] = JSON.stringify(app); return app; } catch(e){ console.warn('مشروع تالف', d.id); return null; }
       });
@@ -1543,7 +1551,7 @@ function buildsUsed(){
   var b = (S.profile && S.profile.builds) || {};
   return PLANS[curPlan()].perMonth ? (b.month === monthKey() ? b.count || 0 : 0) : (b.total || 0);
 }
-function canBuild(){ if (proxyMode()) return !S.credits || S.credits.remaining >= 25; /* البناء يكمل من حيث توقف إذا نفد الرصيد */ return buildsUsed() < PLANS[curPlan()].limit; }
+function canBuild(){ if (ownKeyOn()) return true; if (proxyMode()) return !S.credits || S.credits.remaining >= 25; /* البناء يكمل من حيث توقف إذا نفد الرصيد */ return buildsUsed() < PLANS[curPlan()].limit; }
 function countBuild(){
   S.profile = S.profile || { plan: 'free' };
   var b = S.profile.builds || {}, m = monthKey();
@@ -1632,7 +1640,7 @@ var Billing = {
   onVerified: function(){ this.sync(); },
   sync: function(){
     if (!this.ready || !S.user) return;
-    var CP = window.CdvPurchase, best = null, rank = ['starter', 'pro', 'business'], self = this;
+    var CP = window.CdvPurchase, best = null, rank = ['key', 'starter', 'pro', 'business'], self = this;
     rank.forEach(function(k){ if (self.store.owned(PLANS[k].product)) best = k; });
     var tx = null;
     (this.store.localReceipts || []).forEach(function(r){ (r.transactions || []).forEach(function(t){
@@ -1667,10 +1675,11 @@ function renderPlans(){
   var px = proxyMode();
   var feats = {
     starter: [px ? '٤٬٠٠٠ نقطة شهرياً (٤–١٥ تطبيقاً)' : 'تطبيق واحد كل شهر', 'محتوى كامل وهوية خاصة', 'فحص حي وإصلاح تلقائي', 'مشروع أندرويد جاهز للبناء'],
+    key: ['بمفتاح Gemini الخاص بك', 'تطبيقات بلا حد يومي ولا نقاط', 'كل أدوات الاستوديو والسحابة', 'بلا إعلانات'],
     pro: [px ? '٨٬٥٠٠ نقطة شهرياً' : '٣ تطبيقات كل شهر', 'الاستوديو مع المساعد الذكي', 'حزمة Google Play كاملة', 'دليل نشر خطوة بخطوة'],
     business: [px ? '٢٢٬٠٠٠ نقطة شهرياً' : 'تطبيقات غير محدودة', 'كل مميزات المحترف', 'أولوية في البناء', 'دعم مباشر عبر واتساب']
   };
-  document.getElementById('plans-box').innerHTML = ['starter', 'pro', 'business'].map(function(k){
+  document.getElementById('plans-box').innerHTML = (px ? ['key', 'starter', 'pro', 'business'] : ['starter', 'pro', 'business']).map(function(k){
     var P = PLANS[k], on = cur === k;
     return '<div class="plan-opt' + (k === 'pro' ? ' pop' : '') + '">' + (k === 'pro' ? '<div class="pop-tag"><svg class="i"><use href="#i-sparkles"/></svg>الأكثر اختياراً</div>' : '') +
       '<div class="po-row"><div class="po-name">' + P.name + '</div><div class="po-price"><bdi dir="ltr">' + esc(Billing.price(k)) + '</bdi><span> / شهر</span></div></div>' +
@@ -1723,7 +1732,7 @@ function showOffline(){
 }
 function needKeyMsg(){ toast(PROXY_URL ? 'تحقق من اتصالك بالإنترنت وسجّل دخولك، ثم أعد المحاولة' : 'أدخل مفتاح Gemini API أولاً','err'); }
 function checkKey() {
-  if (PROXY_URL) { var ks0 = document.getElementById('key-item'); if (ks0) ks0.hidden = true; document.getElementById('api-note').style.display = 'none'; return; }
+  if (PROXY_URL) { keyItemSync(); document.getElementById('api-note').style.display = 'none'; return; }
   if (proxyMode()) { document.getElementById('api-note').style.display = 'none'; var ks = document.getElementById('key-item'); if (ks) ks.hidden = true; return; }
   var k = localStorage.getItem('bgkey');
   document.getElementById('api-note').style.display = k ? 'none' : '';
@@ -1735,13 +1744,30 @@ function saveKey() {
   document.getElementById('api-note').style.display = 'none';
   toast('تم حفظ المفتاح','suc');
 }
+function keyItemSync(){
+  var it = document.getElementById('key-item'); if (!it) return;
+  it.hidden = false;
+  var sm = it.querySelector('small'); if (sm) sm.textContent = ownKeyOn() ? 'مفعّل: البناء بلا نقاط ولا حدود' : localKey() ? 'محفوظ، يعمل مع الاشتراك' : 'ابنِ بلا حدود بمفتاحك (للمشتركين)';
+  var rm = document.getElementById('kmod-rm'); if (rm) rm.hidden = !localKey();
+}
+function openKeyModal(){
+  document.getElementById('kmod').value = '';
+  var n = document.getElementById('kmod-note');
+  if (n) n.innerHTML = PROXY_URL && !paidUser() ? 'هذه الميزة للمشتركين. أرخص خطة: <b>مفتاحك الخاص</b> <bdi dir="ltr">' + esc(Billing.price('key')) + '</bdi> شهرياً، بلا نقاط ولا حد يومي. <button class="link-btn" onclick="closeModal(\'key-modal\');Billing.buy(\'key\')">اشترك</button>' : 'الطلبات تذهب من جهازك إلى Google مباشرة، ولا يمر المفتاح على خوادم بانِي.';
+  keyItemSync(); openModal('key-modal');
+}
+function removeKey(){ try { localStorage.removeItem('bgkey'); } catch(e){} keyItemSync(); closeModal('key-modal'); toast('حُذف المفتاح، رجعت للبناء بالنقاط','suc'); }
 function saveKeyModal() {
-  var k = document.getElementById('kmod').value.trim();
-  if (!k) { toast('أدخل المفتاح أولاً','err'); return; }
-  localStorage.setItem('bgkey', k);
-  closeModal('key-modal');
-  document.getElementById('api-note').style.display = 'none';
-  toast('تم حفظ المفتاح','suc');
+  var k = document.getElementById('kmod').value.trim(), b = document.getElementById('kmod-btn');
+  if (!/^[\w.-]{20,}$/.test(k)) { toast('المفتاح غير صحيح، انسخه كاملاً من Google AI Studio','err'); return; }
+  if (b) { b.disabled = true; b.textContent = 'جارٍ التحقق…'; }
+  fetch('https://generativelanguage.googleapis.com/v1beta/models?pageSize=5', { headers: { 'x-goog-api-key': k } }).then(function(r){
+    if (r.status === 400 || r.status === 401 || r.status === 403) throw { bad: true };
+    localStorage.setItem('bgkey', k);
+    closeModal('key-modal'); document.getElementById('api-note').style.display = 'none'; keyItemSync();
+    toast(ownKeyOn() || !PROXY_URL ? 'تم تفعيل مفتاحك: ابنِ بلا حدود' : 'حُفظ المفتاح، ويعمل بعد الاشتراك','suc');
+  }).catch(function(e){ toast(e && e.bad ? 'Google رفضت المفتاح، تأكد منه أو أنشئ مفتاحاً جديداً' : 'تعذّر التحقق، تحقق من الاتصال','err'); })
+    .then(function(){ if (b) { b.disabled = false; b.textContent = 'حفظ المفتاح'; } });
 }
 
 // ════ OPTIONS ════
@@ -1977,6 +2003,15 @@ function buildApp() {
     toast(proxyMode() ? (S.credits && S.credits.plan === 'free' && !S.credits.bonus ? 'انتهى رصيدك التجريبي، اشترك لتكمل البناء' : 'رصيدك لا يكفي لبناء تطبيق جديد') : curPlan() === 'free' ? 'استخدمت تطبيقك التجريبي المجاني، اشترك لبناء المزيد' : 'وصلت لحد خطتك هذا الشهر', 'err');
     openUpgrade(); return;
   }
+  if (proxyMode() && !ownKeyOn() && !buildApp._ok) {
+    var bb = document.getElementById('bld-btn'); if (bb) bb.disabled = true;
+    proxyCall({ op: 'newApp' }).then(function(r){
+      if (bb) bb.disabled = false;
+      if (r && r.ok === false && r.error && r.error.code === 'app_day') { toast(r.error.message, 'err'); setTimeout(openUpgrade, 600); return; }
+      buildApp._ok = true; try { buildApp(); } finally { buildApp._ok = false; }
+    }, function(){ if (bb) bb.disabled = false; buildApp._ok = true; try { buildApp(); } finally { buildApp._ok = false; } });
+    return;
+  }
   RQ = { desc: desc, key: key, data: null, ans: {}, tok: Date.now() };
   var tok = RQ.tok;
   rqRender(); openModal('req-modal');
@@ -2036,6 +2071,7 @@ function rqStart(){
               status: 'building', progress: 0, color: S.color, auth: S.auth, steps: newSteps(), ck: null };
   S.apps.unshift(app);
   countBuild();
+  if (proxyMode() && !ownKeyOn()) proxyCall({ op: 'newApp', commit: true }).catch(function(){});
   var ta = document.getElementById('adesc'); ta.value = ''; ta.dispatchEvent(new Event('input'));
   goTo('apps');
   toast('بدأ البناء، يمكنك التنقل بحرية','suc');
@@ -2043,6 +2079,7 @@ function rqStart(){
 }
 
 function arErr(code, msg){
+  if (ownKeyOn() && (code===429 || /quota|exhausted|rate limit/i.test(msg))) return 'انتهت حصة مفتاحك في Google حالياً. انتظر قليلاً ثم اضغط متابعة، أو فعّل الفوترة في Google AI Studio لحصة أكبر، أو احذف المفتاح من حسابي لتكمل بالنقاط';
   if (code===503 || code===429 || /high demand|overloaded|quota|exhausted/i.test(msg)) return 'خوادم Gemini مشغولة الآن، أكمل بعد دقيقة';
   if (code===400 && /API key|API_KEY/i.test(msg)) return 'مفتاح Gemini غير صالح، راجعه من حسابي';
   if (code===403) return 'المفتاح لا يملك صلاحية، أنشئ مفتاحاً جديداً';
@@ -2475,7 +2512,11 @@ function closeJob(){ openJob = null; closeModal('job-modal'); }
 
 function newSteps(){ return STEP_DEFS.map(function(d){ return { ic: d[0], label: d[1], state: '' }; }); }
 function proxyMode(){ return !!(PROXY_URL && CLOUD && FB && FB.auth && FB.auth.currentUser); }
-function getKey(){ if (proxyMode()) return 'PROXY'; var k = null; try { k = localStorage.getItem('bgkey'); } catch(e){} return k; }
+function localKey(){ try { return localStorage.getItem('bgkey') || ''; } catch(e){ return ''; } }
+// مفتاح المستخدم الخاص: للمشتركين فقط. بلا نقاط ولا حدود، والطلب يذهب من الجهاز إلى Google مباشرة
+function paidUser(){ return (S.credits && S.credits.plan && S.credits.plan !== 'free') || curPlan() !== 'free'; }
+function ownKeyOn(){ return !!(PROXY_URL && localKey() && paidUser()); }
+function getKey(){ if (ownKeyOn()) return localKey(); if (proxyMode()) return 'PROXY'; var k = null; try { k = localStorage.getItem('bgkey'); } catch(e){} return k; }
 
 // ── الاتصال بخادم بانِي ──
 function proxyCall(body){
@@ -2490,6 +2531,7 @@ function proxyCall(body){
 function setCredits(c){
   if (!c) return;
   S.credits = c;
+  try { keyItemSync(); } catch(e){}
   var el = document.getElementById('credit-chip');
   if (el) { el.hidden = false; el.querySelector('b').textContent = toAr(c.remaining); el.classList.toggle('low', c.remaining < 300); }
   updatePlan();

@@ -32,6 +32,7 @@ var CFG = {
   APP_AI_MODEL: 'gemini-3.5-flash-lite',
   PUSH_PER_DAY: 10,         // إشعارات يرسلها صاحب التطبيق يومياً
   // ── إعلانات بانِي للمستخدمين غير المشتركين ──
+  FREE_APPS_PER_DAY: 1,     // تطبيقات جديدة يومياً للمستخدم المجاني (التعديل والإصلاح بلا حد)
   AD_POINTS: 5,             // نقاط كل إعلان بمكافأة (≈ قيمة الإعلان الفعلية، فلا خسارة). عدّلها بعد معرفة دخلك من AdMob
   AD_PER_DAY: 10,           // أقصى إعلانات بمكافأة لكل حساب يومياً
   AD_MIN_GAP_MS: 20000      // أقل مدة بين مكافأتين (طول الإعلان)
@@ -40,6 +41,7 @@ var CFG = {
 // الرصيد الشهري لكل خطة (نقاط). المجانية رصيد مرة واحدة.
 var PLANS = {
   free:     { points: 300,   product: null },   // تجربة مجانية مرة واحدة لكل حساب
+  key:      { points: 0,     product: 'banee_key' }, // مفتاح المستخدم الخاص: الذكاء من مفتاحه (لا تكلفة عليك)
   starter:  { points: 4000,  product: 'banee_starter' },
   pro:      { points: 8500,  product: 'banee_pro' },
   business: { points: 22000, product: 'banee_business' }
@@ -86,6 +88,7 @@ function doPost(e) {
     if (req.op === 'topup') return out(topup(user, req));
     if (req.op === 'ask') return out(askGemini(user, req, t0));
     if (req.op === 'adReward') return out(adReward(user));
+    if (req.op === 'newApp') return out(newApp(user, req));
     if (req.op === 'deleteAccount') { PropertiesService.getScriptProperties().deleteProperty('u:' + user.uid); logRow(user, 'DELETE_ACCOUNT', '', 0, 0, 0); return out({ ok: true }); }
     if (req.op === 'report') { try { sheet('reports').appendRow([new Date(), user.uid, user.email, String(req.appId || ''), String(req.text || '').slice(0, 1500)]); } catch (e) {} return out({ ok: true }); }
     // ── قدرات التطبيقات المبنية ببانِي (يستدعيها مستخدمو تلك التطبيقات) ──
@@ -419,6 +422,20 @@ function fcmApp(user, req) {
   return { ok: true, config: content };
 }
 
+// ═════════════ حد التطبيقات الجديدة للمجانيين ═════════════
+// check: يُستدعى قبل البدء (لا يحسب) · commit: عند بدء التوليد فعلاً (يحسب)
+function newApp(user, req) {
+  var lock = LockService.getScriptLock(); lock.waitLock(10000);
+  try {
+    var s = loadState(user), today = Utilities.formatDate(new Date(), 'UTC', 'yyyy-MM-dd');
+    if (s.plan !== 'free' || s.bought) return { ok: true, unlimited: true };
+    if (s.appDay !== today) { s.appDay = today; s.appN = 0; }
+    if (s.appN >= CFG.FREE_APPS_PER_DAY) return { ok: false, error: { code: 'app_day', message: 'الخطة المجانية تسمح بتطبيق جديد واحد يومياً. عُد غداً، أو اشترك لبناء تطبيقات بلا حد. (تعديل تطبيقاتك الحالية متاح دائماً)' } };
+    if (req.commit) { s.appN++; saveState(user, s); }
+    return { ok: true, left: CFG.FREE_APPS_PER_DAY - s.appN };
+  } finally { lock.releaseLock(); }
+}
+
 // ═════════════ مكافأة الإعلان ═════════════
 function adReward(user) {
   var lock = LockService.getScriptLock(); lock.waitLock(10000);
@@ -451,7 +468,7 @@ function topup(user, req) {
   var lock = LockService.getScriptLock(); lock.waitLock(10000);
   try {
     if (prop(key)) return { ok: true, already: true, credits: creditsView(user, loadState(user)) };
-    var s = loadState(user); clearDebt(s); s.bonus = (s.bonus || 0) + pts; saveState(user, s);
+    var s = loadState(user); clearDebt(s); s.bonus = (s.bonus || 0) + pts; s.bought = true; saveState(user, s);
     PropertiesService.getScriptProperties().setProperty(key, user.uid);
     logRow(user, 'TOPUP', req.productId, 0, 0, 0);
     return { ok: true, added: pts, credits: creditsView(user, s) };

@@ -5,7 +5,7 @@ service cloud.firestore {
     function signedIn() { return request.auth != null; }
     function isOwner(uid) { return signedIn() && request.auth.uid == uid; }
     function planFields() { return ['plan', 'planUntil', 'planSource', 'planProduct', 'planToken', 'planOrderId', 'planSyncedAt']; }
-    function validPlan(p) { return p in ['free', 'starter', 'pro', 'business']; }
+    function validPlan(p) { return p in ['free', 'key', 'starter', 'pro', 'business']; }
 
     // حساب المستخدم: يقرأ ويعدّل بياناته فقط
     match /users/{uid} {

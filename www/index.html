@@ -1145,7 +1145,7 @@
   <div class="modal-sheet">
     <div class="mhandle"></div>
     <div class="mtitle"><svg class="i"><use href="#i-crown"/></svg>اختر خطتك</div>
-    <p class="msub">جرّب مجاناً بـ ٣٠٠ نقطة، واشترك عندما تحتاج المزيد. يمكنك الإلغاء في أي وقت من Google Play.</p>
+    <p class="msub">مجاناً: ٢٥٠ نقطة تتجدد كل يوم مع إعلانات. أو اشترك بمفتاحك الخاص وابنِ بلا حدود ولا إعلانات. تلغي متى شئت من Google Play.</p>
     <div class="plans" id="plans-box"></div>
     <p class="msub" id="plans-note" style="margin:12px 0 0;font-size:13px"></p>
     <button class="btn btn-ghost" style="margin-top:16px" onclick="closeModal('upg-modal')">إغلاق</button>
@@ -1199,6 +1199,11 @@
     <div class="mtitle"><svg class="i"><use href="#i-key"/></svg>مفتاح Gemini API</div>
     <p class="msub">احصل على مفتاح من aistudio.google.com ← Get API key. يُحفظ على جهازك فقط.</p>
     <p class="msub" id="kmod-note"></p>
+    <ol class="msub" style="margin:0 0 12px;padding-inline-start:20px;line-height:1.9;font-size:13px">
+      <li>افتح <b dir="ltr">aistudio.google.com</b> وسجّل بحساب Google</li>
+      <li>اضغط <b dir="ltr">Get API key</b> ثم <b dir="ltr">Create API key</b></li>
+      <li>انسخ المفتاح والصقه هنا. مجاني، ويعمل في السودان وكل الدول العربية</li>
+    </ol>
     <div class="field"><label for="kmod">المفتاح</label><div class="input-wrap"><svg class="i"><use href="#i-key"/></svg><input type="password" id="kmod" placeholder="AIza..."></div></div>
     <button class="btn btn-primary" id="kmod-btn" onclick="saveKeyModal()">حفظ المفتاح</button>
     <button class="btn btn-ghost" id="kmod-rm" hidden style="margin-top:8px;color:#C42D33" onclick="removeKey()">حذف المفتاح والرجوع للنقاط</button>
@@ -1693,16 +1698,17 @@ var Billing = {
   }
 };
 
+var SHOW_PACKS = false; // باقات النقاط مخفية: المجاني على حصة Google المجانية، والمشترك بمفتاحه
 function renderPlans(){
   var cur = curPlan(), C = '<svg class="i"><use href="#i-check"/></svg>';
   var px = proxyMode();
   var feats = {
     starter: [px ? '٤٬٠٠٠ نقطة شهرياً (٤–١٥ تطبيقاً)' : 'تطبيق واحد كل شهر', 'محتوى كامل وهوية خاصة', 'فحص حي وإصلاح تلقائي', 'مشروع أندرويد جاهز للبناء'],
-    key: ['بمفتاح Gemini الخاص بك', 'تطبيقات بلا حد يومي ولا نقاط', 'كل أدوات الاستوديو والسحابة', 'بلا إعلانات'],
+    key: ['ابنِ بمفتاح Gemini الخاص بك (مجاني من Google)', 'تطبيقات بلا حد يومي ولا نقاط ولا انتظار', 'بلا أي إعلانات', 'كل الأدوات: المخطط، الأدوار، الاختبار الآلي، السحابة', 'ذكاء اصطناعي داخل تطبيقاتك المنشورة'],
     pro: [px ? '٨٬٥٠٠ نقطة شهرياً' : '٣ تطبيقات كل شهر', 'الاستوديو مع المساعد الذكي', 'حزمة Google Play كاملة', 'دليل نشر خطوة بخطوة'],
     business: [px ? '٢٢٬٠٠٠ نقطة شهرياً' : 'تطبيقات غير محدودة', 'كل مميزات المحترف', 'أولوية في البناء', 'دعم مباشر عبر واتساب']
   };
-  document.getElementById('plans-box').innerHTML = (px ? ['key', 'starter', 'pro', 'business'] : ['starter', 'pro', 'business']).map(function(k){
+  document.getElementById('plans-box').innerHTML = (px ? ['key'] : ['starter', 'pro', 'business']).map(function(k){
     var P = PLANS[k], on = cur === k;
     return '<div class="plan-opt' + (k === 'pro' ? ' pop' : '') + '">' + (k === 'pro' ? '<div class="pop-tag"><svg class="i"><use href="#i-sparkles"/></svg>الأكثر اختياراً</div>' : '') +
       '<div class="po-row"><div class="po-name">' + P.name + '</div><div class="po-price"><bdi dir="ltr">' + esc(Billing.price(k)) + '</bdi><span> / شهر</span></div></div>' +
@@ -1711,9 +1717,9 @@ function renderPlans(){
           : '<button class="btn btn-primary btn-sm po-btn" onclick="Billing.buy(\'' + k + '\')">اشترك</button>') + '</div>';
   }).join('');
   if (px && Ads.eligible()) document.getElementById('plans-box').insertAdjacentHTML('afterbegin', '<div class="ad-earn"><div><b>نقاط مجانية</b><span>شاهد إعلاناً قصيراً واحصل على ' + toAr(S.credits.adPoints || 5) + ' نقاط · ' + (S.credits.adsLeft ? 'متبقي ' + toAr(S.credits.adsLeft) + ' اليوم' : 'انتهت إعلانات اليوم') + '</span></div><button class="btn btn-accent btn-sm" onclick="Ads.reward(this)"' + (S.credits.adsLeft ? '' : ' disabled') + '><svg class="i i-sm"><use href="#i-play"/></svg>شاهد</button></div>');
-  document.getElementById('plans-box').insertAdjacentHTML('beforeend', px ? '<div class="packs"><div class="packs-h">رصيد إضافي (لا ينتهي)</div>' +
+  document.getElementById('plans-box').insertAdjacentHTML('beforeend', px && SHOW_PACKS ? '<div class="packs"><div class="packs-h">رصيد إضافي (لا ينتهي)</div>' +
     Object.keys(PACKS).map(function(id){ return '<button class="pack" onclick="Billing.buyPack(\'' + id + '\')"><b>' + toAr(PACKS[id].points.toLocaleString('en')) + '</b><span>نقطة</span><em>' + esc(Billing.packPrice(id)) + '</em></button>'; }).join('') + '</div>' : '');
-  document.getElementById('plans-note').innerHTML = (px && S.credits ? 'رصيدك الآن: <b>' + toAr(S.credits.remaining) + '</b> نقطة. بناء تطبيق بسيط حوالي ٢٠٠–٣٠٠ نقطة، وتطبيق بمحتوى طويل ٨٠٠–١٢٠٠. ' : '') + (Billing.native()
+  document.getElementById('plans-note').innerHTML = (px && S.credits ? 'الخطة المجانية: <b>' + toAr(S.credits.remaining) + '</b> من ٢٥٠ نقطة اليوم، تتجدد كل يوم، وتطبيق جديد واحد يومياً. وقد تتوقف مؤقتاً عند ازدحام الخدمة المجانية. ' : '') + (Billing.native()
     ? 'الدفع عبر Google Play، ويتجدد شهرياً. تقدر تلغي في أي وقت من إعدادات Google Play. <button class="link-btn" onclick="Billing.restore()">استعادة اشتراكي</button>'
     : 'الاشتراك يتم داخل تطبيق بانِي على أندرويد عبر Google Play.');
 }
@@ -2136,7 +2142,7 @@ function buildApp() {
   if (!key) { needKeyMsg(); if (!PROXY_URL) document.getElementById('api-note').style.display=''; return; }
   if (!canBuild() && Ads.eligible() && Ads.plugin() && S.credits.adsLeft) { toast('رصيدك لا يكفي. شاهد إعلانات لتحصل على نقاط مجانية، أو اشترك', 'err'); openUpgrade(); return; }
   if (!canBuild()) {
-    toast(proxyMode() ? (S.credits && S.credits.plan === 'free' && !S.credits.bonus ? 'انتهى رصيدك التجريبي، اشترك لتكمل البناء' : 'رصيدك لا يكفي لبناء تطبيق جديد') : curPlan() === 'free' ? 'استخدمت تطبيقك التجريبي المجاني، اشترك لبناء المزيد' : 'وصلت لحد خطتك هذا الشهر', 'err');
+    toast(proxyMode() ? (S.credits && S.credits.plan === 'free' && !S.credits.bonus ? 'انتهى رصيد اليوم، يتجدد غداً. شاهد إعلاناً أو اشترك بمفتاحك لتبني الآن' : 'رصيدك لا يكفي لبناء تطبيق جديد') : curPlan() === 'free' ? 'استخدمت تطبيقك التجريبي المجاني، اشترك لبناء المزيد' : 'وصلت لحد خطتك هذا الشهر', 'err');
     openUpgrade(); return;
   }
   if (proxyMode() && !ownKeyOn() && !buildApp._ok) {
@@ -2290,7 +2296,7 @@ function askProxy(role, input, json){
         if (c === 'busy') throw { retry: true, swap: true, code: r.error.status || 503, msg: r.error.message };
         if (c === 'gemini' && /think/i.test(r.error.message || '') && !THINK_OFF) { THINK_OFF = true; throw { retry: true, msg: r.error.message }; }
         if (c === 'timeout' || c === 'server') throw { retry: true, msg: r.error.message };
-        if (c === 'no_credits') { setTimeout(openUpgrade, 400); throw { fatal: true, text: 'نفد رصيدك. اشترك أو اشترِ رصيداً إضافياً، ثم اضغط متابعة لإكمال البناء من حيث توقف' }; }
+        if (c === 'no_credits') { setTimeout(openUpgrade, 400); throw { fatal: true, text: 'انتهى رصيد اليوم (يتجدد غداً). شاهد إعلاناً أو اشترك بمفتاحك الخاص، ثم اضغط متابعة لإكمال البناء من حيث توقف' }; }
         if (c === 'free_ended') { setTimeout(openUpgrade, 400); throw { fatal: true, text: r.error.message }; }
         if (c === 'free_day') throw { fatal: true, text: r.error.message };
         throw { fatal: true, text: (r.error && r.error.message) || 'تعذّر الطلب' };
@@ -2974,7 +2980,7 @@ function writeFlowTests(app, key){
     var r = parseJSON(raw) || {}, tests = (r.tests || (Array.isArray(r) ? r : [])).filter(function(x){ return x && Array.isArray(x.steps) && x.steps.length; }).slice(0, 5);
     tests.forEach(function(x){ x.steps = x.steps.slice(0, 14); });
     app.ck.flowTests = tests; saveApps();
-  }).catch(function(e){ if (e && e.message === '__stale') throw e; app.ck.flowTests = []; });
+  }).catch(function(e){ if (e && (e.message === '__stale' || /رصيد|حصة|الشبكة|Gemini|مشغولة/.test(e.message || ''))) throw e; app.ck.flowTests = []; }); // نفاد الرصيد: يتوقف البناء ويكمل لاحقاً، لا يتخطى الاختبار
 }
 function reviewApp(app, key){
   var plan = app.ck.plan;
@@ -2984,7 +2990,7 @@ function reviewApp(app, key){
     var r = parseJSON(raw) || {}, iss = r.issues || {}, out = {}, n = 0;
     plan.screens.forEach(function(s){ var a = (iss[s.id] || []).filter(function(m){ return typeof m === 'string' && m.length > 8; }).slice(0, 4).map(function(m){ return 'مراجعة: ' + m.slice(0, 400); }); out[s.id] = a; n += a.length; });
     return { issues: out, count: n };
-  }).catch(function(e){ if (e && e.message === '__stale') throw e; return { issues: {}, count: 0 }; });
+  }).catch(function(e){ if (e && (e.message === '__stale' || /رصيد|حصة|الشبكة|Gemini|مشغولة/.test(e.message || ''))) throw e; return { issues: {}, count: 0 }; });
 }
 function routeScreen(plan, path){
   path = (path || '/').split('?')[0];
@@ -3109,7 +3115,7 @@ function fixRuntime(app, key, res, onStage, review){
     return ask(key, 'fixer', prompt).then(function(r){
       var js = grab(r, 'javascript');
       if (!checkScreen(js, s, plan).length && js.length > (old[s.id] || '').length * 0.6) app.ck.screens[s.id] = js;
-    }).catch(function(){});
+    }).catch(function(e){ if (e && /رصيد|حصة/.test(e.message || '')) throw e; });
   })).then(function(){
     var changed = bad.filter(function(s){ return app.ck.screens[s.id] !== old[s.id]; });
     if (!changed.length) return 0;

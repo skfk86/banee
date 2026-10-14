@@ -14,7 +14,7 @@ var CFG = {
   FIREBASE_API_KEY: 'AIzaSyADAJ2MGzx58Bh-8gudT_JUBmBExYLrn6Q', // مفتاح Firebase العام (ليس سراً)
   PACKAGE_NAME: 'com.alloush.banee',
   POINT_USD: 0.00075,            // قيمة النقطة الواحدة بالدولار
-  DAILY_CAP_USD: 5,              // أقصى إنفاق يومي لكل المستخدمين معاً
+  DAILY_CAP_USD: 1e9,            // المفتاح على خطة Google المجانية: لا تكلفة، والحد هو حصة Google نفسها
   MAX_OUTPUT_TOKENS: 12000,
   MAX_INPUT_CHARS: 600000,       // حد حجم الطلب (≈١٥٠ ألف رمز) حتى لا يتجاوز طلب واحد رصيد صاحبه بكثير      // حتى لا يتجاوز الطلب حد الـ 60 ثانية
   ABUSE: { perMinute: 40, perHour: 300, monthPoints: 66000 }, // لا يصلها أي مستخدم حقيقي
@@ -22,8 +22,9 @@ var CFG = {
   // ── برنامج المؤسسين: أنت تتحمل تكلفة أول المستخدمين، بميزانية تحددها أنت ولا تتجاوزها أبداً ──
   FOUNDERS: 0,              // ضع رقماً (مثلاً 100) إذا أردت لاحقاً رصيداً مجانياً لأول المستخدمين
   FOUNDER_POINTS: 1500,     // رصيدهم المجاني (يكفي لبناء تطبيق كامل وتجربته)
-  FREE_BUDGET_USD: 40,      // سقف أمان: أقصى ما تدفعه إجمالاً على التجارب المجانية (٣٠٠ نقطة ≈ ٠٫٢٢$ للشخص)
-  FREE_DAILY_USD: 2,        // أقصى ما يُصرف يومياً على التجارب المجانية
+  FREE_BUDGET_USD: 1e9,     // لا ميزانية: مفتاح الخادم مجاني من Google
+  FREE_DAILY_USD: 1e9,
+  FREE_DAY_POINTS: 250,     // نقاط المجاني اليومية (تتجدد كل يوم) لتوزيع حصة Google المجانية بعدل بين المستخدمين
   // ── قدرات التطبيقات المبنية ──
   NET_PER_HOUR: 120,        // طلبات البيانات الحية لكل مستخدم في الساعة
   APP_AI_PER_HOUR: 20,      // أسئلة الذكاء الاصطناعي لكل مستخدم في كل تطبيق في الساعة (تُخصم من رصيد صاحب التطبيق)
@@ -40,8 +41,8 @@ var CFG = {
 
 // الرصيد الشهري لكل خطة (نقاط). المجانية رصيد مرة واحدة.
 var PLANS = {
-  free:     { points: 300,   product: null },   // تجربة مجانية مرة واحدة لكل حساب
-  key:      { points: 0,     product: 'banee_key' }, // مفتاح المستخدم الخاص: الذكاء من مفتاحه (لا تكلفة عليك)
+  free:     { points: 250,   product: null },   // تتجدد يومياً (FREE_DAY_POINTS)
+  key:      { points: 100,   product: 'banee_key' }, // مفتاح المستخدم الخاص للبناء؛ والنقاط اليومية للذكاء داخل تطبيقاته المنشورة
   starter:  { points: 4000,  product: 'banee_starter' },
   pro:      { points: 8500,  product: 'banee_pro' },
   business: { points: 22000, product: 'banee_business' }
@@ -170,12 +171,13 @@ function loadState(user) {
     PropertiesService.getScriptProperties().setProperty('u:' + user.uid, JSON.stringify(s));
   }
   var plan = userPlan(user, token);
+  if (plan.name === 'free' || plan.name === 'key') plan = { name: plan.name, period: 'd' + Utilities.formatDate(new Date(), 'UTC', 'yyyy-MM-dd') }; // رصيد يومي يتجدد
   if (s.period !== plan.period) { s.period = plan.period; s.used = 0; } // تجديد شهري = رصيد جديد
   s.plan = plan.name;
   return s;
 }
 function saveState(user, s) { PropertiesService.getScriptProperties().setProperty('u:' + user.uid, JSON.stringify(s)); }
-function planPoints(s) { return s.plan === 'free' && s.founder ? CFG.FOUNDER_POINTS : PLANS[s.plan].points; }
+function planPoints(s) { return s.plan === 'free' ? CFG.FREE_DAY_POINTS : PLANS[s.plan].points; }
 function creditsView(user, s) {
   var allow = planPoints(s);
   var today = Utilities.formatDate(new Date(), 'UTC', 'yyyy-MM-dd');
@@ -213,7 +215,7 @@ function askGemini(user, req, t0) {
   } finally { lock.releaseLock(); }
 
   // الموديل: المجانية على موديل اقتصادي، والباقي من القائمة المسموحة فقط
-  var model = s.plan === 'free' && !(s.bonus > 0) ? CFG.FREE_MODEL : (PRICES[req.model] ? req.model : 'gemini-3.7-flash');
+  var model = s.plan === 'free' || s.plan === 'key' ? CFG.FREE_MODEL : (PRICES[req.model] ? req.model : 'gemini-3.7-flash');
   var reqSize = JSON.stringify(req.contents || []).length + JSON.stringify(req.systemInstruction || '').length;
   if (reqSize > CFG.MAX_INPUT_CHARS) return { ok: false, error: { code: 'too_big', message: 'المحادثة طويلة جداً. ابدأ محادثة جديدة أو قلّل حجم الملفات المرسلة.' } };
   var gc = req.generationConfig || {};
@@ -240,6 +242,7 @@ function askGemini(user, req, t0) {
     console.warn('busy', model, code);
   }
   if (code !== 200) {
+    if (code === 429 && /per ?day|PerDay|daily/i.test(JSON.stringify(data))) return { ok: false, error: { code: 'free_day', message: 'انتهت حصة الخدمة المجانية لليوم من Google. عُد غداً لتكمل من حيث توقفت، أو اشترك بمفتاحك الخاص لتبني الآن بلا توقف.' } };
     var busy = code === 429 || code === 503 || code === 500 || code === 404;
     return { ok: false, error: { code: busy ? 'busy' : 'gemini', status: code, message: (data.error && data.error.message) || 'خطأ من Gemini' }, model: model };
   }

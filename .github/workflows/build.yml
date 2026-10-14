@@ -1,0 +1,107 @@
+name: بناء تطبيق أندرويد
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    env:
+      KP: ${{ secrets.KEYSTORE_PASSWORD }}
+      ADMOB_APP_ID: ${{ vars.ADMOB_APP_ID || 'ca-app-pub-7608701150166997~5879396021' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: تثبيت الحزم
+        run: npm install --no-audit --no-fund
+
+      - name: إنشاء مشروع أندرويد
+        run: |
+          npx cap add android
+          # واجهة برمجة Android 16 (API 36) كما يشترط Google Play
+          sed -i 's/compileSdkVersion = [0-9]*/compileSdkVersion = 36/; s/targetSdkVersion = [0-9]*/targetSdkVersion = 36/; s/minSdkVersion = [0-9]*/minSdkVersion = 24/' android/variables.gradle
+          echo "android.suppressUnsupportedCompileSdk=36" >> android/gradle.properties
+          grep -E "minSdkVersion|compileSdkVersion|targetSdkVersion" android/variables.gradle
+          # معرّف تطبيق AdMob (إلزامي وإلا يتوقف التطبيق عند الفتح). ضع معرّفك الحقيقي في ADMOB_APP_ID
+          sed -i "s|</application>|<meta-data android:name=\"com.google.android.gms.ads.APPLICATION_ID\" android:value=\"${ADMOB_APP_ID}\"/></application>|" android/app/src/main/AndroidManifest.xml
+          # صلاحية الإنترنت
+          grep -q "android.permission.INTERNET" android/app/src/main/AndroidManifest.xml || sed -i "s|<application|<uses-permission android:name=\"android.permission.INTERNET\" />\n    <application|" android/app/src/main/AndroidManifest.xml
+
+      - name: الأيقونة وشاشة البداية
+        run: npx @capacitor/assets generate --android --iconBackgroundColor "#011849" --splashBackgroundColor "#011849" --splashBackgroundColorDark "#011849"
+
+      - name: رقم الإصدار
+        run: |
+          sed -i "s/versionCode [0-9]*/versionCode ${{ github.run_number }}/" android/app/build.gradle
+          sed -i "s/versionName \"[^\"]*\"/versionName \"1.0.${{ github.run_number }}\"/" android/app/build.gradle
+
+      - name: مزامنة
+        run: npx cap sync android
+
+      - name: بناء APK للتجربة
+        working-directory: android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon
+
+      - name: تجهيز مفتاح التوقيع
+        id: key
+        run: |
+          if [ -n "${{ secrets.KEYSTORE_BASE64 }}" ]; then
+            echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > release.jks
+          elif [ -f signing/release.jks.enc ] && [ -n "$KP" ]; then
+            openssl enc -d -aes-256-cbc -pbkdf2 -iter 200000 -in signing/release.jks.enc -out release.jks -pass env:KP
+          fi
+          if [ -s release.jks ]; then echo "has=true" >> "$GITHUB_OUTPUT"; else echo "has=false" >> "$GITHUB_OUTPUT"; echo "لا يوجد مفتاح توقيع: سيُبنى نسخة التجربة فقط"; fi
+
+      - name: بناء نسخة النشر
+        if: steps.key.outputs.has == 'true'
+        working-directory: android
+        run: ./gradlew assembleRelease bundleRelease --no-daemon
+
+      - name: توقيع نسخة النشر
+        if: steps.key.outputs.has == 'true'
+        env:
+          ALIAS: ${{ secrets.KEY_ALIAS || 'banee' }}
+          KEYP: ${{ secrets.KEY_PASSWORD || secrets.KEYSTORE_PASSWORD }}
+        run: |
+          BT=$(ls -d $ANDROID_HOME/build-tools/* | sort -V | tail -1)
+          $BT/zipalign -f -p 4 android/app/build/outputs/apk/release/app-release-unsigned.apk app-release-aligned.apk
+          $BT/apksigner sign --ks release.jks --ks-pass env:KP --ks-key-alias "$ALIAS" --key-pass env:KEYP --out banee-release.apk app-release-aligned.apk
+          jarsigner -keystore release.jks -storepass "$KP" -keypass "$KEYP" android/app/build/outputs/bundle/release/app-release.aab "$ALIAS"
+          cp android/app/build/outputs/bundle/release/app-release.aab banee-release.aab
+          rm -f release.jks app-release-aligned.apk
+
+      - name: تجهيز الملفات
+        run: cp android/app/build/outputs/apk/debug/app-debug.apk banee-debug.apk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: banee-v1.0.${{ github.run_number }}
+          path: |
+            banee-*.apk
+            banee-*.aab
+
+      - name: نشر إصدار بالتحميل المباشر
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.0.${{ github.run_number }}
+          name: "بانِي v1.0.${{ github.run_number }}"
+          files: |
+            banee-*.apk
+            banee-*.aab

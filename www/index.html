@@ -3562,6 +3562,14 @@ function drawSplash(app, size, dark){
 function canvasBytes(cv){ return new Promise(function(res){ cv.toBlob(function(b){ b.arrayBuffer().then(function(a){ res(new Uint8Array(a)); }); }, 'image/png'); }); }
 
 // ── ملفات المشروع ──
+// تحويل الاسم العربي لحروف لاتينية: «سوق بانِي» ← souq-bani (لاسم المستودع ومعرّف التطبيق)
+function latinize(s){
+  var M = { 'ا':'a','أ':'a','إ':'e','آ':'aa','ب':'b','ت':'t','ث':'th','ج':'j','ح':'h','خ':'kh','د':'d','ذ':'th','ر':'r','ز':'z','س':'s','ش':'sh','ص':'s','ض':'d','ط':'t','ظ':'z','ع':'a','غ':'gh','ف':'f','ق':'q','ك':'k','ل':'l','م':'m','ن':'n','ه':'h','ة':'a','و':'o','ؤ':'o','ي':'i','ى':'a','ئ':'e','ء':'','ﻻ':'la','٠':'0','١':'1','٢':'2','٣':'3','٤':'4','٥':'5','٦':'6','٧':'7','٨':'8','٩':'9' };
+  var out = String(s || '').replace(/[\u064B-\u0652\u0670\u0640]/g, '').replace(/(^|\s)ال/g, '$1al').replace(/(^|\s)و/g, '$1w').replace(/(^|\s)ي/g, '$1y').split('').map(function(c){ return M[c] !== undefined ? M[c] : c; }).join('');
+  return out.replace(/([aeiou])\1+/g, '$1').replace(/^(a)l(?=[a-z])/,'al');
+}
+function nameSlug(app){ var s = slugify(latinize(app.name || (app.ck && app.ck.plan && app.ck.plan.name) || '')); return s === 'app' ? 'banee-' + String(app.id).slice(-6) : s.slice(0, 40); }
+function nameId(app){ var s = nameSlug(app).replace(/-/g, '_').replace(/^[^a-z]+/, ''); return 'com.banee.' + (s && /^[a-z]/.test(s) ? s : 'app' + String(app.id).slice(-6)); }
 function slugify(s){ return String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'') || 'app'; }
 function androidFiles(app, cfg){
   var d = app.ck.design || normalizeDesign({}, app.color);
@@ -3777,13 +3785,13 @@ function stAndroid(){
   if (!app.approved) { toast('اعتمد التطبيق أولاً','err'); return; }
   closeModal('approve-modal');
   var a = app.android || {};
-  var slug = a.slug || ('banee-' + app.id.slice(-6));
+  var slug = a.slug || nameSlug(app);
   document.getElementById('an-content').innerHTML =
     '<div class="mtitle">'+ic('phone')+'مشروع أندرويد</div>' +
     '<p class="msub">ملف مضغوط فيه مشروع Capacitor كامل: التطبيق، الأيقونة وشاشة البداية بهويته، والبناء التلقائي على GitHub الذي يُخرج APK للتجربة وAAB للنشر.</p>' +
     '<div class="an-icons"><div class="an-ic" id="an-icon"></div><div class="an-sp" id="an-splash"></div></div>' +
     '<div class="field"><label for="an-name">اسم التطبيق على الجوال</label><div class="input-wrap"><svg class="i"><use href="#i-phone"/></svg><input id="an-name" dir="rtl" value="'+esc(a.appName || app.name)+'"></div></div>' +
-    '<div class="field"><label for="an-id">معرّف التطبيق (Package)</label><div class="input-wrap"><svg class="i"><use href="#i-package"/></svg><input id="an-id" value="'+esc(a.appId || ('com.banee.app' + app.id.slice(-6)))+'"></div><small class="hint">بالإنجليزي، مثل com.alloush.clinic — لا يتغير بعد النشر على Google Play</small></div>' +
+    '<div class="field"><label for="an-id">معرّف التطبيق (Package)</label><div class="input-wrap"><svg class="i"><use href="#i-package"/></svg><input id="an-id" value="'+esc(a.appId || nameId(app))+'"></div><small class="hint">بالإنجليزي، مثل com.alloush.clinic — لا يتغير بعد النشر على Google Play</small></div>' +
     '<div class="row2"><div class="field"><label for="an-slug">اسم المستودع</label><div class="input-wrap"><svg class="i"><use href="#i-folder"/></svg><input id="an-slug" value="'+esc(slug)+'"></div></div>' +
     '<div class="field"><label for="an-ver">الإصدار</label><div class="input-wrap"><svg class="i"><use href="#i-layers"/></svg><input id="an-ver" value="'+esc(a.version || '1.0')+'"></div></div></div>' +
     '<div class="field"><label for="an-admob">معرّف تطبيق AdMob</label><div class="input-wrap"><svg class="i"><use href="#i-zap"/></svg><input id="an-admob" value="'+esc(a.admobAppId || 'ca-app-pub-3940256099942544~3347511713')+'"></div><small class="hint">الحالي معرّف اختبار من Google — استبدله بمعرّفك قبل النشر</small></div>' +

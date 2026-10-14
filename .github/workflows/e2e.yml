@@ -1,0 +1,35 @@
+name: اختبار حقيقي لبانِي
+on:
+  workflow_dispatch:
+    inputs:
+      kit:
+        description: 'النظام الجاهز: delivery | store | booking | edu (أو اتركه فارغاً)'
+        default: 'delivery'
+      idea:
+        description: 'وصف التطبيق (اختياري، يستبدل وصف النظام الجاهز)'
+        default: ''
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 70
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - name: تجهيز المتصفح
+        run: |
+          npm i --no-save playwright@1.48.2
+          npx playwright install --with-deps chromium
+      - name: نسخة اختبار من بانِي (بلا خادم، بمفتاح Gemini)
+        run: sed "s#^var PROXY_URL = '[^']*';#var PROXY_URL = '';#" www/index.html > e2e.html
+      - name: بناء نظام كامل واختباره
+        env:
+          GEMINI_KEY: ${{ secrets.GEMINI_KEY }}
+          KIT: ${{ github.event.inputs.kit }}
+          IDEA: ${{ github.event.inputs.idea }}
+        run: node e2e/e2e.js
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: banee-e2e
+          path: e2e-out

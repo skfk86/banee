@@ -53,21 +53,39 @@ service cloud.firestore {
       function appOwner() { return signedIn() && appDoc().owner == request.auth.uid; }
       function mode(col) { return appDoc().modes.get(col, 'private'); }
       function authorOf(d) { return d.get('userId', d.get('uid', d.get('ownerId', ''))); }
+      // الأدوار: apps/{appId}/members/{uid} = { role, status: ok | pending }
+      function memberPath() { return /databases/$(database)/documents/apps/$(appId)/members/$(request.auth.uid); }
+      function roleCan(col) {
+        return signedIn() && col != 'members' && exists(memberPath())
+          && get(memberPath()).data.status == 'ok'
+          && get(memberPath()).data.role in appDoc().get('roleAccess', {}).get(col, []);
+      }
+      // العضو لا يمنح نفسه دوراً يحتاج موافقة: إما «قيد المراجعة» أو دور مفتوح
+      function memberOk(d) {
+        return d.get('status', '') == 'pending'
+          || (d.get('status', '') == 'ok' && !(d.get('role', '') in appDoc().get('roleApprove', [])));
+      }
 
       match /{col}/{id} {
         allow read: if mode(col) == 'content'
           || (mode(col) == 'shared' && signedIn())
           || appOwner()
+          || roleCan(col)
           || (signedIn() && id == request.auth.uid)
           || (signedIn() && resource != null && authorOf(resource.data) == request.auth.uid);
         allow create: if appOwner()
           || (mode(col) == 'shared' && signedIn())
           || (mode(col) == 'private' && signedIn()
-              && (authorOf(request.resource.data) == request.auth.uid || id == request.auth.uid));
+              && (authorOf(request.resource.data) == request.auth.uid || id == request.auth.uid)
+              && (col != 'members' || (id == request.auth.uid && memberOk(request.resource.data))));
         allow update: if appOwner()
+          || (roleCan(col) && authorOf(request.resource.data) == authorOf(resource.data))
           || (mode(col) != 'content' && signedIn()
               && (authorOf(resource.data) == request.auth.uid || id == request.auth.uid)
-              && authorOf(request.resource.data) == authorOf(resource.data));
+              && authorOf(request.resource.data) == authorOf(resource.data)
+              && (col != 'members' || memberOk(request.resource.data)
+                  || (request.resource.data.get('role', '') == resource.data.get('role', '')
+                      && request.resource.data.get('status', '') == resource.data.get('status', ''))));
         allow delete: if appOwner()
           || (mode(col) != 'content' && signedIn()
               && (authorOf(resource.data) == request.auth.uid || id == request.auth.uid));

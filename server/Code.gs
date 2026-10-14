@@ -179,7 +179,7 @@ function planPoints(s) { return s.plan === 'free' && s.founder ? CFG.FOUNDER_POI
 function creditsView(user, s) {
   var allow = planPoints(s);
   var today = Utilities.formatDate(new Date(), 'UTC', 'yyyy-MM-dd');
-  return { adsLeft: s.plan === 'free' ? Math.max(0, CFG.AD_PER_DAY - (s.adDay === today ? s.adN || 0 : 0)) : 0, adPoints: CFG.AD_POINTS, plan: s.plan, founder: !!s.founder, no: s.no || 0, allowance: allow, used: Math.round(s.used), bonus: Math.round(s.bonus || 0), remaining: Math.max(0, Math.round(allow - s.used + (s.bonus || 0))), blocked: !!s.blocked };
+  return { adsLeft: s.plan === 'free' ? Math.max(0, CFG.AD_PER_DAY - (s.adDay === today ? s.adN || 0 : 0)) : 0, adPoints: CFG.AD_POINTS, plan: s.plan, founder: !!s.founder, no: s.no || 0, allowance: allow, used: Math.round(s.used), bonus: Math.round(s.bonus || 0), remaining: Math.max(0, Math.round(allow - s.used + (s.bonus || 0))), blocked: !!s.blocked, at: Date.now() };
 }
 
 // ═════════════ الطلب إلى Gemini ═════════════

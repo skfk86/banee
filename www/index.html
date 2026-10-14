@@ -211,27 +211,75 @@
     .bld-top h3 { font-size: 16px; font-weight: 700; }
     .bld-top p { font-size: 13px; color: var(--text3); }
     .bld-steps { display: flex; flex-direction: column; gap: 4px; }
+    /* ── مخطط النظام ── */
+    .bp { display: flex; flex-direction: column; gap: 14px; }
+    .bp-hero { display: flex; gap: 12px; align-items: center; }
+    .bp-hero .bp-logo { width: 52px; height: 52px; flex: none; border-radius: 16px; display: grid; place-items: center; color: #fff; background: linear-gradient(140deg, var(--primary), #7C5CFF); box-shadow: 0 6px 18px rgba(44,100,221,.28); }
+    .bp-hero .bp-logo .i { width: 26px; height: 26px; }
+    .bp-hero h3 { margin: 0; font-size: 19px; font-weight: 800; letter-spacing: -.2px; text-wrap: balance; }
+    .bp-hero p { margin: 3px 0 0; font-size: 13px; color: var(--text2); line-height: 1.6; }
+    .bp-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+    .bp-stat { background: var(--surface2); border: 1px solid var(--border); border-radius: 12px; padding: 8px 4px; text-align: center; }
+    .bp-stat b { display: block; font-size: 18px; font-weight: 800; color: var(--text); font-variant-numeric: tabular-nums; }
+    .bp-stat span { font-size: 11px; color: var(--text2); }
+    .bp-note { display: flex; gap: 8px; align-items: flex-start; font-size: 12.5px; line-height: 1.7; color: var(--text2); background: var(--primary-soft, rgba(44,100,221,.08)); border-radius: 12px; padding: 10px 12px; }
+    .bp-note .i { flex: none; width: 16px; height: 16px; margin-top: 3px; color: var(--primary-ink); }
+    .bp-card { border: 1px solid var(--border); border-radius: 16px; background: var(--surface); padding: 14px; }
+    .bp-h { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; font-size: 14.5px; font-weight: 700; color: var(--text); }
+    .bp-h .bp-ic { width: 28px; height: 28px; border-radius: 9px; display: grid; place-items: center; background: var(--surface2); color: var(--primary-ink); flex: none; }
+    .bp-h .bp-ic .i { width: 15px; height: 15px; }
+    .bp-h small { margin-inline-start: auto; font-size: 11.5px; font-weight: 500; color: var(--text3); }
+    .bp-roles { display: grid; gap: 8px; }
+    .bp-role { display: flex; gap: 10px; align-items: center; padding: 10px; border-radius: 12px; background: var(--surface2); }
+    .bp-role .av { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; background: var(--surface); border: 1px solid var(--border); color: var(--primary-ink); flex: none; }
+    .bp-role .av .i { width: 16px; height: 16px; }
+    .bp-role b { display: block; font-size: 14px; }
+    .bp-role span { font-size: 12.5px; color: var(--text2); line-height: 1.5; }
+    .bp-tag { display: inline-flex; align-items: center; gap: 3px; font-size: 10.5px; font-weight: 700; padding: 2px 7px; border-radius: 100px; background: var(--surface); border: 1px solid var(--border); color: var(--text2); margin-inline-start: 6px; vertical-align: 2px; }
+    .bp-tag.warn { background: #FFF4E5; border-color: #F5D7A8; color: #8A4B00; }
+    .bp-flow + .bp-flow { margin-top: 14px; padding-top: 14px; border-top: 1px dashed var(--border); }
+    .bp-flow > b { display: block; font-size: 13.5px; margin-bottom: 8px; }
+    .bp-tl { list-style: none; margin: 0; padding: 0; counter-reset: s; }
+    .bp-tl li { counter-increment: s; position: relative; padding: 0 30px 10px 0; font-size: 13px; color: var(--text2); line-height: 1.6; }
+    .bp-tl li::before { content: counter(s); position: absolute; right: 0; top: 0; width: 20px; height: 20px; border-radius: 50%; background: var(--primary); color: #fff; font-size: 11px; font-weight: 700; display: grid; place-items: center; }
+    .bp-tl li:not(:last-child)::after { content: ''; position: absolute; right: 9.5px; top: 21px; bottom: 1px; width: 1px; background: var(--border-strong, var(--border)); }
+    .bp-tl li:last-child { padding-bottom: 0; }
+    .bp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .bp-scr { border: 1px solid var(--border); border-radius: 12px; padding: 10px; min-width: 0; background: var(--surface); }
+    .bp-scr b { display: flex; align-items: center; gap: 5px; font-size: 13px; }
+    .bp-scr b .i { width: 13px; height: 13px; color: var(--primary-ink); }
+    .bp-scr p { margin: 4px 0 0; font-size: 11.5px; color: var(--text2); line-height: 1.55; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .bp-scr em { display: inline-block; margin-top: 6px; font-style: normal; font-size: 10.5px; color: var(--text3); }
+    .bp-col + .bp-col { margin-top: 10px; }
+    .bp-col b { font: 700 12.5px 'JetBrains Mono', ui-monospace, monospace; direction: ltr; display: block; text-align: left; }
+    .bp-chips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 5px; direction: ltr; }
+    .bp-chips span { font: 11px 'JetBrains Mono', ui-monospace, monospace; padding: 2px 7px; border-radius: 6px; background: var(--surface2); color: var(--text2); border: 1px solid var(--border); }
+    .bp-sub { margin-top: 12px; padding-top: 10px; border-top: 1px dashed var(--border); font-size: 12px; color: var(--text2); line-height: 1.9; }
+    .bp-setup-h { display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 800; margin: 4px 2px -4px; }
+    .bp-setup-h span { font-size: 12px; font-weight: 500; color: var(--text2); }
+    .bp-num { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; background: var(--primary); color: #fff; font-size: 12px; font-weight: 800; flex: none; }
+    .bp-in { display: block; margin-top: 10px; }
+    .bp-in > span { display: block; font-size: 12.5px; font-weight: 600; margin-bottom: 5px; color: var(--text); }
+    .bp-in input, .bp-in textarea, #bp-fb { width: 100%; box-sizing: border-box; border: 1.5px solid var(--border); border-radius: 12px; padding: 11px 12px; font: inherit; font-size: 14px; background: var(--surface); color: var(--text); transition: border-color .15s, box-shadow .15s; }
+    .bp-in input:focus, .bp-in textarea:focus, #bp-fb:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-ring, rgba(44,100,221,.18)); }
+    .bp-in textarea.code { font: 12px/1.6 'JetBrains Mono', ui-monospace, monospace; min-height: 110px; }
+    .bp-opts { display: grid; gap: 8px; }
+    .bp-opt { display: flex; gap: 12px; align-items: flex-start; padding: 12px; border: 1.5px solid var(--border); border-radius: 14px; cursor: pointer; background: var(--surface); transition: border-color .15s, background .15s; }
+    .bp-opt input { position: absolute; opacity: 0; pointer-events: none; }
+    .bp-opt .oi { width: 36px; height: 36px; border-radius: 10px; display: grid; place-items: center; background: var(--surface2); color: var(--primary-ink); flex: none; }
+    .bp-opt b { display: block; font-size: 14px; }
+    .bp-opt span { font-size: 12.5px; color: var(--text2); line-height: 1.6; }
+    .bp-opt .ck { margin-inline-start: auto; width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--border-strong, var(--border)); flex: none; margin-top: 8px; }
+    .bp-opt.on { border-color: var(--primary); background: var(--primary-soft, rgba(44,100,221,.06)); }
+    .bp-opt.on .ck { border-color: var(--primary); background: var(--primary); box-shadow: inset 0 0 0 3px var(--surface); }
+    .bp-steps { list-style: none; margin: 12px 0 0; padding: 0; counter-reset: k; display: grid; gap: 8px; }
+    .bp-steps li { counter-increment: k; display: flex; gap: 10px; font-size: 13px; line-height: 1.7; color: var(--text2); }
+    .bp-steps li::before { content: counter(k); width: 22px; height: 22px; flex: none; border-radius: 50%; background: var(--surface2); border: 1px solid var(--border); color: var(--text); font-size: 11.5px; font-weight: 700; display: grid; place-items: center; margin-top: 1px; }
+    .bp-steps code { font: 12px 'JetBrains Mono', ui-monospace, monospace; background: var(--surface2); padding: 1px 5px; border-radius: 5px; color: var(--text); direction: ltr; unicode-bidi: isolate; }
+    .bp-actions { position: sticky; bottom: -1px; margin: 4px -16px -16px; padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px)); background: linear-gradient(to top, var(--surface) 75%, transparent); display: grid; gap: 8px; }
+    .bp-actions .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
     .chip.kit.on { background: var(--primary); color: #fff; border-color: var(--primary); }
-    #bp-fb { width: 100%; box-sizing: border-box; border: 1px solid var(--border); border-radius: 10px; padding: 8px 10px; font: inherit; font-size: 13px; background: var(--surface); color: var(--text); }
-    .bp-opt { display: flex; gap: 8px; align-items: flex-start; font-size: 13px; line-height: 1.7; padding: 6px 0; cursor: pointer; }
-    .bp-opt input { margin-top: 5px; accent-color: var(--primary); }
-    .bp-steps { margin: 6px 0 10px; padding-inline-start: 20px; font-size: 12.5px; line-height: 1.9; color: var(--text2); }
-    .bp-sec .field textarea, .bp-sec .field input { width: 100%; box-sizing: border-box; border: 1px solid var(--border); border-radius: 10px; padding: 8px 10px; font: inherit; font-size: 13px; background: var(--surface); color: var(--text); }
-    .bp-lead { font-size: 13px; color: var(--text2); margin: 0 0 10px; line-height: 1.7; }
-    .bp-sec { border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px; margin-bottom: 8px; background: var(--surface); }
-    .bp-h { display: flex; align-items: center; gap: 6px; font-weight: 700; font-size: 13.5px; margin-bottom: 6px; color: var(--primary-ink); }
-    .bp-row { display: flex; flex-direction: column; gap: 1px; padding: 6px 0; border-top: 1px dashed var(--border); font-size: 13px; min-width: 0; }
-    .bp-h + .bp-row, .bp-h + .bp-flow { border-top: 0; padding-top: 2px; }
-    .bp-row b { font-weight: 600; color: var(--text); }
-    .bp-row b em { font-style: normal; font-size: 10.5px; font-weight: 500; color: var(--text3); border: 1px solid var(--border); border-radius: 6px; padding: 0 5px; margin-inline-start: 4px; }
-    .bp-row span { color: var(--text2); line-height: 1.6; overflow-wrap: anywhere; }
-    .bp-f { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11.5px; text-align: left; }
-    .bp-flow { padding: 6px 0; border-top: 1px dashed var(--border); font-size: 13px; }
 
-    .bp-flow > div { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; margin-top: 4px; }
-    .bp-flow span { background: var(--surface2); border-radius: 8px; padding: 2px 8px; font-size: 12px; color: var(--text2); }
-    .bp-flow i { font-style: normal; color: var(--text3); font-size: 11px; }
-    .bp-ul { margin: 0; padding-inline-start: 18px; font-size: 12.5px; color: var(--text2); line-height: 1.8; overflow-wrap: anywhere; }
     .bstep { display: flex; align-items: center; gap: 12px; padding: 9px 10px; border-radius: var(--r-sm); font-size: 14px; color: var(--text3); transition: all .3s; }
     .bstep .dot { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; flex-shrink: 0; border: 1.5px solid var(--border-strong); color: var(--text3); }
     .bstep .dot .i { width: 14px; height: 14px; stroke-width: 2.2; }
@@ -2752,23 +2800,27 @@ function renderJob(app){
 }
 // ── مخطط النظام: يراجعه صاحب الفكرة ويعدّله قبل كتابة أي كود ──
 function blueprintHTML(app){
-  var p = app.ck.plan, sec = function(icn, title, body){ return body ? '<div class="bp-sec"><div class="bp-h">' + ic(icn,'i-sm') + title + '</div>' + body + '</div>' : ''; };
-  var roleName = {}; (p.roles || []).forEach(function(r){ roleName[r.id] = r.name; });
-  var roles = (p.roles || []).map(function(r){ return '<div class="bp-row"><b>' + esc(r.name) + '</b><span>' + esc(r.does || '') + '</span></div>'; }).join('') + '<div class="bp-row"><b>صاحب التطبيق</b><span>لوحة إدارة جاهزة: المحتوى والطلبات والإشعارات</span></div>';
-  var screens = p.screens.map(function(s){ return '<div class="bp-row"><b>' + esc(s.title) + (s.nav ? ' <em>قائمة</em>' : '') + '</b><span>' + esc(String(s.purpose || '').split(/[.。]/)[0]) + ((s.roles || []).length && (p.roles || []).length > 1 ? ' · ' + s.roles.map(function(r){ return esc(roleName[r] || r); }).join('، ') : '') + '</span></div>'; }).join('');
-  var data = (p.collections || []).map(function(c){ var f = Object.keys(c.fields || {}); return '<div class="bp-row"><b dir="ltr">' + esc(c.name) + '</b><span dir="ltr" class="bp-f">' + esc(f.slice(0, 8).join(' · ') + (f.length > 8 ? ' …' : '')) + '</span></div>'; }).join('');
-  var flows = (p.flows || []).map(function(f){ return '<div class="bp-flow"><b>' + esc(f.name) + '</b><div>' + (f.steps || []).map(function(x){ return '<span>' + esc(x) + '</span>'; }).join('<i>←</i>') + '</div></div>'; }).join('');
-  var rel = (p.relations || []).map(function(r){ return '<li dir="ltr">' + esc(r) + '</li>'; }).join('');
-  var cnt = (p.content || []).map(function(c){ return '<li>' + esc(c.collection) + ': ' + toAr(c.count || 0) + ' عنصراً جاهزاً</li>'; }).join('');
-  return '<div class="bld-top"><div class="bld-orb still">' + ic('grid') + '</div><div style="min-width:0"><h3>' + esc(p.name || app.name) + '</h3><p>' + esc(p.summary || 'مخطط النظام قبل البناء') + '</p></div></div>' +
-    '<p class="bp-lead">راجع المخطط قبل كتابة أي كود. أي تعديل الآن مجاني تقريباً، وبعد البناء أغلى.</p>' +
-    sec('users', 'الأدوار', roles) + sec('git-branch', 'رحلات المستخدم', flows) + sec('phone', 'الشاشات (' + toAr(p.screens.length) + ')', screens) +
-    sec('database', 'البيانات', data) + sec('link', 'الربط بين البيانات', rel ? '<ul class="bp-ul">' + rel + '</ul>' : '') + sec('book', 'المحتوى الجاهز', cnt ? '<ul class="bp-ul">' + cnt + '</ul>' : '') +
-    fbSetupHTML(app) +
-    '<div class="field" style="margin-top:12px"><label for="bp-fb">تعديلات على المخطط (اختياري)</label><textarea id="bp-fb" rows="3" placeholder="مثال: أضف دور مندوب توصيل، واجعل الدفع عند الاستلام فقط، واحذف شاشة المقالات"></textarea></div>' +
-    '<div class="row-btns"><button class="btn btn-primary" id="bp-ok" onclick="approvePlan(\'' + app.id + '\')">' + ic('check') + 'موافق، ابدأ البناء</button>' +
-    '<button class="btn btn-ghost" id="bp-re" onclick="revisePlan(\'' + app.id + '\')">' + ic('rotate') + 'عدّل المخطط</button></div>' +
-    '<button class="btn btn-ghost" style="margin-top:8px" onclick="closeJob()">لاحقاً</button>';
+  var p = app.ck.plan, roles = p.roles || [], multi = roles.length > 1;
+  var card = function(icn, title, body, extra){ return body ? '<section class="bp-card"><div class="bp-h"><span class="bp-ic">' + ic(icn) + '</span>' + title + (extra ? '<small>' + extra + '</small>' : '') + '</div>' + body + '</section>' : ''; };
+  var roleName = {}; roles.forEach(function(r){ roleName[r.id] = r.name; });
+  var nContent = (p.content || []).reduce(function(n, c){ return n + (+c.count || 0); }, 0);
+  var stats = '<div class="bp-stats">' + [[p.screens.length, 'شاشات'], [(p.collections || []).length, 'جداول بيانات'], [Math.max(1, roles.length) + 1, 'أدوار'], [nContent, 'محتوى جاهز']].map(function(s){ return '<div class="bp-stat"><b>' + toAr(s[0]) + '</b><span>' + s[1] + '</span></div>'; }).join('') + '</div>';
+  var rolesH = '<div class="bp-roles">' + roles.map(function(r, i){ return '<div class="bp-role"><span class="av">' + ic(i === 0 ? 'user' : r.approve ? 'key' : 'users') + '</span><div style="min-width:0"><b>' + esc(r.name) + (r.approve ? '<span class="bp-tag warn">بموافقتك</span>' : '') + '</b><span>' + esc(r.does || '') + '</span></div></div>'; }).join('') +
+    '<div class="bp-role"><span class="av">' + ic('shield') + '</span><div style="min-width:0"><b>أنت (صاحب التطبيق)</b><span>لوحة إدارة جاهزة: المحتوى، الطلبات، الأعضاء، الإشعارات</span></div></div></div>';
+  var flows = (p.flows || []).map(function(f){ return '<div class="bp-flow"><b>' + esc(f.name) + '</b><ol class="bp-tl">' + (f.steps || []).map(function(x){ return '<li>' + esc(x) + '</li>'; }).join('') + '</ol></div>'; }).join('');
+  var screens = '<div class="bp-grid">' + p.screens.map(function(s){ var who = multi && s.roles && s.roles.length ? s.roles.map(function(r){ return roleName[r] || r; }).join('، ') : ''; return '<div class="bp-scr"><b>' + (s.nav ? ic('grid') : '') + esc(s.title) + '</b><p>' + esc(String(s.purpose || '').split(/[.。]/)[0]) + '</p>' + (who ? '<em>' + esc(who) + '</em>' : '') + '</div>'; }).join('') + '</div>';
+  var data = (p.collections || []).map(function(c){ var f = Object.keys(c.fields || {}); return '<div class="bp-col"><b>' + esc(c.name) + '</b><div class="bp-chips">' + f.slice(0, 9).map(function(k){ return '<span>' + esc(k) + '</span>'; }).join('') + (f.length > 9 ? '<span>+' + (f.length - 9) + '</span>' : '') + '</div></div>'; }).join('') +
+    ((p.relations || []).length ? '<div class="bp-sub">' + p.relations.map(function(r){ return '<div dir="ltr" style="text-align:left">' + esc(r) + '</div>'; }).join('') + '</div>' : '');
+  var setup = fbSetupHTML(app);
+  return '<div class="bp">' +
+    '<div class="bp-hero"><span class="bp-logo">' + ic('layers') + '</span><div style="min-width:0"><h3>' + esc(p.name || app.name) + '</h3><p>' + esc(p.summary || 'مخطط النظام قبل البناء') + '</p></div></div>' + stats +
+    '<div class="bp-note">' + ic('info') + '<span>هذا مخطط نظامك قبل كتابة أي كود. راجعه الآن: التعديل هنا مجاني تقريباً، وبعد البناء أغلى.</span></div>' +
+    card('users', 'الأدوار', rolesH) + card('git-branch', 'رحلات المستخدم', flows, (p.flows || []).length ? toAr(p.flows.length) + ' رحلات تُختبر آلياً' : '') +
+    card('phone', 'الشاشات', screens, toAr(p.screens.length)) + card('database', 'البيانات', data, nContent ? toAr(nContent) + ' عنصر جاهز' : '') +
+    setup +
+    '<section class="bp-card"><div class="bp-h"><span class="bp-ic">' + ic('sparkles') + '</span>تريد تغيير شيء؟</div><textarea id="bp-fb" rows="3" placeholder="مثال: أضف دور مندوب توصيل، واجعل الدفع عند الاستلام فقط"></textarea></section>' +
+    '<div class="bp-actions"><button class="btn btn-primary" id="bp-ok" onclick="approvePlan(\'' + app.id + '\')">' + ic('check') + 'موافق، ابدأ البناء</button>' +
+    '<div class="row2"><button class="btn btn-ghost" id="bp-re" onclick="revisePlan(\'' + app.id + '\')">' + ic('rotate') + 'عدّل المخطط</button><button class="btn btn-ghost" onclick="closeJob()">لاحقاً</button></div></div></div>';
 }
 // ════ مشروع Firebase خاص بصاحب التطبيق ════
 function parseFbConfig(txt){
@@ -2823,30 +2875,26 @@ function ownRules(plan, admin){
 }
 function needsData(plan){ return !!(plan.auth || (plan.collections || []).some(function(c){ var f = c.fields || {}; return 'userId' in f; }) || plan.payments); }
 function fbSetupHTML(app){
-  var p = app.ck.plan, own = !!app.fbDraft || !!app.fb, f = app.fb || app.fbDraft || {};
-  var pay = p.payments ? '<div class="bp-sec"><div class="bp-h">' + ic('wallet','i-sm') + 'بيانات الدفع (تظهر للعميل عند الدفع)</div>' +
-    '<div class="field"><label for="bp-bk">رقم حساب بنكك</label><input id="bp-bk" dir="ltr" inputmode="numeric" value="' + esc(p.payments.bankakAccount || '') + '" placeholder="مثال: 1234567"></div>' +
-    '<div class="field"><label for="bp-bn">اسم صاحب الحساب</label><input id="bp-bn" value="' + esc(p.payments.bankakName || '') + '" placeholder="الاسم كما في بنكك"></div></div>' : '';
-  if (!needsData(p)) return pay;
-  return pay + '<div class="bp-sec"><div class="bp-h">' + ic('database','i-sm') + 'قاعدة البيانات وتسجيل الدخول</div>' +
-    '<label class="bp-opt"><input type="radio" name="bp-db" value="banee"' + (own ? '' : ' checked') + ' onchange="fbMode(\'' + app.id + '\', false)"> <b>سحابة بانِي</b> — جاهزة فوراً بلا إعداد (مناسبة للتجربة والبداية)</label>' +
-    '<label class="bp-opt"><input type="radio" name="bp-db" value="own"' + (own ? ' checked' : '') + ' onchange="fbMode(\'' + app.id + '\', true)"> <b>مشروع Firebase خاص بي</b> — بياناتك وحسابات مستخدميك ملكك بالكامل (للإنتاج)</label>' +
-    (own ? '<ol class="bp-steps">' +
-      '<li>افتح <b dir="ltr">console.firebase.google.com</b> ← <b>Add project</b> (أنشئ مشروعاً جديداً)</li>' +
-      '<li>من <b>Build ← Authentication ← Get started</b> فعّل <b>Email/Password</b>' + (p.auth ? '' : ' و <b>Anonymous</b>') + '</li>' +
-      '<li>من <b>Build ← Firestore Database ← Create database</b> اختر <b>Production mode</b> وأقرب منطقة</li>' +
-      '<li>من ⚙️ <b>Project settings ← Your apps</b> اضغط أيقونة الويب <b dir="ltr">&lt;/&gt;</b> وسجّل التطبيق، ثم انسخ كتلة <b dir="ltr">firebaseConfig</b> كاملة والصقها هنا</li></ol>' +
-      '<div class="field"><label for="bp-fb-cfg">إعدادات firebaseConfig</label><textarea id="bp-fb-cfg" dir="ltr" rows="5" placeholder="const firebaseConfig = { apiKey: ..., projectId: ..., appId: ... };">' + esc(f.raw || '') + '</textarea></div>' +
-      '<div class="field"><label for="bp-fb-admin">بريد مدير التطبيق (حسابك لإدارة المحتوى والطلبات)</label><input id="bp-fb-admin" type="email" dir="ltr" value="' + esc(f.admin || (S.user && S.user.email) || '') + '"></div>' +
-      '<p class="bp-lead">بعد البناء سيعطيك بانِي قواعد أمان مخصصة لتطبيقك تلصقها في Firestore ← Rules.</p>' : '') + '</div>';
+  var p = app.ck.plan, own = !!app.fbDraft || !!app.fb, f = app.fb || app.fbDraft || {}, n = 0, parts = [];
+  if (p.payments) parts.push('<section class="bp-card"><div class="bp-h"><span class="bp-num">' + toAr(++n) + '</span>بيانات الدفع<small>تظهر للعميل عند الدفع ببنكك</small></div>' +
+    '<label class="bp-in"><span>رقم حساب بنكك</span><input id="bp-bk" dir="ltr" inputmode="numeric" value="' + esc(p.payments.bankakAccount || '') + '" placeholder="1234567"></label>' +
+    '<label class="bp-in"><span>اسم صاحب الحساب</span><input id="bp-bn" value="' + esc(p.payments.bankakName || '') + '" placeholder="الاسم كما يظهر في بنكك"></label></section>');
+  if (needsData(p)) {
+    var opt = function(v, on, icn, t, d){ return '<label class="bp-opt' + (on ? ' on' : '') + '"><input type="radio" name="bp-db" value="' + v + '"' + (on ? ' checked' : '') + ' onchange="fbMode(\'' + app.id + '\', ' + (v === 'own') + ')"><span class="oi">' + ic(icn) + '</span><div style="min-width:0"><b>' + t + '</b><span>' + d + '</span></div><span class="ck"></span></label>'; };
+    parts.push('<section class="bp-card"><div class="bp-h"><span class="bp-num">' + toAr(++n) + '</span>قاعدة البيانات وتسجيل الدخول</div><div class="bp-opts">' +
+      opt('banee', !own, 'sparkles', 'سحابة بانِي', 'تعمل فوراً بلا أي إعداد. مناسبة للتجربة والبداية.') +
+      opt('own', own, 'shield', 'مشروع Firebase خاص بك', 'بياناتك وحسابات مستخدميك ملكك بالكامل. الأنسب للنشر والإنتاج.') + '</div>' +
+      (own ? '<ol class="bp-steps">' +
+        '<li><span>افتح <code>console.firebase.google.com</code> واضغط <b>Add project</b></span></li>' +
+        '<li><span>من <b>Build ← Authentication</b> اضغط <b>Get started</b> وفعّل <b>Email/Password</b>' + (p.auth ? '' : ' و <b>Anonymous</b>') + '</span></li>' +
+        '<li><span>من <b>Build ← Firestore Database</b> اضغط <b>Create database</b> واختر <b>Production mode</b></span></li>' +
+        '<li><span>من ⚙️ <b>Project settings</b> سجّل تطبيق ويب <code>&lt;/&gt;</code> وانسخ كتلة <code>firebaseConfig</code> كاملة</span></li></ol>' +
+        '<label class="bp-in"><span>إعدادات firebaseConfig</span><textarea id="bp-fb-cfg" class="code" dir="ltr" rows="5" placeholder="const firebaseConfig = {\n  apiKey: &quot;...&quot;,\n  projectId: &quot;...&quot;,\n  appId: &quot;...&quot;\n};">' + esc(f.raw || '') + '</textarea></label>' +
+        '<label class="bp-in"><span>بريد مدير التطبيق</span><input id="bp-fb-admin" type="email" dir="ltr" value="' + esc(f.admin || (S.user && S.user.email) || '') + '"></label>' +
+        '<div class="bp-note" style="margin-top:10px">' + ic('info') + '<span>بانِي سيتحقق من المشروع قبل البدء، وبعد البناء يعطيك قواعد أمان مخصصة لتطبيقك تلصقها بضغطة.</span></div>' : '') + '</section>');
+  }
+  return parts.length ? '<div class="bp-setup-h">قبل البدء <span>نحتاج منك ' + toAr(parts.length) + (parts.length > 1 ? ' أشياء' : ' شيئاً واحداً') + '</span></div>' + parts.join('') : '';
 }
-function showOwnRules(app){
-  if (!app || !app.ck || !app.ck.plan) return;
-  if (!app.fb) { toast('التطبيق يستخدم سحابة بانِي، ولا يحتاج قواعد', 'suc'); return; }
-  document.getElementById('rules-text').value = ownRules(app.ck.plan, app.fb.admin);
-  openModal('rules-modal');
-}
-function copyRules(){ var t = document.getElementById('rules-text'); t.select(); try { navigator.clipboard.writeText(t.value).then(function(){ toast('نُسخت القواعد','suc'); }, function(){ document.execCommand('copy'); toast('نُسخت القواعد','suc'); }); } catch(e){ document.execCommand('copy'); toast('نُسخت القواعد','suc'); } }
 function fbMode(id, own){ var app = findApp(id); if (!app) return; if (own) app.fbDraft = app.fbDraft || {}; else { delete app.fbDraft; delete app.fb; } saveApps(); renderJob(app); }
 // يجمع بيانات المشروع من نافذة المخطط ويتحقق منها قبل البدء
 function collectSetup(app){

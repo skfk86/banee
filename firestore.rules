@@ -54,6 +54,8 @@ service cloud.firestore {
       function mode(col) { return appDoc().modes.get(col, 'private'); }
       function authorOf(d) { return d.get('userId', d.get('uid', d.get('ownerId', d.get('sellerId', d.get('providerId', d.get('teacherId', '')))))); }
       // الأدوار: apps/{appId}/members/{uid} = { role, status: ok | pending }
+      // سحابة بانِي للتجربة فقط: بيانات التطبيق تتوقف إذا لم يُفتح في بانِي ٣٠ يوماً (بانِي يحدّث updatedAt عند كل معاينة)
+      function alive() { return appDoc().get('updatedAt', 0) > request.time.toMillis() - 2592000000; }
       function memberPath() { return /databases/$(database)/documents/apps/$(appId)/members/$(request.auth.uid); }
       function roleCan(col) {
         return signedIn() && col != 'members' && exists(memberPath())
@@ -67,20 +69,19 @@ service cloud.firestore {
       }
 
       match /{col}/{id} {
-        allow read: if mode(col) == 'content'
+        allow read: if appOwner() || (alive() && (mode(col) == 'content'
           || (mode(col) == 'shared' && signedIn())
-          || appOwner()
           || roleCan(col)
           || (signedIn() && id == request.auth.uid)
-          || (signedIn() && resource != null && authorOf(resource.data) == request.auth.uid);
-        allow create: if appOwner()
+          || (signedIn() && resource != null && authorOf(resource.data) == request.auth.uid)));
+        allow create: if appOwner() || (alive() && (false
           // دور معتمد ينشر محتواه في مجموعة عامة (بائع يضيف منتجاته، معلم يضيف دروسه) باسمه هو فقط
           || (mode(col) == 'content' && roleCan(col) && authorOf(request.resource.data) == request.auth.uid)
           || (mode(col) == 'shared' && signedIn())
           || (mode(col) == 'private' && signedIn()
               && (authorOf(request.resource.data) == request.auth.uid || id == request.auth.uid)
-              && (col != 'members' || (id == request.auth.uid && memberOk(request.resource.data))));
-        allow update: if appOwner()
+              && (col != 'members' || (id == request.auth.uid && memberOk(request.resource.data))))));
+        allow update: if appOwner() || (alive() && (false
           || (roleCan(col) && authorOf(request.resource.data) == authorOf(resource.data)
               && (mode(col) != 'content' || authorOf(resource.data) == request.auth.uid))
           || (mode(col) != 'content' && signedIn()
@@ -88,11 +89,11 @@ service cloud.firestore {
               && authorOf(request.resource.data) == authorOf(resource.data)
               && (col != 'members' || memberOk(request.resource.data)
                   || (request.resource.data.get('role', '') == resource.data.get('role', '')
-                      && request.resource.data.get('status', '') == resource.data.get('status', ''))));
-        allow delete: if appOwner()
+                      && request.resource.data.get('status', '') == resource.data.get('status', ''))))));
+        allow delete: if appOwner() || (alive() && (false
           || (mode(col) == 'content' && roleCan(col) && authorOf(resource.data) == request.auth.uid)
           || (mode(col) != 'content' && signedIn()
-              && (authorOf(resource.data) == request.auth.uid || id == request.auth.uid));
+              && (authorOf(resource.data) == request.auth.uid || id == request.auth.uid))));
       }
     }
 

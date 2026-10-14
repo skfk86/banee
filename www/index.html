@@ -1823,7 +1823,7 @@ var KITS = {
   store: { name: 'متجر بعدة بائعين', icon: 'bag', match: /متجر|بيع|منتجات|سوق|بائع|تاجر|shop|store/i,
     desc: 'سوق إلكتروني يعرض فيه البائعون منتجاتهم بالصور والأسعار، والعميل يتصفح حسب التصنيف ويضيف للسلة ويطلب ويدفع ببنكك أو عند الاستلام، والبائع يدير منتجاته وطلباته.',
     plan: { roles: [{ id: 'customer', name: 'العميل', icon: 'user', does: 'يتصفح ويشتري ويتابع طلباته' }, { id: 'seller', name: 'البائع', icon: 'store', does: 'يضيف منتجاته ويدير طلباتها', approve: true }],
-      roleAccess: { orders: ['seller'] },
+      roleAccess: { orders: ['seller'], products: ['seller'] },
       collections: [{ name: 'categories', fields: { name: 'string', icon: 'string', order: 'number' } },
         { name: 'products', fields: { title: 'string', price: 'number', image: 'string', category: 'string', description: 'string', sellerId: 'string', sellerName: 'string', stock: 'number', order: 'number' } },
         { name: 'cart', fields: { userId: 'string', productId: 'string', title: 'string', price: 'number', qty: 'number' } },
@@ -1861,7 +1861,7 @@ var KITS = {
   edu: { name: 'منصة تعليمية', icon: 'cap', match: /تعليم|دروس|دورة|دورات|كورس|معلم|طلاب|اختبار/i,
     desc: 'منصة تعليمية: دورات مقسمة لدروس مكتوبة كاملة واختبار بعد كل وحدة، الطالب يتابع تقدمه ويحصل على نقاط، والمعلم يضيف الدروس ويرى نتائج طلابه.',
     plan: { roles: [{ id: 'student', name: 'الطالب', icon: 'user', does: 'يتعلم ويختبر ويتابع تقدمه' }, { id: 'teacher', name: 'المعلم', icon: 'graduation-cap', does: 'يضيف الدروس ويتابع النتائج', approve: true }],
-      roleAccess: { results: ['teacher'] },
+      roleAccess: { results: ['teacher'], lessons: ['teacher'], quizzes: ['teacher'] },
       collections: [{ name: 'courses', fields: { title: 'string', summary: 'string', level: 'string', image: 'string', order: 'number' } },
         { name: 'lessons', fields: { courseId: 'string', title: 'string', minutes: 'number', body: 'string — نص طويل منسق', order: 'number' } },
         { name: 'quizzes', fields: { courseId: 'string', title: 'string', questions: 'array of {q, options, answer, explain}', order: 'number' } },
@@ -1977,7 +1977,7 @@ var ROLES = {
 ' "content":[{"collection":"lessons","count":20,"size":"long","spec":"وصف دقيق لما يحتويه كل عنصر وكيف يُكتب","outline":["عنوان العنصر ١","عنوان العنصر ٢","..."]}],\n' +
 ' "seed":{},\n' +
 ' "roles":[{"id":"customer","name":"العميل","icon":"user","does":"ما يفعله هذا الدور في جملة","approve":false},{"id":"driver","name":"المندوب","icon":"bike","does":"...","approve":true}],\n' +
-' "roleAccess":{"orders":["driver"]},   ← الأدوار التي ترى كل عناصر مجموعة خاصة وتحدّثها (غير صاحبها)\n' +
+' "roleAccess":{"orders":["driver"],"products":["seller"]},   ← الأدوار التي ترى كل عناصر مجموعة خاصة وتحدّثها، أو تنشر في مجموعة محتوى عامة باسمها (بائع ينشر منتجاته بحقل sellerId، معلم ينشر دروسه بحقل teacherId)\n' +
 ' "flows":[{"name":"اسم الرحلة مثل: طلب منتج","steps":["يفتح الرئيسية","يختار منتجاً","يضيفه للسلة","يدفع ببنكك","يتابع حالة الطلب"]}],\n' +
 ' "relations":["orders.userId ← المستخدم","quizzes.lessonId ← lessons.id"],\n' +
 ' "screens":[{"id":"home","route":"/","title":"الرئيسية","icon":"home","nav":true,"roles":["user"],"purpose":"..."}]}\n' +

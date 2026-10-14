@@ -2031,7 +2031,7 @@ var ROLES = {
 '{"click":"[data-act=xxx]"} أو {"click":"text:نص الزر"} ← ضغط عنصر موجود فعلاً\n' +
 '{"expect":"نص يجب أن يظهر"} ← نص ثابت مؤكد الظهور بعد الخطوة (من الكود أو البيانات، وليس من رسائل toast)\n' +
 '{"expectDb":{"col":"orders","min":1}} ← بعد عملية حفظ: يجب أن تحتوي المجموعة على هذا العدد على الأقل\n' +
-'القواعد: استخدم فقط selectors و data-act و ids موجودة حرفياً في الكود المعطى. من ٣ إلى ١٢ خطوة لكل رحلة. ابدأ كل رحلة بـ go. ' +
+'القواعد: استخدم فقط selectors و data-act و ids موجودة حرفياً في الكود المعطى، ولا تخترع id. للحقل الذي له name فقط استخدم [name=address]. من ٣ إلى ١٢ خطوة لكل رحلة. ابدأ كل رحلة بـ go. ' +
 'إذا فتح الزر نافذة تأكيد (UI.confirm أو UI.sheet) فاضغط زرها التالي. لا تختبر الحذف أو تسجيل الخروج. اختبر ما يكتبه المستخدم (طلب، حجز، إضافة) بـ expectDb.',
   fixer: 'أنت مصلّح أخطاء. ستستلم كود شاشة واحدة وقائمة أخطاء مكتشفة آلياً. أصلح الأخطاء فقط مع الالتزام بالعقد التالي، وأعد الشاشة كاملة داخل ```javascript بلا شرح.\n' + CONTRACT
 };
@@ -3016,7 +3016,13 @@ function runFlows(app, w, d, note, setCur){
   function here(){ return routeScreen(plan, w.location.hash.slice(1) || '/'); }
   function find(sel){
     if (/^text:/.test(sel)){ var tx = sel.slice(5).trim(); var all = d.querySelectorAll('button, a, [data-act], .item, .card, [role=button]'); for (var i = all.length - 1; i >= 0; i--) if ((all[i].textContent || '').replace(/\s+/g, ' ').indexOf(tx) > -1) return all[i]; return null; }
-    try { var el = d.querySelector('#sheet ' + sel) || d.querySelector(sel); return el; } catch (e) { return null; }
+    try { var el = d.querySelector('#sheet ' + sel) || d.querySelector(sel); if (el) return el; } catch (e) {}
+    // السيناريو خمّن اسماً قريباً (#address-input) والحقل الحقيقي name="address": نجرّب البدائل المعقولة
+    var m = /^#([\w-]+)$/.exec(sel); if (!m) return null;
+    var base = m[1].replace(/[-_]?(input|field|inp|txt|text)$/i, '');
+    var alts = ['[name="' + m[1] + '"]', '[name="' + base + '"]', '#' + base, '[id*="' + base + '"]', '[name*="' + base + '"]', '[placeholder*="' + base + '"]'];
+    for (var i = 0; i < alts.length; i++){ try { var a = d.querySelector('#sheet ' + alts[i]) || d.querySelector(alts[i]); if (a && /INPUT|TEXTAREA|SELECT/.test(a.tagName)) return a; } catch (e) {} }
+    return null;
   }
   tests.forEach(function(tc){
     chain = chain.then(function(){
@@ -3068,14 +3074,16 @@ function designAudit(w, d, root){
   function rgb(s){ var m = String(s).match(/rgba?\(([^)]+)\)/); if (!m) return null; var p = m[1].split(/[ ,\/]+/).filter(Boolean).map(parseFloat); return { r:p[0], g:p[1], b:p[2], a: p.length > 3 ? p[3] : 1 }; }
   function lum(c){ return [c.r, c.g, c.b].map(function(v){ v /= 255; return v <= .03928 ? v/12.92 : Math.pow((v+.055)/1.055, 2.4); }).reduce(function(s, v, i){ return s + v * [.2126,.7152,.0722][i]; }, 0); }
   function ratio(a, b){ var x = lum(a), y = lum(b); return (Math.max(x,y)+.05)/(Math.min(x,y)+.05); }
+  var bgEl = null;
   function bgOf(el){
-    for (var e = el; e && e.nodeType === 1; e = e.parentElement){
+    for (var e = el; e && e.nodeType === 1; e = e.parentElement){ bgEl = e;
       var cs = w.getComputedStyle(e);
       if (cs.backgroundImage && cs.backgroundImage !== 'none'){ var g = rgb(cs.backgroundImage); if (g && g.a > .5) return g; if (/url\(/.test(cs.backgroundImage)) return null; }
       var c = rgb(cs.backgroundColor); if (c && c.a > .5) return c;
     }
     return { r:255, g:255, b:255, a:1 };
   }
+  function hex6(c){ return '#' + [c.r, c.g, c.b].map(function(v){ return ('0' + Math.round(v).toString(16)).slice(-2); }).join(''); }
   function label(el){ var t = (el.textContent || el.getAttribute('alt') || '').trim().replace(/\s+/g,' ').slice(0, 40); return '"' + (t || el.className || el.tagName.toLowerCase()) + '"'; }
   function inScroller(el){ for (var e = el.parentElement; e && e !== root; e = e.parentElement){ var o = w.getComputedStyle(e).overflowX; if (o === 'auto' || o === 'scroll' || o === 'hidden') return true; } return false; }
   var seen = { overflow:0, contrast:0, md:0, img:0, clip:0 };
@@ -3088,7 +3096,7 @@ function designAudit(w, d, root){
     if (own){
       var fg = rgb(cs.color), bg = bgOf(el);
       if (fg && bg){ var k = ratio(fg, bg), big = parseFloat(cs.fontSize) >= 18 || (parseFloat(cs.fontSize) >= 14 && +cs.fontWeight >= 700);
-        if (k * (fg.a < 1 ? fg.a : 1) < (big ? 3 : 4.5) - .01 && seen.contrast < 3){ seen.contrast++; out.push('النص ' + label(el) + ' غير مقروء: تباين ' + k.toFixed(1) + ':1 مع خلفيته. على خلفية hero أو لون أساسي استخدم نصاً أبيض، ولا تضع muted أو subtitle داخلها.'); } }
+        if (k * (fg.a < 1 ? fg.a : 1) < (big ? 3 : 4.5) - .01 && seen.contrast < 3){ seen.contrast++; out.push('النص ' + label(el) + ' غير مقروء: تباين ' + k.toFixed(1) + ':1 — لونه ' + hex6(fg) + ' والخلفية ' + hex6(bg) + ' من العنصر <' + (bgEl ? bgEl.tagName.toLowerCase() + (bgEl.className && typeof bgEl.className === 'string' ? ' class="' + bgEl.className.slice(0, 40) + '"' : '') : '?') + '>. ' + (lum(bg) > .5 ? 'الخلفية فاتحة: استخدم var(--text) للنص، أو أزل خلفية ذلك العنصر إن كان داخل hero.' : 'الخلفية داكنة/ملونة: استخدم var(--on-primary) للنص، ولا تضع muted أو subtitle داخلها.')); } }
       if (/\*\*|(^|\s)#{1,6}\s|^\s*>\s/.test(el.textContent) && !el.closest('.rich') && seen.md < 2){ seen.md++; out.push('رموز Markdown ظاهرة كما هي في ' + label(el) + '. اعرض النص الطويل بـ UI.rich(text) أو احذف الرموز.'); }
       if (el.scrollWidth > el.clientWidth + 2 && cs.overflowX === 'hidden' && cs.textOverflow !== 'ellipsis' && !(+cs.webkitLineClamp > 0) && seen.clip < 2){ seen.clip++; out.push('النص ' + label(el) + ' مقطوع بدون نقاط (…). اسمح له بالالتفاف.'); }
     }

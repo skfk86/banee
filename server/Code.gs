@@ -65,13 +65,13 @@ var PRICES = {
 
 // الموديل البديل عند الازدحام (بنفس التكلفة أو أرخص)
 var FALLBACK = {
-  'gemini-3.8-flash': ['gemini-3.7-flash', 'gemini-2.5-flash'],
-  'gemini-3.7-flash': ['gemini-3.6-flash', 'gemini-2.5-flash'],
-  'gemini-3.6-flash': ['gemini-3.7-flash', 'gemini-2.5-flash'],
-  'gemini-3.5-flash': ['gemini-3.7-flash', 'gemini-2.5-flash'],
-  'gemini-flash-latest': ['gemini-3.7-flash', 'gemini-2.5-flash'],
-  'gemini-3.5-flash-lite': ['gemini-3.1-flash-lite', 'gemini-2.5-flash-lite'],
-  'gemini-flash-lite-latest': ['gemini-3.5-flash-lite', 'gemini-2.5-flash-lite']
+  'gemini-3.8-flash': ['gemini-3.7-flash', 'gemini-3.6-flash', 'gemini-3.5-flash'],
+  'gemini-3.7-flash': ['gemini-3.6-flash', 'gemini-3.8-flash', 'gemini-3.5-flash'],
+  'gemini-3.6-flash': ['gemini-3.7-flash', 'gemini-3.8-flash', 'gemini-3.5-flash'],
+  'gemini-3.5-flash': ['gemini-3.7-flash', 'gemini-3.6-flash', 'gemini-3.8-flash'],
+  'gemini-flash-latest': ['gemini-3.7-flash', 'gemini-3.6-flash'],
+  'gemini-3.5-flash-lite': ['gemini-3.1-flash-lite', 'gemini-flash-lite-latest'],
+  'gemini-flash-lite-latest': ['gemini-3.5-flash-lite', 'gemini-3.1-flash-lite']
 };
 
 // ═════════════ نقطة الدخول ═════════════
@@ -537,7 +537,7 @@ function giveCredits(uid, points) {
   s.bonus = (s.bonus || 0) + points; PropertiesService.getScriptProperties().setProperty('u:' + uid, JSON.stringify(s)); Logger.log('الرصيد الإضافي: ' + s.bonus);
 }
 function testGemini() {
-  ['gemini-3.7-flash', 'gemini-3.6-flash', 'gemini-3.5-flash-lite', 'gemini-2.5-flash'].forEach(function(m){
+  ['gemini-3.8-flash', 'gemini-3.7-flash', 'gemini-3.6-flash', 'gemini-3.5-flash', 'gemini-3.5-flash-lite', 'gemini-3.1-flash-lite'].forEach(function(m){
     var r = UrlFetchApp.fetch('https://generativelanguage.googleapis.com/v1beta/models/' + m + ':generateContent', {
       method: 'post', contentType: 'application/json', muteHttpExceptions: true, headers: { 'x-goog-api-key': prop('GEMINI_KEY') },
       payload: JSON.stringify({ contents: [{ role: 'user', parts: [{ text: 'قل مرحبا' }] }] })

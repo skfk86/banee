@@ -19,6 +19,8 @@ const log = (...a) => { const s = '[' + new Date().toISOString().slice(11, 19) +
   }, [KEY || 'FAKE']);
   const p = await ctx.newPage(); const perr = [];
   p.on('pageerror', e => perr.push(e.message));
+  p.on('response', async r => { const u = r.url(); if (/generativelanguage/.test(u) && r.status() !== 200) { let body = ''; try { body = (await r.text()).slice(0, 400); } catch (e) {} log('Gemini', r.status(), (u.match(/models\/([^:?]+)/) || [])[1] || '', body.replace(/\s+/g, ' ')); } });
+  p.on('requestfailed', r => { if (/generativelanguage/.test(r.url())) log('Gemini طلب فشل:', (r.url().match(/models\/([^:?]+)/) || [])[1] || '', r.failure() && r.failure().errorText); });
   await p.goto('file://' + path.resolve(SRC)); await p.waitForTimeout(2500);
   await p.evaluate(([kit, idea]) => {
     goTo('build');

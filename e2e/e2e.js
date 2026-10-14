@@ -70,7 +70,8 @@ const log = (...a) => { const s = '[' + new Date().toISOString().slice(11, 19) +
     }
     let n = 2;
     for (const s of plan.screens) {
-      let route = s.route.replace(/:\w+/g, () => { for (const k in plan.seed) if ((plan.seed[k] || [])[0]) return encodeURIComponent(plan.seed[k][0].id || 's1'); return 's1'; });
+      const sid = await p.evaluate(id => { const a = S.apps[0]; try { return seedIdFor({ seed: mergedSeed(a) }, a.ck.screens[id]); } catch (e) { return 's1'; } }, s.id);
+      let route = s.route.replace(/:\w+/g, () => encodeURIComponent(sid || 's1'));
       await ap.evaluate(([r, role]) => { try { window.__banee.setRole(role); } catch (e) {} location.hash = r; }, [route, plan.roles.length > 1 && s.roles && s.roles.length ? s.roles[0] : null]);
       await ap.waitForTimeout(1800);
       await ap.screenshot({ path: path.join(OUT, String(n++).padStart(2, '0') + '-' + s.id + '.png'), fullPage: true });

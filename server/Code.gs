@@ -80,6 +80,15 @@ function doPost(e) {
   var t0 = Date.now();
   try {
     var req = JSON.parse((e && e.postData && e.postData.contents) || '{}');
+    // تطبيق منشور بمشروع Firebase خاص بصاحبه: يُعرَّف بمفتاح التطبيق، ولا يصل إلا للبيانات الحية والذكاء الاصطناعي
+    if (req.appKey) {
+      var ak = prop('ak:' + String(req.appKey).slice(0, 64)); if (!ak) return out({ ok: false, error: { code: 'auth', message: 'التطبيق غير مسجل في بانِي' } });
+      ak = JSON.parse(ak);
+      var dev = { uid: 'k_' + hash(String(req.appKey) + '|' + String(req.device || '').slice(0, 80)).slice(0, 20), email: 'app:' + ak.appId };
+      if (req.op === 'fetch') return out(netFetch(dev, req));
+      if (req.op === 'appAsk') { req.appId = 'key:' + req.appKey; return out(appAsk(dev, req, t0)); }
+      return out({ ok: false, error: { code: 'bad_request', message: 'غير مسموح' } });
+    }
     var user = verifyUser(req.idToken);
     if (!user) return out({ ok: false, error: { code: 'auth', message: 'سجّل دخولك مرة أخرى' } });
     user.planToken = typeof req.planToken === 'string' ? req.planToken.slice(0, 400) : '';
@@ -89,6 +98,7 @@ function doPost(e) {
     if (req.op === 'topup') return out(topup(user, req));
     if (req.op === 'ask') return out(askGemini(user, req, t0));
     if (req.op === 'adReward') return out(adReward(user));
+    if (req.op === 'regApp') return out(regApp(user, req));
     if (req.op === 'newApp') return out(newApp(user, req));
     if (req.op === 'deleteAccount') { PropertiesService.getScriptProperties().deleteProperty('u:' + user.uid); logRow(user, 'DELETE_ACCOUNT', '', 0, 0, 0); return out({ ok: true }); }
     if (req.op === 'report') { try { sheet('reports').appendRow([new Date(), user.uid, user.email, String(req.appId || ''), String(req.text || '').slice(0, 1500)]); } catch (e) {} return out({ ok: true }); }
@@ -323,8 +333,15 @@ function netFetch(user, req) {
 
 // ٢) ذكاء اصطناعي داخل التطبيقات المبنية: يُخصم من رصيد صاحب التطبيق
 function ownerState(uid) { var raw = prop('u:' + uid); return raw ? JSON.parse(raw) : null; }
+function regApp(user, req) {
+  var id = String(req.appId || '').replace(/[^\w-]/g, '').slice(0, 40); if (!id) return { ok: false, error: { code: 'bad_request', message: 'تطبيق غير معروف' } };
+  var key = hash(user.uid + '|' + id + '|' + (prop('AK_SALT') || 'banee')).slice(0, 24);
+  PropertiesService.getScriptProperties().setProperty('ak:' + key, JSON.stringify({ owner: user.uid, appId: id, name: String(req.name || '').slice(0, 60) }));
+  return { ok: true, appKey: key };
+}
 function appAsk(user, req, t0) {
-  var m = req.appId === 'preview' ? { owner: user.uid } : appMeta(req.appId);
+  var akm = /^key:/.test(req.appId || '') ? JSON.parse(prop('ak:' + req.appId.slice(4)) || 'null') : null;
+  var m = req.appId === 'preview' ? { owner: user.uid } : akm ? { owner: akm.owner } : appMeta(req.appId);
   if (!m || !m.owner) return { ok: false, error: { code: 'no_app', message: 'التطبيق غير مفعّل على سحابة بانِي' } };
   if (!hit('ai:' + req.appId + ':' + user.uid + ':' + Utilities.formatDate(new Date(), 'UTC', 'yyyyMMddHH'), CFG.APP_AI_PER_HOUR, 3700)) return { ok: false, error: { code: 'rate', message: 'وصلت للحد المسموح من الأسئلة هذه الساعة' } };
   if (!hit('aiapp:' + req.appId + ':' + Utilities.formatDate(new Date(), 'UTC', 'yyyyMMddHH'), CFG.APP_AI_PER_APP_HOUR, 3700)) return { ok: false, error: { code: 'rate', message: 'التطبيق مزدحم، حاول بعد قليل' } };

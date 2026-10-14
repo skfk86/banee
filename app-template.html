@@ -52,6 +52,7 @@
     .app-header h1 { flex: 1; font-size: 17px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 4px; }
     .hbtn { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; border: none; background: none; cursor: pointer; color: var(--text2); }
     .hbtn:active { background: var(--surface2); }
+    .pv-banner { position: fixed; top: 0; left: 50%; transform: translateX(-50%); z-index: 60; font: 600 10.5px var(--font); color: #7A4A00; background: #FFF4E0; border: 1px solid #F3D9A6; border-top: 0; padding: 2px 10px; border-radius: 0 0 8px 8px; pointer-events: none; }
     .role-pill { height: 30px; padding: 0 10px; border-radius: 100px; border: 1px solid var(--border); background: var(--surface2); color: var(--text2); font: 600 12px var(--font); display: inline-flex; align-items: center; gap: 4px; cursor: pointer; white-space: nowrap; }
     .role-pill [data-lucide], .role-pill .lucide { width: 14px; height: 14px; }
     .role-opt { width: 100%; text-align: right; display: flex; gap: 12px; align-items: center; padding: 12px; border: 1.5px solid var(--border); border-radius: var(--r-md); background: var(--surface); cursor: pointer; font: inherit; color: var(--text); margin-bottom: 8px; }
@@ -414,9 +415,12 @@ _e(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&
       async call(body) {
         // داخل معاينة بانِي: يمر الطلب عبر حساب صاحب التطبيق في بانِي
         if (!LIVE) { let p = null; try { p = window.parent !== window && window.parent.baneeAppCall; } catch (e) {} if (p) return p(body); }
-        if (!META.api || !FS || !FS.auth.currentUser) throw new Error('هذه الميزة تعمل بعد نشر التطبيق مع قاعدة البيانات');
-        const idToken = await FS.auth.currentUser.getIdToken();
-        const r = await fetch(META.api, { method: 'POST', body: JSON.stringify(Object.assign({}, body, { idToken })) });
+        if (!META.api) throw new Error('هذه الميزة تعمل بعد نشر التطبيق');
+        let auth;
+        if (META.cloud && FS && FS.auth.currentUser) auth = { idToken: await FS.auth.currentUser.getIdToken() };
+        else if (META.appKey) { let dev = Store.get('dev_id'); if (!dev) { dev = genId() + genId(); Store.set('dev_id', dev); } auth = { appKey: META.appKey, device: (Auth.user && Auth.user.uid) || dev }; }
+        else throw new Error('هذه الميزة تعمل بعد نشر التطبيق مع قاعدة البيانات');
+        const r = await fetch(META.api, { method: 'POST', body: JSON.stringify(Object.assign({}, body, auth)) });
         return r.json();
       }
     };
@@ -433,7 +437,7 @@ _e(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&
     const AI = {
       async ask(prompt, { system = '', json = false } = {}) {
         if (META.test) return json ? {} : 'رد تجريبي من المساعد الذكي.';
-        const r = await Cloud.call({ op: 'appAsk', appId: META.cloud ? META.cloud.id : 'preview', prompt: String(prompt), system, json });
+        const r = await Cloud.call({ op: 'appAsk', appId: META.cloud ? META.cloud.id : META.appKey ? 'key' : 'preview', prompt: String(prompt), system, json });
         if (!r || !r.ok) throw new Error((r && r.error && r.error.message) || 'تعذّر الرد، حاول مرة أخرى');
         if (json) { try { return JSON.parse(r.text); } catch (e) { return {}; } }
         return r.text;
@@ -639,6 +643,7 @@ _e(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&
     const Auth = {
       user: null,
       async signIn(email, password) {
+        if (LIVE && META.preview) return Auth._preview(email.split('@')[0], email);
         if (LIVE) { const r = await FS.a.signInWithEmailAndPassword(FS.auth, email, password); return Auth._set(r.user); }
         const users = Store.get('users', []); const u = users.find(x => x.email === email && x.password === password);
         if (!u) throw { code: 'auth/invalid-credential' };
@@ -646,14 +651,17 @@ _e(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&
       },
       async signUp(name, email, password) {
         if (password.length < 6) throw { code: 'auth/weak-password' };
+        if (LIVE && META.preview) { const u = await Auth._preview(name, email); await DB.set('users', u.uid, { name, email, userId: u.uid }); return u; }
         if (LIVE) { const r = await FS.a.createUserWithEmailAndPassword(FS.auth, email, password); await FS.a.updateProfile(r.user, { displayName: name }); await DB.set('users', r.user.uid, { name, email }); return Auth._set(r.user, name); }
         const users = Store.get('users', []); if (users.some(x => x.email === email)) throw { code: 'auth/email-already-in-use' };
         const u = { uid: genId(), name, email, password }; users.push(u); Store.set('users', users);
         await DB.set('users', u.uid, { name, email });
         return Auth._local(u);
       },
-      async signOut() { if (LIVE) await FS.a.signOut(FS.auth); Auth.user = null; Store.set('session', null); App.go('/login'); },
+      async signOut() { if (LIVE) await FS.a.signOut(FS.auth); Store.set('pv_user', null); Auth.user = null; Store.set('session', null); App.go('/login'); },
       error(e) { return AUTH_ERR[e && e.code] || 'حدث خطأ، حاول مرة أخرى'; },
+      // المعاينة داخل بانِي: حسابات تجريبية حقيقية على السحابة (بلا بريد فعلي)، لكل جهاز/تسجيل مستخدم مستقل
+      async _preview(name, email) { const r = FS.auth.currentUser && FS.auth.currentUser.isAnonymous ? { user: FS.auth.currentUser } : await FS.a.signInAnonymously(FS.auth); try { await FS.a.updateProfile(r.user, { displayName: name }); } catch (e) {} Auth.user = { uid: r.user.uid, name: name || 'مستخدم تجريبي', email: email || '' }; Store.set('pv_user', Auth.user); return Auth.user; },
       _local(u) { Auth.user = { uid: u.uid, name: u.name, email: u.email }; Store.set('session', Auth.user); return Auth.user; },
       _set(u, name) { Auth.user = u ? { uid: u.uid, name: name || u.displayName || (u.email || '').split('@')[0], email: u.email } : null; return Auth.user; }
     };
@@ -943,7 +951,7 @@ _e(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&
       if (!LIVE) return;
       const v = '10.12.2', base = `https://www.gstatic.com/firebasejs/${v}/`;
       const [appM, fsM, auM] = await Promise.all([import(base + 'firebase-app.js'), import(base + 'firebase-firestore.js'), import(base + 'firebase-auth.js')]);
-      const fbApp = appM.initializeApp(FIREBASE_CONFIG);
+      const fbApp = META.preview ? appM.initializeApp(FIREBASE_CONFIG, 'pv_' + META.id) : appM.initializeApp(FIREBASE_CONFIG); // المعاينة: جلسة منفصلة عن حساب بانِي
       FS = { m: fsM, a: auM, db: fsM.getFirestore(fbApp), auth: auM.getAuth(fbApp) };
       // أول تشغيل (مشروع Firebase خاص فقط): ارفع المحتوى إذا كانت المجموعة فارغة. في سحابة بانِي يرفعه بانِي نفسه.
       if (!META.cloud) for (const [c, items] of Object.entries(META.seed || {})) {
@@ -953,6 +961,8 @@ _e(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&
         } catch (e) { console.warn('seed', c, e.message); }
       }
       await new Promise(res => { const off = auM.onAuthStateChanged(FS.auth, u => { Auth._set(u, u && u.isAnonymous ? 'زائر' : ''); off(); res(); }); });
+      if (META.preview && Auth.user) { const pv = Store.get('pv_user'); if (pv && pv.uid === Auth.user.uid) Auth.user = pv; else if (META.auth && FS.auth.currentUser && FS.auth.currentUser.isAnonymous && !pv) Auth.user = null; }
+      if (META.preview) { const bn = document.createElement('div'); bn.className = 'pv-banner'; bn.textContent = 'قاعدة بيانات تجريبية حقيقية · تعمل داخل بانِي فقط'; document.body.appendChild(bn); }
       // تطبيق بلا تسجيل دخول: هوية مجهولة حتى تُحفظ بيانات كل جهاز على السحابة باسمه
       if (META.cloud && !META.auth && !Auth.user) {
         try { const r = await auM.signInAnonymously(FS.auth); Auth._set(r.user, 'زائر'); }

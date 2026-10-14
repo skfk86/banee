@@ -52,7 +52,7 @@ service cloud.firestore {
       function appDoc() { return get(/databases/$(database)/documents/apps/$(appId)).data; }
       function appOwner() { return signedIn() && appDoc().owner == request.auth.uid; }
       function mode(col) { return appDoc().modes.get(col, 'private'); }
-      function authorOf(d) { return d.get('userId', d.get('uid', d.get('ownerId', ''))); }
+      function authorOf(d) { return d.get('userId', d.get('uid', d.get('ownerId', d.get('sellerId', d.get('providerId', d.get('teacherId', '')))))); }
       // الأدوار: apps/{appId}/members/{uid} = { role, status: ok | pending }
       function memberPath() { return /databases/$(database)/documents/apps/$(appId)/members/$(request.auth.uid); }
       function roleCan(col) {
@@ -74,12 +74,15 @@ service cloud.firestore {
           || (signedIn() && id == request.auth.uid)
           || (signedIn() && resource != null && authorOf(resource.data) == request.auth.uid);
         allow create: if appOwner()
+          // دور معتمد ينشر محتواه في مجموعة عامة (بائع يضيف منتجاته، معلم يضيف دروسه) باسمه هو فقط
+          || (mode(col) == 'content' && roleCan(col) && authorOf(request.resource.data) == request.auth.uid)
           || (mode(col) == 'shared' && signedIn())
           || (mode(col) == 'private' && signedIn()
               && (authorOf(request.resource.data) == request.auth.uid || id == request.auth.uid)
               && (col != 'members' || (id == request.auth.uid && memberOk(request.resource.data))));
         allow update: if appOwner()
-          || (roleCan(col) && authorOf(request.resource.data) == authorOf(resource.data))
+          || (roleCan(col) && authorOf(request.resource.data) == authorOf(resource.data)
+              && (mode(col) != 'content' || authorOf(resource.data) == request.auth.uid))
           || (mode(col) != 'content' && signedIn()
               && (authorOf(resource.data) == request.auth.uid || id == request.auth.uid)
               && authorOf(request.resource.data) == authorOf(resource.data)
@@ -87,6 +90,7 @@ service cloud.firestore {
                   || (request.resource.data.get('role', '') == resource.data.get('role', '')
                       && request.resource.data.get('status', '') == resource.data.get('status', ''))));
         allow delete: if appOwner()
+          || (mode(col) == 'content' && roleCan(col) && authorOf(resource.data) == request.auth.uid)
           || (mode(col) != 'content' && signedIn()
               && (authorOf(resource.data) == request.auth.uid || id == request.auth.uid));
       }

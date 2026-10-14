@@ -1905,7 +1905,11 @@ var COLORS = {
   purple: { name:'بنفسجي',  p:'#7C3AED', d:'#6D28D9', s:'#F1EBFE' },
   orange: { name:'برتقالي', p:'#EA580C', d:'#C2410C', s:'#FDEEE6' }
 };
-var MODELS = ['gemini-3.8-flash','gemini-3.5-flash','gemini-flash-latest','gemini-2.5-flash'];
+var MODELS = ['gemini-3.8-flash','gemini-3.7-flash','gemini-3.6-flash','gemini-3.5-flash','gemini-flash-latest'];
+// موديلات أوقفتها Google لهذا المفتاح (404): لا نعيد المحاولة عليها في هذه الجلسة
+var DEAD_MODELS = {};
+// الموديل التالي عند الازدحام: ندور على كل القائمة ونتخطى الموديلات الموقوفة
+function nextModel(mi, code){ if (code === 404) DEAD_MODELS[MODELS[mi]] = 1; for (var k = 1; k <= MODELS.length; k++){ var j = (mi + k) % MODELS.length; if (!DEAD_MODELS[MODELS[j]]) return j; } return mi; }
 var PARALLEL = 3;
 
 var CONTRACT =
@@ -2249,10 +2253,12 @@ function ask(key, role, input, json){
       });
     }, function(){ clearTimeout(timer); throw { retry: true, net: true }; })
     .catch(function(err){
-      if (err.fatal || attempt >= 5) throw new Error(err.net ? 'الشبكة ضعيفة، اضغط متابعة لإكمال البناء من حيث توقف' : arErr(err.code, err.msg || ''));
+      var busy = err.swap && err.code !== 404;
+      if (err.fatal || attempt >= (busy ? 14 : 5)) throw new Error(err.net ? 'الشبكة ضعيفة، اضغط متابعة لإكمال البناء من حيث توقف' : arErr(err.code, err.msg || ''));
       attempt++;
-      if (err.swap && mi + 1 < MODELS.length) mi++;
-      return sleep(err.net ? 3000 * attempt : 1500 * attempt).then(once);
+      if (err.swap) mi = nextModel(mi, err.code);
+      // كل الموديلات مزدحمة؟ ننتظر أطول بعد كل دورة كاملة (حتى ٤٥ ثانية) بدل الاستسلام
+      return sleep(err.net ? 3000 * attempt : err.swap ? Math.min(45000, 1500 + Math.floor(attempt / MODELS.length) * 15000 + attempt * 500) : 1500 * attempt).then(once);
     });
   }
   return once();
@@ -2285,10 +2291,11 @@ function askProxy(role, input, json){
     }, function(){ throw { retry: true, net: true }; })
     .catch(function(err){
       if (err.fatal) throw new Error(err.text);
-      if (attempt >= 5) throw new Error(err.net ? 'الشبكة ضعيفة، اضغط متابعة لإكمال البناء من حيث توقف' : arErr(err.code, err.msg || ''));
+      if (attempt >= (err.swap && err.code !== 404 ? 14 : 5)) throw new Error(err.net ? 'الشبكة ضعيفة، اضغط متابعة لإكمال البناء من حيث توقف' : arErr(err.code, err.msg || ''));
       attempt++;
-      if (err.swap && mi + 1 < MODELS.length) mi++;
-      return sleep(err.net ? 3000 * attempt : 1500 * attempt).then(once);
+      if (err.swap) mi = nextModel(mi, err.code);
+      // كل الموديلات مزدحمة؟ ننتظر أطول بعد كل دورة كاملة (حتى ٤٥ ثانية) بدل الاستسلام
+      return sleep(err.net ? 3000 * attempt : err.swap ? Math.min(45000, 1500 + Math.floor(attempt / MODELS.length) * 15000 + attempt * 500) : 1500 * attempt).then(once);
     });
   }
   return once();

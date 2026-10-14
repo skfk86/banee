@@ -709,7 +709,7 @@ _e(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&
       }
     };
 
-    window.__banee = { get Roles(){ return Roles; }, get DB(){ return DB; }, get Store(){ return Store; }, get App(){ return App; },
+    window.__banee = { get Roles(){ return Roles; }, get DB(){ return DB; }, get Store(){ return Store; }, get App(){ return App; }, get Auth(){ return Auth; },
       setRole(r) { Roles.me = r ? { role: r, status: 'ok' } : null; buildNav(); } };
     // ═════════════ التنقّل ═════════════
     const App = {
@@ -1010,7 +1010,8 @@ _e(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&
       const roleRefresh = async () => { if (!Roles.multi || !Auth.user) return; const was = Roles.current(); await Roles.load(); if (Roles.current() !== was) { buildNav(); UI.toast('أصبحت الآن ' + Roles.info(Roles.current()).name, 'success'); App.go(Roles.home()); } else Roles.pill(); };
       document.addEventListener('visibilitychange', () => { if (!document.hidden) roleRefresh(); });
       window.__banee.refresh = roleRefresh;
-      if (Roles.multi && Auth.user && !Roles.me && !META.test) setTimeout(() => Roles.sheet(true), 500);
+      let inBanee = false; try { inBanee = window.parent !== window && !!window.parent.baneeAppCall; } catch (e) {}
+      if (Roles.multi && Auth.user && !Roles.me && !META.test && !inBanee) setTimeout(() => Roles.sheet(true), 500);
       initAds(); initBackButton(); Push.init(); setTimeout(() => Push.notices(), 1200);
     })();
   </script>

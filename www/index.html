@@ -571,6 +571,9 @@
     .next code { font-family: 'JetBrains Mono', monospace; font-size: 12px; background: var(--surface); border: 1px solid var(--border); padding: 1px 6px; border-radius: 5px; direction: ltr; display: inline-block; }
 
     /* ── APPS ── */
+    .app-del { flex: none; width: 36px; height: 36px; border-radius: 10px; border: 0; background: transparent; color: var(--text3); display: grid; place-items: center; cursor: pointer; margin-inline-start: auto; }
+    .app-del:active, .app-del:hover { background: var(--error-soft, #FDECEC); color: #C42D33; }
+    .app-del .i { width: 17px; height: 17px; }
     .app-card { background: var(--surface); border-radius: var(--r-md); padding: 14px; border: 1px solid var(--border); margin-bottom: 10px; display: flex; align-items: center; gap: 14px; cursor: pointer; transition: border-color .15s, box-shadow .15s; }
     .app-card:hover { border-color: var(--border-strong); box-shadow: var(--shadow-md); }
     .app-ico { width: 48px; height: 48px; border-radius: 13px; flex-shrink: 0; display: grid; place-items: center; color: #fff; box-shadow: inset 0 1px 0 rgba(255,255,255,.2); }
@@ -807,7 +810,7 @@
   <symbol id="i-folder" viewBox="0 0 24 24"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></symbol>
   <symbol id="i-save" viewBox="0 0 24 24"><path d="M15.2 3a2 2 0 0 1 1.4.6l3.8 3.8a2 2 0 0 1 .6 1.4V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M17 21v-7a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v7M7 3v4a1 1 0 0 0 1 1h7"/></symbol>
   <symbol id="i-undo" viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></symbol>
-  <symbol id="i-wallet" viewBox="0 0 24 24"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/></symbol><symbol id="i-map-pin" viewBox="0 0 24 24"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></symbol><symbol id="i-users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></symbol><symbol id="i-git-branch" viewBox="0 0 24 24"><path d="M6 3v12"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></symbol><symbol id="i-database" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5M3 12a9 3 0 0 0 18 0"/></symbol><symbol id="i-link" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></symbol><symbol id="i-maximize" viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3M21 8V5a2 2 0 0 0-2-2h-3M3 16v3a2 2 0 0 0 2 2h3M16 21h3a2 2 0 0 0 2-2v-3"/></symbol><symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol><symbol id="i-book" viewBox="0 0 24 24"><path d="M12 7v14M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/></symbol>
+  <symbol id="i-wallet" viewBox="0 0 24 24"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/></symbol><symbol id="i-map-pin" viewBox="0 0 24 24"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></symbol><symbol id="i-users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></symbol><symbol id="i-git-branch" viewBox="0 0 24 24"><path d="M6 3v12"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></symbol><symbol id="i-database" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5M3 12a9 3 0 0 0 18 0"/></symbol><symbol id="i-link" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></symbol><symbol id="i-maximize" viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3M21 8V5a2 2 0 0 0-2-2h-3M3 16v3a2 2 0 0 0 2 2h3M16 21h3a2 2 0 0 0 2-2v-3"/></symbol><symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol><symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6M10 11v6M14 11v6"/></symbol><symbol id="i-book" viewBox="0 0 24 24"><path d="M12 7v14M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/></symbol>
   <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></symbol>
   <symbol id="i-more" viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.5" fill="currentColor"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/><circle cx="12" cy="19" r="1.5" fill="currentColor"/></symbol>
   <symbol id="i-dot" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1" fill="currentColor"/></symbol>
@@ -1282,6 +1285,16 @@
     <button class="btn btn-ghost" style="margin-top:8px" onclick="closeModal('del-modal')">إلغاء</button>
   </div>
 </div>
+<div class="modal-bg" id="delapp-modal">
+  <div class="modal-sheet">
+    <div class="mhandle"></div>
+    <div class="mtitle" style="color:#C42D33"><svg class="i"><use href="#i-trash"/></svg>حذف التطبيق</div>
+    <p class="msub">سيُحذف «<b id="delapp-name"></b>» نهائياً من جهازك بكل شاشاته ونسخه. لا يمكن التراجع.</p>
+    <button class="btn btn-primary" style="background:#C42D33;border-color:#C42D33" onclick="confirmDeleteApp()">حذف نهائياً</button>
+    <button class="btn btn-ghost" style="margin-top:8px" onclick="closeModal('delapp-modal')">إلغاء</button>
+  </div>
+</div>
+
 <div class="modal-bg" id="fblink-modal">
   <div class="modal-sheet">
     <div class="mhandle"></div>
@@ -1459,6 +1472,7 @@ function deleteAccountGo(){
       .then(function(){ return f.deleteDoc(fdoc('users', u.uid, 'apps', d.id)); });
   })); })
   .then(function(){ return f.deleteDoc(fdoc('users', u.uid)); })
+  .then(function(){ var pre = u.uid + ':'; return LDB.all(pre).then(function(list){ return Promise.all(list.map(function(j){ try { return LDB.del(pre + JSON.parse(j).id); } catch(e){} })); }).catch(function(){}); })
   .then(function(){ return FB.a.deleteUser(u); })
   .then(function(){
     try { Object.keys(localStorage).forEach(function(k){ if (/^b/.test(k)) localStorage.removeItem(k); }); } catch(e){}
@@ -1527,7 +1541,7 @@ function openHelp(){
       document.getElementById('boot').hidden = true;
       document.getElementById('local-note').hidden = false;
       var u = null; try { u = JSON.parse(localStorage.getItem('buser')); } catch(e){}
-      try { S.apps = JSON.parse(localStorage.getItem('bapps') || '[]'); } catch(e){}
+      S.apps = []; loadLocalApps().then(function(a){ S.apps = a; fixInterrupted(); renderApps(); });
       try { S.profile = JSON.parse(localStorage.getItem('bprofile') || 'null'); } catch(e){}
       fixInterrupted();
       if (u) enterApp(u); else showAuth();
@@ -1551,9 +1565,14 @@ function loadCloud(u){
     return FB.f.setDoc(ref, S.profile);
   }).then(function(){
     if (S.profile.name) S.user.name = S.profile.name;
+    return loadLocalApps();
+  }).then(function(local){
+    if (local.length || (S.profile && S.profile.appsLocal)) return { local: local };
+    // ترحيل لمرة واحدة: مشاريع محفوظة سابقاً في السحابة تُنقل للجهاز
     var q = function(){ return FB.f.getDocs(fcol('users', u.uid, 'apps')); };
     return q().catch(function(e){ if (e && e.code === 'permission-denied') throw e; return sleep(1500).then(q); }); // إعادة محاولة واحدة عند ضعف الشبكة
   }).then(function(qs){
+    if (qs.local) return qs.local;
     return Promise.all(qs.docs.map(function(d){
       var meta = d.data();
       var gp = function(){ return FB.f.getDocs(fcol('users', u.uid, 'apps', d.id, 'parts')); };
@@ -1565,6 +1584,8 @@ function loadCloud(u){
     }));
   }).then(function(apps){
     S.apps = apps.filter(Boolean).sort(function(a, b){ return String(b.id).localeCompare(String(a.id)); });
+    var pre = ownerKey() + ':'; S.apps.forEach(function(a){ var j = SAVED[a.id] || JSON.stringify(a); LDB.put(pre + a.id, j).catch(function(){}); });
+    if (S.profile && !S.profile.appsLocal) { S.profile.appsLocal = true; try { saveProfile({ appsLocal: true }); } catch(e){} }
     fixInterrupted();
   });
 }
@@ -1646,49 +1667,55 @@ function showErr(el, msg) {
 
 // ════ حفظ المشاريع ════
 var SAVED = {}, saveTimer = null;
-function saveApps(){
-  if (!CLOUD) {
-    var lite = S.apps.slice(0,20).map(function(a){ if (!a.ck || !a.ck.plan) return a; var c = {}; for (var k in a) if (k !== 'code') c[k] = a[k]; return c; });
-    try { localStorage.setItem('bapps', JSON.stringify(lite)); }
-    catch(e){ try { lite.forEach(function(a){ if (a.versions) a.versions = a.versions.slice(-2); }); localStorage.setItem('bapps', JSON.stringify(lite.slice(0,10))); } catch(e2){ toast('مساحة التخزين ممتلئة، احذف تطبيقات قديمة','err'); } }
-    return;
-  }
-  clearTimeout(saveTimer); saveTimer = setTimeout(flushSave, 1500);
+// ════ حفظ المشاريع على الجهاز (IndexedDB: مئات الميغابايت، سريع، بلا إنترنت) ════
+var LDB = (function(){
+  var dbp = null;
+  function open(){ if (dbp) return dbp; dbp = new Promise(function(res, rej){ var r = indexedDB.open('banee', 1); r.onupgradeneeded = function(){ r.result.createObjectStore('apps'); }; r.onsuccess = function(){ res(r.result); }; r.onerror = function(){ rej(r.error); }; }); return dbp; }
+  function tx(mode, fn){ return open().then(function(db){ return new Promise(function(res, rej){ var t = db.transaction('apps', mode), s = t.objectStore('apps'), out = fn(s); t.oncomplete = function(){ res(out && out.result !== undefined ? out.result : out); }; t.onerror = function(){ rej(t.error); }; t.onabort = function(){ rej(t.error); }; }); }); }
+  return {
+    put: function(k, v){ return tx('readwrite', function(s){ s.put(v, k); }); },
+    del: function(k){ return tx('readwrite', function(s){ s.delete(k); }); },
+    all: function(prefix){ return open().then(function(db){ return new Promise(function(res, rej){ var out = [], c = db.transaction('apps').objectStore('apps').openCursor(); c.onsuccess = function(){ var cur = c.result; if (!cur) return res(out); if (String(cur.key).indexOf(prefix) === 0) out.push(cur.value); cur.continue(); }; c.onerror = function(){ rej(c.error); }; }); }); }
+  };
+})();
+function ownerKey(){ return CLOUD && S.user && S.user.uid ? S.user.uid : 'local'; }
+function loadLocalApps(){
+  var pre = ownerKey() + ':';
+  return LDB.all(pre).then(function(list){
+    var apps = list.map(function(j){ try { var a = JSON.parse(j); SAVED[a.id] = j; return a; } catch(e){ return null; } }).filter(Boolean);
+    // ترحيل: مشاريع النسخ القديمة من التخزين المحلي العادي
+    if (!apps.length) { try { var old = JSON.parse(localStorage.getItem('bapps') || '[]'); if (old.length) { apps = old; old.forEach(function(a){ LDB.put(pre + a.id, JSON.stringify(a)); }); } } catch(e){} }
+    return apps.sort(function(a, b){ return String(b.id).localeCompare(String(a.id)); });
+  }).catch(function(e){ console.warn('IndexedDB', e); try { return JSON.parse(localStorage.getItem('bapps') || '[]'); } catch(_){ return []; } });
 }
+function saveApps(){ clearTimeout(saveTimer); saveTimer = setTimeout(flushSave, 800); }
 function flushSave(){
   clearTimeout(saveTimer);
-  if (!CLOUD || !S.user) return;
-  var uid = S.user.uid;
+  var pre = ownerKey() + ':';
   S.apps.forEach(function(a){
-    var c = {}; for (var k in a) if (k !== 'code') c[k] = a[k];
+    var c = {}; for (var k in a) if (k !== 'code' || !(a.ck && a.ck.plan)) c[k] = a[k];
     var json = JSON.stringify(c);
     if (SAVED[a.id] === json) return;
     SAVED[a.id] = json;
-    // حد Firestore ١ ميغابايت للمستند، والحرف العربي ٢ بايت (وبعض الرموز ٣)، فنقسّم كل ٢٨٠ ألف حرف
-    var CH = 280000, n = Math.ceil(json.length / CH) || 1, writes = [];
-    for (var i = 0; i < n; i++) writes.push(FB.f.setDoc(fdoc('users', uid, 'apps', String(a.id), 'parts', String(i)), { d: json.slice(i * CH, (i + 1) * CH) }));
-    Promise.all(writes).then(function(){
-      return FB.f.setDoc(fdoc('users', uid, 'apps', String(a.id)), { name: a.name || '', status: a.status || '', date: a.date || '', parts: n, updatedAt: Date.now() });
-    }).catch(function(e){
-      console.error(e); delete SAVED[a.id];
-      var cd = (e && e.code) || '';
-      toast('تعذّر حفظ "' + (a.name || 'التطبيق') + '"' + (cd === 'permission-denied' ? ': صلاحيات قاعدة البيانات (انشر قواعد Firestore)' : cd === 'invalid-argument' ? ': حجمه كبير جداً' : cd ? ' (' + cd + ')' : '') + '، سنحاول مجدداً', 'err');
-      clearTimeout(saveTimer); saveTimer = setTimeout(flushSave, 20000); // إعادة محاولة تلقائية
-    });
+    LDB.put(pre + a.id, json).catch(function(err){ console.error(err); delete SAVED[a.id]; toast('تعذّر حفظ "' + (a.name || 'التطبيق') + '" على الجهاز: ' + ((err && err.name) === 'QuotaExceededError' ? 'مساحة الجهاز ممتلئة' : 'حاول مجدداً'), 'err'); });
   });
 }
 window.addEventListener('beforeunload', flushSave);
 document.addEventListener('visibilitychange', function(){ if (document.hidden) flushSave(); });
+var DEL_APP = null;
+function askDeleteApp(id){ var a = findApp(id); if (!a) return; DEL_APP = id; document.getElementById('delapp-name').textContent = a.name || 'التطبيق'; openModal('delapp-modal'); }
+function confirmDeleteApp(){ closeModal('delapp-modal'); if (DEL_APP) deleteApp(DEL_APP); DEL_APP = null; }
 function deleteApp(id){
   var a = findApp(id); if (!a) return;
   S.apps = S.apps.filter(function(x){ return x.id !== id; });
   delete SAVED[id];
-  if (CLOUD && S.user) {
+  LDB.del(ownerKey() + ':' + id).catch(function(){});
+  if (CLOUD && S.user) { // حذف أي نسخة قديمة في السحابة
     var uid = S.user.uid;
     FB.f.getDocs(fcol('users', uid, 'apps', String(id), 'parts')).then(function(ps){
       return Promise.all(ps.docs.map(function(p){ return FB.f.deleteDoc(p.ref); }));
-    }).then(function(){ return FB.f.deleteDoc(fdoc('users', uid, 'apps', String(id))); }).catch(function(e){ console.error(e); });
-  } else saveApps();
+    }).then(function(){ return FB.f.deleteDoc(fdoc('users', uid, 'apps', String(id))); }).catch(function(e){ console.warn(e); });
+  }
   renderApps(); updatePlan(); toast('حُذف التطبيق','suc');
 }
 
@@ -4833,7 +4860,7 @@ function renderApps() {
     return '<div class="'+cls+'" onclick="reopenApp(\''+i+'\')">' + ico +
       '<div class="app-info"><div class="app-name">'+esc(a.name||'تطبيق')+'</div>' +
       (st==='building' ? '' : '<div class="app-desc">'+esc((a.desc||'').slice(0,70))+'</div>') + meta +
-      '</div>'+ic('chev')+'</div>';
+      '</div>' + (st === 'building' ? '' : '<button class="app-del" onclick="event.stopPropagation();askDeleteApp(\''+esc(a.id)+'\')" aria-label="حذف التطبيق" title="حذف">'+ic('trash')+'</button>') + ic('chev')+'</div>';
   }).join('');
 }
 

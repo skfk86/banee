@@ -52,7 +52,7 @@ const log = (...a) => { const s = '[' + new Date().toISOString().slice(11, 19) +
     if (st.status === 'ready' || st.status === 'failed') break;
   }
   const rep = await p.evaluate(() => { const a = S.apps[0], ck = a.ck || {}; return { status: a.status, error: a.error || '', name: a.name, steps: a.steps.map(s => s.state + ' · ' + s.label),
-    runtime: ck.runtime || {}, flows: (ck.flowTests || []).map(f => f.flow + ' (' + f.steps.length + ' خطوات)'), review: { found: ck.reviewCount || 0, fixed: ck.reviewFixed || 0 }, screens: (ck.plan ? ck.plan.screens : []).map(s => ({ id: s.id, route: s.route, roles: s.roles || [], bytes: (ck.screens[s.id] || '').length })) }; });
+    runtime: ck.runtime || {}, flows: (ck.flowTests || []).map(f => f.flow + ' (' + f.steps.length + ' خطوات)'), flowSteps: ck.flowTests || [], review: { found: ck.reviewCount || 0, fixed: ck.reviewFixed || 0 }, screens: (ck.plan ? ck.plan.screens : []).map(s => ({ id: s.id, route: s.route, roles: s.roles || [], bytes: (ck.screens[s.id] || '').length })) }; });
   const mins = ((Date.now() - t0) / 60000).toFixed(1);
   fs.writeFileSync(path.join(OUT, 'report.json'), JSON.stringify(rep, null, 2));
   log('النتيجة:', rep.status, rep.error, '| الزمن:', mins, 'دقيقة');

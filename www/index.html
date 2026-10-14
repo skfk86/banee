@@ -1664,11 +1664,17 @@ function flushSave(){
     var json = JSON.stringify(c);
     if (SAVED[a.id] === json) return;
     SAVED[a.id] = json;
-    var CH = 700000, n = Math.ceil(json.length / CH) || 1, writes = [];
+    // حد Firestore ١ ميغابايت للمستند، والحرف العربي ٢ بايت (وبعض الرموز ٣)، فنقسّم كل ٢٨٠ ألف حرف
+    var CH = 280000, n = Math.ceil(json.length / CH) || 1, writes = [];
     for (var i = 0; i < n; i++) writes.push(FB.f.setDoc(fdoc('users', uid, 'apps', String(a.id), 'parts', String(i)), { d: json.slice(i * CH, (i + 1) * CH) }));
     Promise.all(writes).then(function(){
       return FB.f.setDoc(fdoc('users', uid, 'apps', String(a.id)), { name: a.name || '', status: a.status || '', date: a.date || '', parts: n, updatedAt: Date.now() });
-    }).catch(function(e){ console.error(e); delete SAVED[a.id]; toast('تعذّر حفظ "' + (a.name || 'التطبيق') + '" في السحابة، سنحاول مجدداً','err'); });
+    }).catch(function(e){
+      console.error(e); delete SAVED[a.id];
+      var cd = (e && e.code) || '';
+      toast('تعذّر حفظ "' + (a.name || 'التطبيق') + '"' + (cd === 'permission-denied' ? ': صلاحيات قاعدة البيانات (انشر قواعد Firestore)' : cd === 'invalid-argument' ? ': حجمه كبير جداً' : cd ? ' (' + cd + ')' : '') + '، سنحاول مجدداً', 'err');
+      clearTimeout(saveTimer); saveTimer = setTimeout(flushSave, 20000); // إعادة محاولة تلقائية
+    });
   });
 }
 window.addEventListener('beforeunload', flushSave);
@@ -4127,7 +4133,7 @@ function deepCopy(o){ return JSON.parse(JSON.stringify(o)); }
 function snapshot(app, label){
   app.versions = app.versions || [];
   app.versions.push({ t: Date.now(), label: label, ck: deepCopy({ plan: app.ck.plan, screens: app.ck.screens, design: app.ck.design || null }), color: app.color });
-  if (app.versions.length > 6) app.versions.shift();
+  while (app.versions.length > 4) app.versions.shift();
 }
 function verNo(app){ return (app.ver || 1); }
 

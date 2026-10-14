@@ -2216,6 +2216,7 @@ function rqStart(){
 }
 
 function arErr(code, msg){
+  if (msg === 'quota-day') return 'انتهت الحصة اليومية لمفتاح Gemini. أكمل غداً من حيث توقفت، أو فعّل الفوترة في Google AI Studio';
   if (ownKeyOn() && (code===429 || /quota|exhausted|rate limit/i.test(msg))) return 'انتهت حصة مفتاحك في Google حالياً. انتظر قليلاً ثم اضغط متابعة، أو فعّل الفوترة في Google AI Studio لحصة أكبر، أو احذف المفتاح من حسابي لتكمل بالنقاط';
   if (code===503 || code===429 || /high demand|overloaded|quota|exhausted/i.test(msg)) return 'خوادم Gemini مشغولة الآن، أكمل بعد دقيقة';
   if (code===400 && /API key|API_KEY/i.test(msg)) return 'مفتاح Gemini غير صالح، راجعه من حسابي';
@@ -2225,12 +2226,20 @@ function arErr(code, msg){
 function sleep(ms){ return new Promise(function(r){ setTimeout(r, ms); }); }
 
 // طلب واحد مع مهلة، وإعادة محاولة عند ضعف الشبكة، وتبديل الموديل عند الضغط
+// حد الطلبات في الدقيقة (429): كل الطلبات تنتظر معاً المدة التي تحددها Google، بدل أن تستهلك محاولاتها
+var COOL_UNTIL = 0;
+function coolDown(){ var w = COOL_UNTIL - Date.now(); return w > 0 ? sleep(w + Math.random() * 1500) : Promise.resolve(); }
+function retryDelayMs(e){
+  try { var d = ((e.error && e.error.details) || []).filter(function(x){ return x && x.retryDelay; })[0]; if (d) return Math.min(90000, parseFloat(d.retryDelay) * 1000 + 1000); } catch(_){}
+  var m = /retry in ([\d.]+)s/i.exec((e.error && e.error.message) || ''); return m ? Math.min(90000, parseFloat(m[1]) * 1000 + 1000) : 30000;
+}
 function ask(key, role, input, json){
   var attempt = 0, mi = 0;
   if (key === 'PROXY') return askProxy(role, input, json);
-  function once(){
+  function once(){ return coolDown().then(send); }
+  function send(){
     var ctrl = new AbortController();
-    var timer = setTimeout(function(){ ctrl.abort(); }, 150000);
+    var timer = setTimeout(function(){ ctrl.abort(); }, 300000); // الشاشات الكبيرة مع التفكير قد تأخذ أكثر من دقيقتين
     var cfg = thinkCfg(role, MODELS[mi], { temperature: json ? 0.4 : 0.5, maxOutputTokens: 32768 });
     if (json) cfg.responseMimeType = 'application/json';
     return fetch('https://generativelanguage.googleapis.com/v1beta/models/'+MODELS[mi]+':generateContent?key='+encodeURIComponent(key), {
@@ -2248,13 +2257,16 @@ function ask(key, role, input, json){
       return r.json().catch(function(){ return {}; }).then(function(e){
         var msg = (e.error && e.error.message) || '';
         if (r.status === 400 && /think/i.test(msg) && !THINK_OFF) { THINK_OFF = true; throw { retry: true, code: 400, msg: msg }; }
+        if (r.status === 429 && /per ?day|PerDay|daily/i.test(JSON.stringify(e))) throw { fatal: true, code: 429, msg: 'quota-day' };
+        if (r.status === 429) { COOL_UNTIL = Math.max(COOL_UNTIL, Date.now() + retryDelayMs(e)); throw { retry: true, quota: true, code: 429, msg: msg }; }
         if ([429,500,503,504,404].indexOf(r.status) > -1) throw { retry: true, swap: true, code: r.status, msg: msg };
         throw { fatal: true, code: r.status, msg: msg };
       });
-    }, function(){ clearTimeout(timer); throw { retry: true, net: true }; })
+    }, function(){ clearTimeout(timer); throw { retry: true, net: true, swap: ctrl.signal.aborted }; })
     .catch(function(err){
-      var busy = err.swap && err.code !== 404;
-      if (err.fatal || attempt >= (busy ? 14 : 5)) throw new Error(err.net ? 'الشبكة ضعيفة، اضغط متابعة لإكمال البناء من حيث توقف' : arErr(err.code, err.msg || ''));
+      var busy = (err.swap && err.code !== 404) || err.quota;
+      if (err.quota) { if (attempt >= 30) throw new Error(arErr(429, err.msg || '')); attempt++; return once(); } // انتظار الحد فقط، بلا استهلاك محاولات الموديلات
+      if (err.fatal || attempt >= (busy ? 14 : 6)) throw new Error(err.net ? 'الشبكة ضعيفة، اضغط متابعة لإكمال البناء من حيث توقف' : arErr(err.code, err.msg || ''));
       attempt++;
       if (err.swap) mi = nextModel(mi, err.code);
       // كل الموديلات مزدحمة؟ ننتظر أطول بعد كل دورة كاملة (حتى ٤٥ ثانية) بدل الاستسلام

@@ -2,7 +2,7 @@
 const { chromium } = require('playwright');
 const fs = require('fs'), path = require('path');
 const KEY = process.env.GEMINI_KEY || '', IDEA = process.env.IDEA || '', KIT = process.env.KIT || 'delivery';
-const SRC = process.env.SRC || 'e2e.html', OUT = process.env.OUT || 'e2e-out', MAX_MIN = +(process.env.MAX_MIN || 55);
+const SRC = process.env.SRC || 'e2e.html', OUT = process.env.OUT || 'e2e-out', MAX_MIN = +(process.env.MAX_MIN || 110);
 fs.mkdirSync(OUT, { recursive: true });
 const log = (...a) => { const s = '[' + new Date().toISOString().slice(11, 19) + '] ' + a.join(' '); console.log(s); fs.appendFileSync(path.join(OUT, 'log.txt'), s + '\n'); };
 (async () => {
@@ -29,7 +29,7 @@ const log = (...a) => { const s = '[' + new Date().toISOString().slice(11, 19) +
     buildApp();
   }, [KIT, IDEA]);
   log('بدأ البناء:', await p.evaluate(() => document.getElementById('adesc').value || (S.apps[0] && S.apps[0].desc) || ''));
-  const t0 = Date.now(); let last = '', approved = false;
+  const t0 = Date.now(); let last = '', approved = false, resumes = 0;
   while (Date.now() - t0 < MAX_MIN * 60000) {
     await p.waitForTimeout(4000);
     const st = await p.evaluate(() => {
@@ -48,6 +48,7 @@ const log = (...a) => { const s = '[' + new Date().toISOString().slice(11, 19) +
       await p.screenshot({ path: path.join(OUT, '00-blueprint.png'), fullPage: true });
       approved = true; await p.evaluate(id => approvePlan(id), st.id); log('وافقت على المخطط');
     }
+    if (st.status === 'failed' && resumes < 3) { resumes++; log('توقف البناء:', st.err, '← ضغطت «متابعة من حيث توقف» (' + resumes + ')'); await p.waitForTimeout(60000); await p.evaluate(id => retryApp(id), st.id); continue; }
     if (st.status === 'ready' || st.status === 'failed') break;
   }
   const rep = await p.evaluate(() => { const a = S.apps[0], ck = a.ck || {}; return { status: a.status, error: a.error || '', name: a.name, steps: a.steps.map(s => s.state + ' · ' + s.label),

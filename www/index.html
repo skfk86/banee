@@ -2895,6 +2895,13 @@ function fbSetupHTML(app){
   }
   return parts.length ? '<div class="bp-setup-h">قبل البدء <span>نحتاج منك ' + toAr(parts.length) + (parts.length > 1 ? ' أشياء' : ' شيئاً واحداً') + '</span></div>' + parts.join('') : '';
 }
+function showOwnRules(app){
+  if (!app || !app.ck || !app.ck.plan) return;
+  if (!app.fb) { toast('التطبيق يستخدم سحابة بانِي، ولا يحتاج قواعد', 'suc'); return; }
+  document.getElementById('rules-text').value = ownRules(app.ck.plan, app.fb.admin);
+  openModal('rules-modal');
+}
+function copyRules(){ var t = document.getElementById('rules-text'); t.select(); try { navigator.clipboard.writeText(t.value).then(function(){ toast('نُسخت القواعد','suc'); }, function(){ document.execCommand('copy'); toast('نُسخت القواعد','suc'); }); } catch(e){ document.execCommand('copy'); toast('نُسخت القواعد','suc'); } }
 function fbMode(id, own){ var app = findApp(id); if (!app) return; if (own) app.fbDraft = app.fbDraft || {}; else { delete app.fbDraft; delete app.fb; } saveApps(); renderJob(app); }
 // يجمع بيانات المشروع من نافذة المخطط ويتحقق منها قبل البدء
 function collectSetup(app){

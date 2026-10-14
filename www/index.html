@@ -1950,6 +1950,7 @@ var CONTRACT =
 '- await Net.get(url, {ttl}) ← بيانات حية من الإنترنت (JSON يُحوّل تلقائياً). استخدم مصادر عامة بلا مفتاح فقط، مثل: الطقس https://api.open-meteo.com/v1/forecast?latitude=15.6&longitude=32.5&current=temperature_2m,weather_code&daily=temperature_2m_max,temperature_2m_min&timezone=auto · أسعار العملات https://open.er-api.com/v6/latest/USD · مواقيت الصلاة https://api.aladhan.com/v1/timingsByCity?city=Khartoum&country=Sudan · القرآن https://api.alquran.cloud/v1/surah/1/ar.alafasy. ضعها في try/catch مع حالة تحميل ورسالة خطأ.\n' +
 '- await AI.ask(prompt, {system, json}) ← ميزة ذكاء اصطناعي داخل التطبيق (مساعد، تلخيص، تصحيح، اقتراحات، أسئلة توليد). تُخصم من رصيد صاحب التطبيق، فاستخدمها بزر صريح لا تلقائياً، مع حالة «يفكر...» وUI.toast عند الخطأ، واعرض الرد بـ UI.rich.\n' +
 '- Roles (في الأنظمة متعددة الأدوار فقط): Roles.current() ← id الدور الحالي، Roles.is(\'seller\') ← true/false، Roles.info(id).name ← اسمه بالعربي، Roles.sheet() ← نافذة تغيير الدور. الوصول للشاشات حسب الدور تلقائي (لا تكتب حماية بنفسك). في شاشة يستخدمها أكثر من دور اعرض لكل دور ما يخصه بـ Roles.is. الدور الذي له صلاحية على مجموعة (roleAccess) يقرأ كل عناصرها ويحدّثها: مثلاً المندوب يعرض DB.list(\'orders\') بلا فلتر userId ويغيّر status.\n' +
+'- الألوان: ممنوع أي لون hex ثابت في الخلفيات أو النصوص. استخدم var(--primary) var(--primary-dark) var(--primary-soft) var(--accent) var(--on-primary) var(--text) var(--text2) var(--surface) var(--border)، فهي مضمونة القراءة وتعمل في الوضع الداكن. كلاس hero جاهز بخلفية الهوية فلا تكتب له background.\n' +
 '- مجموعة notices جاهزة (title, body, route, createdAt): إشعارات صاحب التطبيق. لشاشة «الإشعارات» اعرضها بـ DB.list(\'notices\', {orderBy:[\'createdAt\',\'desc\']}). الإرسال يتم من لوحة الإدارة تلقائياً، فلا تبنِ شاشة إرسال.\n' +
 '### كلاسات CSS الجاهزة (استخدمها، لا تكتب <style>)\n' +
 'title, subtitle, section, section-head, section-title, link, muted, price, row, stack, grid2, scroll-x, spacer, hero, card, tap, media, media-sq, ' +
@@ -2364,6 +2365,9 @@ function checkScreen(js, s, plan){
       errs.push('لا تحفظ بيانات المستخدم في Store (' + keyTxt.replace(/\s+/g, ' ').slice(0, 40) + '): الشاشات الأخرى لن تراها. احفظها في مجموعة DB من الخطة بحقل userId، واقرأها بـ DB.list(col, {where:[\'userId\',\'==\',Auth.user.uid]})'); break;
     }
   }
+  // ألوان ثابتة: تكسر هوية التطبيق ووضعه الداكن وتسبب نصاً غير مقروء. ألوان الهوية مضمونة التباين
+  var hx = js.match(/(?:background(?:-color)?\s*:\s*|linear-gradient\([^)]*?)#[0-9a-fA-F]{3,8}\b|(?:^|[;"'`\s])color\s*:\s*#(?!fff\b|ffffff\b|FFF\b|FFFFFF\b)[0-9a-fA-F]{3,8}\b/g);
+  if (hx && hx.length) errs.push('ألوان ثابتة (' + hx.slice(0, 3).map(function(v){ return v.replace(/^[;"\'`\s]+/, '').slice(0, 40); }).join(' | ') + '): استخدم متغيرات الهوية فقط: var(--primary) و var(--primary-dark) و var(--primary-soft) و var(--accent) للخلفيات، و var(--on-primary) للنص فوق اللون الأساسي، و var(--text) و var(--text2) للنصوص. وللبطاقة الملونة اكتفِ بكلاس hero بلا style للخلفية.');
   // أزرار ميتة: data-act في الواجهة بلا معالج
   if (!/\[data-act\]['"`]/.test(js) && !/dataset\.act\b/.test(js)) {
     var acts = {}, are = /data-act=\\?["']?([\w-]+)/g, am;
@@ -3025,7 +3029,13 @@ function runFlows(app, w, d, note, setCur){
         var st = tc.steps[k++] || {}; setCur(here());
         var p = Promise.resolve();
         if (st.role) { try { w.__banee.setRole(st.role); } catch(e){} p = sleep(300); }
-        else if (st.go) { var sh0 = d.getElementById('sheet'); if (sh0) sh0.remove(); w.location.hash = st.go; p = sleep(900); }
+        else if (st.go) {
+          var sh0 = d.getElementById('sheet'); if (sh0) sh0.remove();
+          // السيناريو نسي تبديل الدور؟ نفتح الشاشة بدور صاحبها حتى لا يظهر فشل وهمي
+          var gs = plan.screens.filter(function(x){ return x.id === routeScreen(plan, st.go); })[0];
+          try { var R0 = w.__banee.Roles; if ((plan.roles || []).length > 1 && gs && gs.roles && gs.roles.length && gs.roles.indexOf(R0.current()) < 0) w.__banee.setRole(gs.roles[0]); } catch(e){}
+          w.location.hash = st.go; p = sleep(900);
+        }
         else if (st.fill) {
           Object.keys(st.fill).forEach(function(sel){
             if (failed) return;

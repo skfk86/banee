@@ -1,0 +1,76 @@
+{
+  "status": "ready",
+  "error": "",
+  "name": "عيادتي",
+  "steps": [
+    "done · هوية «عناية ورعاية» · الخطة: ٤ شاشات · ٤ مجموعات · ٨ عنصر محتوى",
+    "done · المحتوى: ٨ عنصر مكتوب كاملاً",
+    "done · الهيكل جاهز: التنقّل، البيانات، الدخول، التصميم",
+    "done · ٤ شاشات مكتوبة",
+    "done · الفحص: ١ شاشات بها ملاحظات، راجعها في الاستوديو · المراجعة: أُصلحت ٢ من ٢",
+    "done · جاهز للمعاينة والتحميل"
+  ],
+  "runtime": {
+    "home": [],
+    "book": [],
+    "mine": [],
+    "doctorDashboard": []
+  },
+  "flows": [],
+  "flowSteps": [],
+  "reviewIssues": {
+    "home": [],
+    "book": [
+      "مراجعة: استعلام الحجوزات السابقة يعتمد على حقل createdAt وهو غير معرف في مخطط مجموعة bookings، مما يسبب فشل الاستعلام. الإصلاح: إضافة حقل createdAt لمخطط bookings أو إزالة الترتيب به."
+    ],
+    "mine": [
+      "مراجعة: استخدام حقل createdAt في الترتيب وفي دالة UI.ago(b.createdAt) بينما الحقل غير موجود في تعريف مجموعة bookings في المخطط. الإصلاح: إضافة حقل createdAt لمخطط bookings."
+    ],
+    "doctorDashboard": []
+  },
+  "agent": {
+    "ran": false,
+    "fixed": 0,
+    "steps": 0,
+    "log": []
+  },
+  "fixErrors": [],
+  "review": {
+    "found": 2,
+    "fixed": 2
+  },
+  "screens": [
+    {
+      "id": "home",
+      "route": "/",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 7668
+    },
+    {
+      "id": "book",
+      "route": "/book/:id",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 9707
+    },
+    {
+      "id": "mine",
+      "route": "/bookings",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 7102
+    },
+    {
+      "id": "doctorDashboard",
+      "route": "/doctor",
+      "roles": [
+        "provider"
+      ],
+      "bytes": 6622
+    }
+  ]
+}

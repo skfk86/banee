@@ -1,0 +1,155 @@
+{
+  "status": "ready",
+  "error": "",
+  "name": "مقرأة باني",
+  "steps": [
+    "done · هوية «نور القرآن» · الخطة: ٥ شاشات · ٤ مجموعات · ٦ عنصر محتوى",
+    "done · المحتوى: ٦ عنصر مكتوب كاملاً",
+    "done · الهيكل جاهز: التنقّل، البيانات، الدخول، التصميم",
+    "done · ٥ شاشات مكتوبة",
+    "done · جُرّبت كل الشاشات وأُصلحت ٣، لا أخطاء · رحلات المستخدم: ٢ من ٢ تعمل كاملة · المراجعة: أُصلحت ١ من ١",
+    "done · جاهز للمعاينة والتحميل"
+  ],
+  "runtime": {
+    "home": [],
+    "circleDetails": [],
+    "recitation": [],
+    "teacherReview": [],
+    "profile": []
+  },
+  "flows": [
+    "تسجيل الطالب وتسميع الحفظ (9 خطوات)",
+    "إدارة المعلم وتقييم التسميع (5 خطوات)"
+  ],
+  "flowSteps": [
+    {
+      "flow": "تسجيل الطالب وتسميع الحفظ",
+      "steps": [
+        {
+          "role": "student"
+        },
+        {
+          "go": "/"
+        },
+        {
+          "click": "[data-act=join-circle][data-id=circles-1]"
+        },
+        {
+          "expect": "منضم"
+        },
+        {
+          "go": "/recitation"
+        },
+        {
+          "fill": {
+            "[name=surahName]": "البقرة",
+            "[name=fromAyah]": "1",
+            "[name=toAyah]": "5",
+            "[name=audioUrl]": "https://example.com/recitation.mp3"
+          }
+        },
+        {
+          "click": "#btn-submit-recitation"
+        },
+        {
+          "expect": "البقرة"
+        },
+        {
+          "expectDb": {
+            "col": "recitations",
+            "min": 1
+          }
+        }
+      ]
+    },
+    {
+      "flow": "إدارة المعلم وتقييم التسميع",
+      "steps": [
+        {
+          "role": "teacher"
+        },
+        {
+          "go": "/teacher/reviews"
+        },
+        {
+          "click": "text:ممتاز"
+        },
+        {
+          "expect": "جميع تسجيلات الطلاب تم تقييمها بنجاح"
+        },
+        {
+          "expectDb": {
+            "col": "recitations",
+            "min": 1
+          }
+        }
+      ]
+    }
+  ],
+  "reviewIssues": {
+    "home": [],
+    "circleDetails": [],
+    "recitation": [],
+    "teacherReview": [],
+    "profile": [
+      "مراجعة: استخدام Data.recitations.label(r.status) في شاشة الملف الشخصي خطأ لأن الدالة المعرفة هي UI.label، مما يسبب انهيار العرض. الإصلاح: استبدالها بـ UI.label(r.status)."
+    ]
+  },
+  "flowErr": "",
+  "agent": {
+    "ran": false,
+    "fixed": 0,
+    "steps": 0,
+    "log": []
+  },
+  "fixErrors": [],
+  "review": {
+    "found": 1,
+    "fixed": 1
+  },
+  "screens": [
+    {
+      "id": "home",
+      "route": "/",
+      "roles": [
+        "student",
+        "teacher"
+      ],
+      "bytes": 9501
+    },
+    {
+      "id": "circleDetails",
+      "route": "/circle/:id",
+      "roles": [
+        "student",
+        "teacher"
+      ],
+      "bytes": 11735
+    },
+    {
+      "id": "recitation",
+      "route": "/recitation",
+      "roles": [
+        "student"
+      ],
+      "bytes": 9247
+    },
+    {
+      "id": "teacherReview",
+      "route": "/teacher/reviews",
+      "roles": [
+        "teacher"
+      ],
+      "bytes": 4720
+    },
+    {
+      "id": "profile",
+      "route": "/profile",
+      "roles": [
+        "student",
+        "teacher"
+      ],
+      "bytes": 8017
+    }
+  ]
+}

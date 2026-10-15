@@ -1,0 +1,191 @@
+{
+  "status": "failed",
+  "error": "انتهت الحصة اليومية لمفتاح Gemini. أكمل غداً من حيث توقفت، أو فعّل الفوترة في Google AI Studio",
+  "name": "سوق بانِي",
+  "steps": [
+    "done · هوية «سوقي الرقمي» · الخطة: ٦ شاشات · ٤ مجموعات · ١٨ عنصر محتوى",
+    "done · المحتوى: ١٨ عنصر مكتوب كاملاً",
+    "done · الهيكل جاهز: التنقّل، البيانات، الدخول، التصميم",
+    "done · ٦ شاشات مكتوبة",
+    "err · إصلاح أخطاء التشغيل في ٢ شاشات",
+    " · التجميع النهائي"
+  ],
+  "runtime": {
+    "home": [],
+    "product": [
+      "رحلة «شراء منتج» توقفت عند الخطوة ٥: ظهرت رسالة خطأ: حدث خطأ أثناء الإضافة للسلة — السبب الفعلي الملتقط: Cannot read properties of undefined (reading 'list')"
+    ],
+    "cart": [],
+    "orders": [],
+    "sellerOrders": [],
+    "sellerProducts": [
+      "رحلة «إدارة المتجر» توقفت عند الخطوة ٣: ظهرت رسالة خطأ: حدث خطأ أثناء الإضافة للسلة"
+    ]
+  },
+  "flows": [
+    "شراء منتج (9 خطوات)",
+    "إدارة المتجر (13 خطوات)"
+  ],
+  "flowSteps": [
+    {
+      "flow": "شراء منتج",
+      "steps": [
+        {
+          "role": "customer"
+        },
+        {
+          "go": "/"
+        },
+        {
+          "click": "[data-act=open][data-id=products-1]"
+        },
+        {
+          "expect": "إضافة إلى السلة"
+        },
+        {
+          "click": "text:إضافة إلى السلة"
+        },
+        {
+          "fill": {
+            "#address": "الرياض، حي النخيل"
+          }
+        },
+        {
+          "fill": {
+            "#phone": "0500000000"
+          }
+        },
+        {
+          "click": "text:تأكيد الطلب"
+        },
+        {
+          "expectDb": {
+            "col": "orders",
+            "min": 1
+          }
+        }
+      ]
+    },
+    {
+      "flow": "إدارة المتجر",
+      "steps": [
+        {
+          "role": "seller"
+        },
+        {
+          "go": "/seller/products"
+        },
+        {
+          "click": "text:إضافة منتج جديد"
+        },
+        {
+          "fill": {
+            "#title": "قهوة عربية"
+          }
+        },
+        {
+          "fill": {
+            "#price": "50"
+          }
+        },
+        {
+          "fill": {
+            "#stock": "10"
+          }
+        },
+        {
+          "fill": {
+            "#image": "https://example.com/coffee.jpg"
+          }
+        },
+        {
+          "click": "text:إضافة المنتج"
+        },
+        {
+          "expectDb": {
+            "col": "products",
+            "min": 1
+          }
+        },
+        {
+          "go": "/seller"
+        },
+        {
+          "expect": "طلب #"
+        },
+        {
+          "click": "text:قبول الطلب"
+        },
+        {
+          "expectDb": {
+            "col": "orders",
+            "min": 1
+          }
+        }
+      ]
+    }
+  ],
+  "reviewIssues": null,
+  "flowErr": "",
+  "agent": {
+    "ran": false,
+    "fixed": 0,
+    "steps": 0,
+    "log": []
+  },
+  "fixErrors": [],
+  "review": {
+    "found": 0,
+    "fixed": 0
+  },
+  "screens": [
+    {
+      "id": "home",
+      "route": "/",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 2715
+    },
+    {
+      "id": "product",
+      "route": "/product/:id",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 2762
+    },
+    {
+      "id": "cart",
+      "route": "/cart",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 3211
+    },
+    {
+      "id": "orders",
+      "route": "/orders",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 2280
+    },
+    {
+      "id": "sellerOrders",
+      "route": "/seller",
+      "roles": [
+        "seller"
+      ],
+      "bytes": 2664
+    },
+    {
+      "id": "sellerProducts",
+      "route": "/seller/products",
+      "roles": [
+        "seller"
+      ],
+      "bytes": 4149
+    }
+  ]
+}

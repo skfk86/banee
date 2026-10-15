@@ -1,0 +1,161 @@
+{
+  "status": "ready",
+  "error": "",
+  "name": "منصة تعلُّم",
+  "steps": [
+    "done · هوية «إشراق معرفي» · الخطة: ٦ شاشات · ٦ مجموعات · ٢٠ عنصر محتوى",
+    "done · المحتوى: ٢٠ عنصر مكتوب كاملاً",
+    "done · الهيكل جاهز: التنقّل، البيانات، الدخول، التصميم",
+    "done · ٦ شاشات مكتوبة",
+    "done · جُرّبت كل الشاشات وأُصلحت ٦، لا أخطاء · رحلات المستخدم: ٢ من ٢ تعمل كاملة · المراجعة: أُصلحت ١ من ٣",
+    "done · جاهز للمعاينة والتحميل"
+  ],
+  "runtime": {
+    "home": [],
+    "course": [],
+    "lesson": [],
+    "quiz": [],
+    "me": [],
+    "results": []
+  },
+  "flows": [
+    "إكمال درس واختبار (11 خطوات)",
+    "المعلم يتابع (3 خطوات)"
+  ],
+  "flowSteps": [
+    {
+      "flow": "إكمال درس واختبار",
+      "steps": [
+        {
+          "role": "student"
+        },
+        {
+          "go": "/course/courses-1"
+        },
+        {
+          "click": "[data-act=lesson]"
+        },
+        {
+          "click": "text:أكملت الدرس"
+        },
+        {
+          "expectDb": {
+            "col": "progress",
+            "min": 1
+          }
+        },
+        {
+          "go": "/course/courses-1"
+        },
+        {
+          "click": "[data-act=quiz]"
+        },
+        {
+          "click": "text:إرسال الإجابات"
+        },
+        {
+          "expectDb": {
+            "col": "results",
+            "min": 1
+          }
+        },
+        {
+          "go": "/progress"
+        },
+        {
+          "expect": "درس مكتمل"
+        }
+      ]
+    },
+    {
+      "flow": "المعلم يتابع",
+      "steps": [
+        {
+          "role": "teacher"
+        },
+        {
+          "go": "/results"
+        },
+        {
+          "expect": "نتائج الطلاب والتقييمات"
+        }
+      ]
+    }
+  ],
+  "reviewIssues": {
+    "home": [],
+    "course": [
+      "مراجعة: مجموعتا lessons وquizzes مخصصتان للمعلمين فقط في roleAccess بينما يحتاجها الطلاب في شاشة الدورة، ويجب إضافة الدور student لهما."
+    ],
+    "lesson": [
+      "مراجعة: مجموعة lessons مخصصة للمعلمين فقط في roleAccess بينما يحتاجها الطلاب لقراءة الدرس وإتمام تقدمه."
+    ],
+    "quiz": [
+      "مراجعة: مجموعة quizzes مخصصة للمعلمين فقط في roleAccess بينما يحتاجها الطلاب لجلب وحل الاختبار."
+    ],
+    "me": [],
+    "results": []
+  },
+  "flowErr": "",
+  "agent": {
+    "ran": false,
+    "fixed": 0,
+    "steps": 0,
+    "log": []
+  },
+  "fixErrors": [],
+  "review": {
+    "found": 3,
+    "fixed": 1
+  },
+  "screens": [
+    {
+      "id": "home",
+      "route": "/",
+      "roles": [
+        "student"
+      ],
+      "bytes": 2885
+    },
+    {
+      "id": "course",
+      "route": "/course/:id",
+      "roles": [
+        "student"
+      ],
+      "bytes": 4984
+    },
+    {
+      "id": "lesson",
+      "route": "/lesson/:id",
+      "roles": [
+        "student"
+      ],
+      "bytes": 2254
+    },
+    {
+      "id": "quiz",
+      "route": "/quiz/:id",
+      "roles": [
+        "student"
+      ],
+      "bytes": 4795
+    },
+    {
+      "id": "me",
+      "route": "/progress",
+      "roles": [
+        "student"
+      ],
+      "bytes": 7070
+    },
+    {
+      "id": "results",
+      "route": "/results",
+      "roles": [
+        "teacher"
+      ],
+      "bytes": 2882
+    }
+  ]
+}

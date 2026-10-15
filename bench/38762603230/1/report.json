@@ -1,0 +1,129 @@
+{
+  "status": "ready",
+  "error": "",
+  "name": "حجوزاتي",
+  "steps": [
+    "done · هوية «معد موعد» · الخطة: ٤ شاشات · ٤ مجموعات · ١٢ عنصر محتوى",
+    "done · المحتوى: ١٢ عنصر مكتوب كاملاً",
+    "done · الهيكل جاهز: التنقّل، البيانات، الدخول، التصميم",
+    "done · ٤ شاشات مكتوبة",
+    "done · الفحص: ١ شاشات بها ملاحظات، راجعها في الاستوديو · رحلات المستخدم: ٢ من ٢ تعمل كاملة · المراجعة: أُصلحت ١ من ٢",
+    "done · جاهز للمعاينة والتحميل"
+  ],
+  "runtime": {
+    "home": [],
+    "book": [],
+    "mine": [],
+    "schedule": []
+  },
+  "flows": [
+    "حجز موعد (8 خطوات)",
+    "مقدم الخدمة يؤكد (3 خطوات)"
+  ],
+  "flowSteps": [
+    {
+      "flow": "حجز موعد",
+      "steps": [
+        {
+          "go": "/"
+        },
+        {
+          "click": "[data-act=book][data-id=services-1]"
+        },
+        {
+          "go": "/book/services-1"
+        },
+        {
+          "click": "[data-act=select-provider]"
+        },
+        {
+          "fill": {
+            "#phone": "0912345678"
+          }
+        },
+        {
+          "click": "text:تأكيد الحجز"
+        },
+        {
+          "expect": "مواعيدي"
+        },
+        {
+          "expectDb": {
+            "col": "bookings",
+            "min": 1
+          }
+        }
+      ]
+    },
+    {
+      "flow": "مقدم الخدمة يؤكد",
+      "steps": [
+        {
+          "go": "/schedule"
+        },
+        {
+          "click": "text:تأكيد الموعد"
+        },
+        {
+          "expect": "جدول الحجوزات"
+        }
+      ]
+    }
+  ],
+  "reviewIssues": {
+    "home": [],
+    "book": [
+      "مراجعة: في شاشة book، يتم البحث عن مقدمي الخدمة باستخدام userId مع serviceId: 'providers = await Data.providers.list({ where: ['userId', '==', activeBooking.serviceId] })' ولكن الحقل في جدول providers هو providerId أو يجب ربطه بـ providerId وليس serviceId."
+    ],
+    "mine": [],
+    "schedule": [
+      "مراجعة: في شاشة schedule، دور مقدم الخدمة يعرض حجوزاته عبر Data.bookings.mine()، لكن جدول bookings في المخطط يحتوي على حقل providerId ولا يحتوي على ربط مباشر مع مستخدم مقدم الخدمة عبر userId إلا إذا تم فلترتها بشكل صحيح أو استخدام Data.bookings.list مع providerId."
+    ]
+  },
+  "flowErr": "",
+  "agent": {
+    "ran": false,
+    "fixed": 0,
+    "steps": 0,
+    "log": []
+  },
+  "fixErrors": [],
+  "review": {
+    "found": 2,
+    "fixed": 1
+  },
+  "screens": [
+    {
+      "id": "home",
+      "route": "/",
+      "roles": [
+        "client"
+      ],
+      "bytes": 2972
+    },
+    {
+      "id": "book",
+      "route": "/book/:id",
+      "roles": [
+        "client"
+      ],
+      "bytes": 9484
+    },
+    {
+      "id": "mine",
+      "route": "/bookings",
+      "roles": [
+        "client"
+      ],
+      "bytes": 5282
+    },
+    {
+      "id": "schedule",
+      "route": "/schedule",
+      "roles": [
+        "provider"
+      ],
+      "bytes": 7048
+    }
+  ]
+}

@@ -1,0 +1,172 @@
+{
+  "status": "ready",
+  "error": "",
+  "name": "منصة أكاديميتي",
+  "steps": [
+    "done · هوية «أفق المعرفة» · الخطة: ٥ شاشات · ٦ مجموعات · ٢٠ عنصر محتوى",
+    "done · المحتوى: ٢٠ عنصر مكتوب كاملاً",
+    "done · الهيكل جاهز: التنقّل، البيانات، الدخول، التصميم",
+    "done · ٥ شاشات مكتوبة",
+    "done · الفحص: ١ شاشات بها ملاحظات، راجعها في الاستوديو · رحلات المستخدم: ٢ من ٢ تعمل كاملة · المراجعة: أُصلحت ٢ من ٣",
+    "done · جاهز للمعاينة والتحميل"
+  ],
+  "runtime": {
+    "home": [],
+    "course": [],
+    "lesson": [],
+    "quiz": [],
+    "me": [
+      "تصميم: النص \"٠\" غير مقروء: تباين 2.1:1 — لونه #f59e0b والخلفية #ffffff من العنصر <div class=\"card\">. الخلفية فاتحة: استخدم var(--text) للنص، أو أزل خلفية ذلك العنصر إن كان داخل hero."
+    ]
+  },
+  "flows": [
+    "إكمال درس واختبار (12 خطوات)",
+    "نشر دورة جديدة (6 خطوات)"
+  ],
+  "flowSteps": [
+    {
+      "flow": "إكمال درس واختبار",
+      "steps": [
+        {
+          "go": "/"
+        },
+        {
+          "click": "[data-act=open-course][data-id=\"courses-1\"]"
+        },
+        {
+          "expect": "محتوى الدورة والدروس"
+        },
+        {
+          "click": "[data-act=open-lesson][data-id=\"lessons-1\"]"
+        },
+        {
+          "expect": "الدرس"
+        },
+        {
+          "click": "[data-act=complete]"
+        },
+        {
+          "expectDb": {
+            "col": "progress",
+            "min": 1
+          }
+        },
+        {
+          "go": "/course/courses-1"
+        },
+        {
+          "click": "[data-act=open-quiz][data-id=\"quizzes-1\"]"
+        },
+        {
+          "expect": "اختبار المعرفة"
+        },
+        {
+          "click": "text:إرسال الإجابات"
+        },
+        {
+          "expect": "نتيجة الاختبار"
+        }
+      ]
+    },
+    {
+      "flow": "نشر دورة جديدة",
+      "steps": [
+        {
+          "role": "teacher"
+        },
+        {
+          "go": "/"
+        },
+        {
+          "click": "[data-act=add-course]"
+        },
+        {
+          "fill": {
+            "[name=title]": "تطوير الويب المتقدم",
+            "[name=summary]": "دورة شاملة لتعلم مهارات الويب المتقدمة.",
+            "[name=image]": "https://images.unsplash.com/photo-1516321318423-f06f85e504b3",
+            "[name=price]": "0"
+          }
+        },
+        {
+          "click": "text:حفظ ونشر الدورة"
+        },
+        {
+          "expectDb": {
+            "col": "courses",
+            "min": 1
+          }
+        }
+      ]
+    }
+  ],
+  "reviewIssues": {
+    "home": [],
+    "course": [],
+    "lesson": [
+      "مراجعة: تمرير خاصية orderBy كـ [[ 'order', 'asc' ]] بينما الصيغة الصحيحة هي [ 'order', 'asc' ]."
+    ],
+    "quiz": [],
+    "me": [
+      "مراجعة: استخدام دالة Data.progress.mine() غير المدعومة، والصحيح استخدام Data.progress.list({ where: ['userId', '==', Auth.user.uid] }).",
+      "مراجعة: استخدام دالة Data.results.mine() غير المدعومة، والصحيح استخدام Data.results.list({ where: ['userId', '==', Auth.user.uid] })."
+    ]
+  },
+  "flowErr": "",
+  "agent": {
+    "ran": false,
+    "fixed": 0,
+    "steps": 0,
+    "log": []
+  },
+  "fixErrors": [],
+  "review": {
+    "found": 3,
+    "fixed": 2
+  },
+  "screens": [
+    {
+      "id": "home",
+      "route": "/",
+      "roles": [
+        "student",
+        "teacher"
+      ],
+      "bytes": 6495
+    },
+    {
+      "id": "course",
+      "route": "/course/:id",
+      "roles": [
+        "student",
+        "teacher"
+      ],
+      "bytes": 7807
+    },
+    {
+      "id": "lesson",
+      "route": "/lesson/:id",
+      "roles": [
+        "student"
+      ],
+      "bytes": 4169
+    },
+    {
+      "id": "quiz",
+      "route": "/quiz/:id",
+      "roles": [
+        "student"
+      ],
+      "bytes": 5927
+    },
+    {
+      "id": "me",
+      "route": "/progress",
+      "roles": [
+        "student",
+        "teacher"
+      ],
+      "bytes": 8422
+    }
+  ]
+}

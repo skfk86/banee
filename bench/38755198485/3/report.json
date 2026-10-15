@@ -1,0 +1,155 @@
+{
+  "status": "ready",
+  "error": "",
+  "name": "صيدليتي",
+  "steps": [
+    "done · هوية «شفاء آمن» · الخطة: ٥ شاشات · ٤ مجموعات · ١٦ عنصر محتوى",
+    "done · المحتوى: ١٦ عنصر مكتوب كاملاً",
+    "done · الهيكل جاهز: التنقّل، البيانات، الدخول، التصميم",
+    "done · ٥ شاشات مكتوبة",
+    "done · الفحص: ١ شاشات بها ملاحظات، راجعها في الاستوديو · رحلات المستخدم: ٢ من ٢ تعمل كاملة · المراجعة: أُصلحت ١ من ١",
+    "done · جاهز للمعاينة والتحميل"
+  ],
+  "runtime": {
+    "home": [],
+    "store": [
+      "تصميم: صورة لا تُحمَّل: https://images.unsplash.com/photo-1584483766114-2cea6facaf57?w=500. استخدم صورة من بيانات التطبيق أو أيقونة بديلة."
+    ],
+    "track": [],
+    "pharmacistDashboard": [],
+    "driverDashboard": []
+  },
+  "flows": [
+    "طلب دواء بالوصفة (7 خطوات)",
+    "معالجة الطلب والتوصيل (8 خطوات)"
+  ],
+  "flowSteps": [
+    {
+      "flow": "طلب دواء بالوصفة",
+      "steps": [
+        {
+          "role": "customer"
+        },
+        {
+          "go": "/"
+        },
+        {
+          "click": "[data-act=upload-prescription]"
+        },
+        {
+          "fill": {
+            "#pres-address": "الخرطوم، شارع الجامعة",
+            "#pres-phone": "0912345678"
+          }
+        },
+        {
+          "click": "text:إرسال الطلب الآن"
+        },
+        {
+          "expectDb": {
+            "col": "orders",
+            "min": 1
+          }
+        },
+        {
+          "expect": "طلباتي السابقة والحالية"
+        }
+      ]
+    },
+    {
+      "flow": "معالجة الطلب والتوصيل",
+      "steps": [
+        {
+          "role": "pharmacist"
+        },
+        {
+          "go": "/pharmacist"
+        },
+        {
+          "click": "[data-act=accept]"
+        },
+        {
+          "role": "driver"
+        },
+        {
+          "go": "/driver"
+        },
+        {
+          "click": "[data-act=start-deliver]"
+        },
+        {
+          "expectDb": {
+            "col": "orders",
+            "min": 1
+          }
+        },
+        {
+          "expect": "في الطريق"
+        }
+      ]
+    }
+  ],
+  "reviewIssues": {
+    "home": [],
+    "store": [],
+    "track": [],
+    "pharmacistDashboard": [
+      "مراجعة: في زر قبول الطلب، يتم تعيين driverId بقيمة Auth.user.uid بينما المستخدم هنا هو صيدلي (pharmacist) وليس مندوباً، وقد يتسبب ذلك في تداخل الأدوار أو تخزين معرف الصيدلي كمندوب. يجب عدم تعيين driverId عند قبول الصيدلي للطلب، بل ترك ذلك للمندوب."
+    ],
+    "driverDashboard": []
+  },
+  "flowErr": "",
+  "agent": {
+    "ran": false,
+    "fixed": 0,
+    "steps": 0,
+    "log": []
+  },
+  "fixErrors": [],
+  "review": {
+    "found": 1,
+    "fixed": 1
+  },
+  "screens": [
+    {
+      "id": "home",
+      "route": "/",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 5901
+    },
+    {
+      "id": "store",
+      "route": "/store/:id",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 11534
+    },
+    {
+      "id": "track",
+      "route": "/orders",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 5111
+    },
+    {
+      "id": "pharmacistDashboard",
+      "route": "/pharmacist",
+      "roles": [
+        "pharmacist"
+      ],
+      "bytes": 6442
+    },
+    {
+      "id": "driverDashboard",
+      "route": "/driver",
+      "roles": [
+        "driver"
+      ],
+      "bytes": 7873
+    }
+  ]
+}

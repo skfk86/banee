@@ -1,0 +1,168 @@
+{
+  "status": "ready",
+  "error": "",
+  "name": "منصة أكاديمية",
+  "steps": [
+    "done · هوية «منصة إتقان» · الخطة: ٦ شاشات · ٦ مجموعات · ٢٠ عنصر محتوى",
+    "done · المحتوى: ٢٠ عنصر مكتوب كاملاً",
+    "done · الهيكل جاهز: التنقّل، البيانات، الدخول، التصميم",
+    "done · ٦ شاشات مكتوبة",
+    "done · جُرّبت كل الشاشات وأُصلحت ٣، لا أخطاء · رحلات المستخدم: ٢ من ٢ تعمل كاملة · المراجعة الشاملة: لا مشاكل",
+    "done · جاهز للمعاينة والتحميل"
+  ],
+  "runtime": {
+    "home": [],
+    "course": [],
+    "lesson": [],
+    "quiz": [],
+    "me": [],
+    "teacherDashboard": []
+  },
+  "flows": [
+    "إكمال درس واختبار (10 خطوات)",
+    "نشر دورة جديدة (7 خطوات)"
+  ],
+  "flowSteps": [
+    {
+      "flow": "إكمال درس واختبار",
+      "steps": [
+        {
+          "go": "/"
+        },
+        {
+          "click": "[data-act=\"open-course\"][data-id=\"courses-1\"]"
+        },
+        {
+          "expect": "دروس الدورة"
+        },
+        {
+          "click": "[data-act=\"open-lesson\"][data-id=\"lessons-1\"]"
+        },
+        {
+          "click": "[data-act=\"complete\"]"
+        },
+        {
+          "expect": "تفاصيل الدورة"
+        },
+        {
+          "click": "[data-act=\"start-quiz\"][data-id=\"quizzes-1\"]"
+        },
+        {
+          "expect": "الاختبار"
+        },
+        {
+          "click": "text:إنهاء الاختبار وحفظ النتيجة"
+        },
+        {
+          "expectDb": {
+            "col": "results",
+            "min": 1
+          }
+        }
+      ]
+    },
+    {
+      "flow": "نشر دورة جديدة",
+      "steps": [
+        {
+          "role": "teacher"
+        },
+        {
+          "go": "/teacher"
+        },
+        {
+          "expect": "لوحة تحكم المدرب"
+        },
+        {
+          "click": "[data-act=\"add-course\"]"
+        },
+        {
+          "fill": {
+            "[name=\"title\"]": "دورة جديدة",
+            "[name=\"summary\"]": "ملخص دورة جديدة",
+            "[name=\"level\"]": "مبتدئ"
+          }
+        },
+        {
+          "click": "text:نشر الدورة"
+        },
+        {
+          "expectDb": {
+            "col": "courses",
+            "min": 1
+          }
+        }
+      ]
+    }
+  ],
+  "reviewIssues": {
+    "home": [],
+    "course": [],
+    "lesson": [],
+    "quiz": [],
+    "me": [],
+    "teacherDashboard": []
+  },
+  "flowErr": "",
+  "agent": {
+    "ran": false,
+    "fixed": 0,
+    "steps": 0,
+    "log": []
+  },
+  "fixErrors": [],
+  "review": {
+    "found": 0,
+    "fixed": 0
+  },
+  "screens": [
+    {
+      "id": "home",
+      "route": "/",
+      "roles": [
+        "student"
+      ],
+      "bytes": 2974
+    },
+    {
+      "id": "course",
+      "route": "/course/:id",
+      "roles": [
+        "student"
+      ],
+      "bytes": 5879
+    },
+    {
+      "id": "lesson",
+      "route": "/lesson/:id",
+      "roles": [
+        "student"
+      ],
+      "bytes": 4316
+    },
+    {
+      "id": "quiz",
+      "route": "/quiz/:id",
+      "roles": [
+        "student"
+      ],
+      "bytes": 4664
+    },
+    {
+      "id": "me",
+      "route": "/progress",
+      "roles": [
+        "student"
+      ],
+      "bytes": 9078
+    },
+    {
+      "id": "teacherDashboard",
+      "route": "/teacher",
+      "roles": [
+        "teacher"
+      ],
+      "bytes": 21795
+    }
+  ]
+}

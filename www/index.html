@@ -2247,6 +2247,15 @@ var ROLES = {
 '{"expectDb":{"col":"orders","min":1}} ← بعد عملية حفظ: يجب أن تحتوي المجموعة على هذا العدد على الأقل\n' +
 'القواعد: استخدم فقط selectors و data-act و ids موجودة حرفياً في الكود المعطى، ولا تخترع id. للحقل الذي له name فقط استخدم [name=address]. من ٣ إلى ١٢ خطوة لكل رحلة. ابدأ كل رحلة بـ go. ' +
 'في الاختبارات والنماذج اختر إجابة لكل سؤال وعبّئ كل الحقول المطلوبة قبل الإرسال. expectDb فقط بعد عملية حفظ قام بها المستخدم في نفس الرحلة. إذا فتح الزر نافذة تأكيد (UI.confirm أو UI.sheet) فاضغط زرها التالي. لا تختبر الحذف أو تسجيل الخروج. اختبر ما يكتبه المستخدم (طلب، حجز، إضافة) بـ expectDb.',
+  agent: 'أنت مهندس برمجيات خبير تعمل كوكيل مستقل داخل بانِي لإصلاح تطبيق عربي متعدد الشاشات حتى تعمل رحلات المستخدم كاملة. لديك أدوات تستدعيها خطوة خطوة، وبعد كل أداة ترى نتيجتها ثم تقرر التالية.\n' +
+'أعد JSON فقط في كل خطوة: {"think":"تفكيرك القصير: ماذا تعرف وما الفرضية","tool":"اسم الأداة", ...معاملاتها}\n' +
+'الأدوات:\n' +
+'{"tool":"read","screen":"id"} ← كود شاشة بأرقام الأسطر\n' +
+'{"tool":"search","text":"نص"} ← كل الأسطر التي تحتوي النص في كل الشاشات (للتتبع بين الشاشات: من يكتب الحقل ومن يقرؤه)\n' +
+'{"tool":"edit","screen":"id","find":"نص موجود حرفياً مرة واحدة","replace":"النص الجديد"} ← تعديل جراحي؛ انسخ find حرفياً من نتيجة read (بدون أرقام الأسطر) واجعله قصيراً ومميزاً\n' +
+'{"tool":"run"} ← تشغيل التطبيق كاملاً وتجربة كل الشاشات والرحلات، يعيد الأخطاء الحالية\n' +
+'{"tool":"done","summary":"ما أصلحته"} ← عندما تنتهي الأخطاء أو لا يمكنك المزيد\n' +
+'المنهج: اقرأ الخطأ، تتبّع السبب الجذري عبر الشاشات بـ search وread (حقل مختلف الاسم، قيمة حالة مختلفة، فلترة خاطئة، زر لا يظهر لهذا الدور، عنصر يظهر فقط عند وجود بيانات)، عدّل أقل قدر ممكن، ثم run للتحقق. لا تحذف ميزات ولا تغيّر قيم data-act الموجودة. استخدم طبقة Data للمجموعات المعرّفة في العقد. لا تعدّل لإرضاء الاختبار بنص وهمي، أصلح السلوك الحقيقي.',
   fixer: 'أنت مصلّح أخطاء. ستستلم كود شاشة واحدة وقائمة أخطاء مكتشفة آلياً. أصلح الأخطاء فقط مع الالتزام بالعقد التالي، وأعد الشاشة كاملة داخل ```javascript بلا شرح.\n' + CONTRACT
 };
 
@@ -2343,6 +2352,7 @@ var THINK = { analyst: 'low', designer: 'low', content: 'low', fixer: 'low', ass
 var THINK_OFF = false;
 function thinkCfg(role, model, cfg){
   if (role === 'reviewer' && !THINK_OFF && /^gemini-3/.test(model)) { cfg.thinkingConfig = { thinkingLevel: 'medium' }; return cfg; }
+  if (role === 'agent' && !THINK_OFF && /^gemini-3/.test(model)) { cfg.thinkingConfig = { thinkingLevel: 'medium' }; return cfg; }
   if (role === 'tester' && !THINK_OFF && /^gemini-3/.test(model)) { cfg.thinkingConfig = { thinkingLevel: 'low' }; return cfg; }
   var l = THINK[role];
   if (l && !THINK_OFF && /^gemini-3/.test(model)) cfg.thinkingConfig = { thinkingLevel: l };
@@ -2928,6 +2938,15 @@ function runBuild(app, key){
   }).then(function(nFixed){
     alive();
     var round = 0, fixedLive = 0, miss = 0;
+    // الإصلاح العادي لم يكفِ: الوكيل المستقل يتتبّع السبب بين الشاشات بنفسه (مرة لكل بناء، وفقط لأخطاء وظيفية)
+    function runAgent(res){
+      var fn = 0; for (var id in res) fn += (res[id] || []).filter(function(m){ return !/^تصميم:/.test(m); }).length;
+      if (!fn || app.ck.agentRan) return res;
+      app.ck.agentRan = true; saveApps();
+      jstep(app,4,'cur','وكيل الإصلاح يتتبّع الأخطاء بين الشاشات');
+      return agentFix(app, key, res, function(k, a){ alive(); jstep(app,4,'cur','وكيل الإصلاح — خطوة ' + toAr(k) + ': ' + ({ read:'يقرأ ', search:'يبحث عن ', edit:'يعدّل ', run:'يشغّل التطبيق ويجرّبه', done:'ينهي' }[a.tool] || '') + (a.screen || (a.text ? '«' + String(a.text).slice(0, 30) + '»' : ''))); })
+        .then(function(r){ alive(); fixedLive += Math.max(0, r.fixed || 0); app.ck.agentFixed = r.fixed || 0; app.ck.agentSteps = r.steps; return r.res; });
+    }
     function liveRound(known){
       if (round === 0 && !known && !app.ck.flowTests && (app.ck.plan.flows || []).length) {
         jstep(app,4,'cur','كتابة سيناريوهات اختبار رحلات المستخدم');
@@ -2954,7 +2973,7 @@ function runBuild(app, key){
         return fixRuntime(app, key, rv.issues, null, true).then(function(k){ alive(); fixedLive += k; app.ck.reviewFixed = k; return app.ck.runtime || res; });
       }).then(function regen(res2){
         var stale = JSON.stringify(res2 || {}).match(/رحلة[^"]*(لم يُعثر على|غير موجود في الشاشة)/);
-        if (!stale || (app.ck.flowRegen || 0) >= 2 || !(app.ck.plan.flows || []).length) return res2;
+        if (!stale || (app.ck.flowRegen || 0) >= 2 || !(app.ck.plan.flows || []).length) return runAgent(res2);
         // عنصر مفقود من كل كود التطبيق = السيناريو قديم (الشاشة تغيّرت بالإصلاح) لا خطأ في التطبيق: نعيد كتابته ونعيد التجربة
         app.ck.flowRegen = (app.ck.flowRegen || 0) + 1; jstep(app,4,'cur','تحديث سيناريوهات الاختبار بعد الإصلاحات');
         return writeFlowTests(app, key).then(function(){ alive(); round = 2; return liveRound(); }).then(regen);
@@ -2973,6 +2992,7 @@ function runBuild(app, key){
     }
     if (app.ck.reviewCount) app.steps[4].label += ' · المراجعة: أُصلحت ' + toAr(app.ck.reviewFixed || 0) + ' من ' + toAr(app.ck.reviewCount);
     else if (app.ck.reviewed) app.steps[4].label += ' · المراجعة الشاملة: لا مشاكل';
+    if (app.ck.agentRan) app.steps[4].label += ' · وكيل الإصلاح: ' + (app.ck.agentFixed > 0 ? 'أصلح ' + toAr(app.ck.agentFixed) + ' في ' + toAr(app.ck.agentSteps || 0) + ' خطوة' : 'لم يجد تحسيناً آمناً');
     jstep(app,5,'cur');
     app.status = 'ready'; app.progress = 100; app.live = '';
     if (credit0 != null && S.credits && S.credits.remaining <= credit0) app.spent = (app.spent || 0) + (credit0 - S.credits.remaining);
@@ -3631,6 +3651,87 @@ function designAudit(w, d, root){
   return out;
 }
 
+// ════ وكيل الإصلاح المستقل: حلقة (يفكر ← يستدعي أداة ← يرى النتيجة) بتعديلات جراحية، مع حارس يمنع التراجع ════
+function appScore(app, res){ var plan = app.ck.plan, sc = 0; plan.screens.forEach(function(s){ sc += scrScore(plan, app.ck.screens, res, s.id); }); return sc; }
+function issuesText(app, res){
+  var out = []; app.ck.plan.screens.forEach(function(s){ (res[s.id] || []).forEach(function(m){ if (!/^تصميم:/.test(m)) out.push('[' + s.id + '] ' + m); }); });
+  return out.length ? out.slice(0, 25).join('\n') : 'لا أخطاء وظيفية';
+}
+function agentFix(app, key, res, onStep){
+  var plan = app.ck.plan, start = {}, MAX = 14, n = 0, hist = [], cur = res, best = appScore(app, res), bestScreens = null;
+  plan.screens.forEach(function(s){ start[s.id] = app.ck.screens[s.id]; });
+  function numbered(js){ return String(js || '').split('\n').map(function(l, i){ return (i + 1) + '| ' + l; }).join('\n'); }
+  function ctx(){
+    return 'التطبيق: ' + plan.name + ' — ' + (plan.summary || '') +
+      ((plan.roles || []).length > 1 ? '\nالأدوار: ' + plan.roles.map(function(r){ return r.id + ' (' + r.name + ')'; }).join('، ') : '') +
+      '\nالشاشات:\n' + plan.screens.map(function(s){ return '- ' + s.id + ' ' + s.route + ' «' + s.title + '»' + (s.roles && s.roles.length ? ' أدوار: ' + s.roles.join('/') : '') + ' (' + String(app.ck.screens[s.id] || '').split('\n').length + ' سطر)'; }).join('\n') +
+      '\nالمجموعات: ' + JSON.stringify(plan.collections || []).slice(0, 2500) + dataDoc(plan) +
+      ((plan.flows || []).length ? '\nرحلات المستخدم: ' + plan.flows.map(function(f){ return f.name + ': ' + (f.steps || []).join(' ← '); }).join(' | ') : '') +
+      ((app.ck.flowTests || []).length ? '\nسيناريوهات الاختبار الآلي: ' + JSON.stringify(app.ck.flowTests).slice(0, 3000) : '') +
+      '\n\nالأخطاء الحالية من آخر تشغيل:\n' + issuesText(app, cur) +
+      '\n\nسجل خطواتك حتى الآن (' + n + ' من ' + MAX + '):\n' + (hist.length ? hist.map(function(h, i){ var last = i >= hist.length - 3; return '#' + (i + 1) + ' ' + h.call + '\n→ ' + (last ? h.obs : h.obs.slice(0, 400) + (h.obs.length > 400 ? ' …' : '')); }).join('\n\n') : '(لا شيء بعد)') +
+      '\n\nما الخطوة التالية؟';
+  }
+  function act(a){
+    var sc = plan.screens.filter(function(s){ return s.id === a.screen; })[0];
+    if (a.tool === 'read') return Promise.resolve(sc ? numbered(app.ck.screens[sc.id]).slice(0, 45000) : 'لا توجد شاشة بهذا id. الموجود: ' + plan.screens.map(function(s){ return s.id; }).join('، '));
+    if (a.tool === 'search') {
+      var q = String(a.text || ''), hits = []; if (!q) return Promise.resolve('النص فارغ');
+      plan.screens.forEach(function(s){ String(app.ck.screens[s.id] || '').split('\n').forEach(function(l, i){ if (hits.length < 40 && l.indexOf(q) > -1) hits.push(s.id + ':' + (i + 1) + '| ' + l.trim().slice(0, 220)); }); });
+      return Promise.resolve(hits.length ? hits.join('\n') : 'لا نتائج لـ «' + q + '»');
+    }
+    if (a.tool === 'edit') {
+      if (!sc) return Promise.resolve('لا توجد شاشة بهذا id');
+      var js = app.ck.screens[sc.id] || '', f = String(a.find || '').replace(/^\d+\| /gm, '');
+      if (!f) return Promise.resolve('find فارغ');
+      var cnt = js.split(f).length - 1;
+      if (cnt !== 1) return Promise.resolve(cnt ? 'find موجود ' + cnt + ' مرات، اجعله أطول وأكثر تميزاً' : 'find غير موجود حرفياً في ' + sc.id + '؛ اقرأ الشاشة وانسخ النص بدقة (المسافات مهمة)');
+      var nj = js.split(f).join(String(a.replace == null ? '' : a.replace)), errs = checkScreen(nj, sc, plan);
+      var hard = errs.filter(function(e){ return /صياغ|نحوي|SyntaxError|Unexpected|App\.screen/.test(e); });
+      if (hard.length) return Promise.resolve('رُفض التعديل لأنه يكسر الكود: ' + hard.join(' | ').slice(0, 400));
+      app.ck.screens[sc.id] = nj;
+      return Promise.resolve('تم التعديل' + (errs.length ? '. ملاحظات الفحص الثابت بعده: ' + errs.slice(0, 4).join(' | ').slice(0, 500) : ''));
+    }
+    if (a.tool === 'run') {
+      return runtimeTest(app).then(function(r){
+        var cx = crossCheck(app); Object.keys(cx).forEach(function(id){ (cx[id] || []).forEach(function(m){ if (r[id] && r[id].indexOf(m) < 0) r[id].push(m); }); });
+        cur = r; var s = appScore(app, r);
+        if (s < best) { best = s; bestScreens = {}; plan.screens.forEach(function(x){ bestScreens[x.id] = app.ck.screens[x.id]; }); }
+        return 'نتيجة التشغيل (درجة الأخطاء ' + s + '، الأفضل حتى الآن ' + best + '):\n' + issuesText(app, r);
+      });
+    }
+    return Promise.resolve('أداة غير معروفة: ' + a.tool);
+  }
+  function loop(){
+    if (n >= MAX) return finish();
+    n++;
+    return ask(key, 'agent', ctx(), true).then(function(raw){
+      var a = parseJSON(raw) || {};
+      if (onStep) onStep(n, a);
+      if (a.tool === 'done' || !a.tool) { hist.push({ call: 'done', obs: String(a.summary || '') }); return finish(); }
+      var call = a.tool + (a.screen ? ' ' + a.screen : '') + (a.text ? ' «' + String(a.text).slice(0, 60) + '»' : '') + (a.think ? ' — ' + String(a.think).slice(0, 200) : '');
+      return act(a).then(function(obs){ hist.push({ call: call, obs: String(obs) }); return loop(); });
+    }, function(e){ if (e && /رصيد|حصة/.test(e.message || '')) throw e; return finish(); });
+  }
+  function finish(){
+    var changed = plan.screens.some(function(s){ return app.ck.screens[s.id] !== start[s.id]; });
+    if (!changed) return Promise.resolve({ fixed: 0, res: res, steps: n });
+    var ran = hist.length && /^run/.test(hist[hist.length - 1].call);
+    return (ran ? Promise.resolve(cur) : runtimeTest(app)).then(function(r){
+      var s = appScore(app, r);
+      if (s < best) { best = s; bestScreens = null; cur = r; }
+      else if (bestScreens) { plan.screens.forEach(function(x){ app.ck.screens[x.id] = bestScreens[x.id]; }); return runtimeTest(app).then(function(r2){ cur = r2; return r2; }); }
+      return r;
+    }).then(function(r){
+      var before = appScore(app, res), after = appScore(app, r);
+      if (after >= before) { plan.screens.forEach(function(x){ app.ck.screens[x.id] = start[x.id]; }); setRuntime(app, res); saveApps(); return { fixed: 0, res: res, steps: n, log: hist }; }
+      setRuntime(app, r); saveApps();
+      app.ck.agentLog = hist.map(function(h){ return h.call; });
+      return { fixed: runtimeIssues(res) - runtimeIssues(r), res: r, steps: n, log: hist };
+    });
+  }
+  return loop();
+}
 function runtimeIssues(res){ var n = 0; for (var k in res) n += res[k].length; return n; }
 
 // إصلاح موجّه بالأخطاء الحية

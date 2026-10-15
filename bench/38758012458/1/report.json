@@ -1,0 +1,196 @@
+{
+  "status": "ready",
+  "error": "",
+  "name": "صيانة بيتي",
+  "steps": [
+    "done · هوية «صيانة برو» · الخطة: ٦ شاشات · ٣ مجموعات · ٦ عنصر محتوى",
+    "done · المحتوى: ٦ عنصر مكتوب كاملاً",
+    "done · الهيكل جاهز: التنقّل، البيانات، الدخول، التصميم",
+    "done · ٦ شاشات مكتوبة",
+    "done · جُرّبت كل الشاشات وأُصلحت ٥، لا أخطاء · رحلات المستخدم: ٢ من ٢ تعمل كاملة · المراجعة: أُصلحت ٣ من ٣",
+    "done · جاهز للمعاينة والتحميل"
+  ],
+  "runtime": {
+    "home": [],
+    "checkout": [],
+    "orders": [],
+    "techRequests": [],
+    "techActiveOrders": [],
+    "notifications": []
+  },
+  "flows": [
+    "طلب خدمة صيانة (10 خطوات)",
+    "تنفيذ الطلب للفني (13 خطوات)"
+  ],
+  "flowSteps": [
+    {
+      "flow": "طلب خدمة صيانة",
+      "steps": [
+        {
+          "role": "customer"
+        },
+        {
+          "go": "/"
+        },
+        {
+          "click": "[data-act=\"select-service\"][data-id=\"services-1\"]"
+        },
+        {
+          "fill": {
+            "[name=userPhone]": "0501234567"
+          }
+        },
+        {
+          "fill": {
+            "[name=address]": "الرياض، حي الملز"
+          }
+        },
+        {
+          "fill": {
+            "[name=scheduledTime]": "2023-12-01T10:00"
+          }
+        },
+        {
+          "fill": {
+            "[name=notes]": "يرجى الحضور في الموعد المحدد"
+          }
+        },
+        {
+          "click": "[data-act=submit-order]"
+        },
+        {
+          "expectDb": {
+            "col": "orders",
+            "min": 1
+          }
+        },
+        {
+          "expect": "طلبات الصيانة الخاصة بي"
+        }
+      ]
+    },
+    {
+      "flow": "تنفيذ الطلب للفني",
+      "steps": [
+        {
+          "role": "technician"
+        },
+        {
+          "go": "/tech-requests"
+        },
+        {
+          "click": "[data-act=accept]"
+        },
+        {
+          "go": "/tech-active-orders"
+        },
+        {
+          "click": "[data-act=set-delivering]"
+        },
+        {
+          "click": "[data-act=set-done]"
+        },
+        {
+          "click": "text:نعم، تمت"
+        },
+        {
+          "role": "customer"
+        },
+        {
+          "go": "/orders"
+        },
+        {
+          "click": "[data-act=rate]"
+        },
+        {
+          "fill": {
+            "#rate-review": "خدمة ممتازة وفني محترف"
+          }
+        },
+        {
+          "click": "#submit-rating-btn"
+        },
+        {
+          "expect": "تقييم الخدمة والفني"
+        }
+      ]
+    }
+  ],
+  "reviewIssues": {
+    "home": [],
+    "checkout": [],
+    "orders": [],
+    "techRequests": [
+      "مراجعة: تمرير معامل ثالث `{ technicianId: Auth.user.uid }` لدالة Data.orders.setStatus عند قبول الطلب قد يهمله النظام إذا كانت الدالة تقبل الحالة فقط، فلا يتم ربط الطلب بالفني. الإصلاح: استخدام Data.orders.update(orderId, { status: 'accepted', technicianId: Auth.user.uid }) لتحديث الحالة وربط الفني معاً."
+    ],
+    "techActiveOrders": [
+      "مراجعة: تستخدم الشاشة Data.orders.mine() لجلب طلبات الفني الحالية، وهي مخصصة لجلب طلبات العميل (حسب userId) مما يمنع ظهور الطلبات المسندة للفني. الإصلاح: استبدالها بـ Data.orders.list({ where: [['technicianId', '==', Auth.user.uid]] })."
+    ],
+    "notifications": [
+      "مراجعة: تجلب الشاشة للفني جميع طلبات النظام عبر Data.orders.list دون فلتر لـ technicianId، مما يظهر طلبات باقي الفنيين والعملاء. الإصلاح: إضافة شرط الفلترة حسب technicianId للفنيين."
+    ]
+  },
+  "flowErr": "",
+  "agent": {
+    "ran": false,
+    "fixed": 0,
+    "steps": 0,
+    "log": []
+  },
+  "fixErrors": [],
+  "review": {
+    "found": 3,
+    "fixed": 3
+  },
+  "screens": [
+    {
+      "id": "home",
+      "route": "/",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 3136
+    },
+    {
+      "id": "checkout",
+      "route": "/checkout",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 5132
+    },
+    {
+      "id": "orders",
+      "route": "/orders",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 5944
+    },
+    {
+      "id": "techRequests",
+      "route": "/tech-requests",
+      "roles": [
+        "technician"
+      ],
+      "bytes": 3745
+    },
+    {
+      "id": "techActiveOrders",
+      "route": "/tech-active-orders",
+      "roles": [
+        "technician"
+      ],
+      "bytes": 6775
+    },
+    {
+      "id": "notifications",
+      "route": "/notifications",
+      "roles": [
+        "customer",
+        "technician"
+      ],
+      "bytes": 4561
+    }
+  ]
+}

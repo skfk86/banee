@@ -2239,7 +2239,7 @@ var ROLES = {
   tester: 'أنت مهندس ضمان جودة في فريق بانِي. ستستلم رحلات المستخدم وكود شاشات تطبيق عربي. اكتب سيناريو اختبار آلي لكل رحلة يجرّبها كمستخدم حقيقي من البداية للنهاية.\n' +
 'أعد JSON فقط: {"tests":[{"flow":"اسم الرحلة","steps":[ ... ]}]}\n' +
 'الخطوات المتاحة فقط:\n' +
-'{"role":"driver"} ← تبديل الدور (في الأنظمة متعددة الأدوار فقط)\n' +
+'{"role":"driver"} ← تبديل الدور. في الأنظمة متعددة الأدوار ابدأ كل رحلة بخطوة role لدور صاحبها، وبدّل الدور داخل الرحلة إذا انتقلت لدور آخر (الطالب يسلّم ثم {"role":"teacher"} يصحّح). الرحلات تعمل بالترتيب على نفس البيانات، فما أنشأته رحلة سابقة موجود للتالية\n' +
 '{"go":"/route"} ← فتح شاشة (لمسار فيه :id استخدم id حقيقياً من البيانات المعطاة)\n' +
 '{"fill":{"#selector":"قيمة واقعية"}} ← تعبئة حقول موجودة فعلاً في الكود\n' +
 '{"click":"[data-act=xxx]"} أو {"click":"text:نص الزر"} ← ضغط عنصر موجود فعلاً\n' +
@@ -3520,6 +3520,22 @@ function runFlows(app, w, d, note, setCur){
     for (var i = 0; i < alts.length; i++){ try { var a = d.querySelector('#sheet ' + alts[i]) || d.querySelector(alts[i]); if (a && /INPUT|TEXTAREA|SELECT/.test(a.tagName)) return a; } catch (e) {} }
     return null;
   }
+  // العنصر غير موجود؟ ربما السيناريو نسي تبديل الدور: نجرّب أدوار الشاشة الأخرى ونعيد عرضها قبل إعلان الفشل
+  function findRole(sel){
+    var el = find(sel); if (el) return Promise.resolve(el);
+    var R; try { R = w.__banee.Roles; } catch(e){}
+    if (!R || (plan.roles || []).length < 2) return Promise.resolve(null);
+    var hash = w.location.hash, sc = plan.screens.filter(function(x){ return x.id === here(); })[0];
+    var cur = R.current(), opts = (sc && sc.roles && sc.roles.length ? sc.roles : plan.roles.map(function(r){ return r.id; })).filter(function(r){ return r !== cur; });
+    var i = 0;
+    function next(){
+      if (i >= opts.length) { try { w.__banee.setRole(cur); } catch(e){} return Promise.resolve(null); }
+      var r = opts[i++]; try { w.__banee.setRole(r); } catch(e){}
+      w.location.hash = '#/__r' + Date.now(); 
+      return sleep(150).then(function(){ w.location.hash = hash; return sleep(900); }).then(function(){ var e2 = find(sel); return e2 || next(); });
+    }
+    return next();
+  }
   tests.forEach(function(tc){
     chain = chain.then(function(){
       var k = 0, failed = false, base = {};
@@ -3548,8 +3564,7 @@ function runFlows(app, w, d, note, setCur){
           });
           p = sleep(150);
         }
-        else if (st.click) {
-          var el = find(st.click);
+        else if (st.click) p = findRole(st.click).then(function(el){
           if (!el) fail('لم يُعثر على ' + st.click + ' (الزر غير موجود أو اسمه مختلف)');
           else {
             var form = el.closest && el.closest('form');
@@ -3564,8 +3579,8 @@ function runFlows(app, w, d, note, setCur){
                 f.dispatchEvent(new w.Event('input', { bubbles: true })); f.dispatchEvent(new w.Event('change', { bubbles: true }));
               });
             }
-            el.click(); p = sleep(800).then(function(){ setCur(here()); var t = d.querySelector('.toast.error, .toast-error, [data-type=error]'); if (t && t.textContent.trim()) fail('ظهرت رسالة خطأ: ' + t.textContent.trim().slice(0, 120)); }); }
-        }
+            el.click(); return sleep(800).then(function(){ setCur(here()); var t = d.querySelector('.toast.error, .toast-error, [data-type=error]'); if (t && t.textContent.trim()) fail('ظهرت رسالة خطأ: ' + t.textContent.trim().slice(0, 120)); }); }
+        });
         else if (st.expect) { if ((d.body.textContent || '').indexOf(st.expect) < 0) fail('كان متوقعاً ظهور «' + String(st.expect).slice(0, 60) + '» ولم يظهر'); }
         else if (st.expectDb) {
           var q = st.expectDb, acted = tc.steps.slice(0, k).some(function(s){ return s && (s.click || s.fill); }); p = Promise.resolve(w.__banee.DB.list(q.col)).then(function(a){ var now = docSnap(a), touched = acted && Object.keys(now).some(function(id){ return (snap[q.col] || {})[id] !== now[id]; }); if (!touched && (a || []).length - (acted ? (base[q.col] || 0) : 0) < (q.min || 1)) fail('لم يُحفظ شيء في ' + q.col + ' بعد العملية (الحفظ لا يعمل)'); }, function(e){ fail('تعذّرت قراءة ' + q.col + ': ' + (e && e.message)); });

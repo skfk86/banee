@@ -1,0 +1,23 @@
+{
+  "name": "حجوزات ومواعيد",
+  "roles": [
+    "العميل",
+    "مقدم الخدمة*"
+  ],
+  "screens": [
+    "الخدمات / [client]",
+    "الحجز /book/:id [client]",
+    "مواعيدي /bookings [client]",
+    "جدولي /schedule [provider]"
+  ],
+  "cols": [
+    "services",
+    "providers",
+    "bookings",
+    "members"
+  ],
+  "flows": [
+    "حجز موعد",
+    "مقدم الخدمة يؤكد"
+  ]
+}

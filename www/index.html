@@ -3436,7 +3436,7 @@ function writeFlowTests(app, key){
 function reviewApp(app, key){
   var plan = app.ck.plan;
   var ctx = 'المخطط:\n' + JSON.stringify({ name: plan.name, roles: plan.roles, roleAccess: plan.roleAccess, collections: plan.collections, flows: plan.flows, payments: plan.payments }) +
-    '\n\nالشاشات:\n' + plan.screens.map(function(s){ return '### id=' + s.id + ' route=' + s.route + ' (' + s.title + ')' + (s.roles && s.roles.length ? ' أدوار: ' + s.roles.join('،') : '') + '\n' + String(app.ck.screens[s.id] || '').replace(/^([\s\S]{40000})[\s\S]+$/, '$1\n/* [بقية كود هذه الشاشة حُذفت من العرض للاختصار فقط — الكود الحقيقي كامل وسليم نحوياً، لا تبلّغ عن قطع] */'); }).join('\n\n') + '\n\nملاحظة: كل الشاشات اجتازت فحص الصياغة آلياً، فلا تبلّغ عن كود مقطوع أو خطأ صياغة.';
+    '\n\nالشاشات:\n' + plan.screens.map(function(s){ return '### id=' + s.id + ' route=' + s.route + ' (' + s.title + ')' + (s.roles && s.roles.length ? ' أدوار: ' + s.roles.join('،') : '') + '\n' + String(app.ck.screens[s.id] || '').replace(/^([\s\S]{40000})[\s\S]+$/, '$1\n/* [بقية كود هذه الشاشة حُذفت من العرض للاختصار فقط — الكود الحقيقي كامل وسليم نحوياً، لا تبلّغ عن قطع] */'); }).join('\n\n') + '\n\nملاحظة: كل الشاشات اجتازت فحص الصياغة آلياً، فلا تبلّغ عن كود مقطوع أو خطأ صياغة. وDB.list(col,{ where }) يقبل شرطاً واحداً [f,op,v] أو مصفوفة شروط [[f,op,v],[f,op,v]] — كلاهما مدعوم.';
   return ask(key, 'reviewer', ctx, true).then(function(raw){
     var r = parseJSON(raw) || {}, iss = r.issues || {}, out = {}, n = 0;
     plan.screens.forEach(function(s){ var a = (iss[s.id] || []).filter(function(m){ return typeof m === 'string' && m.length > 8; }).slice(0, 4).map(function(m){ return 'مراجعة: ' + m.slice(0, 400); }); out[s.id] = a; n += a.length; });

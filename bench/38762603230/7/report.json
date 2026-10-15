@@ -1,0 +1,151 @@
+{
+  "status": "ready",
+  "error": "",
+  "name": "صوت البلدية",
+  "steps": [
+    "done · هوية «بلدي الرصين» · الخطة: ٦ شاشات · ٣ مجموعات · ٦ عنصر محتوى",
+    "done · المحتوى: ٦ عنصر مكتوب كاملاً",
+    "done · الهيكل جاهز: التنقّل، البيانات، الدخول، التصميم",
+    "done · ٦ شاشات مكتوبة",
+    "done · جُرّبت كل الشاشات وأُصلحت ٣، لا أخطاء · رحلات المستخدم: ١ من ١ تعمل كاملة · المراجعة: أُصلحت ١ من ١",
+    "done · جاهز للمعاينة والتحميل"
+  ],
+  "runtime": {
+    "home": [],
+    "myComplaints": [],
+    "newComplaint": [],
+    "complaintDetails": [],
+    "employeeDashboard": [],
+    "profile": []
+  },
+  "flows": [
+    "تقديم ومتابعة شكوى (13 خطوات)"
+  ],
+  "flowSteps": [
+    {
+      "flow": "تقديم ومتابعة شكوى",
+      "steps": [
+        {
+          "role": "citizen"
+        },
+        {
+          "go": "/"
+        },
+        {
+          "click": "[data-act=new]"
+        },
+        {
+          "fill": {
+            "#cat-select": "categories-1",
+            "#comp-title": "انقطاع الإنارة",
+            "#comp-desc": "الإنارة لا تعمل في الشارع"
+          }
+        },
+        {
+          "click": "[data-act=get-location]"
+        },
+        {
+          "click": "text:إرسال الشكوى"
+        },
+        {
+          "expectDb": {
+            "col": "complaints",
+            "min": 1
+          }
+        },
+        {
+          "expect": "أحدث شكاويك"
+        },
+        {
+          "role": "employee"
+        },
+        {
+          "go": "/employee"
+        },
+        {
+          "click": "[data-act=open]"
+        },
+        {
+          "click": "[data-act=set-status]"
+        },
+        {
+          "expect": "تم الحل"
+        }
+      ]
+    }
+  ],
+  "reviewIssues": {
+    "home": [],
+    "myComplaints": [],
+    "newComplaint": [],
+    "complaintDetails": [],
+    "employeeDashboard": [
+      "مراجعة: تستخدم الشاشة DB.list('complaints', ...) بدلاً من Data.complaints.list أو Data.complaints الخاص بالنظام، كما تستخدم استعلاماً مباشراً لقاعدة البيانات قد يكسر القواعد المعيارية، والإصلاح هو استخدام Data.complaints.list أو الدالة المعتمدة لجلب البيانات."
+    ],
+    "profile": []
+  },
+  "flowErr": "",
+  "agent": {
+    "ran": false,
+    "fixed": 0,
+    "steps": 0,
+    "log": []
+  },
+  "fixErrors": [],
+  "review": {
+    "found": 1,
+    "fixed": 1
+  },
+  "screens": [
+    {
+      "id": "home",
+      "route": "/",
+      "roles": [
+        "citizen"
+      ],
+      "bytes": 5894
+    },
+    {
+      "id": "myComplaints",
+      "route": "/my-complaints",
+      "roles": [
+        "citizen"
+      ],
+      "bytes": 5319
+    },
+    {
+      "id": "newComplaint",
+      "route": "/new-complaint",
+      "roles": [
+        "citizen"
+      ],
+      "bytes": 8922
+    },
+    {
+      "id": "complaintDetails",
+      "route": "/complaint/:id",
+      "roles": [
+        "citizen",
+        "employee"
+      ],
+      "bytes": 5601
+    },
+    {
+      "id": "employeeDashboard",
+      "route": "/employee",
+      "roles": [
+        "employee"
+      ],
+      "bytes": 5498
+    },
+    {
+      "id": "profile",
+      "route": "/profile",
+      "roles": [
+        "citizen",
+        "employee"
+      ],
+      "bytes": 4984
+    }
+  ]
+}

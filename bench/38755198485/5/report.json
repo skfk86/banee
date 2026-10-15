@@ -1,0 +1,129 @@
+{
+  "status": "ready",
+  "error": "",
+  "name": "إدارة المشاريع",
+  "steps": [
+    "done · هوية «إنجاز احترافي» · الخطة: ٤ شاشات · ٣ مجموعات · ١٢ عنصر محتوى",
+    "done · المحتوى: ١٢ عنصر مكتوب كاملاً",
+    "done · الهيكل جاهز: التنقّل، البيانات، الدخول، التصميم",
+    "done · ٤ شاشات مكتوبة",
+    "done · جُرّبت كل الشاشات وأُصلحت ٣، لا أخطاء · رحلات المستخدم: ١ من ١ تعمل كاملة · المراجعة: أُصلحت ٢ من ٢",
+    "done · جاهز للمعاينة والتحميل"
+  ],
+  "runtime": {
+    "home": [],
+    "tasksList": [],
+    "dashboard": [],
+    "notifications": []
+  },
+  "flows": [
+    "إسناد ومتابعة مهمة (11 خطوات)"
+  ],
+  "flowSteps": [
+    {
+      "flow": "إسناد ومتابعة مهمة",
+      "steps": [
+        {
+          "role": "manager"
+        },
+        {
+          "go": "/"
+        },
+        {
+          "click": "[data-act=add-task]"
+        },
+        {
+          "fill": {
+            "#new-task-title": "تطوير واجهة المستخدم",
+            "#new-task-desc": "تصميم وتطوير الشاشات الرئيسية",
+            "#new-task-assigned": "أحمد موظف",
+            "#new-task-due": "2023-12-31"
+          }
+        },
+        {
+          "click": "text:حفظ وإسناد المهمة"
+        },
+        {
+          "expectDb": {
+            "col": "tasks",
+            "min": 1
+          }
+        },
+        {
+          "role": "employee"
+        },
+        {
+          "go": "/tasks"
+        },
+        {
+          "click": "[data-act=openTask]"
+        },
+        {
+          "go": "/dashboard"
+        },
+        {
+          "expect": "لوحة مؤشرات الإنجاز"
+        }
+      ]
+    }
+  ],
+  "reviewIssues": {
+    "home": [
+      "مراجعة: يوجد زر في شاشة الرئيسية لتعديل أو عرض المهمة لكن لا يوجد شاشة أو مكون لتعديل المهام وتحديث حالتها بواسطة الموظف أو المدير عبر الضغط على المهام حيث يتم الانتقال لـ /tasks مباشرة، الرحلة غير مكتملة لتحديث حالة المهمة ونسبة الإنجاز كما في التدفق المطلوب."
+    ],
+    "tasksList": [
+      "مراجعة: زر إضافة مهمة يستخدم حقل الحالة الحالية ولا يقوم الموظف بتحديث نسب الإنجاز وحالة التنفيذ المحددة في دور الموظف، كما أن حقل assignedTo يحفظ باسم الموظف أو النص مباشرة دون ربط حقيقي أو تحقق."
+    ],
+    "dashboard": [],
+    "notifications": []
+  },
+  "flowErr": "",
+  "agent": {
+    "ran": false,
+    "fixed": 0,
+    "steps": 0,
+    "log": []
+  },
+  "fixErrors": [],
+  "review": {
+    "found": 2,
+    "fixed": 2
+  },
+  "screens": [
+    {
+      "id": "home",
+      "route": "/",
+      "roles": [
+        "employee",
+        "manager"
+      ],
+      "bytes": 10897
+    },
+    {
+      "id": "tasksList",
+      "route": "/tasks",
+      "roles": [
+        "employee",
+        "manager"
+      ],
+      "bytes": 12755
+    },
+    {
+      "id": "dashboard",
+      "route": "/dashboard",
+      "roles": [
+        "manager"
+      ],
+      "bytes": 5360
+    },
+    {
+      "id": "notifications",
+      "route": "/notifications",
+      "roles": [
+        "employee",
+        "manager"
+      ],
+      "bytes": 2546
+    }
+  ]
+}

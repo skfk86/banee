@@ -1,0 +1,61 @@
+name: قياس بانِي (عدة أفكار بالتوازي)
+on:
+  workflow_dispatch:
+    inputs:
+      set:
+        description: 'مجموعة الأفكار: a | b | c'
+        default: 'a'
+permissions:
+  contents: write
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      ideas: ${{ steps.p.outputs.ideas }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: p
+        run: echo "ideas=$(node -e "const s=require('./e2e/bench-ideas.json')['${{ github.event.inputs.set }}']||[];console.log(JSON.stringify(s.map((x,i)=>({i,...x}))))")" >> $GITHUB_OUTPUT
+  build:
+    needs: plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        it: ${{ fromJson(needs.plan.outputs.ideas) }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: |
+          npm i --no-save playwright@1.48.2
+          npx playwright install --with-deps chromium
+      - run: sed "s#^var PROXY_URL = '[^']*';#var PROXY_URL = '';#" www/index.html > e2e.html
+      - name: بناء واختبار
+        continue-on-error: true
+        env:
+          GEMINI_KEY: ${{ secrets.GEMINI_KEY }}
+          GEMINI_KEY2: ${{ secrets.GEMINI_KEY2 }}
+          GEMINI_KEY3: ${{ secrets.GEMINI_KEY3 }}
+          GEMINI_KEY4: ${{ secrets.GEMINI_KEY4 }}
+          KEY_IDX: ${{ matrix.it.i }}
+          KIT: ${{ matrix.it.kit || '' }}
+          IDEA: ${{ matrix.it.idea || '' }}
+          OUT: out
+          MAX_MIN: 75
+        run: node e2e/e2e.js
+      - name: حفظ النتيجة
+        if: always()
+        run: |
+          mkdir -p out && rm -f out/*.png
+          D=bench/${{ github.run_id }}/${{ matrix.it.i }}
+          git config user.name banee-bench && git config user.email e2e@banee.app
+          git fetch -q origin e2e-bench || true
+          for t in 1 2 3 4 5 6; do
+            rm -rf /tmp/w && git worktree add -q /tmp/w origin/e2e-bench 2>/dev/null || { git worktree add -q --orphan -b tmpb /tmp/w 2>/dev/null || git worktree add -q /tmp/w --detach; }
+            mkdir -p /tmp/w/$D && cp out/report.json out/report.md out/log.txt /tmp/w/$D/ 2>/dev/null
+            cd /tmp/w && git add -A && git commit -qm "bench ${{ github.run_id }} ${{ matrix.it.i }}" && git push -q https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }} HEAD:e2e-bench && exit 0
+            cd - >/dev/null; git worktree remove --force /tmp/w; git branch -D tmpb 2>/dev/null; sleep $((RANDOM % 20 + 5)); git fetch -q origin e2e-bench || true
+          done

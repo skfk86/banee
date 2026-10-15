@@ -1,0 +1,148 @@
+{
+  "status": "ready",
+  "error": "",
+  "name": "عقاراتي",
+  "steps": [
+    "done · هوية «مفتاح أمان» · الخطة: ٤ شاشات · ٣ مجموعات · ١٢ عنصر محتوى",
+    "done · المحتوى: ١٢ عنصر مكتوب كاملاً",
+    "done · الهيكل جاهز: التنقّل، البيانات، الدخول، التصميم",
+    "done · ٤ شاشات مكتوبة",
+    "done · جُرّبت كل الشاشات، لا أخطاء · رحلات المستخدم: ٢ من ٢ تعمل كاملة · المراجعة الشاملة: لا مشاكل",
+    "done · جاهز للمعاينة والتحميل"
+  ],
+  "runtime": {
+    "home": [],
+    "requestInspection": [],
+    "myInspections": [],
+    "addProperty": []
+  },
+  "flows": [
+    "طلب معاينة شقة (7 خطوات)",
+    "نشر شقة للإيجار (6 خطوات)"
+  ],
+  "flowSteps": [
+    {
+      "flow": "طلب معاينة شقة",
+      "steps": [
+        {
+          "role": "seeker"
+        },
+        {
+          "go": "/"
+        },
+        {
+          "click": "[data-act=inspect][data-id=properties-1]"
+        },
+        {
+          "fill": {
+            "[name=userName]": "محمد أحمد",
+            "[name=phone]": "+249912345678",
+            "[name=date]": "2025-05-01",
+            "[name=time]": "14:00",
+            "[name=note]": "أرجو التأكيد في أسرع وقت"
+          }
+        },
+        {
+          "click": "text:تأكيد طلب المعاينة"
+        },
+        {
+          "expectDb": {
+            "col": "inspections",
+            "min": 1
+          }
+        },
+        {
+          "expect": "جدول المعاينات"
+        }
+      ]
+    },
+    {
+      "flow": "نشر شقة للإيجار",
+      "steps": [
+        {
+          "role": "advertiser"
+        },
+        {
+          "go": "/add-property"
+        },
+        {
+          "fill": {
+            "[name=title]": "شقة فاخرة في الخرطوم",
+            "[name=city]": "الخرطوم",
+            "[name=price]": "250000",
+            "[name=rooms]": "3",
+            "[name=phone]": "+249912345678",
+            "[name=image]": "https://example.com/image.jpg",
+            "[name=description]": "شقة واسعة وقريبة من الخدمات الأساسية."
+          }
+        },
+        {
+          "click": "text:نشر العقار"
+        },
+        {
+          "expectDb": {
+            "col": "properties",
+            "min": 1
+          }
+        },
+        {
+          "expect": "منصة عقاراتي"
+        }
+      ]
+    }
+  ],
+  "reviewIssues": {
+    "home": [],
+    "requestInspection": [],
+    "myInspections": [],
+    "addProperty": []
+  },
+  "flowErr": "",
+  "agent": {
+    "ran": false,
+    "fixed": 0,
+    "steps": 0,
+    "log": []
+  },
+  "fixErrors": [],
+  "review": {
+    "found": 0,
+    "fixed": 0
+  },
+  "screens": [
+    {
+      "id": "home",
+      "route": "/",
+      "roles": [
+        "seeker",
+        "advertiser"
+      ],
+      "bytes": 2814
+    },
+    {
+      "id": "requestInspection",
+      "route": "/inspect/:id",
+      "roles": [
+        "seeker"
+      ],
+      "bytes": 3757
+    },
+    {
+      "id": "myInspections",
+      "route": "/my-inspections",
+      "roles": [
+        "seeker",
+        "advertiser"
+      ],
+      "bytes": 5692
+    },
+    {
+      "id": "addProperty",
+      "route": "/add-property",
+      "roles": [
+        "advertiser"
+      ],
+      "bytes": 3283
+    }
+  ]
+}

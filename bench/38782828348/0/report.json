@@ -1,0 +1,79 @@
+{
+  "status": "failed",
+  "error": "انتهت الحصة اليومية لمفتاح Gemini. أكمل غداً من حيث توقفت، أو فعّل الفوترة في Google AI Studio",
+  "name": "صالوني",
+  "steps": [
+    "done · هوية «أناقة باربر» · الخطة: ٦ شاشات · ٤ مجموعات · ١٨ عنصر محتوى",
+    "done · المحتوى: ١٨ عنصر مكتوب كاملاً",
+    "done · الهيكل جاهز: التنقّل، البيانات، الدخول، التصميم",
+    "err · بناء الشاشات (٠ من ٦)",
+    " · فحص وتشغيل التطبيق",
+    " · التجميع النهائي"
+  ],
+  "runtime": {},
+  "flows": [],
+  "flowSteps": [],
+  "reviewIssues": null,
+  "flowErr": "",
+  "agent": {
+    "ran": false,
+    "fixed": 0,
+    "steps": 0,
+    "log": []
+  },
+  "fixErrors": [],
+  "review": {
+    "found": 0,
+    "fixed": 0
+  },
+  "screens": [
+    {
+      "id": "home",
+      "route": "/",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 0
+    },
+    {
+      "id": "barber-detail",
+      "route": "/barber/:id",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 0
+    },
+    {
+      "id": "checkout",
+      "route": "/checkout",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 0
+    },
+    {
+      "id": "my-bookings",
+      "route": "/my-bookings",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 0
+    },
+    {
+      "id": "barber-schedule",
+      "route": "/barber-schedule",
+      "roles": [
+        "barber"
+      ],
+      "bytes": 0
+    },
+    {
+      "id": "barber-profile",
+      "route": "/barber-profile",
+      "roles": [
+        "barber"
+      ],
+      "bytes": 0
+    }
+  ]
+}

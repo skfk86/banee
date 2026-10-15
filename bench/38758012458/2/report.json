@@ -1,0 +1,187 @@
+{
+  "status": "ready",
+  "error": "",
+  "name": "سوق المستعمل",
+  "steps": [
+    "done · هوية «سوق التدوير» · الخطة: ٥ شاشات · ٤ مجموعات · ١٢ عنصر محتوى",
+    "done · المحتوى: ١٢ عنصر مكتوب كاملاً",
+    "done · الهيكل جاهز: التنقّل، البيانات، الدخول، التصميم",
+    "done · ٥ شاشات مكتوبة",
+    "done · جُرّبت كل الشاشات وأُصلحت ٣، لا أخطاء · رحلات المستخدم: ٢ من ٢ تعمل كاملة · المراجعة: أُصلحت ٢ من ٢",
+    "done · جاهز للمعاينة والتحميل"
+  ],
+  "runtime": {
+    "home": [],
+    "product": [],
+    "makeOffer": [],
+    "myOffers": [],
+    "sellerDashboard": []
+  },
+  "flows": [
+    "تقديم عرض سعر ومتابعته (14 خطوات)",
+    "نشر منتج وإدارة العروض للبائع (9 خطوات)"
+  ],
+  "flowSteps": [
+    {
+      "flow": "تقديم عرض سعر ومتابعته",
+      "steps": [
+        {
+          "role": "customer"
+        },
+        {
+          "go": "/"
+        },
+        {
+          "click": "[data-act=open-product][data-id=products-1]"
+        },
+        {
+          "expect": "تفاصيل المنتج"
+        },
+        {
+          "click": "[data-act=make-offer]"
+        },
+        {
+          "expect": "تقديم عرض سعر"
+        },
+        {
+          "fill": {
+            "#offeredPriceInput": "150"
+          }
+        },
+        {
+          "click": "[data-act=submitOffer]"
+        },
+        {
+          "expectDb": {
+            "col": "offers",
+            "min": 1
+          }
+        },
+        {
+          "go": "/my-offers"
+        },
+        {
+          "expect": "عروض الأسعار المقدمة"
+        },
+        {
+          "role": "seller"
+        },
+        {
+          "go": "/seller/dashboard"
+        },
+        {
+          "click": "text:العروض الواردة"
+        }
+      ]
+    },
+    {
+      "flow": "نشر منتج وإدارة العروض للبائع",
+      "steps": [
+        {
+          "role": "seller"
+        },
+        {
+          "go": "/seller/dashboard"
+        },
+        {
+          "expect": "لوحة البائع"
+        },
+        {
+          "click": "[data-act=add-product]"
+        },
+        {
+          "fill": {
+            "#p-title": "ساعة حائط ذكية",
+            "#p-price": "200",
+            "#p-stock": "1",
+            "#p-category": "categories-1",
+            "#p-image": "https://example.com/watch.jpg",
+            "#p-desc": "ساعة ذكية بحالة ممتازة لاستخدام خفيف جداً"
+          }
+        },
+        {
+          "click": "#save-product-btn"
+        },
+        {
+          "expectDb": {
+            "col": "products",
+            "min": 1
+          }
+        },
+        {
+          "click": "text:العروض الواردة"
+        },
+        {
+          "expect": "العروض المقدمة من المشترين"
+        }
+      ]
+    }
+  ],
+  "reviewIssues": {
+    "home": [],
+    "product": [
+      "مراجعة: زر تعديل المنتج يستخدم المسار '/seller/dashboard' مباشرة ولا يمرر بيانات المنتج للتعديل في شاشة البائع، الإصلاح: تمرير المنتج أو فتحه كـ modal وتغيير الزر لفتح نموذج التعديل مباشرة."
+    ],
+    "makeOffer": [],
+    "myOffers": [],
+    "sellerDashboard": [
+      "مراجعة: عند إنشاء منتج جديد في openProductSheet، لا يتم تمرير حقل sellerId في كائن البيانات المُرسل لـ Data.products.create مما يخالف مخطط قاعدة البيانات، الإصلاح: إضافة sellerId: Auth.user.uid."
+    ]
+  },
+  "flowErr": "",
+  "agent": {
+    "ran": false,
+    "fixed": 0,
+    "steps": 0,
+    "log": []
+  },
+  "fixErrors": [],
+  "review": {
+    "found": 2,
+    "fixed": 2
+  },
+  "screens": [
+    {
+      "id": "home",
+      "route": "/",
+      "roles": [
+        "customer",
+        "seller"
+      ],
+      "bytes": 4599
+    },
+    {
+      "id": "product",
+      "route": "/product/:id",
+      "roles": [
+        "customer",
+        "seller"
+      ],
+      "bytes": 7715
+    },
+    {
+      "id": "makeOffer",
+      "route": "/offer/new",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 3297
+    },
+    {
+      "id": "myOffers",
+      "route": "/my-offers",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 4238
+    },
+    {
+      "id": "sellerDashboard",
+      "route": "/seller/dashboard",
+      "roles": [
+        "seller"
+      ],
+      "bytes": 13358
+    }
+  ]
+}

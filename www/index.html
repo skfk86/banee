@@ -3426,7 +3426,7 @@ function writeFlowTests(app, key){
     ((plan.roles || []).length > 1 ? '\nالأدوار: ' + plan.roles.map(function(r){ return r.id + ' (' + r.name + ')'; }).join('، ') + '\nشاشات كل دور: ' + plan.screens.map(function(s){ return s.route + '→' + ((s.roles || []).join('/') || 'الجميع'); }).join('، ') : '') +
     '\n\nرحلات المستخدم:\n' + plan.flows.map(function(f){ return '- ' + f.name + ': ' + (f.steps || []).join(' ← '); }).join('\n') +
     '\n\nids حقيقية من البيانات: ' + JSON.stringify(ids) +
-    '\n\nكود الشاشات:\n' + plan.screens.map(function(s){ return '### ' + s.route + ' (' + s.title + ')\n' + String(app.ck.screens[s.id] || '').slice(0, 7000); }).join('\n\n');
+    '\n\nكود الشاشات:\n' + plan.screens.map(function(s){ return '### ' + s.route + ' (' + s.title + ')\n' + String(app.ck.screens[s.id] || '').slice(0, 40000); }).join('\n\n');
   return ask(key, 'tester', ctx, true).then(function(raw){
     var r = parseJSON(raw) || {}, tests = (r.tests || (Array.isArray(r) ? r : [])).filter(function(x){ return x && Array.isArray(x.steps) && x.steps.length; }).slice(0, 5);
     tests.forEach(function(x){ x.steps = x.steps.slice(0, 14); });

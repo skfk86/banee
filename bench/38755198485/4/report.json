@@ -1,0 +1,168 @@
+{
+  "status": "ready",
+  "error": "",
+  "name": "نقلة",
+  "steps": [
+    "done · هوية «نقل آمن» · الخطة: ٤ شاشات · ٣ مجموعات",
+    "done · لا يحتاج التطبيق محتوى جاهزاً",
+    "done · الهيكل جاهز: التنقّل، البيانات، الدخول، التصميم",
+    "done · ٤ شاشات مكتوبة",
+    "done · الفحص: ٢ شاشات بها ملاحظات، راجعها في الاستوديو · رحلات المستخدم: ٠ من ١ تعمل كاملة · المراجعة: أُصلحت ٣ من ٦ · وكيل الإصلاح: لم يجد تحسيناً آمناً",
+    "done · جاهز للمعاينة والتحميل"
+  ],
+  "runtime": {
+    "home": [
+      "Validation failed. Values: [object Object]",
+      "رحلة «طلب نقل أثاث» توقفت عند الخطوة ٣: ظهرت رسالة خطأ: الطلب غير موجود"
+    ],
+    "createOrder": [
+      "Validation failed. Values: [object Object]"
+    ],
+    "orderDetails": [],
+    "profile": []
+  },
+  "flows": [
+    "طلب نقل أثاث (14 خطوات)"
+  ],
+  "flowSteps": [
+    {
+      "flow": "طلب نقل أثاث",
+      "steps": [
+        {
+          "role": "customer"
+        },
+        {
+          "go": "/"
+        },
+        {
+          "click": "[data-act=create-order]"
+        },
+        {
+          "fill": {
+            "#pickup": "الرياض، حي الياسمين"
+          }
+        },
+        {
+          "fill": {
+            "#dropoff": "جدة، حي الروضة"
+          }
+        },
+        {
+          "fill": {
+            "#movingDate": "2023-12-01"
+          }
+        },
+        {
+          "fill": {
+            "#itemsDescription": "أثاث غرفة نوم كاملة"
+          }
+        },
+        {
+          "click": "text:إرسال الطلب"
+        },
+        {
+          "expect": "الرئيسية"
+        },
+        {
+          "expectDb": {
+            "col": "orders",
+            "min": 1
+          }
+        },
+        {
+          "role": "driver"
+        },
+        {
+          "go": "/"
+        },
+        {
+          "click": "[data-act=open]"
+        },
+        {
+          "fill": {
+            "#amount": "500"
+          }
+        }
+      ]
+    }
+  ],
+  "reviewIssues": {
+    "home": [
+      "مراجعة: استخدام حقل createdAt في العرض وهو غير موجود في مخطط collection orders."
+    ],
+    "createOrder": [],
+    "orderDetails": [
+      "مراجعة: حقل driverId مفقود في استدعاء Data.bids.create رغم وجوده في مخطط collection bids.",
+      "مراجعة: استدعاء Data.orders.setStatus يمرر معرف العرض (bid ID) كـ driverId، يجب جلب driverId من بيانات العرض (bid) قبل التحديث.",
+      "مراجعة: حقل driverId غير موجود في مخطط collection orders، لذا لا يمكن حفظه عند قبول العرض."
+    ],
+    "profile": [
+      "مراجعة: يتم الفلترة بحالة 'done' بينما لم يتم تعريفها في المخطط أو في أي شاشة أخرى، الحالة المذكورة في المخطط هي 'مكتمل'.",
+      "مراجعة: استخدام حقل createdAt في العرض والترتيب وهو غير موجود في مخطط collection orders."
+    ]
+  },
+  "flowErr": "",
+  "agent": {
+    "ran": true,
+    "fixed": -1,
+    "steps": 14,
+    "log": [
+      "read createOrder — سأقوم بقراءة شاشة 'createOrder' لفهم كيفية معالجة البيانات والتحقق من الحقول، حيث أن الخطأ يشير إلى فشل في التحقق من المدخلات عند إرسال الطلب → 1| App.screen({\n2|   id: 'createOrder',\n3|   route: '/create',\n4|   title: 'طلب نقل جديد',\n5|   icon: 'plus',\n6|   nav: false,\n7|   render(params) {\n8|     retu",
+      "read home — سأقوم بقراءة شاشة 'home' للتأكد من وجود زر 'create-order' وتوجيهه الصحيح، حيث أن الخطأ قد يكون ناتجاً عن عدم التوجيه الصحيح أو مشكلة في الربط بين ال → 1| App.screen({\n2|   id: 'home',\n3|   route: '/',\n4|   title: 'الرئيسية',\n5|   icon: 'home',\n6|   nav: true,\n7|   render(params) {\n8|     const isDriver = Roles",
+      "edit createOrder — الخطأ يظهر عند محاولة إرسال الطلب، مما يعني أن الحقول لا تُقرأ بشكل صحيح أو أن الاختبار يحاول الضغط قبل اكتمال التعبئة. سأقوم بمراجعة كود `cr → تم التعديل",
+      "run — الخطأ «يرجى تعبئة جميع الحقول المطلوبة» يظهر في `createOrder` عند النقر على `create-order`. بما أن الاختبار يملأ الحقول، فقد يكون هناك تأخير في تحديث قيمة → نتيجة التشغيل (درجة الأخطاء 30، الأفضل حتى الآن 30):\n[home] رحلة «طلب نقل أثاث» توقفت عند الخطوة ٣: ظهرت رسالة خطأ: يرجى تعبئة جميع الحقول المطلوبة",
+      "edit createOrder — الخطأ لا يزال يظهر في `createOrder` رغم أن الكود يبدو صحيحاً. قد يكون السبب أن الاختبار الآلي يملأ الحقول ولكن `el.querySelector('#pickup').v → find غير موجود حرفياً في createOrder؛ اقرأ الشاشة وانسخ النص بدقة (المسافات مهمة)",
+      "edit createOrder — سأقوم بإضافة سجلات تصحيح (console.log) داخل دالة التحقق في شاشة createOrder لمعرفة أي حقل يراه التطبيق فارغاً أثناء اختبار الرحلة، حيث أن الق → تم التعديل",
+      "edit createOrder — الخطأ مستمر، سأقوم بإضافة console.log داخل دالة التحقق في createOrder لأرى القيم التي يتم قراءتها فعلياً أثناء الاختبار، ربما هناك حقل يقرأ ق → find غير موجود حرفياً في createOrder؛ اقرأ الشاشة وانسخ النص بدقة (المسافات مهمة)",
+      "read createOrder — سأقوم بقراءة شاشة 'createOrder' بالكامل لأتمكن من تحديد الجزء المسؤول عن التحقق من الحقول وتعديله بشكل صحيح، حيث أن المحاولات السابقة فشلت بس → 1| App.screen({\n2|   id: 'createOrder',\n3|   route: '/create',\n4|   title: 'طلب نقل جديد',\n5|   icon: 'plus',\n6|   nav: false,\n7|   render(params) {\n8|     retu",
+      "edit createOrder — لقد قرأت كود شاشة createOrder، والتحقق يبدو منطقياً، لكن الاختبار يفشل. سأقوم بتعديل دالة التحقق لتكون أكثر مرونة في تسجيل القيم التي يتم قرا → تم التعديل",
+      "read home — لقد راجعت كود createOrder والتحقق يبدو سليماً، لكن الاختبار لا يزال يفشل. سأقوم بقراءة شاشة home للتأكد من وجود الزر [data-act=create-order] وتفعيله → 1| App.screen({\n2|   id: 'home',\n3|   route: '/',\n4|   title: 'الرئيسية',\n5|   icon: 'home',\n6|   nav: true,\n7|   render(params) {\n8|     const isDriver = Roles",
+      "edit createOrder — الخطأ لا يزال يظهر رغم صحة الكود. سأقوم بتعديل دالة التحقق في createOrder لتكون أكثر مرونة (استخدام trim() والتأكد من وجود القيم) وإضافة سجلا → find غير موجود حرفياً في createOrder؛ اقرأ الشاشة وانسخ النص بدقة (المسافات مهمة)",
+      "edit createOrder — الخطأ مستمر في التحقق من الحقول في شاشة createOrder. سأقوم بتعديل دالة التحقق لتكون أكثر تفصيلاً في تسجيل القيم التي يتم قراءتها، وأتأكد من أ → find غير موجود حرفياً في createOrder؛ اقرأ الشاشة وانسخ النص بدقة (المسافات مهمة)",
+      "edit createOrder — التحقق من الحقول في شاشة createOrder يبدو صحيحاً، لكن الاختبار يفشل في قراءة القيم. سأقوم بتعديل دالة التحقق لتكون أكثر مرونة في قراءة القيم  → find غير موجود حرفياً في createOrder؛ اقرأ الشاشة وانسخ النص بدقة (المسافات مهمة)",
+      "edit createOrder — سأقوم بتعديل دالة التحقق في شاشة createOrder لإضافة سجلات تصحيح (console.log) تظهر القيم التي يتم قراءتها فعلياً عند الضغط على زر الإرسال، وذ → find غير موجود حرفياً في createOrder؛ اقرأ الشاشة وانسخ النص بدقة (المسافات مهمة)"
+    ]
+  },
+  "fixErrors": [],
+  "review": {
+    "found": 6,
+    "fixed": 3
+  },
+  "screens": [
+    {
+      "id": "home",
+      "route": "/",
+      "roles": [
+        "customer",
+        "driver"
+      ],
+      "bytes": 2302
+    },
+    {
+      "id": "createOrder",
+      "route": "/create",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 2670
+    },
+    {
+      "id": "orderDetails",
+      "route": "/order/:id",
+      "roles": [
+        "customer",
+        "driver"
+      ],
+      "bytes": 4146
+    },
+    {
+      "id": "profile",
+      "route": "/profile",
+      "roles": [
+        "customer",
+        "driver"
+      ],
+      "bytes": 2520
+    }
+  ]
+}

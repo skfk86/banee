@@ -1,0 +1,137 @@
+{
+  "status": "ready",
+  "error": "",
+  "name": "شكاوى البلدية",
+  "steps": [
+    "done · هوية «بلاغ نشط» · الخطة: ٤ شاشات · ٣ مجموعات · ٥ عنصر محتوى",
+    "done · المحتوى: ٥ عنصر مكتوب كاملاً",
+    "done · الهيكل جاهز: التنقّل، البيانات، الدخول، التصميم",
+    "done · ٤ شاشات مكتوبة",
+    "done · جُرّبت كل الشاشات وأُصلحت ٤، لا أخطاء · رحلات المستخدم: ١ من ١ تعمل كاملة · المراجعة: أُصلحت ٣ من ٣",
+    "done · جاهز للمعاينة والتحميل"
+  ],
+  "runtime": {
+    "home": [],
+    "createComplaint": [],
+    "employeeDashboard": [],
+    "complaintDetails": []
+  },
+  "flows": [
+    "رفع ومتابعة شكوى (14 خطوات)"
+  ],
+  "flowSteps": [
+    {
+      "flow": "رفع ومتابعة شكوى",
+      "steps": [
+        {
+          "role": "citizen"
+        },
+        {
+          "go": "/"
+        },
+        {
+          "click": "[data-act=create-complaint]"
+        },
+        {
+          "click": "[data-act=select-category][data-id=categories-1]"
+        },
+        {
+          "fill": {
+            "[name=title]": "انقطاع إنارة الشارع"
+          }
+        },
+        {
+          "fill": {
+            "[name=description]": "عمود الإنارة رقم 12 لا يعمل منذ يومين"
+          }
+        },
+        {
+          "click": "text:إرسال البلاغ"
+        },
+        {
+          "expectDb": {
+            "col": "complaints",
+            "min": 1
+          }
+        },
+        {
+          "role": "employee"
+        },
+        {
+          "go": "/employee"
+        },
+        {
+          "click": "[data-act=view]"
+        },
+        {
+          "click": "text:جاري العمل"
+        },
+        {
+          "go": "/employee"
+        },
+        {
+          "click": "[data-act=view]"
+        }
+      ]
+    }
+  ],
+  "reviewIssues": {
+    "home": [
+      "مراجعة: حقل createdAt نصي ولا يمكن طرحه مباشرة (b.createdAt || 0) مما يسبب خطأ NaN في الترتيب، ويجب مقارنته كتاريخ."
+    ],
+    "createComplaint": [],
+    "employeeDashboard": [
+      "مراجعة: حقل createdAt نصي ولا يمكن طرحه مباشرة مما يسبب خطأ NaN في الترتيب، ويجب مقارنته كتاريخ."
+    ],
+    "complaintDetails": [
+      "مراجعة: استخدام دالة Data.complaints.setStatus غير المعرفة، والصحيح استخدام Data.complaints.update لتحديث حالة الشكوى."
+    ]
+  },
+  "flowErr": "",
+  "agent": {
+    "ran": false,
+    "fixed": 0,
+    "steps": 0,
+    "log": []
+  },
+  "fixErrors": [],
+  "review": {
+    "found": 3,
+    "fixed": 3
+  },
+  "screens": [
+    {
+      "id": "home",
+      "route": "/",
+      "roles": [
+        "citizen"
+      ],
+      "bytes": 5022
+    },
+    {
+      "id": "createComplaint",
+      "route": "/create",
+      "roles": [
+        "citizen"
+      ],
+      "bytes": 8514
+    },
+    {
+      "id": "employeeDashboard",
+      "route": "/employee",
+      "roles": [
+        "employee"
+      ],
+      "bytes": 4308
+    },
+    {
+      "id": "complaintDetails",
+      "route": "/complaint/:id",
+      "roles": [
+        "citizen",
+        "employee"
+      ],
+      "bytes": 4652
+    }
+  ]
+}

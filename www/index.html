@@ -2952,11 +2952,12 @@ function runBuild(app, key){
         if (!rv.count) return res;
         jstep(app,4,'cur','إصلاح ' + toAr(rv.count) + ' ملاحظات من المراجعة');
         return fixRuntime(app, key, rv.issues, null, true).then(function(k){ alive(); fixedLive += k; app.ck.reviewFixed = k; return app.ck.runtime || res; });
-      }).then(function(res2){
+      }).then(function regen(res2){
         var stale = JSON.stringify(res2 || {}).match(/رحلة[^"]*(لم يُعثر على|غير موجود في الشاشة)/);
-        if (!stale || app.ck.flowRegen || !(app.ck.plan.flows || []).length) return res2;
-        app.ck.flowRegen = true; jstep(app,4,'cur','تحديث سيناريوهات الاختبار بعد الإصلاحات');
-        return writeFlowTests(app, key).then(function(){ alive(); round = 2; return liveRound(); });
+        if (!stale || (app.ck.flowRegen || 0) >= 2 || !(app.ck.plan.flows || []).length) return res2;
+        // عنصر مفقود من كل كود التطبيق = السيناريو قديم (الشاشة تغيّرت بالإصلاح) لا خطأ في التطبيق: نعيد كتابته ونعيد التجربة
+        app.ck.flowRegen = (app.ck.flowRegen || 0) + 1; jstep(app,4,'cur','تحديث سيناريوهات الاختبار بعد الإصلاحات');
+        return writeFlowTests(app, key).then(function(){ alive(); round = 2; return liveRound(); }).then(regen);
       });
     }
     return liveRound().then(deep).then(function(res){ return { nFixed: nFixed + fixedLive, res: res }; });

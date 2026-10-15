@@ -2901,7 +2901,7 @@ function runBuild(app, key){
       if (app.ck.reviewed) return Promise.resolve(res);
       jstep(app,4,'cur','مراجعة شاملة للنظام ككل كمهندس خبير');
       return reviewApp(app, key).then(function(rv){
-        alive(); app.ck.reviewed = true; app.ck.reviewCount = rv.count; saveApps();
+        alive(); app.ck.reviewed = true; app.ck.reviewCount = rv.count; app.ck.reviewIssues = rv.issues; saveApps();
         if (!rv.count) return res;
         jstep(app,4,'cur','إصلاح ' + toAr(rv.count) + ' ملاحظات من المراجعة');
         return fixRuntime(app, key, rv.issues, null, true).then(function(k){ alive(); fixedLive += k; app.ck.reviewFixed = k; return app.ck.runtime || res; });
@@ -3611,7 +3611,7 @@ function fixRuntime(app, key, res, onStage, review, attempt){
     return ask(key, 'fixer', prompt).then(function(r){
       var js = grab(r, 'javascript');
       if (!checkScreen(js, s, plan).length && js.length > (old[s.id] || '').length * 0.6) app.ck.screens[s.id] = js;
-    }).catch(function(e){ if (e && /رصيد|حصة/.test(e.message || '')) throw e; });
+    }).catch(function(e){ if (e && /رصيد|حصة/.test(e.message || '')) throw e; (app.ck.fixErrors = app.ck.fixErrors || []).push(s.id + ': ' + String(e && e.message || e).slice(0, 160)); });
   })).then(function(){
     var changed = bad.filter(function(s){ return app.ck.screens[s.id] !== old[s.id]; });
     if (!changed.length) return 0;

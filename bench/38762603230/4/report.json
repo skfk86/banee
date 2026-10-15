@@ -1,0 +1,119 @@
+{
+  "status": "ready",
+  "error": "",
+  "name": "مفتاحك للسيارات",
+  "steps": [
+    "done · هوية «طريق آمن» · الخطة: ٤ شاشات · ٣ مجموعات · ١٢ عنصر محتوى",
+    "done · المحتوى: ١٢ عنصر مكتوب كاملاً",
+    "done · الهيكل جاهز: التنقّل، البيانات، الدخول، التصميم",
+    "done · ٤ شاشات مكتوبة",
+    "done · جُرّبت كل الشاشات وأُصلحت ٥، لا أخطاء · رحلات المستخدم: ١ من ١ تعمل كاملة · المراجعة: أُصلحت ٣ من ٣",
+    "done · جاهز للمعاينة والتحميل"
+  ],
+  "runtime": {
+    "home": [],
+    "book": [],
+    "myBookings": [],
+    "ownerDashboard": []
+  },
+  "flows": [
+    "حجز سيارة (8 خطوات)"
+  ],
+  "flowSteps": [
+    {
+      "flow": "حجز سيارة",
+      "steps": [
+        {
+          "role": "customer"
+        },
+        {
+          "go": "/"
+        },
+        {
+          "click": "[data-id=cars-1]"
+        },
+        {
+          "fill": {
+            "#start-date": "2023-12-01"
+          }
+        },
+        {
+          "fill": {
+            "#end-date": "2023-12-05"
+          }
+        },
+        {
+          "click": "text:تأكيد الحجز"
+        },
+        {
+          "expect": "حجوزاتك"
+        },
+        {
+          "expectDb": {
+            "col": "bookings",
+            "min": 1
+          }
+        }
+      ]
+    }
+  ],
+  "reviewIssues": {
+    "home": [
+      "مراجعة: عرض جميع السيارات دون فلترة حقل status، مما يؤدي لظهور السيارات غير المتاحة للمستخدمين. يجب إضافة شرط where: ['status', '==', 'available'] في استدعاء Data.cars.list."
+    ],
+    "book": [
+      "مراجعة: عدم التحقق من وجود Auth.user قبل الوصول إلى Auth.user.uid عند تأكيد الحجز، مما سيؤدي لانهيار التطبيق إذا حاول زائر غير مسجل القيام بالحجز."
+    ],
+    "myBookings": [
+      "مراجعة: استخدام حقل createdAt في orderBy غير موجود في تعريف مجموعة bookings، مما سيؤدي إلى فشل جلب البيانات. يجب استخدام حقل موجود مثل startDate أو إزالة orderBy."
+    ],
+    "ownerDashboard": []
+  },
+  "flowErr": "",
+  "agent": {
+    "ran": false,
+    "fixed": 0,
+    "steps": 0,
+    "log": []
+  },
+  "fixErrors": [],
+  "review": {
+    "found": 3,
+    "fixed": 3
+  },
+  "screens": [
+    {
+      "id": "home",
+      "route": "/",
+      "roles": [
+        "customer",
+        "owner"
+      ],
+      "bytes": 2454
+    },
+    {
+      "id": "book",
+      "route": "/book/:id",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 2701
+    },
+    {
+      "id": "myBookings",
+      "route": "/my-bookings",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 1977
+    },
+    {
+      "id": "ownerDashboard",
+      "route": "/owner",
+      "roles": [
+        "owner"
+      ],
+      "bytes": 3140
+    }
+  ]
+}

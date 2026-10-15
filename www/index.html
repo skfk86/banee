@@ -2660,20 +2660,21 @@ function dataModule(plan){
   '    const Data = (() => {\n' +
   '      const C = ' + JSON.stringify(C) + ', L = ' + JSON.stringify(lbl) + ';\n' +
   '      const chk = (c, s) => { const v = C[c].statuses; if (s != null && v.length && v.indexOf(s) < 0) throw new Error("Data." + c + ": الحالة \\"" + s + "\\" غير معرّفة في العقد، المسموح: " + v.join(", ")); };\n' +
-  '      const warn = (c, o) => { const f = C[c].fields; if (!f.length) return; Object.keys(o || {}).forEach(k => { if (f.indexOf(k) < 0 && !/^(id|createdAt|updatedAt|order)$/.test(k)) console.warn("Data." + c + ": حقل غير موجود في العقد: " + k); }); };\n' +
+  '      const warn = (c, o) => { const f = C[c].fields; if (!f.length) return; Object.keys(o || {}).forEach(k => { if (f.indexOf(k) > -1 || /^(id|createdAt|updatedAt|order)$/.test(k)) return; const lk = k.toLowerCase(), near = f.filter(x => x.length > 3 && k.length > 3 && (lk === x.toLowerCase() || lk.indexOf(x.toLowerCase()) > -1 || x.toLowerCase().indexOf(lk) > -1))[0]; if (near) console.warn("Data." + c + ": الحقل «" + k + "» غير موجود في عقد البيانات، والشاشات الأخرى تقرأ «" + near + "» — استخدم الاسم الصحيح"); }); };\n' +
+  '      try { const _a = DB.add.bind(DB), _u = DB.update.bind(DB); DB.add = (c, o) => { if (C[c]) warn(c, o); return _a(c, o); }; DB.update = (c, id, p) => { if (C[c]) warn(c, p); return _u(c, id, p); }; } catch (e) {}\n' +
   '      const api = c => ({\n' +
   '        fields: C[c].fields, statuses: C[c].statuses,\n' +
   '        label: s => L[s] || s || "",\n' +
   '        async create(o) { o = { ...(o || {}) }; const u = Auth.user || {}; if (C[c].statuses.length && o.status == null) o.status = C[c].statuses[0]; chk(c, o.status);\n' +
   '          if (C[c].owner && o.userId == null && u.uid) o.userId = u.uid; if (C[c].fields.indexOf("userName") > -1 && o.userName == null && u.name) o.userName = u.name;\n' +
   '          try { const r = window.__banee && __banee.Roles && __banee.Roles.current(); if (r && C[c].byRole.indexOf(r) > -1 && o[r + "Id"] == null && u.uid) o[r + "Id"] = u.uid; } catch (e) {}\n' +
-  '          warn(c, o); return DB.add(c, o); },\n' +
+  '          return DB.add(c, o); },\n' +
   '        list: (opt) => DB.list(c, opt || {}),\n' +
   '        get: (id) => DB.get(c, id),\n' +
   '        mine(opt) { opt = { ...(opt || {}) }; const u = Auth.user || {}; const f = C[c].owner || ((window.__banee && __banee.Roles && C[c].byRole.indexOf(__banee.Roles.current()) > -1) ? __banee.Roles.current() + "Id" : "userId"); const w = [f, "==", u.uid || "-"]; opt.where = opt.where ? (Array.isArray(opt.where[0]) ? opt.where.concat([w]) : [opt.where, w]) : w; return DB.list(c, opt); },\n' +
   '        byStatus(s, opt) { opt = { ...(opt || {}) }; [].concat(s).forEach(x => chk(c, x)); const all = [].concat(s); return DB.list(c, opt).then(a => a.filter(x => all.indexOf(x.status) > -1)); },\n' +
   '        setStatus(id, s, extra) { chk(c, s); return DB.update(c, id, { ...(extra || {}), status: s }); },\n' +
-  '        update(id, p) { if (p && "status" in p) chk(c, p.status); warn(c, p); return DB.update(c, id, p); },\n' +
+  '        update(id, p) { if (p && "status" in p) chk(c, p.status); return DB.update(c, id, p); },\n' +
   '        remove: (id) => DB.remove(c, id)\n' +
   '      });\n' +
   '      const D = { label: s => L[s] || s || "" }; Object.keys(C).forEach(c => { D[c] = api(c); }); try { if (typeof UI.label !== "function") UI.label = D.label; if (typeof UI.status !== "function") UI.status = D.label; } catch (e) {} return D;\n' +
@@ -3415,6 +3416,7 @@ function runtimeTest(app, onProgress){
     var hook = '<script>(function(){function s(m){try{parent.postMessage({__bt:"' + token + '",msg:String(m)},"*")}catch(e){}}' +
       'window.addEventListener("error",function(e){if(e.message)s(e.message+(e.lineno?" (line "+e.lineno+")":""))});' +
       'window.addEventListener("unhandledrejection",function(e){var r=e.reason;s(r&&(r.message||r.code)?(r.message||r.code):String(r))});' +
+      'var cw=console.warn;console.warn=function(){var m=[].join.call(arguments," ");if(/^Data\\./.test(m))s(m);cw.apply(console,arguments)};' +
       'var ce=console.error;console.error=function(){s([].map.call(arguments,function(a){return a&&a.message?a.message:String(a)}).join(" "));ce.apply(console,arguments)};' +
       '})()<\/script>';
     html = html.replace('<head>', '<head>' + hook);

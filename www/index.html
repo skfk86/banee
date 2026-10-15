@@ -2253,7 +2253,7 @@ var ROLES = {
 '{"tool":"read","screen":"id"} ← كود شاشة بأرقام الأسطر\n' +
 '{"tool":"search","text":"نص"} ← كل الأسطر التي تحتوي النص في كل الشاشات (للتتبع بين الشاشات: من يكتب الحقل ومن يقرؤه)\n' +
 '{"tool":"edit","screen":"id","find":"نص موجود حرفياً مرة واحدة","replace":"النص الجديد"} ← تعديل جراحي؛ انسخ find حرفياً من نتيجة read (بدون أرقام الأسطر) واجعله قصيراً ومميزاً\n' +
-'{"tool":"run"} ← تشغيل التطبيق كاملاً وتجربة كل الشاشات والرحلات، يعيد الأخطاء الحالية\n' +
+'{"tool":"run"} ← تشغيل التطبيق كاملاً وتجربة كل الشاشات والرحلات، يعيد الأخطاء الحالية، ومعها ناتج أي console.log("DBG", ...) تضيفه في الكود لترى القيم الفعلية (تُحذف تلقائياً في النهاية)\n' +
 '{"tool":"done","summary":"ما أصلحته"} ← عندما تنتهي الأخطاء أو لا يمكنك المزيد\n' +
 'المنهج: اقرأ الخطأ، تتبّع السبب الجذري عبر الشاشات بـ search وread (حقل مختلف الاسم، قيمة حالة مختلفة، فلترة خاطئة، زر لا يظهر لهذا الدور، عنصر يظهر فقط عند وجود بيانات)، عدّل أقل قدر ممكن، ثم run للتحقق. لا تحذف ميزات ولا تغيّر قيم data-act الموجودة. استخدم طبقة Data للمجموعات المعرّفة في العقد. لا تعدّل لإرضاء الاختبار بنص وهمي، أصلح السلوك الحقيقي. خطأ مثل «X is not a function» يعني استدعاء دالة غير موجودة في الهيكل: استبدلها بالدالة الصحيحة من عقد الهيكل أدناه أو اكتب المنطق مباشرة.\nعقد الهيكل الذي تُكتب به الشاشات:\n' + CONTRACT,
   fixer: 'أنت مصلّح أخطاء. ستستلم كود شاشة واحدة وقائمة أخطاء مكتشفة آلياً. أصلح الأخطاء فقط مع الالتزام بالعقد التالي، وأعد الشاشة كاملة داخل ```javascript بلا شرح.\n' + CONTRACT
@@ -3416,6 +3416,7 @@ function runtimeTest(app, onProgress){
     var hook = '<script>(function(){function s(m){try{parent.postMessage({__bt:"' + token + '",msg:String(m)},"*")}catch(e){}}' +
       'window.addEventListener("error",function(e){if(e.message)s(e.message+(e.lineno?" (line "+e.lineno+")":""))});' +
       'window.addEventListener("unhandledrejection",function(e){var r=e.reason;s(r&&(r.message||r.code)?(r.message||r.code):String(r))});' +
+      'var cl=console.log;console.log=function(){var m=[].map.call(arguments,function(a){try{return typeof a==="object"?JSON.stringify(a):String(a)}catch(e){return String(a)}}).join(" ");if(/^DBG/.test(m)){try{parent.postMessage({__bt:"' + token + '",dbg:1,msg:m.slice(0,300)},"*")}catch(e){}}cl.apply(console,arguments)};' +
       'var cw=console.warn;console.warn=function(){var m=[].join.call(arguments," ");if(/^Data\\./.test(m))s(m);cw.apply(console,arguments)};' +
       'var ce=console.error;console.error=function(){s([].map.call(arguments,function(a){return a&&a.message?a.message:String(a)}).join(" "));ce.apply(console,arguments)};' +
       '})()<\/script>';
@@ -3426,7 +3427,7 @@ function runtimeTest(app, onProgress){
     var fr = document.createElement('iframe');
     fr.setAttribute('aria-hidden', 'true');
     fr.style.cssText = 'position:fixed;left:-10000px;top:0;width:390px;height:780px;border:0;visibility:hidden';
-    function onMsg(e){ if (e.data && e.data.__bt === token) note(curScreen, e.data.msg); }
+    function onMsg(e){ if (e.data && e.data.__bt === token) { if (e.data.dbg) { (window.__agentDbg = window.__agentDbg || []).push('[' + curScreen + '] ' + e.data.msg); return; } note(curScreen, e.data.msg); } }
     window.addEventListener('message', onMsg);
 
     function done(){
@@ -3542,6 +3543,9 @@ function runFlows(app, w, d, note, setCur){
       if (cands.length === 1) return cands[0];
       return null;
     }
+    // [name=fromAyات] (اسم مشوّه) أو [name=X] غير موجود: نطابق بالجزء اللاتيني كبادئة
+    var mn = /^\[name=["']?([^"'\]]+)["']?\]$/.exec(sel);
+    if (mn){ var pre = mn[1].replace(/[^\w-].*$/, ''); if (pre.length >= 3) { try { var en = d.querySelector('#sheet [name^="' + pre + '"]') || d.querySelector('[name^="' + pre + '"]') || d.querySelector('#' + pre) || d.querySelector('[id^="' + pre + '"]'); if (en && /INPUT|TEXTAREA|SELECT/.test(en.tagName)) return en; } catch (e) {} } return null; }
     var m = /^#([\w-]+)$/.exec(sel); if (!m) return null;
     var base = m[1].replace(/[-_]?(input|field|inp|txt|text)$/i, '');
     var alts = ['[name="' + m[1] + '"]', '[name="' + base + '"]', '#' + base, '[id*="' + base + '"]', '[name*="' + base + '"]', '[placeholder*="' + base + '"]'];
@@ -3706,19 +3710,29 @@ function agentFix(app, key, res, onStep){
       var js = app.ck.screens[sc.id] || '', f = String(a.find || '').replace(/^\d+\| /gm, '');
       if (!f) return Promise.resolve('find فارغ');
       var cnt = js.split(f).length - 1;
-      if (cnt !== 1) return Promise.resolve(cnt ? 'find موجود ' + cnt + ' مرات، اجعله أطول وأكثر تميزاً' : 'find غير موجود حرفياً في ' + sc.id + '؛ اقرأ الشاشة وانسخ النص بدقة (المسافات مهمة)');
-      var nj = js.split(f).join(String(a.replace == null ? '' : a.replace)), errs = checkScreen(nj, sc, plan);
+      var nj;
+      if (cnt === 1) nj = js.split(f).join(String(a.replace == null ? '' : a.replace));
+      else if (cnt > 1) return Promise.resolve('find موجود ' + cnt + ' مرات، اجعله أطول وأكثر تميزاً');
+      else {
+        // تسامح مع اختلاف المسافات والأسطر: نطابق نفس الرموز بأي مسافات بينها
+        var toks = f.trim().split(/\s+/).map(function(x){ return x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }), re = toks.length ? new RegExp(toks.join('\\s*'), 'g') : null, ms = re ? js.match(re) || [] : [];
+        if (ms.length !== 1) return Promise.resolve(ms.length ? 'find يطابق ' + ms.length + ' مواضع، اجعله أطول' : 'find غير موجود في ' + sc.id + ' حتى مع تجاهل المسافات؛ استخدم search بكلمة مميزة منه لتعرف النص الحالي، ثم انسخ سطراً أو سطرين فقط');
+        var at = js.search(re); nj = js.slice(0, at) + String(a.replace == null ? '' : a.replace) + js.slice(at + ms[0].length);
+      }
+      var errs = checkScreen(nj, sc, plan);
       var hard = errs.filter(function(e){ return /صياغ|نحوي|SyntaxError|Unexpected|App\.screen/.test(e); });
       if (hard.length) return Promise.resolve('رُفض التعديل لأنه يكسر الكود: ' + hard.join(' | ').slice(0, 400));
       app.ck.screens[sc.id] = nj;
       return Promise.resolve('تم التعديل' + (errs.length ? '. ملاحظات الفحص الثابت بعده: ' + errs.slice(0, 4).join(' | ').slice(0, 500) : ''));
     }
     if (a.tool === 'run') {
+      window.__agentDbg = [];
       return runtimeTest(app).then(function(r){
         var cx = crossCheck(app); Object.keys(cx).forEach(function(id){ (cx[id] || []).forEach(function(m){ if (r[id] && r[id].indexOf(m) < 0) r[id].push(m); }); });
         cur = r; var s = appScore(app, r);
         if (s < best) { best = s; bestScreens = {}; plan.screens.forEach(function(x){ bestScreens[x.id] = app.ck.screens[x.id]; }); }
-        return 'نتيجة التشغيل (درجة الأخطاء ' + s + '، الأفضل حتى الآن ' + best + '):\n' + issuesText(app, r);
+        var dbg = (window.__agentDbg || []).slice(-25);
+        return 'نتيجة التشغيل (درجة الأخطاء ' + s + '، الأفضل حتى الآن ' + best + '):\n' + issuesText(app, r) + (dbg.length ? '\n\nمخرجات console.log("DBG", ...) أثناء التشغيل:\n' + dbg.join('\n') : '');
       });
     }
     return Promise.resolve('أداة غير معروفة: ' + a.tool);
@@ -3738,6 +3752,7 @@ function agentFix(app, key, res, onStep){
     }, function(e){ if (e && /رصيد|حصة/.test(e.message || '')) throw e; return finish(); });
   }
   function finish(){
+    plan.screens.forEach(function(s){ var js = app.ck.screens[s.id]; if (js && js.indexOf('DBG') > -1) app.ck.screens[s.id] = js.replace(/^[ \t]*console\.log\(\s*['"`]DBG[^\n]*\n/gm, ''); });
     var changed = plan.screens.some(function(s){ return app.ck.screens[s.id] !== start[s.id]; });
     if (!changed) { app.ck.agentLog = hist.map(function(h){ return h.call.slice(0, 160) + ' → ' + String(h.obs).slice(0, 160); }); return Promise.resolve({ fixed: 0, res: res, steps: n }); }
     var ran = hist.length && /^run/.test(hist[hist.length - 1].call);

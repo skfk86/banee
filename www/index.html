@@ -3459,6 +3459,14 @@ function runFlows(app, w, d, note, setCur){
     if (/^text:/.test(sel)){ var tx = sel.slice(5).trim(); var all = d.querySelectorAll('button, a, [data-act], .item, .card, [role=button]'); for (var i = all.length - 1; i >= 0; i--) if ((all[i].textContent || '').replace(/\s+/g, ' ').indexOf(tx) > -1) return all[i]; return null; }
     try { var el = d.querySelector('#sheet ' + sel) || d.querySelector(sel); if (el) return el; } catch (e) {}
     // السيناريو خمّن اسماً قريباً (#address-input) والحقل الحقيقي name="address": نجرّب البدائل المعقولة
+    // [data-act=X][data-val=Y] والزر الحقيقي data-status="Y" أو data-id="Y": نطابق data-act ثم أي سمة data-* قيمتها Y
+    var ma = /^\[data-act=["']?([\w-]+)["']?\]\[data-[\w-]+=["']?([^"'\]]+)["']?\]$/.exec(sel);
+    if (ma){
+      var cands = [].slice.call(d.querySelectorAll('#sheet [data-act="' + ma[1] + '"]')).concat([].slice.call(d.querySelectorAll('[data-act="' + ma[1] + '"]')));
+      for (var j = 0; j < cands.length; j++){ var ds = cands[j].dataset || {}; for (var key in ds) if (key !== 'act' && String(ds[key]) === ma[2]) return cands[j]; }
+      if (cands.length === 1) return cands[0];
+      return null;
+    }
     var m = /^#([\w-]+)$/.exec(sel); if (!m) return null;
     var base = m[1].replace(/[-_]?(input|field|inp|txt|text)$/i, '');
     var alts = ['[name="' + m[1] + '"]', '[name="' + base + '"]', '#' + base, '[id*="' + base + '"]', '[name*="' + base + '"]', '[placeholder*="' + base + '"]'];
@@ -3469,6 +3477,7 @@ function runFlows(app, w, d, note, setCur){
     chain = chain.then(function(){
       var k = 0, failed = false, base = {};
       try { w.__banee.setRole(null); } catch(e){}
+      var snap = {}; function docSnap(a){ var o = {}; (a || []).forEach(function(x, i){ try { o[x.id || i] = JSON.stringify(x); } catch(e){} }); return o; }
       var cols = tc.steps.filter(function(s){ return s && s.expectDb && s.expectDb.col; }).map(function(s){ return s.expectDb.col; });
       function fail(msg){ failed = true; note(here(), 'رحلة «' + tc.flow + '» توقفت عند الخطوة ' + toAr(k) + ': ' + msg); }
       function step(){
@@ -3512,11 +3521,11 @@ function runFlows(app, w, d, note, setCur){
         }
         else if (st.expect) { if ((d.body.textContent || '').indexOf(st.expect) < 0) fail('كان متوقعاً ظهور «' + String(st.expect).slice(0, 60) + '» ولم يظهر'); }
         else if (st.expectDb) {
-          var q = st.expectDb, acted = tc.steps.slice(0, k).some(function(s){ return s && (s.click || s.fill); }); p = Promise.resolve(w.__banee.DB.list(q.col)).then(function(a){ if ((a || []).length - (acted ? (base[q.col] || 0) : 0) < (q.min || 1)) fail('لم يُحفظ شيء في ' + q.col + ' بعد العملية (الحفظ لا يعمل)'); }, function(e){ fail('تعذّرت قراءة ' + q.col + ': ' + (e && e.message)); });
+          var q = st.expectDb, acted = tc.steps.slice(0, k).some(function(s){ return s && (s.click || s.fill); }); p = Promise.resolve(w.__banee.DB.list(q.col)).then(function(a){ var now = docSnap(a), touched = acted && Object.keys(now).some(function(id){ return (snap[q.col] || {})[id] !== now[id]; }); if (!touched && (a || []).length - (acted ? (base[q.col] || 0) : 0) < (q.min || 1)) fail('لم يُحفظ شيء في ' + q.col + ' بعد العملية (الحفظ لا يعمل)'); }, function(e){ fail('تعذّرت قراءة ' + q.col + ': ' + (e && e.message)); });
         }
         return p.then(step);
       }
-      return Promise.all(cols.map(function(c){ return Promise.resolve(w.__banee.DB.list(c)).then(function(a){ base[c] = (a || []).length; }, function(){ base[c] = 0; }); })).then(step);
+      return Promise.all(cols.map(function(c){ return Promise.resolve(w.__banee.DB.list(c)).then(function(a){ base[c] = (a || []).length; snap[c] = docSnap(a); }, function(){ base[c] = 0; snap[c] = {}; }); })).then(step);
     });
   });
   return chain;

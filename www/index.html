@@ -1805,7 +1805,7 @@ function updatePlan() {
     document.getElementById('plan-nm').textContent = pn;
     document.getElementById('plan-apps').textContent = 'رصيدك: ' + toAr(c.remaining) + ' نقطة' + (c.bonus ? ' (منها ' + toAr(c.bonus) + ' إضافية)' : '');
     document.getElementById('plan-bar').style.width = Math.min(100, c.used / Math.max(1, c.allowance) * 100) + '%';
-    document.getElementById('plan-cnt').textContent = toAr(c.used) + ' من ' + toAr(c.allowance) + (c.plan === 'free' ? (c.founder ? ' · رصيد المؤسسين' : (c.allowance ? ' · رصيد تجريبي لمرة واحدة' : ' · اشترك لتبدأ البناء')) : ' نقطة هذا الشهر');
+    document.getElementById('plan-cnt').textContent = c.plan === 'key' ? 'بمفتاحك الخاص · بلا حد يومي' : toAr(c.used) + ' من ' + toAr(c.allowance) + (c.plan === 'free' ? (c.founder ? ' · رصيد المؤسسين' : ' نقطة اليوم · تتجدد يومياً') : ' نقطة هذا الشهر');
     return;
   }
   var plan = curPlan(), P = PLANS[plan], used = buildsUsed();

@@ -1,0 +1,169 @@
+{
+  "status": "ready",
+  "error": "",
+  "name": "فعاليات",
+  "steps": [
+    "done · هوية «نبض الفعاليات» · الخطة: ٥ شاشات · ٣ مجموعات · ١٢ عنصر محتوى",
+    "done · المحتوى: ١٢ عنصر مكتوب كاملاً",
+    "done · الهيكل جاهز: التنقّل، البيانات، الدخول، التصميم",
+    "done · ٥ شاشات مكتوبة",
+    "done · جُرّبت كل الشاشات وأُصلحت ٣، لا أخطاء · رحلات المستخدم: ٢ من ٢ تعمل كاملة · المراجعة: أُصلحت ١ من ٢",
+    "done · جاهز للمعاينة والتحميل"
+  ],
+  "runtime": {
+    "home": [],
+    "book": [],
+    "myTickets": [],
+    "organizerDashboard": [],
+    "profile": []
+  },
+  "flows": [
+    "حجز تذكرة فعالية (7 خطوات)",
+    "نشر فعالية وتسجيل الحضور (9 خطوات)"
+  ],
+  "flowSteps": [
+    {
+      "flow": "حجز تذكرة فعالية",
+      "steps": [
+        {
+          "role": "customer"
+        },
+        {
+          "go": "/"
+        },
+        {
+          "click": "[data-act=book][data-id=events-1]"
+        },
+        {
+          "fill": {
+            "#userName": "أحمد محمد",
+            "#phone": "0912345678",
+            "#method": "بنكك (تطبيق بنك الخرطوم)"
+          }
+        },
+        {
+          "click": "#submit-btn"
+        },
+        {
+          "expect": "تذاكري وحجوزاتي"
+        },
+        {
+          "expectDb": {
+            "col": "bookings",
+            "min": 1
+          }
+        }
+      ]
+    },
+    {
+      "flow": "نشر فعالية وتسجيل الحضور",
+      "steps": [
+        {
+          "role": "organizer"
+        },
+        {
+          "go": "/organizer"
+        },
+        {
+          "click": "[data-act=add-event]"
+        },
+        {
+          "fill": {
+            "[name=title]": "مؤتمر الذكاء الاصطناعي",
+            "[name=category]": "تقنية",
+            "[name=date]": "2025-12-31",
+            "[name=time]": "10:00 صباحاً",
+            "[name=location]": "الخرطوم",
+            "[name=capacity]": "50",
+            "[name=price]": "0",
+            "[name=description]": "مؤتمر تقني رفيع المستوى"
+          }
+        },
+        {
+          "click": "text:حفظ ونشر الفعالية"
+        },
+        {
+          "expect": "فعالياتي المنشورة"
+        },
+        {
+          "expectDb": {
+            "col": "events",
+            "min": 1
+          }
+        },
+        {
+          "click": "[data-act=view-bookings]"
+        },
+        {
+          "click": "[data-act=mark-attended]"
+        }
+      ]
+    }
+  ],
+  "reviewIssues": {
+    "home": [],
+    "book": [],
+    "myTickets": [
+      "مراجعة: حالة التذكرة new غير مستخدمة نهائياً عند إنشاء الحجز في شاشة الحجز (حيث يتم تعيين status إلى confirmed)، مما يجعل فلتر 'جديدة' لا يعرض أي نتائج. الإصلاح: تعيين حالة الحجز الجديد إلى new أو إزالة الفلتر."
+    ],
+    "organizerDashboard": [],
+    "profile": [
+      "مراجعة: الكتابة إلى مجموعة users غير المعرفة في مخطط النظام (collections) بينما المجموعات المتاحة هي events و bookings و members فقط. الإصلاح: حفظ بيانات المستخدم وتحديثها في مجموعة members."
+    ]
+  },
+  "flowErr": "",
+  "agent": {
+    "ran": false,
+    "fixed": 0,
+    "steps": 0,
+    "log": []
+  },
+  "fixErrors": [],
+  "review": {
+    "found": 2,
+    "fixed": 1
+  },
+  "screens": [
+    {
+      "id": "home",
+      "route": "/",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 8898
+    },
+    {
+      "id": "book",
+      "route": "/book/:id",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 5103
+    },
+    {
+      "id": "myTickets",
+      "route": "/my-tickets",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 7698
+    },
+    {
+      "id": "organizerDashboard",
+      "route": "/organizer",
+      "roles": [
+        "organizer"
+      ],
+      "bytes": 10314
+    },
+    {
+      "id": "profile",
+      "route": "/profile",
+      "roles": [
+        "customer",
+        "organizer"
+      ],
+      "bytes": 9573
+    }
+  ]
+}

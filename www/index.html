@@ -2240,7 +2240,7 @@ var ROLES = {
 '{"expect":"نص يجب أن يظهر"} ← نص ثابت مؤكد الظهور بعد الخطوة (من الكود أو البيانات، وليس من رسائل toast)\n' +
 '{"expectDb":{"col":"orders","min":1}} ← بعد عملية حفظ: يجب أن تحتوي المجموعة على هذا العدد على الأقل\n' +
 'القواعد: استخدم فقط selectors و data-act و ids موجودة حرفياً في الكود المعطى، ولا تخترع id. للحقل الذي له name فقط استخدم [name=address]. من ٣ إلى ١٢ خطوة لكل رحلة. ابدأ كل رحلة بـ go. ' +
-'إذا فتح الزر نافذة تأكيد (UI.confirm أو UI.sheet) فاضغط زرها التالي. لا تختبر الحذف أو تسجيل الخروج. اختبر ما يكتبه المستخدم (طلب، حجز، إضافة) بـ expectDb.',
+'في الاختبارات والنماذج اختر إجابة لكل سؤال وعبّئ كل الحقول المطلوبة قبل الإرسال. expectDb فقط بعد عملية حفظ قام بها المستخدم في نفس الرحلة. إذا فتح الزر نافذة تأكيد (UI.confirm أو UI.sheet) فاضغط زرها التالي. لا تختبر الحذف أو تسجيل الخروج. اختبر ما يكتبه المستخدم (طلب، حجز، إضافة) بـ expectDb.',
   fixer: 'أنت مصلّح أخطاء. ستستلم كود شاشة واحدة وقائمة أخطاء مكتشفة آلياً. أصلح الأخطاء فقط مع الالتزام بالعقد التالي، وأعد الشاشة كاملة داخل ```javascript بلا شرح.\n' + CONTRACT
 };
 
@@ -3239,7 +3239,10 @@ function seedIdFor(plan, js){
   return 's1';
 }
 
+var LEGIT_WORDS = '(?!)';
 function runtimeTest(app, onProgress){
+  // كلمات مثل undefined أو NaN قد تكون جزءاً من المحتوى نفسه (دروس برمجة)، فلا تُحسب خطأ
+  try { var sj = JSON.stringify(mergedSeed(app)); LEGIT_WORDS = ['undefined', 'NaN', '\\[object Object\\]'].filter(function(wd){ return new RegExp(wd).test(sj); }).join('|') || '(?!)'; } catch(e){ LEGIT_WORDS = '(?!)'; }
   return new Promise(function(resolve){
     var plan = app.ck.plan, token = 'bt' + Date.now() + Math.random().toString(36).slice(2,6);
     var res = {}; plan.screens.forEach(function(s){ res[s.id] = []; });
@@ -3284,7 +3287,7 @@ function runtimeTest(app, onProgress){
         if (el.querySelector('.empty h3') && /تعذّر عرض الشاشة/.test(el.textContent)) note(s.id, 'دالة render رمت خطأ');
         if (el.querySelector('.sk')) note(s.id, 'الشاشة بقيت عالقة في حالة التحميل (skeleton لم يُستبدل بعد mount)');
         if (!el.textContent.trim() && !el.querySelector('img,svg,i,input,button')) note(s.id, 'الشاشة فارغة تماماً');
-        if (/undefined|\[object Object\]|NaN/.test(el.textContent)) note(s.id, 'يظهر للمستخدم نص مثل undefined أو [object Object] أو NaN — حقل غير موجود أو اسم خاطئ');
+        if (/undefined|\[object Object\]|NaN/.test(el.textContent.replace(new RegExp(LEGIT_WORDS, 'g'), ''))) note(s.id, 'يظهر للمستخدم نص مثل undefined أو [object Object] أو NaN — حقل غير موجود أو اسم خاطئ');
         try { designAudit(w, d, el).forEach(function(m){ note(s.id, 'تصميم: ' + m); }); } catch(e){}
       }
       function clickActions(s, route){
@@ -3402,11 +3405,24 @@ function runFlows(app, w, d, note, setCur){
         else if (st.click) {
           var el = find(st.click);
           if (!el) fail('لم يُعثر على ' + st.click + ' (الزر غير موجود أو اسمه مختلف)');
-          else { el.click(); p = sleep(800).then(function(){ setCur(here()); var t = d.querySelector('.toast.error, .toast-error, [data-type=error]'); if (t && t.textContent.trim()) fail('ظهرت رسالة خطأ: ' + t.textContent.trim().slice(0, 120)); }); }
+          else {
+            var form = el.closest && el.closest('form');
+            if (form && (el.type === 'submit' || el.tagName === 'BUTTON')) {
+              var names = {};
+              form.querySelectorAll('input[type=radio]').forEach(function(r){ if (!names[r.name]) { names[r.name] = 1; if (!form.querySelector('input[type=radio][name="' + r.name + '"]:checked')) r.click(); } });
+              form.querySelectorAll('input[required], textarea[required], select[required]').forEach(function(f){
+                if (f.type === 'radio' || f.value) return;
+                if (f.type === 'checkbox') { if (!f.checked) f.click(); return; }
+                if (f.tagName === 'SELECT') { if (f.options.length > 1) f.selectedIndex = 1; }
+                else f.value = f.type === 'number' ? '1' : f.type === 'email' ? 'test@banee.app' : f.type === 'tel' ? '0912345678' : f.type === 'date' ? new Date(Date.now() + 864e5).toISOString().slice(0, 10) : 'تجربة';
+                f.dispatchEvent(new w.Event('input', { bubbles: true })); f.dispatchEvent(new w.Event('change', { bubbles: true }));
+              });
+            }
+            el.click(); p = sleep(800).then(function(){ setCur(here()); var t = d.querySelector('.toast.error, .toast-error, [data-type=error]'); if (t && t.textContent.trim()) fail('ظهرت رسالة خطأ: ' + t.textContent.trim().slice(0, 120)); }); }
         }
         else if (st.expect) { if ((d.body.textContent || '').indexOf(st.expect) < 0) fail('كان متوقعاً ظهور «' + String(st.expect).slice(0, 60) + '» ولم يظهر'); }
         else if (st.expectDb) {
-          var q = st.expectDb; p = Promise.resolve(w.__banee.DB.list(q.col)).then(function(a){ if ((a || []).length - (base[q.col] || 0) < (q.min || 1)) fail('لم يُحفظ شيء في ' + q.col + ' بعد العملية (الحفظ لا يعمل)'); }, function(e){ fail('تعذّرت قراءة ' + q.col + ': ' + (e && e.message)); });
+          var q = st.expectDb, acted = tc.steps.slice(0, k).some(function(s){ return s && (s.click || s.fill); }); p = Promise.resolve(w.__banee.DB.list(q.col)).then(function(a){ if ((a || []).length - (acted ? (base[q.col] || 0) : 0) < (q.min || 1)) fail('لم يُحفظ شيء في ' + q.col + ' بعد العملية (الحفظ لا يعمل)'); }, function(e){ fail('تعذّرت قراءة ' + q.col + ': ' + (e && e.message)); });
         }
         return p.then(step);
       }

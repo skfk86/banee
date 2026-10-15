@@ -24,6 +24,7 @@ var CFG = {
   FOUNDER_POINTS: 1500,     // رصيدهم المجاني (يكفي لبناء تطبيق كامل وتجربته)
   FREE_BUDGET_USD: 1e9,     // لا ميزانية: مفتاح الخادم مجاني من Google
   FREE_DAILY_USD: 1e9,
+  FREE_REFILL_HOURS: 4,      // نقاط المجاني تتجدد كل ٤ ساعات
   FREE_DAY_POINTS: 250,     // نقاط المجاني اليومية (تتجدد كل يوم) لتوزيع حصة Google المجانية بعدل بين المستخدمين
   // ── قدرات التطبيقات المبنية ──
   NET_PER_HOUR: 120,        // طلبات البيانات الحية لكل مستخدم في الساعة
@@ -181,17 +182,20 @@ function loadState(user) {
     PropertiesService.getScriptProperties().setProperty('u:' + user.uid, JSON.stringify(s));
   }
   var plan = userPlan(user, token);
-  if (plan.name === 'free' || plan.name === 'key') plan = { name: plan.name, period: 'd' + Utilities.formatDate(new Date(), 'UTC', 'yyyy-MM-dd') }; // رصيد يومي يتجدد
+  if (plan.name === 'free' || plan.name === 'key') plan = { name: plan.name, period: freeWindow() }; // رصيد يتجدد كل ٤ ساعات
   if (s.period !== plan.period) { s.period = plan.period; s.used = 0; } // تجديد شهري = رصيد جديد
   s.plan = plan.name;
   return s;
 }
+// نافذة تجديد نقاط المجاني: كل ٤ ساعات بتوقيت UTC+3 (00، 04، 08، 12، 16، 20 بتوقيت الخليج؛ 23، 03، 07… بتوقيت السودان)
+function freeWindow(d) { var x = new Date((d || new Date()).getTime() + 3 * 3600000); return 'h' + Utilities.formatDate(x, 'UTC', 'yyyy-MM-dd') + '-' + Math.floor(x.getUTCHours() / CFG.FREE_REFILL_HOURS); }
+function nextRefill() { var x = new Date(Date.now() + 3 * 3600000), h = (Math.floor(x.getUTCHours() / CFG.FREE_REFILL_HOURS) + 1) * CFG.FREE_REFILL_HOURS; x.setUTCHours(h, 0, 0, 0); return x.getTime() - 3 * 3600000; }
 function saveState(user, s) { PropertiesService.getScriptProperties().setProperty('u:' + user.uid, JSON.stringify(s)); }
 function planPoints(s) { return s.plan === 'free' ? CFG.FREE_DAY_POINTS : PLANS[s.plan].points; }
 function creditsView(user, s) {
   var allow = planPoints(s);
   var today = Utilities.formatDate(new Date(), 'UTC', 'yyyy-MM-dd');
-  return { adsLeft: s.plan === 'free' ? Math.max(0, CFG.AD_PER_DAY - (s.adDay === today ? s.adN || 0 : 0)) : 0, adPoints: CFG.AD_POINTS, plan: s.plan, founder: !!s.founder, no: s.no || 0, allowance: allow, used: Math.round(s.used), bonus: Math.round(s.bonus || 0), remaining: Math.max(0, Math.round(allow - s.used + (s.bonus || 0))), blocked: !!s.blocked, at: Date.now() };
+  return { adsLeft: s.plan === 'free' ? Math.max(0, CFG.AD_PER_DAY - (s.adDay === today ? s.adN || 0 : 0)) : 0, adPoints: CFG.AD_POINTS, plan: s.plan, founder: !!s.founder, no: s.no || 0, allowance: allow, used: Math.round(s.used), bonus: Math.round(s.bonus || 0), remaining: Math.max(0, Math.round(allow - s.used + (s.bonus || 0))), blocked: !!s.blocked, refillAt: s.plan === 'free' ? nextRefill() : 0, at: Date.now() };
 }
 
 // ═════════════ الطلب إلى Gemini ═════════════

@@ -1241,7 +1241,7 @@
   <div class="modal-sheet">
     <div class="mhandle"></div>
     <div class="mtitle"><svg class="i"><use href="#i-crown"/></svg>اختر خطتك</div>
-    <p class="msub">مجاناً: ٢٥٠ نقطة تتجدد كل يوم مع إعلانات. أو اشترك بمفتاحك الخاص وابنِ بلا حدود ولا إعلانات. تلغي متى شئت من Google Play.</p>
+    <p class="msub">مجاناً: ٢٥٠ نقطة تتجدد كل ٤ ساعات مع إعلانات. أو اشترك بمفتاحك الخاص وابنِ بلا حدود ولا إعلانات. تلغي متى شئت من Google Play.</p>
     <div class="plans" id="plans-box"></div>
     <p class="msub" id="plans-note" style="margin:12px 0 0;font-size:13px"></p>
     <button class="btn btn-ghost" style="margin-top:16px" onclick="closeModal('upg-modal')">إغلاق</button>
@@ -1805,7 +1805,7 @@ function updatePlan() {
     document.getElementById('plan-nm').textContent = pn;
     document.getElementById('plan-apps').textContent = 'رصيدك: ' + toAr(c.remaining) + ' نقطة' + (c.bonus ? ' (منها ' + toAr(c.bonus) + ' إضافية)' : '');
     document.getElementById('plan-bar').style.width = Math.min(100, c.used / Math.max(1, c.allowance) * 100) + '%';
-    document.getElementById('plan-cnt').textContent = c.plan === 'key' ? 'بمفتاحك الخاص · بلا حد يومي' : toAr(c.used) + ' من ' + toAr(c.allowance) + (c.plan === 'free' ? (c.founder ? ' · رصيد المؤسسين' : ' نقطة اليوم · تتجدد يومياً') : ' نقطة هذا الشهر');
+    document.getElementById('plan-cnt').textContent = c.plan === 'key' ? 'بمفتاحك الخاص · بلا حد يومي' : toAr(c.used) + ' من ' + toAr(c.allowance) + (c.plan === 'free' ? (c.founder ? ' · رصيد المؤسسين' : ' نقطة · تتجدد ' + refillTxt()) : ' نقطة هذا الشهر');
     return;
   }
   var plan = curPlan(), P = PLANS[plan], used = buildsUsed();
@@ -1927,7 +1927,7 @@ function renderPlans(){
   if (px && Ads.eligible()) document.getElementById('plans-box').insertAdjacentHTML('afterbegin', '<div class="ad-earn"><div><b>نقاط مجانية</b><span>شاهد إعلاناً قصيراً واحصل على ' + toAr(S.credits.adPoints || 5) + ' نقاط · ' + (S.credits.adsLeft ? 'متبقي ' + toAr(S.credits.adsLeft) + ' اليوم' : 'انتهت إعلانات اليوم') + '</span></div><button class="btn btn-accent btn-sm" onclick="Ads.reward(this)"' + (S.credits.adsLeft ? '' : ' disabled') + '><svg class="i i-sm"><use href="#i-play"/></svg>شاهد</button></div>');
   document.getElementById('plans-box').insertAdjacentHTML('beforeend', px && SHOW_PACKS ? '<div class="packs"><div class="packs-h">رصيد إضافي (لا ينتهي)</div>' +
     Object.keys(PACKS).map(function(id){ return '<button class="pack" onclick="Billing.buyPack(\'' + id + '\')"><b>' + toAr(PACKS[id].points.toLocaleString('en')) + '</b><span>نقطة</span><em>' + esc(Billing.packPrice(id)) + '</em></button>'; }).join('') + '</div>' : '');
-  document.getElementById('plans-note').innerHTML = (px && S.credits ? 'الخطة المجانية: <b>' + toAr(S.credits.remaining) + '</b> من ٢٥٠ نقطة اليوم، تتجدد كل يوم، وتطبيق جديد واحد يومياً. وقد تتوقف مؤقتاً عند ازدحام الخدمة المجانية. ' : '') + (Billing.native()
+  document.getElementById('plans-note').innerHTML = (px && S.credits ? 'الخطة المجانية: <b>' + toAr(S.credits.remaining) + '</b> من ٢٥٠ نقطة، تتجدد كل ٤ ساعات، وتطبيق جديد واحد يومياً. وقد تتوقف مؤقتاً عند ازدحام الخدمة المجانية. ' : '') + (Billing.native()
     ? 'الدفع عبر Google Play، ويتجدد شهرياً. تقدر تلغي في أي وقت من إعدادات Google Play. <button class="link-btn" onclick="Billing.restore()">استعادة اشتراكي</button>'
     : 'الاشتراك يتم داخل تطبيق بانِي على أندرويد عبر Google Play.');
 }
@@ -2369,7 +2369,7 @@ function buildApp() {
   if (!key) { needKeyMsg(); if (!PROXY_URL) document.getElementById('api-note').style.display=''; return; }
   if (!canBuild() && Ads.eligible() && Ads.plugin() && S.credits.adsLeft) { toast('رصيدك لا يكفي. شاهد إعلانات لتحصل على نقاط مجانية، أو اشترك', 'err'); openUpgrade(); return; }
   if (!canBuild()) {
-    toast(proxyMode() ? (S.credits && S.credits.plan === 'free' && !S.credits.bonus ? 'انتهى رصيد اليوم، يتجدد غداً. شاهد إعلاناً أو اشترك بمفتاحك لتبني الآن' : 'رصيدك لا يكفي لبناء تطبيق جديد') : curPlan() === 'free' ? 'استخدمت تطبيقك التجريبي المجاني، اشترك لبناء المزيد' : 'وصلت لحد خطتك هذا الشهر', 'err');
+    toast(proxyMode() ? (S.credits && S.credits.plan === 'free' && !S.credits.bonus ? 'انتهى رصيدك، يتجدد ' + refillTxt() + '. شاهد إعلاناً أو اشترك بمفتاحك لتبني الآن' : 'رصيدك لا يكفي لبناء تطبيق جديد') : curPlan() === 'free' ? 'استخدمت تطبيقك التجريبي المجاني، اشترك لبناء المزيد' : 'وصلت لحد خطتك هذا الشهر', 'err');
     openUpgrade(); return;
   }
   if (proxyMode() && !ownKeyOn() && !buildApp._ok) {
@@ -2528,7 +2528,7 @@ function askProxy(role, input, json){
         if (c === 'busy') throw { retry: true, swap: true, code: r.error.status || 503, msg: r.error.message };
         if (c === 'gemini' && /think/i.test(r.error.message || '') && !THINK_OFF) { THINK_OFF = true; throw { retry: true, msg: r.error.message }; }
         if (c === 'timeout' || c === 'server') throw { retry: true, msg: r.error.message };
-        if (c === 'no_credits') { setTimeout(openUpgrade, 400); throw { fatal: true, text: 'انتهى رصيد اليوم (يتجدد غداً). شاهد إعلاناً أو اشترك بمفتاحك الخاص، ثم اضغط متابعة لإكمال البناء من حيث توقف' }; }
+        if (c === 'no_credits') { setTimeout(openUpgrade, 400); throw { fatal: true, text: 'انتهى رصيدك (يتجدد ' + refillTxt() + '). شاهد إعلاناً أو اشترك بمفتاحك الخاص، ثم اضغط متابعة لإكمال البناء من حيث توقف' }; }
         if (c === 'free_ended') { setTimeout(openUpgrade, 400); throw { fatal: true, text: r.error.message }; }
         if (c === 'free_day') throw { fatal: true, text: r.error.message };
         throw { fatal: true, text: (r.error && r.error.message) || 'تعذّر الطلب' };
@@ -3304,6 +3304,12 @@ function proxyCall(body){
     return fetch(PROXY_URL, { method: 'POST', body: JSON.stringify(body), signal: ctrl.signal, redirect: 'follow' })
       .then(function(r){ clearTimeout(timer); return r.json(); }, function(e){ clearTimeout(timer); throw e; });
   });
+}
+// موعد تجديد نقاط المجاني القادم بصيغة مفهومة: «بعد ساعتين و١٠ دقائق»
+function refillTxt(){
+  var at = S.credits && S.credits.refillAt; if (!at) return 'كل ٤ ساعات';
+  var m = Math.max(1, Math.round((at - Date.now()) / 60000)), h = Math.floor(m / 60), r = m % 60;
+  return 'بعد ' + (h ? (h === 1 ? 'ساعة' : h === 2 ? 'ساعتين' : toAr(h) + ' ساعات') + (r ? ' و' + toAr(r) + ' دقيقة' : '') : toAr(r) + ' دقيقة');
 }
 function setCredits(c){
   if (!c) return;

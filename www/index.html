@@ -2621,6 +2621,7 @@ function assemble(app, opts){
     var js = app.ck.screens[s.id];
     return js ? '    // ── شاشة: ' + s.title + ' ──\n' + js.split('\n').map(function(l){ return '    ' + l; }).join('\n') + '\n' : '';
   }).join('\n');
+  body = dataModule(plan) + body;
   var out = APP_TEMPLATE.split('{{TITLE}}').join(UI_esc(plan.name));
   Object.keys(dv).forEach(function(k){ out = out.split(k).join(dv[k]); });
   return out
@@ -2630,6 +2631,51 @@ function assemble(app, opts){
 function adminKey(app){ var s = String(app.adminPin || '0000') + '|' + app.id, x = 5381; for (var i = 0; i < s.length; i++) x = ((x << 5) + x + s.charCodeAt(i)) >>> 0; return x.toString(36); }
 function UI_esc(s){ return String(s||'').replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
 
+// ════ عقد البيانات: طبقة Data تُولَّد آلياً من المخطط (بلا ذكاء اصطناعي) فتتفق كل الشاشات على الحقول والقيم ════
+var STATUS_AR = { new:'جديد', pending:'قيد الانتظار', accepted:'مقبول', confirmed:'مؤكد', preparing:'قيد التجهيز', ready:'جاهز', delivering:'في الطريق', shipped:'تم الشحن', delivered:'تم التوصيل', done:'مكتمل', completed:'مكتمل', cancelled:'ملغي', canceled:'ملغي', rejected:'مرفوض', paid:'مدفوع', unpaid:'غير مدفوع', active:'نشط', inactive:'غير نشط', expired:'منتهي', open:'مفتوح', closed:'مغلق', submitted:'مُسلَّم', graded:'مُقيَّم', draft:'مسودة', published:'منشور', approved:'مقبول', scheduled:'مجدول', attended:'حضر', absent:'غائب', inprogress:'قيد التنفيذ', in_progress:'قيد التنفيذ', review:'قيد المراجعة' };
+function contractOf(plan){
+  var roles = (plan.roles || []).map(function(r){ return r.id; }), out = {};
+  (plan.collections || []).forEach(function(c){
+    if (!c || !c.name || /^(users|members|notices|devices)$/.test(c.name)) return;
+    var f = Object.keys(c.fields || {}), st = plan.statuses && plan.statuses[c.name];
+    if ((!st || !st.length) && f.indexOf('status') > -1) { var m = (String((c.fields || {}).status || '').match(/[a-z_]+/g) || []).filter(function(w){ return !/^(string|number|enum|text|one|of|or)$/.test(w); }); if (m.length > 1) st = m; }
+    out[c.name] = { fields: f, statuses: (st || []).map(String), owner: f.indexOf('userId') > -1 ? 'userId' : null, byRole: roles.filter(function(r){ return f.indexOf(r + 'Id') > -1; }) };
+  });
+  return out;
+}
+function dataModule(plan){
+  var C = contractOf(plan); if (!Object.keys(C).length) return '';
+  var lbl = {}; Object.keys(C).forEach(function(k){ C[k].statuses.forEach(function(s){ lbl[s] = STATUS_AR[s] || STATUS_AR[s.toLowerCase()] || s; }); });
+  return '    // ── عقد البيانات (مولَّد آلياً من المخطط — لا تعدّله) ──\n' +
+  '    const Data = (() => {\n' +
+  '      const C = ' + JSON.stringify(C) + ', L = ' + JSON.stringify(lbl) + ';\n' +
+  '      const chk = (c, s) => { const v = C[c].statuses; if (s != null && v.length && v.indexOf(s) < 0) throw new Error("Data." + c + ": الحالة \\"" + s + "\\" غير معرّفة في العقد، المسموح: " + v.join(", ")); };\n' +
+  '      const warn = (c, o) => { const f = C[c].fields; if (!f.length) return; Object.keys(o || {}).forEach(k => { if (f.indexOf(k) < 0 && !/^(id|createdAt|updatedAt|order)$/.test(k)) console.warn("Data." + c + ": حقل غير موجود في العقد: " + k); }); };\n' +
+  '      const api = c => ({\n' +
+  '        fields: C[c].fields, statuses: C[c].statuses,\n' +
+  '        label: s => L[s] || s || "",\n' +
+  '        async create(o) { o = { ...(o || {}) }; const u = Auth.user || {}; if (C[c].statuses.length && o.status == null) o.status = C[c].statuses[0]; chk(c, o.status);\n' +
+  '          if (C[c].owner && o.userId == null && u.uid) o.userId = u.uid; if (C[c].fields.indexOf("userName") > -1 && o.userName == null && u.name) o.userName = u.name;\n' +
+  '          try { const r = window.__banee && __banee.Roles && __banee.Roles.current(); if (r && C[c].byRole.indexOf(r) > -1 && o[r + "Id"] == null && u.uid) o[r + "Id"] = u.uid; } catch (e) {}\n' +
+  '          warn(c, o); return DB.add(c, o); },\n' +
+  '        list: (opt) => DB.list(c, opt || {}),\n' +
+  '        get: (id) => DB.get(c, id),\n' +
+  '        mine(opt) { opt = { ...(opt || {}) }; const u = Auth.user || {}; const f = C[c].owner || ((window.__banee && __banee.Roles && C[c].byRole.indexOf(__banee.Roles.current()) > -1) ? __banee.Roles.current() + "Id" : "userId"); const w = [f, "==", u.uid || "-"]; opt.where = opt.where ? (Array.isArray(opt.where[0]) ? opt.where.concat([w]) : [opt.where, w]) : w; return DB.list(c, opt); },\n' +
+  '        byStatus(s, opt) { opt = { ...(opt || {}) }; [].concat(s).forEach(x => chk(c, x)); const all = [].concat(s); return DB.list(c, opt).then(a => a.filter(x => all.indexOf(x.status) > -1)); },\n' +
+  '        setStatus(id, s, extra) { chk(c, s); return DB.update(c, id, { ...(extra || {}), status: s }); },\n' +
+  '        update(id, p) { if (p && "status" in p) chk(c, p.status); warn(c, p); return DB.update(c, id, p); },\n' +
+  '        remove: (id) => DB.remove(c, id)\n' +
+  '      });\n' +
+  '      const D = { label: s => L[s] || s || "" }; Object.keys(C).forEach(c => { D[c] = api(c); }); return D;\n' +
+  '    })();\n\n';
+}
+function dataDoc(plan){
+  var C = contractOf(plan), ks = Object.keys(C); if (!ks.length) return '';
+  return '\n\nطبقة البيانات Data (مولَّدة من العقد ومتاحة لكل الشاشات — استخدمها بدل DB لهذه المجموعات، فهي تملأ الحالة الأولى وuserId واسم المستخدم وحقل الدور تلقائياً وترفض قيم الحالة الخاطئة):\n' +
+    ks.map(function(k){ var c = C[k]; return '- Data.' + k + (c.statuses.length ? ' — الحالات بالترتيب: ' + c.statuses.join(' → ') : '') + (c.owner ? ' — مالك العنصر userId' : '') + (c.byRole.length ? ' — حقل الدور: ' + c.byRole.map(function(r){ return r + 'Id'; }).join('، ') : ''); }).join('\n') +
+    '\nالدوال: await Data.X.create(obj) ← يعيد id | Data.X.list({ where, orderBy, limit }) | Data.X.get(id) | Data.X.mine() ← عناصر المستخدم الحالي (أو عناصر دوره كالبائع والمعلم) | Data.X.byStatus("new") أو byStatus(["new","accepted"]) | Data.X.setStatus(id, "accepted", { driverId: Auth.user.uid }) | Data.X.update(id, patch) | Data.X.remove(id) | Data.label(status) ← الاسم العربي للحالة للعرض.' +
+    '\nقاعدة: الشاشة التي تعرض عناصر بحالة معينة تستخدم byStatus بقيم العقد نفسها التي تكتبها create/setStatus في الشاشات الأخرى، ولا تكتب نصوص الحالة بالعربي في البيانات أبداً (العرض فقط عبر Data.label).';
+}
 function screenCtx(plan, s, content){
   content = content || {};
   var samples = Object.keys(content).map(function(k){ var it = (content[k] || []).filter(Boolean); if (!it.length) return ''; return '\n- ' + k + ' (' + it.length + ' عنصراً، مرتبة بالحقل order، والـ id مثل "' + it[0].id + '"). مثال كامل لعنصر:\n' + JSON.stringify(it[0]).slice(0, 1800); }).join('');
@@ -2638,6 +2684,7 @@ function screenCtx(plan, s, content){
     '\n\nالمجموعات والحقول (استخدمها حرفياً):\n' + JSON.stringify(plan.collections||[], null, 1) +
     (samples ? '\n\nالمحتوى الحقيقي الموجود في قاعدة البيانات (اعرضه كاملاً كما هو، النصوص الطويلة عبر UI.rich):' + samples : '') +
     (plan.statuses && Object.keys(plan.statuses).length ? '\n\nقيم حقل status المعتمدة (اكتب وقارن بهذه القيم حرفياً فقط، والعرض للمستخدم بترجمة عربية):\n' + Object.keys(plan.statuses).map(function(c){ return '- ' + c + ': ' + [].concat(plan.statuses[c]).join(' → '); }).join('\n') : '') +
+    dataDoc(plan) +
     ((plan.shared || []).length ? '\n\nالحالة المشتركة بين الشاشات عبر Store (التزم بالمفتاح والشكل حرفياً، قراءةً وكتابةً، وبنفس القيمة الافتراضية):\n' + plan.shared.map(function(x){ return '- Store "' + x.key + '": ' + x.shape + (x.writes ? ' — تكتبها: ' + [].concat(x.writes).join('، ') : '') + (x.reads ? ' — تقرؤها: ' + [].concat(x.reads).join('، ') : ''); }).join('\n') : '') +
     (plan.flows && plan.flows.length ? '\n\nرحلات المستخدم في النظام (يجب أن تعمل هذه الشاشة ضمنها):\n' + plan.flows.map(function(f){ return '- ' + f.name + ': ' + (f.steps || []).join(' ← '); }).join('\n') : '') +
     '\n\nكل الشاشات ومساراتها:\n' + plan.screens.map(function(x){ return '- ' + x.route + ' : ' + x.title + (x.nav ? ' (في القائمة السفلية)' : ''); }).join('\n') +

@@ -3489,7 +3489,7 @@ function runtimeTest(app, onProgress){
 }
 
 // ════ وكيل الاختبار: يكتب سيناريو لكل رحلة مستخدم، ثم يشغّلها على التطبيق كمستخدم حقيقي ════
-function writeFlowTests(app, key){
+function writeFlowTests(app, key, again){
   var plan = app.ck.plan, seed = mergedSeed(app), ids = {};
   Object.keys(seed).forEach(function(c){ ids[c] = (seed[c] || []).slice(0, 3).map(function(x, i){ return x.id || 's' + (i + 1); }); });
   var ctx = 'التطبيق: ' + plan.name +
@@ -3497,11 +3497,14 @@ function writeFlowTests(app, key){
     '\n\nرحلات المستخدم:\n' + plan.flows.map(function(f){ return '- ' + f.name + ': ' + (f.steps || []).join(' ← '); }).join('\n') +
     '\n\nids حقيقية من البيانات: ' + JSON.stringify(ids) +
     '\n\nكود الشاشات:\n' + plan.screens.map(function(s){ return '### ' + s.route + ' (' + s.title + ')\n' + String(app.ck.screens[s.id] || '').slice(0, 40000); }).join('\n\n');
+  if (again) ctx += '\n\nمهم: أعد JSON صالحاً قصيراً فقط، بحد أقصى ٣ رحلات و١٠ خطوات لكل رحلة.';
   return ask(key, 'tester', ctx, true).then(function(raw){
     var r = parseJSON(raw) || {}, tests = (r.tests || (Array.isArray(r) ? r : [])).filter(function(x){ return x && Array.isArray(x.steps) && x.steps.length; }).slice(0, 5);
     tests.forEach(function(x){ x.steps = x.steps.slice(0, 14); });
+    // رد فارغ أو JSON مقطوع: لا نتخطى اختبار الرحلات بصمت، نعيد المحاولة مرتين
+    if (!tests.length && (plan.flows || []).length && (again || 0) < 2) { app.ck.flowErr = 'رد غير صالح: ' + String(raw || '').slice(0, 120); return writeFlowTests(app, key, (again || 0) + 1); }
     app.ck.flowTests = tests; saveApps();
-  }).catch(function(e){ if (e && (e.message === '__stale' || /رصيد|حصة|الشبكة|Gemini|مشغولة/.test(e.message || ''))) throw e; app.ck.flowTests = []; }); // نفاد الرصيد: يتوقف البناء ويكمل لاحقاً، لا يتخطى الاختبار
+  }).catch(function(e){ if (e && (e.message === '__stale' || /رصيد|حصة|الشبكة|Gemini|مشغولة/.test(e.message || ''))) throw e; app.ck.flowErr = String(e && e.message || e).slice(0, 160); if ((again || 0) < 2) return writeFlowTests(app, key, (again || 0) + 1); app.ck.flowTests = []; }); // نفاد الرصيد: يتوقف البناء ويكمل لاحقاً، لا يتخطى الاختبار
 }
 function reviewApp(app, key){
   var plan = app.ck.plan;
@@ -3559,6 +3562,16 @@ function runFlows(app, w, d, note, setCur){
     }
     return next();
   }
+  // عند فقدان عنصر: نصف ما هو ظاهر فعلاً، فيعرف المصلح والوكيل هل الشاشة خاطئة أم العنصر يظهر بشرط
+  function seen(){
+    try {
+      var acts = {}, ins = [], root = d.getElementById('sheet') || d;
+      [].forEach.call(d.querySelectorAll('[data-act]'), function(e){ acts[e.getAttribute('data-act')] = 1; });
+      [].forEach.call(root.querySelectorAll('input, textarea, select'), function(e){ if (ins.length < 12) ins.push(e.id ? '#' + e.id : e.name ? '[name=' + e.name + ']' : e.tagName.toLowerCase()); });
+      var R = w.__banee && w.__banee.Roles, role = R ? R.current() : '';
+      return ' — الظاهر الآن: الشاشة ' + here() + ' (' + (w.location.hash || '#/') + ')' + (role ? ' بدور ' + role : '') + (d.getElementById('sheet') ? '، ونافذة منبثقة مفتوحة' : '') + '؛ الأزرار: ' + (Object.keys(acts).slice(0, 14).join('، ') || 'لا شيء') + '؛ الحقول: ' + (ins.join('، ') || 'لا شيء');
+    } catch (e) { return ''; }
+  }
   tests.forEach(function(tc){
     chain = chain.then(function(){
       var k = 0, failed = false, base = {};
@@ -3582,13 +3595,13 @@ function runFlows(app, w, d, note, setCur){
           Object.keys(st.fill).forEach(function(sel){
             if (failed) return;
             var el = find(sel);
-            if (!el) return fail('الحقل ' + sel + ' غير موجود في الشاشة');
+            if (!el) return fail('الحقل ' + sel + ' غير موجود في الشاشة' + seen());
             el.value = st.fill[sel]; el.dispatchEvent(new w.Event('input', { bubbles: true })); el.dispatchEvent(new w.Event('change', { bubbles: true }));
           });
           p = sleep(150);
         }
         else if (st.click) p = findRole(st.click).then(function(el){
-          if (!el) fail('لم يُعثر على ' + st.click + ' (الزر غير موجود أو اسمه مختلف)');
+          if (!el) fail('لم يُعثر على ' + st.click + ' (الزر غير موجود أو اسمه مختلف)' + seen());
           else {
             var form = el.closest && el.closest('form');
             if (form && (el.type === 'submit' || el.tagName === 'BUTTON')) {
@@ -3671,7 +3684,7 @@ function agentFix(app, key, res, onStep){
       ((plan.flows || []).length ? '\nرحلات المستخدم: ' + plan.flows.map(function(f){ return f.name + ': ' + (f.steps || []).join(' ← '); }).join(' | ') : '') +
       ((app.ck.flowTests || []).length ? '\nسيناريوهات الاختبار الآلي: ' + JSON.stringify(app.ck.flowTests).slice(0, 3000) : '') +
       '\n\nالأخطاء الحالية من آخر تشغيل:\n' + issuesText(app, cur) +
-      '\n\nسجل خطواتك حتى الآن (' + n + ' من ' + MAX + '):\n' + (hist.length ? hist.map(function(h, i){ var last = i >= hist.length - 3; return '#' + (i + 1) + ' ' + h.call + '\n→ ' + (last ? h.obs : h.obs.slice(0, 400) + (h.obs.length > 400 ? ' …' : '')); }).join('\n\n') : '(لا شيء بعد)') +
+      '\n\nسجل خطواتك حتى الآن (' + n + ' من ' + MAX + '):\n' + (hist.length ? hist.map(function(h, i){ var last = i >= hist.length - 6; return '#' + (i + 1) + ' ' + h.call + '\n→ ' + (last ? h.obs : h.obs.slice(0, 400) + (h.obs.length > 400 ? ' …' : '')); }).join('\n\n') : '(لا شيء بعد)') +
       (function(){ var edits = hist.filter(function(h){ return /^edit/.test(h.call) && /^تم التعديل/.test(h.obs); }).length; return (n >= 5 && !edits) ? '\n\nتنبيه: مضت ' + n + ' خطوات بلا أي تعديل. لديك ما يكفي من المعلومات: نفّذ edit الآن على السبب الأرجح ثم run.' : (n >= MAX - 2 ? '\n\nتبقّت خطوات قليلة: إن عدّلت فشغّل run للتحقق، أو أنهِ بـ done.' : ''); })() +
       '\n\nما الخطوة التالية؟';
   }
@@ -3712,8 +3725,9 @@ function agentFix(app, key, res, onStep){
       var a = parseJSON(raw) || {};
       if (onStep) onStep(n, a);
       if (a.tool === 'done' || !a.tool) { hist.push({ call: 'done', obs: String(a.summary || '') }); return finish(); }
-      var sig = JSON.stringify([a.tool, a.screen, a.text, a.find, a.replace]), dup = hist.filter(function(h){ return h.sig === sig; })[0];
-      if (dup && a.tool !== 'run') { hist.push({ call: a.tool + ' (مكرر)', sig: sig, obs: 'نفّذت هذه الخطوة نفسها سابقاً (#' + (hist.indexOf(dup) + 1) + ') ولن تتغير النتيجة. انتقل لخطوة مختلفة: عدّل أو أنهِ.' }); return loop(); }
+      var ver = a.tool === 'read' || a.tool === 'search' ? plan.screens.map(function(s){ return (app.ck.screens[s.id] || '').length; }).join(',') : '';
+      var sig = JSON.stringify([a.tool, a.screen, a.text, a.find, a.replace, ver]), dup = hist.slice(-6).filter(function(h){ return h.sig === sig; })[0];
+      if (dup && a.tool !== 'run') { hist.push({ call: a.tool + ' (مكرر)', sig: 'dup' + n, obs: 'نتيجة هذه الخطوة نفسها ظاهرة أعلاه في #' + (hist.indexOf(dup) + 1) + ' والكود لم يتغير منذها. استخدمها: نفّذ edit أو run أو done.' }); return loop(); }
       var call = a.tool + (a.screen ? ' ' + a.screen : '') + (a.text ? ' «' + String(a.text).slice(0, 60) + '»' : '') + (a.think ? ' — ' + String(a.think).slice(0, 200) : '');
       return act(a).then(function(obs){ hist.push({ call: call, sig: sig, obs: String(obs) }); return loop(); });
     }, function(e){ if (e && /رصيد|حصة/.test(e.message || '')) throw e; return finish(); });

@@ -1,0 +1,168 @@
+{
+  "status": "ready",
+  "error": "",
+  "name": "عيادتي",
+  "steps": [
+    "done · هوية «شفاء ونقاء» · الخطة: ٥ شاشات · ٤ مجموعات · ١٠ عنصر محتوى",
+    "done · المحتوى: ١٠ عنصر مكتوب كاملاً",
+    "done · الهيكل جاهز: التنقّل، البيانات، الدخول، التصميم",
+    "done · ٥ شاشات مكتوبة",
+    "done · جُرّبت كل الشاشات وأُصلحت ٧، لا أخطاء · رحلات المستخدم: ٢ من ٢ تعمل كاملة · المراجعة: أُصلحت ٣ من ٣",
+    "done · جاهز للمعاينة والتحميل"
+  ],
+  "runtime": {
+    "home": [],
+    "book": [],
+    "mine": [],
+    "doctorSchedule": [],
+    "doctorNote": []
+  },
+  "flows": [
+    "حجز موعد (10 خطوات)",
+    "إدارة المواعيد للطبيب (7 خطوات)"
+  ],
+  "flowSteps": [
+    {
+      "flow": "حجز موعد",
+      "steps": [
+        {
+          "role": "customer"
+        },
+        {
+          "go": "/"
+        },
+        {
+          "click": "[data-act=book]"
+        },
+        {
+          "click": ".provider-card"
+        },
+        {
+          "fill": {
+            "#booking-day": "اليوم"
+          }
+        },
+        {
+          "click": ".slot-btn"
+        },
+        {
+          "fill": {
+            "#patient-name": "أحمد علي",
+            "#patient-phone": "0912345678",
+            "#patient-note": "ألم في الأسنان"
+          }
+        },
+        {
+          "click": "#confirm-booking-btn"
+        },
+        {
+          "expect": "سجل المواعيد الطبية"
+        },
+        {
+          "expectDb": {
+            "col": "bookings",
+            "min": 1
+          }
+        }
+      ]
+    },
+    {
+      "flow": "إدارة المواعيد للطبيب",
+      "steps": [
+        {
+          "role": "doctor"
+        },
+        {
+          "go": "/doctor/schedule"
+        },
+        {
+          "click": "[data-act=note]"
+        },
+        {
+          "fill": {
+            "#doctor-note-input": "تم الكشف ووصف العلاج المناسب"
+          }
+        },
+        {
+          "click": "[data-act=save-and-finish]"
+        },
+        {
+          "expect": "مواعيدي اليومية"
+        },
+        {
+          "expectDb": {
+            "col": "bookings",
+            "min": 1
+          }
+        }
+      ]
+    }
+  ],
+  "reviewIssues": {
+    "home": [],
+    "book": [],
+    "mine": [
+      "مراجعة: استخدام الدالة غير الموجودة Data.bookings.setStatus، والإصلاح هو استخدام Data.bookings.update(id, { status: 'cancelled' })."
+    ],
+    "doctorSchedule": [
+      "مراجعة: استخدام الدالة غير المعرفة Data.bookings.byStatus، والإصلاح هو استخدام Data.bookings.list({ where: [['status', '==', currentStatusFilter]] })."
+    ],
+    "doctorNote": [
+      "مراجعة: تعريف الشاشة مرتين بنفس المعرف doctorNote، يجب إزالة التعريف المكرر."
+    ]
+  },
+  "flowErr": "",
+  "agent": {
+    "ran": false,
+    "fixed": 0,
+    "steps": 0,
+    "log": []
+  },
+  "fixErrors": [],
+  "review": {
+    "found": 3,
+    "fixed": 3
+  },
+  "screens": [
+    {
+      "id": "home",
+      "route": "/",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 2604
+    },
+    {
+      "id": "book",
+      "route": "/book/:id",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 10983
+    },
+    {
+      "id": "mine",
+      "route": "/bookings",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 5502
+    },
+    {
+      "id": "doctorSchedule",
+      "route": "/doctor/schedule",
+      "roles": [
+        "doctor"
+      ],
+      "bytes": 7758
+    },
+    {
+      "id": "doctorNote",
+      "route": "/doctor/note/:id",
+      "roles": [
+        "doctor"
+      ],
+      "bytes": 4502
+    }
+  ]
+}

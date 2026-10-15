@@ -1,0 +1,178 @@
+{
+  "status": "ready",
+  "error": "",
+  "name": "مزرعتي",
+  "steps": [
+    "done · هوية «حصاد المزرعة» · الخطة: ٥ شاشات · ٣ مجموعات",
+    "done · لا يحتاج التطبيق محتوى جاهزاً",
+    "done · الهيكل جاهز: التنقّل، البيانات، الدخول، التصميم",
+    "done · ٥ شاشات مكتوبة",
+    "done · جُرّبت كل الشاشات وأُصلحت ٢، لا أخطاء · رحلات المستخدم: ٢ من ٢ تعمل كاملة · المراجعة: أُصلحت ١ من ١",
+    "done · جاهز للمعاينة والتحميل"
+  ],
+  "runtime": {
+    "home": [],
+    "dailyEntry": [],
+    "recordsList": [],
+    "reports": [],
+    "alertsManager": []
+  },
+  "flows": [
+    "تسجيل البيانات اليومية (10 خطوات)",
+    "متابعة التقارير وإرسال التنبيهات (9 خطوات)"
+  ],
+  "flowSteps": [
+    {
+      "flow": "تسجيل البيانات اليومية",
+      "steps": [
+        {
+          "role": "worker"
+        },
+        {
+          "go": "/daily-entry"
+        },
+        {
+          "fill": {
+            "[name=date]": "2023-10-25"
+          }
+        },
+        {
+          "fill": {
+            "[name=eggProduction]": "1200"
+          }
+        },
+        {
+          "fill": {
+            "[name=feedConsumed]": "250.5"
+          }
+        },
+        {
+          "fill": {
+            "[name=mortality]": "2"
+          }
+        },
+        {
+          "fill": {
+            "[name=notes]": "القطيع بحالة ممتازة"
+          }
+        },
+        {
+          "click": "text:حفظ وتسجيل البيانات"
+        },
+        {
+          "expect": "تم حفظ بيانات المزرعة بنجاح"
+        },
+        {
+          "expectDb": {
+            "col": "dailyRecords",
+            "min": 1
+          }
+        }
+      ]
+    },
+    {
+      "flow": "متابعة التقارير وإرسال التنبيهات",
+      "steps": [
+        {
+          "role": "owner"
+        },
+        {
+          "go": "/reports"
+        },
+        {
+          "expect": "لوحة التقارير والتحليلات"
+        },
+        {
+          "go": "/alerts"
+        },
+        {
+          "fill": {
+            "[name=title]": "تطعيم القطيع"
+          }
+        },
+        {
+          "fill": {
+            "[name=message]": "يرجى الانتباه لتطعيم القطيع غداً صباحاً"
+          }
+        },
+        {
+          "click": "text:نشر التنبيه للعمال"
+        },
+        {
+          "expect": "تم نشر التنبيه بنجاح"
+        },
+        {
+          "expectDb": {
+            "col": "alerts",
+            "min": 1
+          }
+        }
+      ]
+    }
+  ],
+  "reviewIssues": {
+    "home": [],
+    "dailyEntry": [],
+    "recordsList": [],
+    "reports": [],
+    "alertsManager": [
+      "مراجعة: حقل date يُرسل عند إنشاء التنبيه بصيغة 'YYYY-MM-DD' عبر date: currentDate، لكن مخطط مجموعة alerts يحدد نوعه كـ 'string' دون مشاكل، إلا أن زر الحذف لا يعالج خطأ الاتصال بشكل مثالي أو أن زر الإرسال يحمل data-act='submit-alert' بينما الحدث يستهدف الفورم submit. لا توجد مشكلة حرجة هنا."
+    ]
+  },
+  "flowErr": "",
+  "agent": {
+    "ran": false,
+    "fixed": 0,
+    "steps": 0,
+    "log": []
+  },
+  "fixErrors": [],
+  "review": {
+    "found": 1,
+    "fixed": 1
+  },
+  "screens": [
+    {
+      "id": "home",
+      "route": "/",
+      "roles": [
+        "worker",
+        "owner"
+      ],
+      "bytes": 7070
+    },
+    {
+      "id": "dailyEntry",
+      "route": "/daily-entry",
+      "roles": [
+        "worker"
+      ],
+      "bytes": 5796
+    },
+    {
+      "id": "recordsList",
+      "route": "/records-list",
+      "roles": [
+        "worker",
+        "owner"
+      ],
+      "bytes": 3274
+    },
+    {
+      "id": "reports",
+      "route": "/reports",
+      "roles": [
+        "owner"
+      ],
+      "bytes": 6276
+    },
+    {
+      "id": "alertsManager",
+      "route": "/alerts",
+      "roles": [
+        "owner"
+      ],
+      "bytes": 5919
+    }
+  ]
+}

@@ -19,6 +19,7 @@ const log = (...a) => { const s = '[' + new Date().toISOString().slice(11, 19) +
   }, [KEY || 'FAKE']);
   const p = await ctx.newPage(); const perr = [];
   p.on('pageerror', e => perr.push(e.message));
+  let lastToast = ''; setInterval(async () => { try { const tx = await p.evaluate(() => { const t = document.querySelector('.toast.on, #toast.on, .toast'); return t ? t.textContent.trim() : ''; }); if (tx && tx !== lastToast) { lastToast = tx; log('رسالة:', tx); } } catch (e) {} }, 1500);
   p.on('response', async r => { const u = r.url(); if (/generativelanguage/.test(u) && r.status() !== 200) { let body = ''; try { body = (await r.text()).slice(0, 1500); } catch (e) {} log('Gemini', r.status(), (u.match(/models\/([^:?]+)/) || [])[1] || '', body.replace(/\s+/g, ' ')); } });
   p.on('requestfailed', r => { if (/generativelanguage/.test(r.url())) log('Gemini طلب فشل:', (r.url().match(/models\/([^:?]+)/) || [])[1] || '', r.failure() && r.failure().errorText); });
   await p.goto('file://' + path.resolve(SRC)); await p.waitForTimeout(2500);
@@ -29,7 +30,7 @@ const log = (...a) => { const s = '[' + new Date().toISOString().slice(11, 19) +
     buildApp();
   }, [KIT, IDEA]);
   log('بدأ البناء:', await p.evaluate(() => document.getElementById('adesc').value || (S.apps[0] && S.apps[0].desc) || ''));
-  const t0 = Date.now(); let last = '', approved = false, resumes = 0;
+  const t0 = Date.now(); let last = '', approved = false, approvedAt = 0, resumes = 0;
   while (Date.now() - t0 < MAX_MIN * 60000) {
     await p.waitForTimeout(4000);
     const st = await p.evaluate(() => {
@@ -41,12 +42,14 @@ const log = (...a) => { const s = '[' + new Date().toISOString().slice(11, 19) +
     if (st.none) continue;
     const line = st.status + ' ' + st.steps;
     if (line !== last) { log(line); last = line; }
+    if (st.status === 'review' && approved && !approved.warned && Date.now() - approvedAt > 180000) { approved = { warned: 1 }; log('⚠️ ما زال بانتظار المراجعة بعد الموافقة بـ٣ دقائق'); }
     if (st.status === 'review' && !approved) {
       const bp = await p.evaluate(() => { const pl = S.apps[0].ck.plan; return { name: pl.name, roles: (pl.roles || []).map(r => r.name + (r.approve ? '*' : '')), screens: pl.screens.map(s => s.title + ' ' + s.route + (s.roles ? ' [' + s.roles.join(',') + ']' : '')), cols: (pl.collections || []).map(c => c.name), flows: (pl.flows || []).map(f => f.name) }; });
       fs.writeFileSync(path.join(OUT, 'blueprint.json'), JSON.stringify(bp, null, 2));
       log('المخطط:', JSON.stringify(bp));
       await p.screenshot({ path: path.join(OUT, '00-blueprint.png'), fullPage: true });
-      approved = true; await p.evaluate(id => approvePlan(id), st.id); log('وافقت على المخطط');
+      await p.evaluate(() => { const bk = document.getElementById('bp-bk'), bn = document.getElementById('bp-bn'); if (bk && !bk.value) bk.value = '1234567'; if (bn && !bn.value) bn.value = 'متجر تجريبي'; });
+      approved = true; approvedAt = Date.now(); await p.evaluate(id => approvePlan(id), st.id); log('وافقت على المخطط (وعبّأت بيانات الدفع إن طُلبت)');
     }
     if (st.status === 'failed' && resumes < 3) { resumes++; log('توقف البناء:', st.err, '← ضغطت «متابعة من حيث توقف» (' + resumes + ')'); await p.waitForTimeout(60000); await p.evaluate(id => retryApp(id), st.id); continue; }
     if (st.status === 'ready' || st.status === 'failed') break;

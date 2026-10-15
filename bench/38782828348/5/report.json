@@ -1,0 +1,170 @@
+{
+  "status": "ready",
+  "error": "",
+  "name": "مدير المشاريع",
+  "steps": [
+    "done · هوية «إنجاز مهني» · الخطة: ٥ شاشات · ٤ مجموعات · ١٢ عنصر محتوى",
+    "done · المحتوى: ١٢ عنصر مكتوب كاملاً",
+    "done · الهيكل جاهز: التنقّل، البيانات، الدخول، التصميم",
+    "done · ٥ شاشات مكتوبة",
+    "done · الفحص: ١ شاشات بها ملاحظات، راجعها في الاستوديو · رحلات المستخدم: ٠ من ١ تعمل كاملة · المراجعة: أُصلحت ٣ من ٣ · وكيل الإصلاح: لم يجد تحسيناً آمناً",
+    "done · جاهز للمعاينة والتحميل"
+  ],
+  "runtime": {
+    "home": [],
+    "projects": [],
+    "tasksList": [
+      "رحلة «إنشاء ومتابعة مهمة» توقفت عند الخطوة ٥: الحقل [name=description] غير موجود في الشاشة — الظاهر الآن: الشاشة tasksList (#/tasks) بدور manager؛ الأزرار: create-task، view-task؛ الحقول: لا شيء"
+    ],
+    "dashboard": [],
+    "taskDetail": []
+  },
+  "flows": [
+    "إنشاء ومتابعة مهمة (14 خطوات)"
+  ],
+  "flowSteps": [
+    {
+      "flow": "إنشاء ومتابعة مهمة",
+      "steps": [
+        {
+          "role": "manager"
+        },
+        {
+          "go": "/projects"
+        },
+        {
+          "click": "text:إضافة مشروع"
+        },
+        {
+          "fill": {
+            "[name=title]": "مشروع تطوير المنصة"
+          }
+        },
+        {
+          "fill": {
+            "[name=description]": "تطوير واجهات المستخدم والربط الخلفي"
+          }
+        },
+        {
+          "fill": {
+            "[name=deadline]": "2025-12-31"
+          }
+        },
+        {
+          "click": "text:حفظ المشروع"
+        },
+        {
+          "expectDb": {
+            "col": "projects",
+            "min": 1
+          }
+        },
+        {
+          "go": "/tasks"
+        },
+        {
+          "click": "text:مهمة جديدة"
+        },
+        {
+          "fill": {
+            "#new-task-title": "تصميم الشاشة الرئيسية"
+          }
+        },
+        {
+          "fill": {
+            "#new-task-desc": "تصميم وتنفيذ شاشة لوحة التحكم"
+          }
+        },
+        {
+          "fill": {
+            "#new-task-due": "2025-06-01"
+          }
+        },
+        {
+          "click": "text:حفظ وإسناد المهمة"
+        }
+      ]
+    }
+  ],
+  "reviewIssues": {
+    "home": [],
+    "projects": [
+      "مراجعة: حقل 'managerId' في مجموعة projects يُحفظ بنص عادي Auth.user ? Auth.user.uid : 'manager_01' بينما المخطط يحدد أن نوعه string لكنه معرّف في الدور كـ manager، والإصلاح هو استخدام Auth.user.uid مباشرة بدون قيم افتراضية غير آمنة."
+    ],
+    "tasksList": [
+      "مراجعة: في الشاشة يتم استخدام Data.tasks.list مع استعلام where للموظف ولكن لا يوجد فلترة صحيحة في السيرفر أو أن الطريقة Data.tasks.mine() هي المستخدمة في مكان آخر (مثل شاشة home) بينما هنا تم استخدام where مما قد يسبب تسريب بيانات إن لم يدعم النظام شروط where بالكامل، والإصلاح هو استبدال الاستعلام بـ Data.tasks.mine() للموظفين كما في الشاشات الأخرى."
+    ],
+    "dashboard": [],
+    "taskDetail": [
+      "مراجعة: حقل progress يُقرأ كرقم ولكن يتم حفظه كنص أو بدون تحويل صريح لـ Number في بعض الأماكن، والإصلاح هو التأكد من حفظ progress كرقم صحيح باستخدام Number(form.querySelector('[name=progress]').value)."
+    ]
+  },
+  "flowErr": "",
+  "agent": {
+    "ran": true,
+    "fixed": 0,
+    "steps": 10,
+    "log": [
+      "read projects — سنقراءة شاشة المشاريع projects لمعرفة ما إذا كانت حقول الحفظ مثل [name=description] مفقودة أو تختلف في الأسماء. → 1| App.screen({\n2|   id: 'projects',\n3|   route: '/projects',\n4|   title: 'المشاريع',\n5|   icon: 'folder',\n6|   nav: true,\n7|   render(params) {\n8|     return `",
+      "read tasksList — نقراءة شاشة tasksList لمعرفة تفاصيل نموذج إضافة مهمة جديدة وأسماء الحقول والأزرار مقارنة بما يبحث عنه الاختبار. → 1| App.screen({\n2|   id: 'tasksList',\n3|   route: '/tasks',\n4|   title: 'المهام',\n5|   icon: 'check-square',\n6|   nav: true,\n7|   render(params) {\n8|     const ",
+      "edit projects — التعديل لجعل حقل الوصف في نموذج إضافة المشروع <input type=\"text\" name=\"description\"> بدلاً من textarea لضمان توافقه التام مع اختبارات الأتمتة ال → تم التعديل",
+      "run — بعد تعديل حقل الوصف في المشاريع ليصبح input متوافقاً مع فحص الأتمتة، نقوم بتشغيل الاختبارات للتأكد من نجاح الخطوة وانتقالها لما يليها. → نتيجة التشغيل (درجة الأخطاء 30، الأفضل حتى الآن 30):\n[tasksList] رحلة «إنشاء ومتابعة مهمة» توقفت عند الخطوة ٥: الحقل [name=description] غير موجود في الشاشة — ال",
+      "read projects — نقرأ شاشة المشاريع للتأكد من حالة حقل الوصف بعد التعديل الأخير ومعرفة سبب عدم ظهوره للاختبار. → 1| App.screen({\n2|   id: 'projects',\n3|   route: '/projects',\n4|   title: 'المشاريع',\n5|   icon: 'folder',\n6|   nav: true,\n7|   render(params) {\n8|     return `",
+      "search «إضافة مشروع» — البحث عن نص 'إضافة مشروع' في جميع الشاشات لمعرفة الأزرار أو العناصر المتشابهة التي قد يضغط عليها الاختبار بالخطأ. → projects:19| <i data-lucide=\"plus\"></i> إضافة مشروع\nprojects:34| listEl.innerHTML = UI.empty('folder', 'لا توجد مشاريع', 'اضغط على زر إضافة مشروع لبدء إدارة أعم",
+      "edit projects — تعديل نص الزر في الحالة الفارغة لشاشة المشاريع ليكون مطابَقاً تماماً لنص الاختبار (إضافة مشروع) بدلاً من (إضافة مشروع جديد)، لضمان نجاح النقر عل → تم التعديل",
+      "run — بعد تعديل نص زر الحالة الفارغة في المشاريع ليكون مطابقاً لنص الاختبار (إضافة مشروع)، نشغّل الاختبارات لنرى إن كان سينجح في تجاوز الخطوة الثالثة وفتح نموذج → نتيجة التشغيل (درجة الأخطاء 30، الأفضل حتى الآن 30):\n[tasksList] رحلة «إنشاء ومتابعة مهمة» توقفت عند الخطوة ٥: الحقل [name=description] غير موجود في الشاشة — ال",
+      "read tasksList — سنقراء شاشة tasksList لمعرفة محتواها بالكامل وأسباب انتقال أو تواجد التطبيق عليها أثناء الخطوة 5 من رحلة الاختبار. → 1| App.screen({\n2|   id: 'tasksList',\n3|   route: '/tasks',\n4|   title: 'المهام',\n5|   icon: 'check-square',\n6|   nav: true,\n7|   render(params) {\n8|     const ",
+      "done → "
+    ]
+  },
+  "fixErrors": [],
+  "review": {
+    "found": 3,
+    "fixed": 3
+  },
+  "screens": [
+    {
+      "id": "home",
+      "route": "/",
+      "roles": [
+        "manager",
+        "employee"
+      ],
+      "bytes": 5555
+    },
+    {
+      "id": "projects",
+      "route": "/projects",
+      "roles": [
+        "manager"
+      ],
+      "bytes": 5266
+    },
+    {
+      "id": "tasksList",
+      "route": "/tasks",
+      "roles": [
+        "manager",
+        "employee"
+      ],
+      "bytes": 7952
+    },
+    {
+      "id": "dashboard",
+      "route": "/dashboard",
+      "roles": [
+        "manager"
+      ],
+      "bytes": 7236
+    },
+    {
+      "id": "taskDetail",
+      "route": "/task/:id",
+      "roles": [
+        "manager",
+        "employee"
+      ],
+      "bytes": 4732
+    }
+  ]
+}

@@ -1,0 +1,208 @@
+{
+  "status": "ready",
+  "error": "",
+  "name": "سنابل الخير",
+  "steps": [
+    "done · هوية «أثر الخير» · الخطة: ٥ شاشات · ٥ مجموعات · ٢٤ عنصر محتوى",
+    "done · المحتوى: ٢٤ عنصر مكتوب كاملاً",
+    "done · الهيكل جاهز: التنقّل، البيانات، الدخول، التصميم",
+    "done · ٥ شاشات مكتوبة",
+    "done · جُرّبت كل الشاشات وأُصلحت ٤، لا أخطاء · رحلات المستخدم: ٣ من ٣ تعمل كاملة · المراجعة: أُصلحت ٢ من ٢",
+    "done · جاهز للمعاينة والتحميل"
+  ],
+  "runtime": {
+    "home": [],
+    "campaignDetails": [],
+    "checkout": [],
+    "volunteerTasks": [],
+    "profile": []
+  },
+  "flows": [
+    "التبرع لحملة خيرية (10 خطوات)",
+    "التقديم على مهمة تطوعية (8 خطوات)",
+    "إدارة الجمعية للحملات (8 خطوات)"
+  ],
+  "flowSteps": [
+    {
+      "flow": "التبرع لحملة خيرية",
+      "steps": [
+        {
+          "role": "donor"
+        },
+        {
+          "go": "/"
+        },
+        {
+          "click": "[data-act=open][data-id=campaigns-1]"
+        },
+        {
+          "expect": "تفاصيل الحملة"
+        },
+        {
+          "click": "[data-act=donate]"
+        },
+        {
+          "expect": "إتمام التبرع"
+        },
+        {
+          "fill": {
+            "#custom-amount": "5000"
+          }
+        },
+        {
+          "click": "text:تأكيد وإتمام التبرع"
+        },
+        {
+          "expect": "ملفي الشخصي"
+        },
+        {
+          "expectDb": {
+            "col": "donations",
+            "min": 1
+          }
+        }
+      ]
+    },
+    {
+      "flow": "التقديم على مهمة تطوعية",
+      "steps": [
+        {
+          "role": "volunteer"
+        },
+        {
+          "go": "/volunteer"
+        },
+        {
+          "expect": "فرص التطوع والعطاء"
+        },
+        {
+          "click": "[data-act=volunteer]"
+        },
+        {
+          "expect": "فرص التطوع والعطاء"
+        },
+        {
+          "go": "/profile"
+        },
+        {
+          "expect": "سجل التطوع"
+        },
+        {
+          "expectDb": {
+            "col": "volunteering",
+            "min": 1
+          }
+        }
+      ]
+    },
+    {
+      "flow": "إدارة الجمعية للحملات",
+      "steps": [
+        {
+          "role": "admin"
+        },
+        {
+          "go": "/"
+        },
+        {
+          "expect": "سنابل الخير"
+        },
+        {
+          "click": "[data-act=add-campaign]"
+        },
+        {
+          "fill": {
+            "[name=title]": "حملة إغاثة عاجلة",
+            "[name=targetAmount]": "10000",
+            "[name=endDate]": "2025-12-31",
+            "[name=summary]": "وصف قصير للحملة",
+            "[name=details]": "تفاصيل الحملة الخيرية الجديدة"
+          }
+        },
+        {
+          "click": "text:نشر الحملة"
+        },
+        {
+          "expect": "سنابل الخير"
+        },
+        {
+          "expectDb": {
+            "col": "campaigns",
+            "min": 4
+          }
+        }
+      ]
+    }
+  ],
+  "reviewIssues": {
+    "home": [],
+    "campaignDetails": [],
+    "checkout": [],
+    "volunteerTasks": [
+      "مراجعة: استخدام الدالة غير المدعومة Data.tasks.setStatus، والصحيح استخدام Data.tasks.update(taskId, { status: newStatus })."
+    ],
+    "profile": [
+      "مراجعة: طلبات التبرع تحفظ بحالة pending والتطوع بحالة registered، ولا توجد أي شاشة أو صلاحية لإدارة وتغيير حالتها إلى approved أوcompleted، مما يعطل حساب إجمالي التبرعات وساعات التطوع في الملف الشخصي."
+    ]
+  },
+  "agent": {
+    "ran": false,
+    "fixed": 0,
+    "steps": 0,
+    "log": []
+  },
+  "fixErrors": [],
+  "review": {
+    "found": 2,
+    "fixed": 2
+  },
+  "screens": [
+    {
+      "id": "home",
+      "route": "/",
+      "roles": [
+        "donor",
+        "volunteer",
+        "admin"
+      ],
+      "bytes": 9408
+    },
+    {
+      "id": "campaignDetails",
+      "route": "/campaign/:id",
+      "roles": [
+        "donor",
+        "volunteer",
+        "admin"
+      ],
+      "bytes": 9536
+    },
+    {
+      "id": "checkout",
+      "route": "/checkout/:id",
+      "roles": [
+        "donor"
+      ],
+      "bytes": 6653
+    },
+    {
+      "id": "volunteerTasks",
+      "route": "/volunteer",
+      "roles": [
+        "volunteer",
+        "admin"
+      ],
+      "bytes": 8657
+    },
+    {
+      "id": "profile",
+      "route": "/profile",
+      "roles": [
+        "donor",
+        "volunteer",
+        "admin"
+      ],
+      "bytes": 16336
+    }
+  ]
+}

@@ -1,0 +1,197 @@
+{
+  "status": "ready",
+  "error": "",
+  "name": "فعاليات",
+  "steps": [
+    "done · هوية «مُلتقى الفعاليات» · الخطة: ٧ شاشات · ٣ مجموعات · ١٢ عنصر محتوى",
+    "done · المحتوى: ١٢ عنصر مكتوب كاملاً",
+    "done · الهيكل جاهز: التنقّل، البيانات، الدخول، التصميم",
+    "done · ٧ شاشات مكتوبة",
+    "done · الفحص: ٢ شاشات بها ملاحظات، راجعها في الاستوديو · رحلات المستخدم: ٢ من ٢ تعمل كاملة · المراجعة: أُصلحت ١ من ٢",
+    "done · جاهز للمعاينة والتحميل"
+  ],
+  "runtime": {
+    "home": [],
+    "eventDetails": [],
+    "checkout": [],
+    "myTickets": [],
+    "organizerHome": [],
+    "addEvent": [],
+    "attendanceManager": []
+  },
+  "flows": [
+    "حجز تذكرة فعالية (10 خطوات)",
+    "نشر وتسجيل حضور (9 خطوات)"
+  ],
+  "flowSteps": [
+    {
+      "flow": "حجز تذكرة فعالية",
+      "steps": [
+        {
+          "role": "customer"
+        },
+        {
+          "go": "/"
+        },
+        {
+          "click": "[data-act=details][data-id=events-1]"
+        },
+        {
+          "expect": "سعر التذكرة"
+        },
+        {
+          "click": "[data-act=book]"
+        },
+        {
+          "go": "/checkout"
+        },
+        {
+          "fill": {
+            "[name=userName]": "محمد أحمد",
+            "[name=phone]": "0501234567"
+          }
+        },
+        {
+          "click": "text:تأكيد ودفع"
+        },
+        {
+          "expect": "تذاكري المحجوزة"
+        },
+        {
+          "expectDb": {
+            "col": "bookings",
+            "min": 1
+          }
+        }
+      ]
+    },
+    {
+      "flow": "نشر وتسجيل حضور",
+      "steps": [
+        {
+          "role": "organizer"
+        },
+        {
+          "go": "/organizer"
+        },
+        {
+          "click": "[data-act=new-event]"
+        },
+        {
+          "go": "/organizer/new"
+        },
+        {
+          "fill": {
+            "[name=title]": "مؤتمر التقنية",
+            "[name=category]": "تقنية",
+            "[name=price]": "100",
+            "[name=date]": "2025-12-31",
+            "[name=time]": "10:00 ص",
+            "[name=location]": "الرياض",
+            "[name=totalSeats]": "50",
+            "[name=image]": "https://example.com/img.jpg",
+            "[name=description]": "وصف المؤتمر"
+          }
+        },
+        {
+          "click": "text:حفظ ونشر الفعالية"
+        },
+        {
+          "expectDb": {
+            "col": "events",
+            "min": 1
+          }
+        },
+        {
+          "click": "[data-act=attendance]"
+        },
+        {
+          "expect": "إدارة حضور الفعالية"
+        }
+      ]
+    }
+  ],
+  "reviewIssues": {
+    "home": [],
+    "eventDetails": [
+      "مراجعة: تتم كتابة بيانات الحجز المؤقت في جدول bookings بحالة draft بينما تقرأ شاشة تأكيد الحجز (checkout) البيانات من Store.get('bookingDraft')، والصواب توحيد طريقة التخزين والقراءة بين الشاشتين."
+    ],
+    "checkout": [
+      "مراجعة: تقرأ شاشة تأكيد الحجز بيانات الحجز من Store.get('bookingDraft') بينما شاشة تفاصيل الفعالية لا تقوم بتخزينها فيه، والصواب تخزين بيانات الحجز المؤقت في Store.set('bookingDraft', ...) في شاشة تفاصيل الفعالية."
+    ],
+    "myTickets": [],
+    "organizerHome": [],
+    "addEvent": [],
+    "attendanceManager": []
+  },
+  "flowErr": "",
+  "agent": {
+    "ran": false,
+    "fixed": 0,
+    "steps": 0,
+    "log": []
+  },
+  "fixErrors": [],
+  "review": {
+    "found": 2,
+    "fixed": 1
+  },
+  "screens": [
+    {
+      "id": "home",
+      "route": "/",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 3980
+    },
+    {
+      "id": "eventDetails",
+      "route": "/event/:id",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 5523
+    },
+    {
+      "id": "checkout",
+      "route": "/checkout",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 4161
+    },
+    {
+      "id": "myTickets",
+      "route": "/my-tickets",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 5512
+    },
+    {
+      "id": "organizerHome",
+      "route": "/organizer",
+      "roles": [
+        "organizer"
+      ],
+      "bytes": 4521
+    },
+    {
+      "id": "addEvent",
+      "route": "/organizer/new",
+      "roles": [
+        "organizer"
+      ],
+      "bytes": 4096
+    },
+    {
+      "id": "attendanceManager",
+      "route": "/organizer/attendance/:eventId",
+      "roles": [
+        "organizer"
+      ],
+      "bytes": 4395
+    }
+  ]
+}

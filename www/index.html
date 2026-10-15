@@ -3603,13 +3603,19 @@ function runFlows(app, w, d, note, setCur){
           w.location.hash = st.go; p = sleep(900);
         }
         else if (st.fill) {
-          Object.keys(st.fill).forEach(function(sel){
-            if (failed) return;
-            var el = find(sel);
-            if (!el) return fail('الحقل ' + sel + ' غير موجود في الشاشة' + seen());
-            el.value = st.fill[sel]; el.dispatchEvent(new w.Event('input', { bubbles: true })); el.dispatchEvent(new w.Event('change', { bubbles: true }));
+          // الحقل غير ظاهر لأن النموذج داخل نافذة لم تُفتح؟ نضغط زر الإنشاء/الإضافة الظاهر ثم نعيد البحث
+          var keys = Object.keys(st.fill), miss = keys.filter(function(sel){ return !find(sel); });
+          var opener = null;
+          if (miss.length && !d.getElementById('sheet')) { var cands = [].slice.call(d.querySelectorAll('[data-act]')).filter(function(e){ return /^(create|add|new|open-form|compose|post|publish)([-_]|$)/i.test(e.getAttribute('data-act') || '') && e.offsetParent !== null; }); if (cands.length) opener = cands[0]; }
+          p = (opener ? (opener.click(), sleep(700)) : Promise.resolve()).then(function(){
+            keys.forEach(function(sel){
+              if (failed) return;
+              var el = find(sel);
+              if (!el) return fail('الحقل ' + sel + ' غير موجود في الشاشة' + seen());
+              el.value = st.fill[sel]; el.dispatchEvent(new w.Event('input', { bubbles: true })); el.dispatchEvent(new w.Event('change', { bubbles: true }));
+            });
+            return sleep(150);
           });
-          p = sleep(150);
         }
         else if (st.click) p = findRole(st.click).then(function(el){
           if (!el) fail('لم يُعثر على ' + st.click + ' (الزر غير موجود أو اسمه مختلف)' + seen());

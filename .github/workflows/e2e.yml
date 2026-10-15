@@ -4,7 +4,7 @@ on:
     inputs:
       kit:
         description: 'النظام الجاهز: delivery | store | booking | edu (أو اتركه فارغاً)'
-        default: 'delivery'
+        default: ''
       idea:
         description: 'وصف التطبيق (اختياري، يستبدل وصف النظام الجاهز)'
         default: ''

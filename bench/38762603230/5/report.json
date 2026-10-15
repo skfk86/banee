@@ -1,0 +1,148 @@
+{
+  "status": "ready",
+  "error": "",
+  "name": "عقاراتي",
+  "steps": [
+    "done · هوية «مفتاحك العقاري» · الخطة: ٤ شاشات · ٣ مجموعات · ١٢ عنصر محتوى",
+    "done · المحتوى: ١٢ عنصر مكتوب كاملاً",
+    "done · الهيكل جاهز: التنقّل، البيانات، الدخول، التصميم",
+    "done · ٤ شاشات مكتوبة",
+    "done · جُرّبت كل الشاشات وأُصلحت ١، لا أخطاء · رحلات المستخدم: ٢ من ٢ تعمل كاملة · المراجعة: أُصلحت ٠ من ١",
+    "done · جاهز للمعاينة والتحميل"
+  ],
+  "runtime": {
+    "home": [],
+    "inspect": [],
+    "mine": [],
+    "addApartment": []
+  },
+  "flows": [
+    "طلب معاينة عقار (7 خطوات)",
+    "نشر شقة جديدة (5 خطوات)"
+  ],
+  "flowSteps": [
+    {
+      "flow": "طلب معاينة عقار",
+      "steps": [
+        {
+          "role": "seeker"
+        },
+        {
+          "go": "/"
+        },
+        {
+          "click": "[data-act=details]"
+        },
+        {
+          "go": "/inspect/apartments-1"
+        },
+        {
+          "fill": {
+            "[name=date]": "2023-12-01",
+            "[name=time]": "14:00",
+            "[name=phone]": "+966500000000",
+            "[name=note]": "أرغب بالمعاينة في أقرب وقت"
+          }
+        },
+        {
+          "click": "[data-act=submit]"
+        },
+        {
+          "expectDb": {
+            "col": "inspections",
+            "min": 1
+          }
+        }
+      ]
+    },
+    {
+      "flow": "نشر شقة جديدة",
+      "steps": [
+        {
+          "role": "advertiser"
+        },
+        {
+          "go": "/add-apartment"
+        },
+        {
+          "fill": {
+            "[name=title]": "شقة فاخرة للابيجار",
+            "[name=city]": "الرياض",
+            "[name=district]": "الياسمين",
+            "[name=price]": "50000",
+            "[name=phone]": "+966500000000",
+            "[name=rooms]": "3",
+            "[name=bathrooms]": "2",
+            "[name=image]": "https://example.com/img.jpg",
+            "[name=description]": "شقة جديدة وواسعة"
+          }
+        },
+        {
+          "click": "[data-act=submit]"
+        },
+        {
+          "expectDb": {
+            "col": "apartments",
+            "min": 1
+          }
+        }
+      ]
+    }
+  ],
+  "reviewIssues": {
+    "home": [],
+    "inspect": [],
+    "mine": [],
+    "addApartment": [
+      "مراجعة: في شاشة إضافة شقة، الحقول الرقمية مثل price و rooms و bathrooms تأتي من FormData كنصوص وتُحفظ كأرقام مباشرة، ولكن تأكد من تطابق المخطط والأنواع تماماً، ولا توجد مشاكل حرجة هنا سوى ضمان معالجة الأخطاء."
+    ]
+  },
+  "flowErr": "رد غير صالح: {\"tests\":[{\"flow\":\"طلب معاينة عقار\",\"steps\":[{\"role\":\"seeker\"},{\"go\":\"/\"},{\"click\":\"[data-act=details]\"},{\"go\":\"/inspect",
+  "agent": {
+    "ran": false,
+    "fixed": 0,
+    "steps": 0,
+    "log": []
+  },
+  "fixErrors": [],
+  "review": {
+    "found": 1,
+    "fixed": 0
+  },
+  "screens": [
+    {
+      "id": "home",
+      "route": "/",
+      "roles": [
+        "seeker",
+        "advertiser"
+      ],
+      "bytes": 6213
+    },
+    {
+      "id": "inspect",
+      "route": "/inspect/:id",
+      "roles": [
+        "seeker"
+      ],
+      "bytes": 4280
+    },
+    {
+      "id": "mine",
+      "route": "/mine",
+      "roles": [
+        "seeker",
+        "advertiser"
+      ],
+      "bytes": 6065
+    },
+    {
+      "id": "addApartment",
+      "route": "/add-apartment",
+      "roles": [
+        "advertiser"
+      ],
+      "bytes": 6247
+    }
+  ]
+}

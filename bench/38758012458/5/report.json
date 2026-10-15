@@ -1,0 +1,176 @@
+{
+  "status": "ready",
+  "error": "",
+  "name": "سنابل الخير",
+  "steps": [
+    "done · هوية «عطاء مستدام» · الخطة: ٦ شاشات · ٥ مجموعات · ١٢ عنصر محتوى",
+    "done · المحتوى: ١٢ عنصر مكتوب كاملاً",
+    "done · الهيكل جاهز: التنقّل، البيانات، الدخول، التصميم",
+    "done · ٦ شاشات مكتوبة",
+    "done · الفحص: ٢ شاشات بها ملاحظات، راجعها في الاستوديو · رحلات المستخدم: ٢ من ٢ تعمل كاملة · المراجعة الشاملة: لا مشاكل",
+    "done · جاهز للمعاينة والتحميل"
+  ],
+  "runtime": {
+    "home": [],
+    "campaignDetails": [],
+    "checkout": [
+      "تصميم: النص \"تأكيد وإتمام التبرع\" غير مقروء: تباين 2.1:1 — لونه #ffffff والخلفية #f59e0b من العنصر <button class=\"btn btn-primary\">. الخلفية داكنة/ملونة: استخدم var(--on-primary) للنص، ولا تضع muted أو subtitle داخلها."
+    ],
+    "volunteerTasks": [],
+    "myHistory": [],
+    "adminPanel": []
+  },
+  "flows": [
+    "التبرع لحملة خيرية (11 خطوات)",
+    "التسجيل في مهمة تطوعية (7 خطوات)"
+  ],
+  "flowSteps": [
+    {
+      "flow": "التبرع لحملة خيرية",
+      "steps": [
+        {
+          "role": "donor"
+        },
+        {
+          "go": "/"
+        },
+        {
+          "click": "[data-act=campaign][data-id=campaigns-1]"
+        },
+        {
+          "expect": "تفاصيل الحملة"
+        },
+        {
+          "click": "[data-act=donate]"
+        },
+        {
+          "expect": "إتمام التبرع"
+        },
+        {
+          "fill": {
+            "[name=amount]": "500"
+          }
+        },
+        {
+          "click": "text:تأكيد وإتمام التبرع"
+        },
+        {
+          "expectDb": {
+            "col": "donations",
+            "min": 1
+          }
+        },
+        {
+          "go": "/history"
+        },
+        {
+          "expect": "سجل إسهاماتي الخيرية"
+        }
+      ]
+    },
+    {
+      "flow": "التسجيل في مهمة تطوعية",
+      "steps": [
+        {
+          "role": "volunteer"
+        },
+        {
+          "go": "/tasks"
+        },
+        {
+          "expect": "المهام التطوعية"
+        },
+        {
+          "click": "[data-act=volunteer]"
+        },
+        {
+          "expectDb": {
+            "col": "volunteering",
+            "min": 1
+          }
+        },
+        {
+          "go": "/history"
+        },
+        {
+          "expect": "سجل إسهاماتي الخيرية"
+        }
+      ]
+    }
+  ],
+  "reviewIssues": {
+    "home": [],
+    "campaignDetails": [],
+    "checkout": [],
+    "volunteerTasks": [],
+    "myHistory": [],
+    "adminPanel": []
+  },
+  "flowErr": "",
+  "agent": {
+    "ran": false,
+    "fixed": 0,
+    "steps": 0,
+    "log": []
+  },
+  "fixErrors": [],
+  "review": {
+    "found": 0,
+    "fixed": 0
+  },
+  "screens": [
+    {
+      "id": "home",
+      "route": "/",
+      "roles": [
+        "donor",
+        "volunteer",
+        "admin"
+      ],
+      "bytes": 5829
+    },
+    {
+      "id": "campaignDetails",
+      "route": "/campaign/:id",
+      "roles": [
+        "donor",
+        "admin"
+      ],
+      "bytes": 5758
+    },
+    {
+      "id": "checkout",
+      "route": "/checkout",
+      "roles": [
+        "donor"
+      ],
+      "bytes": 4840
+    },
+    {
+      "id": "volunteerTasks",
+      "route": "/tasks",
+      "roles": [
+        "volunteer",
+        "admin"
+      ],
+      "bytes": 5543
+    },
+    {
+      "id": "myHistory",
+      "route": "/history",
+      "roles": [
+        "donor",
+        "volunteer"
+      ],
+      "bytes": 4401
+    },
+    {
+      "id": "adminPanel",
+      "route": "/admin",
+      "roles": [
+        "admin"
+      ],
+      "bytes": 13234
+    }
+  ]
+}

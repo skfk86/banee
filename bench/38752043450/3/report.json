@@ -1,0 +1,173 @@
+{
+  "status": "ready",
+  "error": "",
+  "name": "سريع للتوصيل",
+  "steps": [
+    "done · هوية «سريع بلس» · الخطة: ٥ شاشات · ٤ مجموعات · ٢٤ عنصر محتوى",
+    "done · المحتوى: ٢٤ عنصر مكتوب كاملاً",
+    "done · الهيكل جاهز: التنقّل، البيانات، الدخول، التصميم",
+    "done · ٥ شاشات مكتوبة",
+    "done · الفحص: ٣ شاشات بها ملاحظات، راجعها في الاستوديو · رحلات المستخدم: ١ من ٢ تعمل كاملة · المراجعة: أُصلحت ٠ من ٢ · وكيل الإصلاح: لم يجد تحسيناً آمناً",
+    "done · جاهز للمعاينة والتحميل"
+  ],
+  "runtime": {
+    "home": [],
+    "store": [],
+    "track": [],
+    "jobs": [],
+    "myJobs": [
+      "رحلة «المندوب يوصّل» توقفت عند الخطوة ٥: لم يُعثر على [data-act=status][data-next=\"delivering\"] (الزر غير موجود أو اسمه مختلف) — الظاهر الآن: الشاشة myJobs (#/jobs/mine) بدور driver؛ الأزرار: لا شيء؛ الحقول: لا شيء"
+    ]
+  },
+  "flows": [
+    "طلب توصيل (9 خطوات)",
+    "المندوب يوصّل (7 خطوات)"
+  ],
+  "flowSteps": [
+    {
+      "flow": "طلب توصيل",
+      "steps": [
+        {
+          "go": "/"
+        },
+        {
+          "click": "[data-act=open-store][data-id=\"stores-1\"]"
+        },
+        {
+          "click": "[data-act=add][data-id=\"items-1\"]"
+        },
+        {
+          "click": "[data-act=checkout]"
+        },
+        {
+          "fill": {
+            "#order-phone": "0912345678"
+          }
+        },
+        {
+          "fill": {
+            "#order-address": "الخرطوم، شارع اليعقوب"
+          }
+        },
+        {
+          "click": "#submit-order-btn"
+        },
+        {
+          "expect": "طلباتي السابقة والنشطة"
+        },
+        {
+          "expectDb": {
+            "col": "orders",
+            "min": 1
+          }
+        }
+      ]
+    },
+    {
+      "flow": "المندوب يوصّل",
+      "steps": [
+        {
+          "role": "driver"
+        },
+        {
+          "go": "/jobs"
+        },
+        {
+          "click": "[data-act=accept]"
+        },
+        {
+          "go": "/jobs/mine"
+        },
+        {
+          "click": "[data-act=status][data-next=\"delivering\"]"
+        },
+        {
+          "click": "[data-act=status][data-next=\"done\"]"
+        },
+        {
+          "expect": "توصيلاتي النشطة والمكتملة"
+        }
+      ]
+    }
+  ],
+  "reviewIssues": {
+    "home": [
+      "مراجعة: في شاشة home يتم جلب سلة المشتريات باستخدام DB.list('cart', ...0) ولكن مجموعة cart غير معرفة في المخطط (collections). يجب استخدام Data.cart أو إضافة المجموعة للمخطط، أو استخدام نظام التخزين المحلي Store كما هو متبع في شاشة store."
+    ],
+    "store": [
+      "مراجعة: في شاشة store عند الضغط على زر إتمام الطلب وحفظ الطلب عبر Data.orders.create، يتم تمرير الحقل lat و lng بقيم ثابتة (15.5007, 32.5599) بدلاً من أخذ موقع المستخدم الفعلي المحدّد في المخطط أو الشاشة."
+    ],
+    "track": [],
+    "jobs": [],
+    "myJobs": []
+  },
+  "flowErr": "",
+  "agent": {
+    "ran": true,
+    "fixed": 0,
+    "steps": 14,
+    "log": [
+      "read myJobs — الأخطاء الحالية تشير إلى أن الشاشة myJobs (/jobs/mine) بدور driver لا تحتوي على أزرار لتغيير الحالة مثل [data-act=status][data-next=\"delivering\"]. → 1| App.screen({\n2|   id: 'myJobs',\n3|   route: '/jobs/mine',\n4|   title: 'توصيلاتي',\n5|   icon: 'check-circle',\n6|   nav: true,\n7|   render(params) {\n8|     ret",
+      "read jobs — نقرأ شاشة jobs لنرى كيف يقبل المندوب الطلب وهل يتم تعيين driverId بشكل صحيح، مما يؤدي لظهور الطلب في myJobs → 1| App.screen({\n2|   id: 'jobs',\n3|   route: '/jobs',\n4|   title: 'طلبات للتوصيل',\n5|   icon: 'bike',\n6|   nav: true,\n7|   render(params) {\n8|     return `\n9|  ",
+      "edit jobs — في شاشة jobs، عند قبول الطلب، تم استخدام Data.orders.setStatus مع تمرير معامل ثالث، ولكن قد لا يتم حفظ driverId بالشكل الصحيح مما يجعل شاشة myJobs ( → تم التعديل",
+      "run — بعد تعديل شاشة الطلبات، دعنا نشغل الاختبارات لنرى ما إذا كان قبول الطلب ينجح وتظهر الأزرار في شاشة توصيلاتي myJobs → نتيجة التشغيل (درجة الأخطاء 50، الأفضل حتى الآن 50):\n[myJobs] رحلة «المندوب يوصّل» توقفت عند الخطوة ٥: لم يُعثر على [data-act=status][data-next=\"delivering\"] (ا",
+      "edit myJobs — في شاشة myJobs، الطلبات لا تظهر لأن استعلام Data.orders.list بـ where قد لا يعمل بالشكل المتوقع أو لأن driverId لم يُحفظ. سنستخدم Data.orders.mine → تم التعديل",
+      "run — بعد استخدام Data.orders.mine() في شاشة myJobs، نشغل الاختبارات لنرى هل ظهرت الطلبات والأزرار الخاصة بتغيير الحالة بنجاح. → نتيجة التشغيل (درجة الأخطاء 50، الأفضل حتى الآن 50):\n[myJobs] رحلة «المندوب يوصّل» توقفت عند الخطوة ٥: لم يُعثر على [data-act=status][data-next=\"delivering\"] (ا",
+      "edit myJobs — في شاشة توصيلاتي (myJobs)، استعلام Data.orders.list مع شرط where للمندوب قد لا يدعمه محاكي البيانات المحلي بشكل كامل لأنه مخصص لـ driverId. الحل ا → find غير موجود حرفياً في myJobs؛ اقرأ الشاشة وانسخ النص بدقة (المسافات مهمة)",
+      "read myJobs — أحتاج لقراءة شاشة myJobs كاملة لأرى كيف يتم جلب الطلبات وعرض أزرار تغيير الحالة للمندوب، وكيف أعدلها لتشمل الأزرار المطلوبة [data-act=status][data → 1| App.screen({\n2|   id: 'myJobs',\n3|   route: '/jobs/mine',\n4|   title: 'توصيلاتي',\n5|   icon: 'check-circle',\n6|   nav: true,\n7|   render(params) {\n8|     ret",
+      "read jobs — لنقرأ شاشة jobs لنرى كيف يقبل المندوب الطلب وكيف يتم تحديث الحالة وتعيين driverId، مما يفسر عدم ظهور الطلب أو أزرار الحالة في myJobs → 1| App.screen({\n2|   id: 'jobs',\n3|   route: '/jobs',\n4|   title: 'طلبات للتوصيل',\n5|   icon: 'bike',\n6|   nav: true,\n7|   render(params) {\n8|     return `\n9|  ",
+      "edit myJobs — في شاشة myJobs، استدعاء Data.orders.mine() قد يعيد الطلبات التي أنشأها المستخدم كمشتري (userId) وليس كمندوب (driverId). يجب جلب جميع الطلبات عبر D → تم التعديل",
+      "run → نتيجة التشغيل (درجة الأخطاء 50، الأفضل حتى الآن 50):\n[myJobs] رحلة «المندوب يوصّل» توقفت عند الخطوة ٥: لم يُعثر على [data-act=status][data-next=\"delivering\"] (ا",
+      "edit myJobs — في شاشة myJobs، استدعاء Data.orders.mine() يعيد طلبات العميل (userId) وليس طلبات المندوب (driverId). يجب جلب جميع الطلبات عبر Data.orders.list({}) → find غير موجود حرفياً في myJobs؛ اقرأ الشاشة وانسخ النص بدقة (المسافات مهمة)",
+      "edit myJobs — في شاشة myJobs، استدعاء Data.orders.mine() يجلب طلبات العميل (userId) وليس طلبات المندوب (driverId). سنقوم بجلب جميع الطلبات عبر Data.orders.list( → find غير موجود حرفياً في myJobs؛ اقرأ الشاشة وانسخ النص بدقة (المسافات مهمة)",
+      "edit myJobs — في شاشة myJobs، استدعاء Data.orders.mine() يعيد طلبات العميل (userId) وليس طلبات المندوب (driverId). سنقوم بجلب جميع الطلبات عبر Data.orders.list( → find غير موجود حرفياً في myJobs؛ اقرأ الشاشة وانسخ النص بدقة (المسافات مهمة)"
+    ]
+  },
+  "fixErrors": [],
+  "review": {
+    "found": 2,
+    "fixed": 0
+  },
+  "screens": [
+    {
+      "id": "home",
+      "route": "/",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 5054
+    },
+    {
+      "id": "store",
+      "route": "/store/:id",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 10351
+    },
+    {
+      "id": "track",
+      "route": "/orders",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 8679
+    },
+    {
+      "id": "jobs",
+      "route": "/jobs",
+      "roles": [
+        "driver"
+      ],
+      "bytes": 5363
+    },
+    {
+      "id": "myJobs",
+      "route": "/jobs/mine",
+      "roles": [
+        "driver"
+      ],
+      "bytes": 6271
+    }
+  ]
+}

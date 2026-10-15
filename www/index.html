@@ -2032,6 +2032,7 @@ var KITS = {
     desc: 'سوق إلكتروني يعرض فيه البائعون منتجاتهم بالصور والأسعار، والعميل يتصفح حسب التصنيف ويضيف للسلة ويطلب ويدفع ببنكك أو عند الاستلام، والبائع يدير منتجاته وطلباته.',
     plan: { roles: [{ id: 'customer', name: 'العميل', icon: 'user', does: 'يتصفح ويشتري ويتابع طلباته' }, { id: 'seller', name: 'البائع', icon: 'store', does: 'يضيف منتجاته ويدير طلباتها', approve: true }],
       roleAccess: { orders: ['seller'], products: ['seller'] },
+      shared: [{ key: 'cart', shape: '{ items: [{ id, title, price, qty, image, sellerId }] }', writes: ['product'], reads: ['cart'] }],
       collections: [{ name: 'categories', fields: { name: 'string', icon: 'string', order: 'number' } },
         { name: 'products', fields: { title: 'string', price: 'number', image: 'string', category: 'string', description: 'string', sellerId: 'string', sellerName: 'string', stock: 'number', order: 'number' } },
         { name: 'cart', fields: { userId: 'string', productId: 'string', title: 'string', price: 'number', qty: 'number' } },
@@ -2058,6 +2059,7 @@ var KITS = {
     desc: 'تطبيق توصيل داخل المدينة: العميل يطلب من المطاعم والمحلات ويحدد موقعه، والمندوب يرى الطلبات الجديدة ويقبلها ويحدّث حالتها حتى التسليم، والعميل يتابع الحالة لحظة بلحظة.',
     plan: { roles: [{ id: 'customer', name: 'العميل', icon: 'user', does: 'يطلب ويتابع التوصيل' }, { id: 'driver', name: 'المندوب', icon: 'bike', does: 'يقبل الطلبات ويوصلها', approve: true }],
       roleAccess: { orders: ['driver'] },
+      shared: [{ key: 'cart', shape: '{ storeId, storeName, items: [{ id, title, price, qty }] }', writes: ['store'], reads: ['home', 'track'] }],
       collections: [{ name: 'stores', fields: { name: 'string', category: 'string', image: 'string', area: 'string', order: 'number' } },
         { name: 'items', fields: { storeId: 'string', title: 'string', price: 'number', image: 'string', order: 'number' } },
         { name: 'orders', fields: { userId: 'string', userName: 'string', phone: 'string', storeId: 'string', items: 'array', amount: 'number', fee: 'number', title: 'string', address: 'string', lat: 'number', lng: 'number', method: 'string', receipt: 'string', status: 'string — جديد|مقبول|في الطريق|تم التسليم', driverId: 'string', driverName: 'string' } }],
@@ -2188,6 +2190,7 @@ var ROLES = {
 ' "roleAccess":{"orders":["driver"],"products":["seller"]},   ← الأدوار التي ترى كل عناصر مجموعة خاصة وتحدّثها، أو تنشر في مجموعة محتوى عامة باسمها (بائع ينشر منتجاته بحقل sellerId، معلم ينشر دروسه بحقل teacherId)\n' +
 ' "flows":[{"name":"اسم الرحلة مثل: طلب منتج","steps":["يفتح الرئيسية","يختار منتجاً","يضيفه للسلة","يدفع ببنكك","يتابع حالة الطلب"]}],\n' +
 ' "relations":["orders.userId ← المستخدم","quizzes.lessonId ← lessons.id"],\n' +
+' "shared":[{"key":"cart","shape":"{ storeId, storeName, items:[{ id, title, price, qty }] }","writes":["store"],"reads":["checkout"]}],   ← كل حالة تنتقل بين الشاشات عبر Store (سلة، اختيارات حجز...) بشكلها الدقيق\n' +
 ' "screens":[{"id":"home","route":"/","title":"الرئيسية","icon":"home","nav":true,"roles":["user"],"purpose":"..."}]}\n' +
 ' "payments":{"methods":["bankak","cod"],"currency":"ج.س"},   ← فقط إذا كان في التطبيق بيع أو حجز مدفوع\n' +
 'القدرات المتاحة في الهيكل (خطط لها عند الحاجة): بيانات حية من الإنترنت (طقس، عملات، مواقيت صلاة، قرآن)، ذكاء اصطناعي داخل التطبيق (مساعد، مصحح، ملخص)، إشعارات من صاحب التطبيق لكل المستخدمين (لوحة الإدارة جاهزة، وأضف شاشة «الإشعارات» إن كانت مفيدة)، الكاميرا والمعرض لرفع الصور، الموقع الحالي والمسافات، خرائط تفاعلية بعلامات، دردشة وتحديث حي فوري بين المستخدمين، دفع ببنكك أو عند الاستلام مع طلبات في مجموعة orders، إشعارات مجدولة، مشاركة، نطق صوتي للنصوص، اتصال وواتساب.\n' +
@@ -2207,6 +2210,7 @@ var ROLES = {
 '- لكل شاشة roles: من يستخدمها. أعطِ كل دور شاشة رئيسية في القائمة السفلية (nav) تخصه، والقائمة تُعرض لكل دور بشاشاته فقط (حتى ٤ لكل دور، والمجموع حتى ١٠ شاشات).\n' +
 '- roles: الأدوار الحقيقية في النظام (مستخدم واحد للتطبيقات البسيطة؛ وللأنظمة: عميل، بائع، مندوب، معلم...). صاحب التطبيق له لوحة إدارة جاهزة فلا تضفه كدور ولا تكتب له شاشة.\n' +
 '- flows: من ٢ إلى ٥ رحلات أساسية تمر بها الأدوار من البداية للنهاية، وكل خطوة فيها تتحقق بشاشة موجودة في screens.\n' +
+'- shared: أي بيانات مؤقتة تكتبها شاشة وتقرؤها أخرى (السلة، الحجز قيد الإنشاء...) عرّف مفتاحها وشكلها الدقيق مرة واحدة، فكل الشاشات تلتزم به حرفياً.\n' +
 '- relations: كل ربط بين المجموعات (حقل يشير لعنصر في مجموعة أخرى أو للمستخدم).\n' +
 '- إذا وصلتك «ملاحظات صاحب التطبيق على المخطط السابق» فطبّقها كلها، وأبقِ ما لم يطلب تغييره كما هو.\n' +
 '- purpose لكل شاشة مفصّل جداً (٤-٨ جمل): ماذا تعرض بالترتيب، أي مجموعة وأي حقول بالاسم، كل زر وماذا يفعل، كيف يُحفظ التقدّم، وإلى أي route تنتقل بالضبط.',
@@ -2218,6 +2222,7 @@ var ROLES = {
 '- النصوص الطويلة منسقة: # للعناوين الفرعية، - للقوائم، 1. للخطوات، **للتأكيد**، `للمصطلحات أو الكود`، > للملاحظات المهمة. فقرات قصيرة مريحة للقراءة على الجوال.\n' +
 '- الدرس الطويل: مقدمة، ثم أقسام مفصلة (كل قسم ٢-٥ فقرات)، أمثلة كثيرة، أخطاء شائعة، ملخص. الاختبار: أسئلة متنوعة بخيارات معقولة، الإجابة الصحيحة، وشرح لماذا هي صحيحة.\n' +
 '- النص الإنجليزي أو الكود داخل العربي يبقى كما هو بدون ترجمة حرفية.\n' +
+'- حقول الصور: رابط https حقيقي فقط (مثل images.unsplash.com/photo-...)، ولا تخترع مسارات محلية مثل /images/x.jpg؛ إن لم تعرف رابطاً مناسباً اترك الحقل فارغاً.\n' +
 '- لا تضع id ولا order (تُضاف تلقائياً). عند الربط بمجموعة أخرى استخدم الـ id المعطى حرفياً.\n' +
 '- أعد JSON فقط: {"items":[...]} بنفس عدد العناصر المطلوبة وترتيبها.',
   screen: 'أنت مطوّر واجهات موبايل محترف في فريق بانِي، تكتب شاشة واحدة لتطبيق عربي RTL.\n' + CONTRACT +
@@ -2631,6 +2636,7 @@ function screenCtx(plan, s, content){
     '\nتسجيل الدخول: ' + (plan.auth ? 'مفعّل' : 'غير مفعّل (Auth.user زائر محلي له uid ثابت)') +
     '\n\nالمجموعات والحقول (استخدمها حرفياً):\n' + JSON.stringify(plan.collections||[], null, 1) +
     (samples ? '\n\nالمحتوى الحقيقي الموجود في قاعدة البيانات (اعرضه كاملاً كما هو، النصوص الطويلة عبر UI.rich):' + samples : '') +
+    ((plan.shared || []).length ? '\n\nالحالة المشتركة بين الشاشات عبر Store (التزم بالمفتاح والشكل حرفياً، قراءةً وكتابةً، وبنفس القيمة الافتراضية):\n' + plan.shared.map(function(x){ return '- Store "' + x.key + '": ' + x.shape + (x.writes ? ' — تكتبها: ' + [].concat(x.writes).join('، ') : '') + (x.reads ? ' — تقرؤها: ' + [].concat(x.reads).join('، ') : ''); }).join('\n') : '') +
     (plan.flows && plan.flows.length ? '\n\nرحلات المستخدم في النظام (يجب أن تعمل هذه الشاشة ضمنها):\n' + plan.flows.map(function(f){ return '- ' + f.name + ': ' + (f.steps || []).join(' ← '); }).join('\n') : '') +
     '\n\nكل الشاشات ومساراتها:\n' + plan.screens.map(function(x){ return '- ' + x.route + ' : ' + x.title + (x.nav ? ' (في القائمة السفلية)' : ''); }).join('\n') +
     (plan.designBrief || '') +
@@ -2646,7 +2652,62 @@ function mergedSeed(app){
   Object.keys(plan.seed || {}).forEach(function(k){ out[k] = plan.seed[k]; });
   var c = app.ck.content || {};
   Object.keys(c).forEach(function(k){ out[k] = (c[k] || []).filter(Boolean); });
+  // صورة بمسار مخترع (/images/x.jpg) لن تُحمَّل: نستبدلها بصورة بديلة مدمجة تعمل بلا إنترنت
+  var col = (app.ck.design && app.ck.design.primary) || '#2C64DD';
+  Object.keys(out).forEach(function(k){ out[k] = (out[k] || []).map(function(it){
+    if (!it || typeof it !== 'object') return it; var cp = null;
+    Object.keys(it).forEach(function(f){ var v = it[f]; if (/image|photo|img|cover|thumb|avatar|logo|picture/i.test(f) && typeof v === 'string' && v && !/^(https?:|data:)/i.test(v)) { cp = cp || Object.assign({}, it); cp[f] = placeholderImg(col, it.title || it.name || ''); } });
+    return cp || it;
+  }); });
   return out;
+}
+// ════ فحص عابر للشاشات: نفس الحالة المشتركة (Store) بأشكال مختلفة بين شاشتين ════
+function storeShapes(js){
+  var out = {}, re = /Store\.get\(\s*['"`]([\w-]+)['"`]\s*,\s*([\[{])/g, m;
+  while ((m = re.exec(js))) {
+    var key = m[1], i = m.index + m[0].length - 1, depth = 0, j = i;
+    for (; j < js.length; j++) { var ch = js[j]; if (ch === '{' || ch === '[') depth++; else if (ch === '}' || ch === ']') { depth--; if (!depth) break; } }
+    var lit = js.slice(i, j + 1).replace(/\s+/g, ' '), props = {}, pm, pre = /(\w+)\s*:\s*([\[{'"`\d]|null|true|false)/g;
+    while ((pm = pre.exec(lit))) props[pm[1]] = pm[2] === '[' ? 'array' : pm[2] === '{' ? 'object' : 'value';
+    out[key] = { top: lit.charAt(0) === '[' ? 'array' : 'object', props: props, lit: lit.slice(0, 90) };
+  }
+  return out;
+}
+function crossCheck(app){
+  var plan = app.ck.plan, res = {}, seen = {};
+  plan.screens.forEach(function(s){ res[s.id] = []; var sh = storeShapes(app.ck.screens[s.id] || ''); Object.keys(sh).forEach(function(k){ (seen[k] = seen[k] || []).push({ id: s.id, title: s.title, sh: sh[k] }); }); });
+  Object.keys(seen).forEach(function(k){
+    var list = seen[k]; if (list.length < 2) return;
+    var a = list[0];
+    list.slice(1).forEach(function(b){
+      var diff = a.sh.top !== b.sh.top ? 'النوع' : Object.keys(a.sh.props).filter(function(p){ return b.sh.props[p] && b.sh.props[p] !== a.sh.props[p]; })[0];
+      if (!diff) return;
+      var spec = (plan.shared || []).filter(function(x){ return x.key === k; })[0];
+      var msg = 'الحالة المشتركة Store("' + k + '") مكتوبة بشكلين مختلفين بين الشاشات: «' + a.title + '» تستخدم ' + a.sh.lit + ' و«' + b.title + '» تستخدم ' + b.sh.lit + ' (الاختلاف في ' + diff + '). وحّد الشكل' + (spec ? ' حسب المخطط: ' + spec.shape : ' في الشاشتين (المصفوفة [{ id, title, price, qty }] أوضح للسلال والقوائم)') + '، قراءةً وكتابةً.';
+      if (res[a.id].indexOf(msg) < 0) res[a.id].push(msg); if (res[b.id].indexOf(msg) < 0) res[b.id].push(msg);
+    });
+  });
+  return res;
+}
+// كود الشاشات التي تشارك هذه الشاشة نفس البيانات (Store أو مجموعات DB): يحتاجه المصلح ليوحّد بينها
+function relatedCode(app, s, limit){
+  var plan = app.ck.plan, js = app.ck.screens[s.id] || '', keys = {};
+  (js.match(/Store\.(?:get|set)\(\s*['"`][\w-]+/g) || []).forEach(function(m){ keys['S:' + m.replace(/.*['"`]/, '')] = 1; });
+  (js.match(/DB\.\w+\(\s*['"`]\w+/g) || []).forEach(function(m){ var c = m.replace(/.*['"`]/, ''); if (!/^(users|notices|devices|members)$/.test(c)) keys['D:' + c] = 1; });
+  var out = '', budget = limit || 7000;
+  plan.screens.forEach(function(o){
+    if (o.id === s.id || budget <= 0) return;
+    var oj = app.ck.screens[o.id] || '', share = Object.keys(keys).some(function(k){ var n = k.slice(2); return k[0] === 'S' ? new RegExp('Store\\.(?:get|set)\\(\\s*[\'"`]' + n + '[\'"`]').test(oj) : new RegExp('DB\\.\\w+\\(\\s*[\'"`]' + n + '[\'"`]').test(oj); });
+    if (!share) return;
+    var part = oj.slice(0, Math.min(budget, 3500)); budget -= part.length;
+    out += '\n\n### شاشة مرتبطة: ' + o.title + ' (' + o.route + ') — تشارك نفس البيانات، لا تعدّلها هنا لكن التزم بنفس الأشكال والحقول:\n```javascript\n' + part + '\n```';
+  });
+  return out;
+}
+function placeholderImg(color, label){
+  var c = /^#[0-9a-f]{6}$/i.test(color) ? color : '#2C64DD', t = String(label || '').trim().charAt(0).replace(/[<>&"']/g, '') || '•';
+  var svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="' + c + '" stop-opacity=".18"/><stop offset="1" stop-color="' + c + '" stop-opacity=".42"/></linearGradient></defs><rect width="400" height="300" fill="url(#g)"/><text x="200" y="182" font-family="Tahoma,Arial" font-size="110" font-weight="700" text-anchor="middle" fill="' + c + '" fill-opacity=".55">' + t + '</text></svg>';
+  return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
 }
 function contentSpecs(plan){
   return (plan.content || []).filter(function(c){ return c && c.collection && c.count > 0; }).map(function(c){
@@ -2776,12 +2837,13 @@ function runBuild(app, key){
     jstep(app,3,'done', toAr(plan.screens.length) + ' شاشات مكتوبة');
     // ٥) فحص ثابت ثم تشغيل حي
     jstep(app,4,'cur','فحص الكود آلياً');
-    var bad = plan.screens.map(function(s){ return { s: s, errs: checkScreen(app.ck.screens[s.id], s, plan) }; })
+    var cross = crossCheck(app);
+    var bad = plan.screens.map(function(s){ return { s: s, errs: checkScreen(app.ck.screens[s.id], s, plan).concat(cross[s.id] || []) }; })
       .filter(function(x){ return x.errs.length && !app.ck.fixed[x.s.id]; });
     if (!bad.length) return 0;
     jstep(app,4,'cur','إصلاح ' + toAr(bad.length) + ' شاشات');
     return Promise.all(bad.map(function(b){
-      return ask(key, 'fixer', 'الأخطاء:\n- ' + b.errs.join('\n- ') + '\n\nسياق الشاشة:\n' + screenCtx(plan, b.s, app.ck.content) + '\n\nالكود الحالي:\n```javascript\n' + app.ck.screens[b.s.id] + '\n```')
+      return ask(key, 'fixer', 'الأخطاء:\n- ' + b.errs.join('\n- ') + '\n\nسياق الشاشة:\n' + screenCtx(plan, b.s, app.ck.content) + relatedCode(app, b.s) + '\n\nالكود الحالي:\n```javascript\n' + app.ck.screens[b.s.id] + '\n```')
         .then(function(r){
           var js = grab(r, 'javascript');
           if (checkScreen(js, b.s, plan).length <= b.errs.length) app.ck.screens[b.s.id] = js;
@@ -2800,7 +2862,7 @@ function runBuild(app, key){
       return (known ? Promise.resolve(known) : runtimeTest(app, function(s, n, t){ jstep(app,4,'cur','تشغيل وتجربة "' + s.title + '" (' + toAr(n) + ' من ' + toAr(t) + ')'); }))
         .then(function(res){
           alive();
-          if (!known) setRuntime(app, res);
+          if (!known) { var cx = crossCheck(app); Object.keys(cx).forEach(function(id){ (cx[id] || []).forEach(function(m){ if (res[id] && res[id].indexOf(m) < 0) res[id].push(m); }); }); setRuntime(app, res); }
           if (!runtimeIssues(res) || round > 4) return res;
           return fixRuntime(app, key, res, function(k){ jstep(app,4,'cur','إصلاح أخطاء التشغيل في ' + toAr(k) + ' شاشات'); })
             .then(function(k){ alive(); fixedLive += k; return k ? liveRound(app.ck.runtime) : app.ck.runtime; });
@@ -3497,7 +3559,7 @@ function fixRuntime(app, key, res, onStage, review){
       '\n\nحدّد السبب الجذري (اسم حقل خاطئ، متغير غير معرّف، عنصر غير موجود في الـ DOM، بيانات قد تكون null...) وأصلحه.' +
       '\nمهم جداً: غيّر أقل ما يمكن. لا تحذف أي ميزة أو زر أو قسم يعمل، ولا تعِد كتابة الشاشة من الصفر. أعد الشاشة كاملة.' +
       (res[s.id].some(function(m){ return /^رحلة/.test(m); }) ? '\nأخطاء «رحلة» جاءت من اختبار آلي يتصرف كمستخدم: أصلح السبب الحقيقي (زر لا يعمل، حفظ لا يتم، تنقّل خاطئ). لا تحذف التحقق من الحقول المطلوبة ولا رسائل الخطأ المفيدة لتمرير الاختبار، وإذا كان الخطأ في السيناريو نفسه (عنصر باسم آخر) فيمكنك إضافة data-act المذكور للعنصر الصحيح.' : '') +
-      '\n\nسياق الشاشة:\n' + screenCtx(plan, s, app.ck.content) +
+      '\n\nسياق الشاشة:\n' + screenCtx(plan, s, app.ck.content) + relatedCode(app, s) +
       '\n\nبيانات تجريبية متاحة:\n' + JSON.stringify(plan.seed || {}).slice(0, 1500) +
       '\n\nالكود الحالي:\n```javascript\n' + old[s.id] + '\n```';
     return ask(key, 'fixer', prompt).then(function(r){

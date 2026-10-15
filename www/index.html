@@ -2671,7 +2671,7 @@ function dataModule(plan){
   '          return DB.add(c, o); },\n' +
   '        list: (opt) => DB.list(c, opt || {}),\n' +
   '        get: (id) => DB.get(c, id),\n' +
-  '        mine(opt) { opt = { ...(opt || {}) }; const u = Auth.user || {}; const f = C[c].owner || ((window.__banee && __banee.Roles && C[c].byRole.indexOf(__banee.Roles.current()) > -1) ? __banee.Roles.current() + "Id" : "userId"); const w = [f, "==", u.uid || "-"]; opt.where = opt.where ? (Array.isArray(opt.where[0]) ? opt.where.concat([w]) : [opt.where, w]) : w; return DB.list(c, opt); },\n' +
+  '        mine(opt) { opt = { ...(opt || {}) }; const u = Auth.user || {}; let r = ""; try { r = __banee.Roles.current(); } catch (e) {} const f = (r && C[c].byRole.indexOf(r) > -1) ? r + "Id" : (C[c].owner || "userId"); const w = [f, "==", u.uid || "-"]; opt.where = opt.where ? (Array.isArray(opt.where[0]) ? opt.where.concat([w]) : [opt.where, w]) : w; return DB.list(c, opt); },\n' +
   '        byStatus(s, opt) { opt = { ...(opt || {}) }; [].concat(s).forEach(x => chk(c, x)); const all = [].concat(s); return DB.list(c, opt).then(a => a.filter(x => all.indexOf(x.status) > -1)); },\n' +
   '        setStatus(id, s, extra) { chk(c, s); return DB.update(c, id, { ...(extra || {}), status: s }); },\n' +
   '        update(id, p) { if (p && "status" in p) chk(c, p.status); return DB.update(c, id, p); },\n' +
@@ -3419,6 +3419,8 @@ function runtimeTest(app, onProgress){
       'var cw=console.warn;console.warn=function(){var m=[].join.call(arguments," ");if(/^Data\\./.test(m))s(m);cw.apply(console,arguments)};' +
       'var ce=console.error;console.error=function(){s([].map.call(arguments,function(a){return a&&a.message?a.message:String(a)}).join(" "));ce.apply(console,arguments)};' +
       '})()<\/script>';
+    // نسخة الاختبار فقط: كل catch في كود الشاشات يسجّل الخطأ الحقيقي، فلا يختبئ السبب خلف رسالة «حدث خطأ»
+    html = html.replace(/(\bcatch\s*\(\s*(\w+)\s*\)\s*\{)/g, function(m0, m1, v){ return m1 + ' try { (window.__caught = window.__caught || []).push(String(' + v + ' && (' + v + '.message || ' + v + '.code) || ' + v + ').slice(0, 200)); if (window.__caught.length > 8) window.__caught.shift(); } catch (__e) {}'; });
     html = html.replace('<head>', '<head>' + hook);
 
     var fr = document.createElement('iframe');
@@ -3562,6 +3564,8 @@ function runFlows(app, w, d, note, setCur){
     }
     return next();
   }
+  // السبب الحقيقي المختبئ داخل catch (نسخة الاختبار تسجّله)
+  function cause(){ try { var c = w.__caught || []; if (!c.length) return ''; var m = c[c.length - 1]; w.__caught = []; return ' — السبب الفعلي الملتقط: ' + m; } catch (e) { return ''; } }
   // عند فقدان عنصر: نصف ما هو ظاهر فعلاً، فيعرف المصلح والوكيل هل الشاشة خاطئة أم العنصر يظهر بشرط
   function seen(){
     try {
@@ -3615,11 +3619,12 @@ function runFlows(app, w, d, note, setCur){
                 f.dispatchEvent(new w.Event('input', { bubbles: true })); f.dispatchEvent(new w.Event('change', { bubbles: true }));
               });
             }
-            el.click(); return sleep(800).then(function(){ setCur(here()); var t = d.querySelector('.toast.error, .toast-error, [data-type=error]'); if (t && t.textContent.trim()) fail('ظهرت رسالة خطأ: ' + t.textContent.trim().slice(0, 120)); }); }
+            try { w.__caught = []; } catch (e) {}
+            el.click(); return sleep(800).then(function(){ setCur(here()); var t = d.querySelector('.toast.error, .toast-error, [data-type=error]'); if (t && t.textContent.trim()) fail('ظهرت رسالة خطأ: ' + t.textContent.trim().slice(0, 120) + cause()); }); }
         });
         else if (st.expect) { if ((d.body.textContent || '').indexOf(st.expect) < 0) fail('كان متوقعاً ظهور «' + String(st.expect).slice(0, 60) + '» ولم يظهر'); }
         else if (st.expectDb) {
-          var q = st.expectDb, acted = tc.steps.slice(0, k).some(function(s){ return s && (s.click || s.fill); }); p = Promise.resolve(w.__banee.DB.list(q.col)).then(function(a){ var now = docSnap(a), touched = acted && Object.keys(now).some(function(id){ return (snap[q.col] || {})[id] !== now[id]; }); if (!touched && (a || []).length - (acted ? (base[q.col] || 0) : 0) < (q.min || 1)) fail('لم يُحفظ شيء في ' + q.col + ' بعد العملية (الحفظ لا يعمل)'); }, function(e){ fail('تعذّرت قراءة ' + q.col + ': ' + (e && e.message)); });
+          var q = st.expectDb, acted = tc.steps.slice(0, k).some(function(s){ return s && (s.click || s.fill); }); p = Promise.resolve(w.__banee.DB.list(q.col)).then(function(a){ var now = docSnap(a), touched = acted && Object.keys(now).some(function(id){ return (snap[q.col] || {})[id] !== now[id]; }); if (!touched && (a || []).length - (acted ? (base[q.col] || 0) : 0) < (q.min || 1)) fail('لم يُحفظ شيء في ' + q.col + ' بعد العملية (الحفظ لا يعمل)' + cause()); }, function(e){ fail('تعذّرت قراءة ' + q.col + ': ' + (e && e.message)); });
         }
         return p.then(step);
       }

@@ -8,6 +8,9 @@ on:
       idea:
         description: 'وصف التطبيق (اختياري، يستبدل وصف النظام الجاهز)'
         default: ''
+      sabotage:
+        description: 'زرع خطأ بين الشاشات بعد البناء لاختبار وكيل الإصلاح (1 للتفعيل)'
+        default: ''
 permissions:
   contents: write
 jobs:
@@ -29,6 +32,7 @@ jobs:
           GEMINI_KEY: ${{ secrets.GEMINI_KEY }}
           KIT: ${{ github.event.inputs.kit }}
           IDEA: ${{ github.event.inputs.idea }}
+          SABOTAGE: ${{ github.event.inputs.sabotage }}
         run: node e2e/e2e.js
       - uses: actions/upload-artifact@v4
         if: always()

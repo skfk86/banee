@@ -1,7 +1,7 @@
 // اختبار حقيقي كامل: يفتح بانِي، يبني نظاماً كاملاً بمفتاح Gemini حقيقي، ثم يصوّر كل شاشة ويكتب تقريراً
 const { chromium } = require('playwright');
 const fs = require('fs'), path = require('path');
-const KEY = process.env.GEMINI_KEY || '', IDEA = process.env.IDEA || '', KIT = process.env.KIT || 'delivery';
+const KEY = process.env.GEMINI_KEY || '', IDEA = process.env.IDEA || '', KIT = process.env.KIT || (process.env.IDEA ? '' : 'delivery');
 const SRC = process.env.SRC || 'e2e.html', OUT = process.env.OUT || 'e2e-out', MAX_MIN = +(process.env.MAX_MIN || 110);
 fs.mkdirSync(OUT, { recursive: true });
 const log = (...a) => { const s = '[' + new Date().toISOString().slice(11, 19) + '] ' + a.join(' '); console.log(s); fs.appendFileSync(path.join(OUT, 'log.txt'), s + '\n'); };

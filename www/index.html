@@ -2254,6 +2254,7 @@ var ROLES = {
 '{"tool":"search","text":"نص"} ← كل الأسطر التي تحتوي النص في كل الشاشات (للتتبع بين الشاشات: من يكتب الحقل ومن يقرؤه)\n' +
 '{"tool":"edit","screen":"id","find":"نص موجود حرفياً مرة واحدة","replace":"النص الجديد"} ← تعديل جراحي؛ انسخ find حرفياً من نتيجة read (بدون أرقام الأسطر) واجعله قصيراً ومميزاً\n' +
 '{"tool":"run"} ← تشغيل التطبيق كاملاً وتجربة كل الشاشات والرحلات، يعيد الأخطاء الحالية، ومعها ناتج أي console.log("DBG", ...) تضيفه في الكود لترى القيم الفعلية (تُحذف تلقائياً في النهاية)\n' +
+'{"tool":"seed","collection":"providers","items":[{...},{...}]} ← إضافة بيانات أولية حقيقية لمجموعة فارغة تعرضها الشاشات ولا يُنشئها المستخدم (مدربون، أطباء، خدمات، تصنيفات…). حقول العناصر بأسماء المجموعة حرفياً، ٤-٨ عناصر واقعية بالعربي\n' +
 '{"tool":"done","summary":"ما أصلحته"} ← عندما تنتهي الأخطاء أو لا يمكنك المزيد\n' +
 'المنهج: اقرأ الخطأ، تتبّع السبب الجذري عبر الشاشات بـ search وread (حقل مختلف الاسم، قيمة حالة مختلفة، فلترة خاطئة، زر لا يظهر لهذا الدور، عنصر يظهر فقط عند وجود بيانات)، عدّل أقل قدر ممكن، ثم run للتحقق. لا تحذف ميزات ولا تغيّر قيم data-act الموجودة. استخدم طبقة Data للمجموعات المعرّفة في العقد. لا تعدّل لإرضاء الاختبار بنص وهمي، أصلح السلوك الحقيقي. خطأ مثل «X is not a function» يعني استدعاء دالة غير موجودة في الهيكل: استبدلها بالدالة الصحيحة من عقد الهيكل أدناه أو اكتب المنطق مباشرة.\nعقد الهيكل الذي تُكتب به الشاشات:\n' + CONTRACT,
   fixer: 'أنت مصلّح أخطاء. ستستلم كود شاشة واحدة وقائمة أخطاء مكتشفة آلياً. أصلح الأخطاء فقط مع الالتزام بالعقد التالي، وأعد الشاشة كاملة داخل ```javascript بلا شرح.\n' + CONTRACT
@@ -2977,10 +2978,11 @@ function runBuild(app, key){
         if (!stale || (app.ck.flowRegen || 0) >= 2 || !(app.ck.plan.flows || []).length) return runAgent(res2);
         // عنصر مفقود من كل كود التطبيق = السيناريو قديم (الشاشة تغيّرت بالإصلاح) لا خطأ في التطبيق: نعيد كتابته ونعيد التجربة
         app.ck.flowRegen = (app.ck.flowRegen || 0) + 1; jstep(app,4,'cur','تحديث سيناريوهات الاختبار بعد الإصلاحات');
+        var prev = []; Object.keys(res2 || {}).forEach(function(id){ (res2[id] || []).forEach(function(m){ if (/^رحلة/.test(m)) prev.push(m); }); }); app.ck.flowPrev = prev.join('\n').slice(0, 3000);
         return writeFlowTests(app, key).then(function(){ alive(); round = 2; return liveRound(); }).then(regen);
       });
     }
-    return liveRound().then(deep).then(function(res){ return { nFixed: nFixed + fixedLive, res: res }; });
+    return fillEmpty(app, key).then(function(){ alive(); return liveRound(); }).then(deep).then(function(res){ return { nFixed: nFixed + fixedLive, res: res }; });
   }).then(function(out){
     alive();
     var plan = app.ck.plan, nFixed = out.nFixed;
@@ -3501,6 +3503,7 @@ function writeFlowTests(app, key, again){
     '\n\nids حقيقية من البيانات: ' + JSON.stringify(ids) +
     '\n\nكود الشاشات:\n' + plan.screens.map(function(s){ return '### ' + s.route + ' (' + s.title + ')\n' + String(app.ck.screens[s.id] || '').slice(0, 40000); }).join('\n\n');
   if (again) ctx += '\n\nمهم: أعد JSON صالحاً قصيراً فقط، بحد أقصى ٣ رحلات و١٠ خطوات لكل رحلة.';
+  if (app.ck.flowPrev) ctx += '\n\nالنسخة السابقة من السيناريوهات فشلت هكذا (مع وصف ما كان ظاهراً فعلاً على الشاشة). صحّح السيناريو: أضف الخطوات الناقصة (فتح عنصر، فتح نافذة، تبديل دور) واستخدم الأزرار والحقول الظاهرة فعلاً:\n' + app.ck.flowPrev;
   return ask(key, 'tester', ctx, true).then(function(raw){
     var r = parseJSON(raw) || {}, tests = (r.tests || (Array.isArray(r) ? r : [])).filter(function(x){ return x && Array.isArray(x.steps) && x.steps.length; }).slice(0, 5);
     tests.forEach(function(x){ x.steps = x.steps.slice(0, 14); });
@@ -3675,6 +3678,31 @@ function designAudit(w, d, root){
   return out;
 }
 
+// مجموعات تعرضها الشاشات للاختيار (مدربون، أطباء، خدمات…) ولا تُنشئها أي شاشة وهي فارغة: نكتب لها بيانات أولية قبل الاختبار
+function emptyCols(app){
+  var plan = app.ck.plan, seed = mergedSeed(app), all = plan.screens.map(function(s){ return app.ck.screens[s.id] || ''; }).join('\n'), out = [];
+  (plan.collections || []).forEach(function(c){
+    if (!c || !c.name || /^(users|members|notices|devices)$/.test(c.name) || (seed[c.name] || []).length) return;
+    var f = Object.keys(c.fields || {}); if (f.indexOf('userId') > -1) return; // بيانات المستخدم تُنشأ أثناء الاستخدام
+    var n = c.name.replace(/[^\w]/g, ''), read = new RegExp('Data\\.' + n + '\\.(list|get|byStatus)|DB\\.(list|get|watch)\\(\\s*[\'"`]' + n + '[\'"`]').test(all), wr = new RegExp('Data\\.' + n + '\\.create|DB\\.add\\(\\s*[\'"`]' + n + '[\'"`]').test(all);
+    if (read && !wr) out.push(c);
+  });
+  return out;
+}
+function fillEmpty(app, key){
+  if (app.ck.filledEmpty) return Promise.resolve();
+  var cols = emptyCols(app); app.ck.filledEmpty = true;
+  if (!cols.length) return Promise.resolve();
+  var plan = app.ck.plan;
+  var prompt = 'التطبيق: ' + plan.name + ' — ' + (plan.summary || '') + '\nهذه المجموعات تعرضها شاشات التطبيق ولا يُنشئها المستخدم، وهي فارغة. اكتب لكل منها من ٤ إلى ٨ عناصر واقعية كاملة بالعربي بأسماء الحقول حرفياً (أسماء سودانية/عربية، أسعار بالجنيه، مدد وأوقات منطقية). الصور: روابط https حقيقية أو اتركها فارغة.\n' +
+    cols.map(function(c){ return '- ' + c.name + ': ' + JSON.stringify(c.fields || {}); }).join('\n') +
+    '\nأعد JSON فقط: {"' + cols[0].name + '":[{...}], ...}';
+  return ask(key, 'content', prompt, true).then(function(raw){
+    var r = parseJSON(raw) || {}; plan.seed = plan.seed || {};
+    cols.forEach(function(c){ var it = (Array.isArray(r[c.name]) ? r[c.name] : []).filter(function(x){ return x && typeof x === 'object'; }).slice(0, 10); if (!it.length) return; it.forEach(function(x, i){ if (!x.id) x.id = c.name + '-' + (i + 1); if (x.order == null) x.order = i + 1; }); plan.seed[c.name] = it; });
+    saveApps();
+  }).catch(function(e){ if (e && /رصيد|حصة/.test(e.message || '')) throw e; });
+}
 // ════ وكيل الإصلاح المستقل: حلقة (يفكر ← يستدعي أداة ← يرى النتيجة) بتعديلات جراحية، مع حارس يمنع التراجع ════
 function appScore(app, res){ var plan = app.ck.plan, sc = 0; plan.screens.forEach(function(s){ sc += scrScore(plan, app.ck.screens, res, s.id); }); return sc; }
 function issuesText(app, res){
@@ -3684,6 +3712,7 @@ function issuesText(app, res){
 function agentFix(app, key, res, onStep){
   var plan = app.ck.plan, start = {}, MAX = 14, n = 0, hist = [], cur = res, best = appScore(app, res), bestScreens = null;
   plan.screens.forEach(function(s){ start[s.id] = app.ck.screens[s.id]; });
+  var startSeed = JSON.stringify(plan.seed || {}), seedChanged = false;
   function numbered(js){ return String(js || '').split('\n').map(function(l, i){ return (i + 1) + '| ' + l; }).join('\n'); }
   function ctx(){
     return 'التطبيق: ' + plan.name + ' — ' + (plan.summary || '') +
@@ -3692,10 +3721,21 @@ function agentFix(app, key, res, onStep){
       '\nالمجموعات: ' + JSON.stringify(plan.collections || []).slice(0, 2500) + dataDoc(plan) +
       ((plan.flows || []).length ? '\nرحلات المستخدم: ' + plan.flows.map(function(f){ return f.name + ': ' + (f.steps || []).join(' ← '); }).join(' | ') : '') +
       ((app.ck.flowTests || []).length ? '\nسيناريوهات الاختبار الآلي: ' + JSON.stringify(app.ck.flowTests).slice(0, 3000) : '') +
+      emptyHint() +
       '\n\nالأخطاء الحالية من آخر تشغيل:\n' + issuesText(app, cur) +
       '\n\nسجل خطواتك حتى الآن (' + n + ' من ' + MAX + '):\n' + (hist.length ? hist.map(function(h, i){ var last = i >= hist.length - 6; return '#' + (i + 1) + ' ' + h.call + '\n→ ' + (last ? h.obs : h.obs.slice(0, 400) + (h.obs.length > 400 ? ' …' : '')); }).join('\n\n') : '(لا شيء بعد)') +
       (function(){ var edits = hist.filter(function(h){ return /^edit/.test(h.call) && /^تم التعديل/.test(h.obs); }).length; return (n >= 5 && !edits) ? '\n\nتنبيه: مضت ' + n + ' خطوات بلا أي تعديل. لديك ما يكفي من المعلومات: نفّذ edit الآن على السبب الأرجح ثم run.' : (n >= MAX - 2 ? '\n\nتبقّت خطوات قليلة: إن عدّلت فشغّل run للتحقق، أو أنهِ بـ done.' : ''); })() +
       '\n\nما الخطوة التالية؟';
+  }
+  // مجموعات تعرضها الشاشات ولا يُنشئها أحد وهي فارغة: سبب شائع لقوائم فارغة وأزرار لا تظهر
+  function emptyHint(){
+    var seed = mergedSeed(app), all = plan.screens.map(function(s){ return app.ck.screens[s.id] || ''; }).join('\n'), out = [];
+    (plan.collections || []).forEach(function(c){
+      if (!c || !c.name || /^(users|members|notices|devices)$/.test(c.name) || (seed[c.name] || []).length) return;
+      var n = c.name.replace(/[^\w]/g, ''), read = new RegExp('Data\\.' + n + '\\.(list|get|byStatus)|DB\\.(list|get|watch)\\(\\s*[\'"`]' + n + '[\'"`]').test(all), wr = new RegExp('Data\\.' + n + '\\.create|DB\\.add\\(\\s*[\'"`]' + n + '[\'"`]').test(all);
+      if (read && !wr) out.push(c.name);
+    });
+    return out.length ? '\n\nتنبيه آلي: هذه المجموعات تعرضها الشاشات ولا تنشئها أي شاشة، وهي فارغة تماماً في البيانات الأولية: ' + out.join('، ') + ' — إن كانت القائمة الفارغة سبب الخطأ فأضف لها بيانات بأداة seed.' : '';
   }
   function act(a){
     var sc = plan.screens.filter(function(s){ return s.id === a.screen; })[0];
@@ -3730,10 +3770,20 @@ function agentFix(app, key, res, onStep){
       return runtimeTest(app).then(function(r){
         var cx = crossCheck(app); Object.keys(cx).forEach(function(id){ (cx[id] || []).forEach(function(m){ if (r[id] && r[id].indexOf(m) < 0) r[id].push(m); }); });
         cur = r; var s = appScore(app, r);
-        if (s < best) { best = s; bestScreens = {}; plan.screens.forEach(function(x){ bestScreens[x.id] = app.ck.screens[x.id]; }); }
+        if (s < best) { best = s; bestScreens = {}; plan.screens.forEach(function(x){ bestScreens[x.id] = app.ck.screens[x.id]; }); bestScreens.__seed = JSON.stringify(plan.seed || {}); }
         var dbg = (window.__agentDbg || []).slice(-25);
         return 'نتيجة التشغيل (درجة الأخطاء ' + s + '، الأفضل حتى الآن ' + best + '):\n' + issuesText(app, r) + (dbg.length ? '\n\nمخرجات console.log("DBG", ...) أثناء التشغيل:\n' + dbg.join('\n') : '');
       });
+    }
+    if (a.tool === 'seed') {
+      var cn = String(a.collection || ''), cdef = (plan.collections || []).filter(function(c){ return c && c.name === cn; })[0];
+      if (!cdef) return Promise.resolve('لا توجد مجموعة بهذا الاسم. الموجود: ' + (plan.collections || []).map(function(c){ return c.name; }).join('، '));
+      var items = (Array.isArray(a.items) ? a.items : []).filter(function(x){ return x && typeof x === 'object' && !Array.isArray(x); }).slice(0, 12);
+      if (!items.length) return Promise.resolve('items فارغة أو غير صالحة');
+      plan.seed = plan.seed || {}; var ex = plan.seed[cn] = plan.seed[cn] || [];
+      items.forEach(function(x, i){ if (!x.id) x.id = cn + '-' + (ex.length + 1); if (x.order == null) x.order = ex.length + 1; ex.push(x); });
+      seedChanged = true;
+      return Promise.resolve('أُضيفت ' + items.length + ' عناصر إلى ' + cn + ' (ids: ' + items.map(function(x){ return x.id; }).join('، ') + '). شغّل run للتحقق.');
     }
     return Promise.resolve('أداة غير معروفة: ' + a.tool);
   }
@@ -3753,18 +3803,18 @@ function agentFix(app, key, res, onStep){
   }
   function finish(){
     plan.screens.forEach(function(s){ var js = app.ck.screens[s.id]; if (js && js.indexOf('DBG') > -1) app.ck.screens[s.id] = js.replace(/^[ \t]*console\.log\(\s*['"`]DBG[^\n]*\n/gm, ''); });
-    var changed = plan.screens.some(function(s){ return app.ck.screens[s.id] !== start[s.id]; });
+    var changed = seedChanged || plan.screens.some(function(s){ return app.ck.screens[s.id] !== start[s.id]; });
     if (!changed) { app.ck.agentLog = hist.map(function(h){ return h.call.slice(0, 160) + ' → ' + String(h.obs).slice(0, 160); }); return Promise.resolve({ fixed: 0, res: res, steps: n }); }
     var ran = hist.length && /^run/.test(hist[hist.length - 1].call);
     return (ran ? Promise.resolve(cur) : runtimeTest(app)).then(function(r){
       var s = appScore(app, r);
       if (s < best) { best = s; bestScreens = null; cur = r; }
-      else if (bestScreens) { plan.screens.forEach(function(x){ app.ck.screens[x.id] = bestScreens[x.id]; }); return runtimeTest(app).then(function(r2){ cur = r2; return r2; }); }
+      else if (bestScreens) { plan.screens.forEach(function(x){ app.ck.screens[x.id] = bestScreens[x.id]; }); if (bestScreens.__seed) plan.seed = JSON.parse(bestScreens.__seed); return runtimeTest(app).then(function(r2){ cur = r2; return r2; }); }
       return r;
     }).then(function(r){
       var before = appScore(app, res), after = appScore(app, r);
       app.ck.agentLog = hist.map(function(h){ return h.call.slice(0, 160) + ' → ' + String(h.obs).slice(0, 160); });
-      if (after >= before) { plan.screens.forEach(function(x){ app.ck.screens[x.id] = start[x.id]; }); setRuntime(app, res); saveApps(); return { fixed: 0, res: res, steps: n, log: hist }; }
+      if (after >= before) { plan.screens.forEach(function(x){ app.ck.screens[x.id] = start[x.id]; }); plan.seed = JSON.parse(startSeed); setRuntime(app, res); saveApps(); return { fixed: 0, res: res, steps: n, log: hist }; }
       setRuntime(app, r); saveApps();
       return { fixed: runtimeIssues(res) - runtimeIssues(r), res: r, steps: n, log: hist };
     });

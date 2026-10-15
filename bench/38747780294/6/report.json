@@ -1,0 +1,133 @@
+{
+  "status": "ready",
+  "error": "",
+  "name": "مكتبة القارئ",
+  "steps": [
+    "done · هوية «أروقة المعرفة» · الخطة: ٤ شاشات · ٣ مجموعات · ١٥ عنصر محتوى",
+    "done · المحتوى: ١٥ عنصر مكتوب كاملاً",
+    "done · الهيكل جاهز: التنقّل، البيانات، الدخول، التصميم",
+    "done · ٤ شاشات مكتوبة",
+    "done · جُرّبت كل الشاشات وأُصلحت ٣، لا أخطاء · رحلات المستخدم: ١ من ١ تعمل كاملة · المراجعة: أُصلحت ١ من ١",
+    "done · جاهز للمعاينة والتحميل"
+  ],
+  "runtime": {
+    "home": [],
+    "loanRequest": [],
+    "myLoans": [],
+    "librarianPanel": []
+  },
+  "flows": [
+    "استعارة كتاب (14 خطوات)"
+  ],
+  "flowSteps": [
+    {
+      "flow": "استعارة كتاب",
+      "steps": [
+        {
+          "role": "reader"
+        },
+        {
+          "go": "/"
+        },
+        {
+          "click": "[data-act=details][data-id=\"books-1\"]"
+        },
+        {
+          "go": "/loan/books-1"
+        },
+        {
+          "fill": {
+            "#loan-note": "أود الاحتفاظ به لمدة أطول"
+          }
+        },
+        {
+          "click": "#confirm-btn"
+        },
+        {
+          "expectDb": {
+            "col": "loans",
+            "min": 1
+          }
+        },
+        {
+          "expect": "سجل الاستعارات"
+        },
+        {
+          "role": "librarian"
+        },
+        {
+          "go": "/librarian"
+        },
+        {
+          "click": "[data-act=approve]"
+        },
+        {
+          "expectDb": {
+            "col": "loans",
+            "min": 1
+          }
+        },
+        {
+          "role": "reader"
+        },
+        {
+          "go": "/my-loans"
+        }
+      ]
+    }
+  ],
+  "reviewIssues": {
+    "home": [],
+    "loanRequest": [],
+    "myLoans": [],
+    "librarianPanel": [
+      "مراجعة: تاريخ الاستعارة وتاريخ الإرجاع في لوحة أمين المكتبة يُخزنان كنص (string) بصيغة 'YYYY-MM-DD'، لكن الكود يستخدم UI.date(parseInt(loan.loanDate) || Date.now()) مما يؤدي إلى فشل التحويل وعرض تواريخ خاطئة. الإصلاح: استخدام UI.esc(loan.loanDate) بدلاً من UI.date و parseInt."
+    ]
+  },
+  "agent": {
+    "ran": false,
+    "fixed": 0,
+    "steps": 0,
+    "log": []
+  },
+  "fixErrors": [],
+  "review": {
+    "found": 1,
+    "fixed": 1
+  },
+  "screens": [
+    {
+      "id": "home",
+      "route": "/",
+      "roles": [
+        "reader",
+        "librarian"
+      ],
+      "bytes": 4858
+    },
+    {
+      "id": "loanRequest",
+      "route": "/loan/:id",
+      "roles": [
+        "reader"
+      ],
+      "bytes": 4065
+    },
+    {
+      "id": "myLoans",
+      "route": "/my-loans",
+      "roles": [
+        "reader"
+      ],
+      "bytes": 7360
+    },
+    {
+      "id": "librarianPanel",
+      "route": "/librarian",
+      "roles": [
+        "librarian"
+      ],
+      "bytes": 7007
+    }
+  ]
+}

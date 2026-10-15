@@ -1,0 +1,173 @@
+{
+  "status": "ready",
+  "error": "",
+  "name": "صيدليتي",
+  "steps": [
+    "done · هوية «عناية مطمئنة» · الخطة: ٦ شاشات · ٤ مجموعات · ٢٠ عنصر محتوى",
+    "done · المحتوى: ٢٠ عنصر مكتوب كاملاً",
+    "done · الهيكل جاهز: التنقّل، البيانات، الدخول، التصميم",
+    "done · ٦ شاشات مكتوبة",
+    "done · الفحص: ٢ شاشات بها ملاحظات، راجعها في الاستوديو · رحلات المستخدم: ٢ من ٢ تعمل كاملة · المراجعة: أُصلحت ١ من ٢",
+    "done · جاهز للمعاينة والتحميل"
+  ],
+  "runtime": {
+    "home": [],
+    "store": [],
+    "checkout": [],
+    "track": [],
+    "pharmacist_dashboard": [],
+    "driver_deliveries": []
+  },
+  "flows": [
+    "طلب دواء عبر الروشتة (9 خطوات)",
+    "مراجعة وتوصيل الطلب (8 خطوات)"
+  ],
+  "flowSteps": [
+    {
+      "flow": "طلب دواء عبر الروشتة",
+      "steps": [
+        {
+          "go": "/"
+        },
+        {
+          "click": "[data-act=open-store]"
+        },
+        {
+          "click": "[data-act=upload-presc]"
+        },
+        {
+          "fill": {
+            "#presc-notes": "أريد البديل الأرخص"
+          }
+        },
+        {
+          "click": "[data-act=go-checkout]"
+        },
+        {
+          "fill": {
+            "#order-username": "محمد أحمد",
+            "#order-phone": "0912345678",
+            "#order-address": "الخرطوم، شارع الجامعة"
+          }
+        },
+        {
+          "click": "#submit-order-btn"
+        },
+        {
+          "expect": "سجل طلباتك الطبية"
+        },
+        {
+          "expectDb": {
+            "col": "orders",
+            "min": 1
+          }
+        }
+      ]
+    },
+    {
+      "flow": "مراجعة وتوصيل الطلب",
+      "steps": [
+        {
+          "role": "pharmacist"
+        },
+        {
+          "go": "/pharmacist"
+        },
+        {
+          "fill": {
+            "#price-stores-1": "5000"
+          }
+        },
+        {
+          "click": "[data-act=accept-order]"
+        },
+        {
+          "role": "driver"
+        },
+        {
+          "go": "/driver"
+        },
+        {
+          "click": "[data-act=set-delivering]"
+        },
+        {
+          "click": "[data-act=set-done]"
+        }
+      ]
+    }
+  ],
+  "reviewIssues": {
+    "home": [],
+    "store": [],
+    "checkout": [
+      "مراجعة: رسوم التوصيل مضافة مسبقاً في المبلغ الكلي totalAmount عند إنشاء الطلب (totalAmount = itemsTotal + fee)، وفي الشاشة driver_deliveries يتم حساب المبلغ هكذا: o.amount + (o.fee || 0)، مما يسبب جمع رسوم التوصيل مرتين. الإصلاح: اجعل totalAmount مساوياً لـ itemsTotal فقط، أو لا تجمع o.fee مجدداً في شاشة المندوب."
+    ],
+    "track": [],
+    "pharmacist_dashboard": [
+      "مراجعة: يوجد حقل مخفي في شاشة الصيدلي id=price-stores-1 بقيمة خاطئة قد تتداخل عند تحديث السعر. الإصلاح: احذف حقل الإدخال المخفي غير الضروري واكتفِ بـ #price-${o.id}."
+    ],
+    "driver_deliveries": []
+  },
+  "flowErr": "",
+  "agent": {
+    "ran": false,
+    "fixed": 0,
+    "steps": 0,
+    "log": []
+  },
+  "fixErrors": [],
+  "review": {
+    "found": 2,
+    "fixed": 1
+  },
+  "screens": [
+    {
+      "id": "home",
+      "route": "/",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 3729
+    },
+    {
+      "id": "store",
+      "route": "/store/:id",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 10126
+    },
+    {
+      "id": "checkout",
+      "route": "/checkout",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 10299
+    },
+    {
+      "id": "track",
+      "route": "/orders",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 6419
+    },
+    {
+      "id": "pharmacist_dashboard",
+      "route": "/pharmacist",
+      "roles": [
+        "pharmacist"
+      ],
+      "bytes": 7210
+    },
+    {
+      "id": "driver_deliveries",
+      "route": "/driver",
+      "roles": [
+        "driver"
+      ],
+      "bytes": 7003
+    }
+  ]
+}

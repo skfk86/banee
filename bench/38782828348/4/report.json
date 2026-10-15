@@ -1,0 +1,81 @@
+{
+  "status": "failed",
+  "error": "انتهت الحصة اليومية لمفتاح Gemini. أكمل غداً من حيث توقفت، أو فعّل الفوترة في Google AI Studio",
+  "name": "منقول",
+  "steps": [
+    "done · هوية «نقلة آمنة» · الخطة: ٦ شاشات · ٣ مجموعات",
+    "done · لا يحتاج التطبيق محتوى جاهزاً",
+    "done · الهيكل جاهز: التنقّل، البيانات، الدخول، التصميم",
+    "err · بناء الشاشات (٣ من ٦)",
+    " · فحص وتشغيل التطبيق",
+    " · التجميع النهائي"
+  ],
+  "runtime": {},
+  "flows": [],
+  "flowSteps": [],
+  "reviewIssues": null,
+  "flowErr": "",
+  "agent": {
+    "ran": false,
+    "fixed": 0,
+    "steps": 0,
+    "log": []
+  },
+  "fixErrors": [],
+  "review": {
+    "found": 0,
+    "fixed": 0
+  },
+  "screens": [
+    {
+      "id": "home",
+      "route": "/",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 4007
+    },
+    {
+      "id": "newOrder",
+      "route": "/new-order",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 5417
+    },
+    {
+      "id": "driverHome",
+      "route": "/driver",
+      "roles": [
+        "driver"
+      ],
+      "bytes": 6936
+    },
+    {
+      "id": "driverOffers",
+      "route": "/driver/offers",
+      "roles": [
+        "driver"
+      ],
+      "bytes": 0
+    },
+    {
+      "id": "orderDetail",
+      "route": "/order/:id",
+      "roles": [
+        "customer",
+        "driver"
+      ],
+      "bytes": 0
+    },
+    {
+      "id": "profile",
+      "route": "/profile",
+      "roles": [
+        "customer",
+        "driver"
+      ],
+      "bytes": 0
+    }
+  ]
+}

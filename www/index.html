@@ -1264,7 +1264,7 @@
     </ol>
     <div class="help-h">أسئلة شائعة</div>
     <div class="faq">
-      <details><summary>كيف أحصل على نقاط مجانية؟</summary><p>من نافذة الخطط: شاهد إعلاناً قصيراً واحصل على ٥ نقاط، حتى ١٠ إعلانات يومياً. المشتركون لا تظهر لهم أي إعلانات.</p></details>
+      <details><summary>كيف أحصل على نقاط مجانية؟</summary><p>من نافذة الخطط: شاهد إعلاناً قصيراً واحصل على ١٥ نقطة، حتى ١٠ إعلانات يومياً. المشتركون لا تظهر لهم أي إعلانات.</p></details>
       <details><summary>ما هي النقاط وكيف تُحسب؟</summary><p>كل طلب للذكاء الاصطناعي يستهلك نقاطاً حسب حجمه الفعلي. التطبيق البسيط يستهلك أقل من تطبيق تعليمي فيه عشرات الدروس. بعد كل بناء يظهر لك ما استهلكه بالضبط، والرصيد ظاهر أعلى شاشة البناء.</p></details>
       <details><summary>هل التطبيق ملكي؟</summary><p>نعم. الكود كاملاً لك، تنزّله وتعدّله وتنشره باسمك على Google Play دون أي رسوم إضافية من بانِي.</p></details>
       <details><summary>هل أحتاج خبرة في البرمجة؟</summary><p>لا. كل التعديلات تتم بالكلام في «المساعد». المحرر متاح لمن يريد، لكنه ليس ضرورياً.</p></details>
@@ -1924,7 +1924,7 @@ function renderPlans(){
       (on ? '<button class="btn btn-ghost btn-sm po-btn" onclick="Billing.manage()">خطتك الحالية · إدارة الاشتراك</button>'
           : '<button class="btn btn-primary btn-sm po-btn" onclick="Billing.buy(\'' + k + '\')">اشترك</button>') + '</div>';
   }).join('');
-  if (px && Ads.eligible()) document.getElementById('plans-box').insertAdjacentHTML('afterbegin', '<div class="ad-earn"><div><b>نقاط مجانية</b><span>شاهد إعلاناً قصيراً واحصل على ' + toAr(S.credits.adPoints || 5) + ' نقاط · ' + (S.credits.adsLeft ? 'متبقي ' + toAr(S.credits.adsLeft) + ' اليوم' : 'انتهت إعلانات اليوم') + '</span></div><button class="btn btn-accent btn-sm" onclick="Ads.reward(this)"' + (S.credits.adsLeft ? '' : ' disabled') + '><svg class="i i-sm"><use href="#i-play"/></svg>شاهد</button></div>');
+  if (px && Ads.eligible()) document.getElementById('plans-box').insertAdjacentHTML('afterbegin', '<div class="ad-earn"><div><b>نقاط مجانية</b><span>شاهد إعلاناً قصيراً واحصل على ' + toAr(S.credits.adPoints || 15) + ' نقطة · ' + (S.credits.adsLeft ? 'متبقي ' + toAr(S.credits.adsLeft) + ' اليوم' : 'انتهت إعلانات اليوم') + '</span></div><button class="btn btn-accent btn-sm" onclick="Ads.reward(this)"' + (S.credits.adsLeft ? '' : ' disabled') + '><svg class="i i-sm"><use href="#i-play"/></svg>شاهد</button></div>');
   document.getElementById('plans-box').insertAdjacentHTML('beforeend', px && SHOW_PACKS ? '<div class="packs"><div class="packs-h">رصيد إضافي (لا ينتهي)</div>' +
     Object.keys(PACKS).map(function(id){ return '<button class="pack" onclick="Billing.buyPack(\'' + id + '\')"><b>' + toAr(PACKS[id].points.toLocaleString('en')) + '</b><span>نقطة</span><em>' + esc(Billing.packPrice(id)) + '</em></button>'; }).join('') + '</div>' : '');
   document.getElementById('plans-note').innerHTML = (px && S.credits ? 'الخطة المجانية: <b>' + toAr(S.credits.remaining) + '</b> من ٢٥٠ نقطة، تتجدد كل ٤ ساعات، وتطبيق جديد واحد يومياً. وقد تتوقف مؤقتاً عند ازدحام الخدمة المجانية. ' : '') + (Billing.native()

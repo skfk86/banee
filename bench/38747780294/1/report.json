@@ -1,0 +1,124 @@
+{
+  "status": "ready",
+  "error": "",
+  "name": "صيانتي",
+  "steps": [
+    "done · هوية «عِمران وتجهيز» · الخطة: ٨ شاشات · ٤ مجموعات · ١٢ عنصر محتوى",
+    "done · المحتوى: ١٢ عنصر مكتوب كاملاً",
+    "done · الهيكل جاهز: التنقّل، البيانات، الدخول، التصميم",
+    "done · ٨ شاشات مكتوبة",
+    "done · جُرّبت كل الشاشات وأُصلحت ١٠، لا أخطاء · المراجعة: أُصلحت ٥ من ٥",
+    "done · جاهز للمعاينة والتحميل"
+  ],
+  "runtime": {
+    "home": [],
+    "service_details": [],
+    "book_service": [],
+    "my_orders": [],
+    "order_details": [],
+    "rate_order": [],
+    "tech_dashboard": [],
+    "profile": []
+  },
+  "flows": [],
+  "flowSteps": [],
+  "reviewIssues": {
+    "home": [
+      "مراجعة: حقل createdAt في الطلب النشط يُمرر إلى Number(activeOrder.createdAt) في دالة UI.ago، وبما أنه يُحفظ كصيغة ISO String فإن التحويل يعيد NaN ويظهر التوقيت دائماً كـ 'الآن'؛ الإصلاح استخدام new Date(activeOrder.createdAt).getTime() بدلاً من Number."
+    ],
+    "service_details": [
+      "مراجعة: تاريخ التقييم r.createdAt يُحفظ كنص رقمي للملي ثواني في rate_order بينما يُقرأ هنا عبر new Date(r.createdAt).getTime() مما يعيد NaN في متصفحات الجافاسكربت وتظهر كل التقييمات بأنها كُتبت 'الآن'؛ الإصلاح استخدام Number(r.createdAt)."
+    ],
+    "book_service": [],
+    "my_orders": [
+      "مراجعة: زر الاتصال بالفني data-act=\"call-tech\" يربط هاتف العميل order.userPhone في خاصية data-phone بدلاً من هاتف الفني، مما يجعل العميل يتصل برقم هاتفه الشخصي؛ الإصلاح عدم عرض زر اتصال بالفني لعدم توفر techPhone في بيانات الطلب."
+    ],
+    "order_details": [
+      "مراجعة: بيانات الطلب والعنوان ورقم الهاتف تُعرض لأي عميل يفتح الرابط دون التحقق من ملكيته للطلب (عدم فحص isOwner || isTech)، مما يسمح للعميل بالاطلاع على بيانات طلبات غيره؛ الإصلاح التحقق من أن order.userId === Auth.user.uid || isTech وعرض رسالة خطأ أو إعادة التوجيه إن لم يكن مخولاً."
+    ],
+    "rate_order": [],
+    "tech_dashboard": [],
+    "profile": [
+      "مراجعة: في حساب الفني (isTech) يتم جلب آخر طلب وقراءة order.userPhone وعرضه كرقم هاتف الفني، وهو رقم العميل صاحب الطلب مما يسرب بيانات العميل ويعرض رقماً خاطئاً؛ الإصلاح قصر قراءة userPhone من الطلبات على دور العميل فقط (!isTech)."
+    ]
+  },
+  "agent": {
+    "ran": false,
+    "fixed": 0,
+    "steps": 0,
+    "log": []
+  },
+  "fixErrors": [],
+  "review": {
+    "found": 5,
+    "fixed": 5
+  },
+  "screens": [
+    {
+      "id": "home",
+      "route": "/",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 11107
+    },
+    {
+      "id": "service_details",
+      "route": "/service/:id",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 9891
+    },
+    {
+      "id": "book_service",
+      "route": "/book",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 7711
+    },
+    {
+      "id": "my_orders",
+      "route": "/my-orders",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 7539
+    },
+    {
+      "id": "order_details",
+      "route": "/order/:id",
+      "roles": [
+        "customer",
+        "technician"
+      ],
+      "bytes": 14687
+    },
+    {
+      "id": "rate_order",
+      "route": "/rate/:orderId",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 10632
+    },
+    {
+      "id": "tech_dashboard",
+      "route": "/tech-requests",
+      "roles": [
+        "technician"
+      ],
+      "bytes": 8425
+    },
+    {
+      "id": "profile",
+      "route": "/profile",
+      "roles": [
+        "customer",
+        "technician"
+      ],
+      "bytes": 10482
+    }
+  ]
+}

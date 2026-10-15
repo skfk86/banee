@@ -18,7 +18,7 @@ const log = (...a) => { const s = '[' + new Date().toISOString().slice(11, 19) +
     localStorage.setItem('bgkey', k); localStorage.setItem('bonb', '1');
   }, [KEY || 'FAKE']);
   const p = await ctx.newPage(); const perr = [];
-  p.on('pageerror', e => perr.push(e.message + ' @ ' + String(e.stack || '').split('\n').slice(1, 3).join(' | ').slice(0, 300)));
+  p.on('console', m => { if (/^AGENT/.test(m.text())) log(m.text()); }); p.on('pageerror', e => perr.push(e.message + ' @ ' + String(e.stack || '').split('\n').slice(1, 3).join(' | ').slice(0, 300)));
   let lastToast = ''; setInterval(async () => { try { const tx = await p.evaluate(() => { const t = document.querySelector('.toast.on, #toast.on, .toast'); return t ? t.textContent.trim() : ''; }); if (tx && tx !== lastToast) { lastToast = tx; log('رسالة:', tx); } } catch (e) {} }, 1500);
   p.on('response', async r => { const u = r.url(); if (/generativelanguage/.test(u) && r.status() !== 200) { let body = ''; try { body = (await r.text()).slice(0, 1500); } catch (e) {} log('Gemini', r.status(), (u.match(/models\/([^:?]+)/) || [])[1] || '', body.replace(/\s+/g, ' ')); } });
   p.on('requestfailed', r => { if (/generativelanguage/.test(r.url())) log('Gemini طلب فشل:', (r.url().match(/models\/([^:?]+)/) || [])[1] || '', r.failure() && r.failure().errorText); });
@@ -81,6 +81,30 @@ const log = (...a) => { const s = '[' + new Date().toISOString().slice(11, 19) +
     }
     fs.writeFileSync(path.join(OUT, 'app-errors.json'), JSON.stringify(aerr, null, 2));
     log('أخطاء أثناء تصفح التطبيق:', aerr.length);
+  }
+  // اختبار الوكيل المستقل: نزرع خطأً حقيقياً بين شاشتين (اسم حقل مختلف عند الإنشاء) ونرى هل يتتبّعه ويصلحه
+  if (process.env.SABOTAGE && rep.status === 'ready') {
+    const sb = await p.evaluate(async () => {
+      const a = S.apps[0], plan = a.ck.plan, scr = a.ck.screens; let done = null;
+      for (const s of plan.screens) {
+        const js = scr[s.id] || ''; const m = /(?:Data\.(\w+)\.create|DB\.add)\(\s*(?:['"`](\w+)['"`]\s*,\s*)?\{([\s\S]{0,600}?)\}\s*\)/.exec(js);
+        if (!m) continue;
+        const keys = (m[3].match(/\b([a-z]\w*Id)\s*:/g) || []).map(k => k.replace(/\s*:$/, '')).filter(k => k !== 'userId');
+        const k = keys.find(k => plan.screens.some(o => o.id !== s.id && (scr[o.id] || '').indexOf(k) > -1));
+        if (!k) continue;
+        const seg = m[0].replace(new RegExp('\\b' + k + '\\s*:'), k + 'Ref:');
+        scr[s.id] = js.replace(m[0], seg); done = { screen: s.id, field: k }; break;
+      }
+      if (!done) return { skipped: 'لم أجد موضعاً مناسباً للزرع' };
+      a.ck.agentRan = false;
+      const res = await runtimeTest(a);
+      const before = runtimeIssues(res);
+      const r = await agentFix(a, localStorage.getItem('bgkey'), res, (k, x) => console.log('AGENT', k, JSON.stringify(x).slice(0, 300)));
+      const fixedBack = (a.ck.screens[done.screen] || '').indexOf(done.field + 'Ref:') < 0;
+      return { ...done, issuesBefore: before, issuesAfter: runtimeIssues(r.res), steps: r.steps, fixedField: fixedBack, log: (r.log || []).map(h => h.call + ' → ' + String(h.obs).slice(0, 200)) };
+    });
+    rep.sabotage = sb; fs.writeFileSync(path.join(OUT, 'report.json'), JSON.stringify(rep, null, 2));
+    log('اختبار الوكيل:', JSON.stringify(sb).slice(0, 3000));
   }
   const md = ['# تقرير الاختبار الحقيقي لبانِي', '', '- التطبيق: **' + rep.name + '**', '- النتيجة: **' + rep.status + '** ' + rep.error, '- الزمن: ' + mins + ' دقيقة', '- رحلات مختبرة: ' + rep.flows.join('، '),
     '- المراجعة الشاملة: وُجدت ' + rep.review.found + ' وأُصلحت ' + rep.review.fixed, '', '## المراحل', ...rep.steps.map(s => '- ' + s), '', '## ملاحظات التشغيل المتبقية',

@@ -2190,6 +2190,7 @@ var ROLES = {
 ' "roleAccess":{"orders":["driver"],"products":["seller"]},   ← الأدوار التي ترى كل عناصر مجموعة خاصة وتحدّثها، أو تنشر في مجموعة محتوى عامة باسمها (بائع ينشر منتجاته بحقل sellerId، معلم ينشر دروسه بحقل teacherId)\n' +
 ' "flows":[{"name":"اسم الرحلة مثل: طلب منتج","steps":["يفتح الرئيسية","يختار منتجاً","يضيفه للسلة","يدفع ببنكك","يتابع حالة الطلب"]}],\n' +
 ' "relations":["orders.userId ← المستخدم","quizzes.lessonId ← lessons.id"],\n' +
+' "statuses":{"orders":["new","accepted","delivering","done","cancelled"]},   ← القيم الوحيدة المسموحة لحقل status في كل مجموعة لها حالة (إنجليزية صغيرة)، الشاشة التي تُنشئ تكتب الأولى\n' +
 ' "shared":[{"key":"cart","shape":"{ storeId, storeName, items:[{ id, title, price, qty }] }","writes":["store"],"reads":["checkout"]}],   ← كل حالة تنتقل بين الشاشات عبر Store (سلة، اختيارات حجز...) بشكلها الدقيق\n' +
 ' "screens":[{"id":"home","route":"/","title":"الرئيسية","icon":"home","nav":true,"roles":["user"],"purpose":"..."}]}\n' +
 ' "payments":{"methods":["bankak","cod"],"currency":"ج.س"},   ← فقط إذا كان في التطبيق بيع أو حجز مدفوع\n' +
@@ -2636,6 +2637,7 @@ function screenCtx(plan, s, content){
     '\nتسجيل الدخول: ' + (plan.auth ? 'مفعّل' : 'غير مفعّل (Auth.user زائر محلي له uid ثابت)') +
     '\n\nالمجموعات والحقول (استخدمها حرفياً):\n' + JSON.stringify(plan.collections||[], null, 1) +
     (samples ? '\n\nالمحتوى الحقيقي الموجود في قاعدة البيانات (اعرضه كاملاً كما هو، النصوص الطويلة عبر UI.rich):' + samples : '') +
+    (plan.statuses && Object.keys(plan.statuses).length ? '\n\nقيم حقل status المعتمدة (اكتب وقارن بهذه القيم حرفياً فقط، والعرض للمستخدم بترجمة عربية):\n' + Object.keys(plan.statuses).map(function(c){ return '- ' + c + ': ' + [].concat(plan.statuses[c]).join(' → '); }).join('\n') : '') +
     ((plan.shared || []).length ? '\n\nالحالة المشتركة بين الشاشات عبر Store (التزم بالمفتاح والشكل حرفياً، قراءةً وكتابةً، وبنفس القيمة الافتراضية):\n' + plan.shared.map(function(x){ return '- Store "' + x.key + '": ' + x.shape + (x.writes ? ' — تكتبها: ' + [].concat(x.writes).join('، ') : '') + (x.reads ? ' — تقرؤها: ' + [].concat(x.reads).join('، ') : ''); }).join('\n') : '') +
     (plan.flows && plan.flows.length ? '\n\nرحلات المستخدم في النظام (يجب أن تعمل هذه الشاشة ضمنها):\n' + plan.flows.map(function(f){ return '- ' + f.name + ': ' + (f.steps || []).join(' ← '); }).join('\n') : '') +
     '\n\nكل الشاشات ومساراتها:\n' + plan.screens.map(function(x){ return '- ' + x.route + ' : ' + x.title + (x.nav ? ' (في القائمة السفلية)' : ''); }).join('\n') +
@@ -2686,6 +2688,19 @@ function crossCheck(app){
       var msg = 'الحالة المشتركة Store("' + k + '") مكتوبة بشكلين مختلفين بين الشاشات: «' + a.title + '» تستخدم ' + a.sh.lit + ' و«' + b.title + '» تستخدم ' + b.sh.lit + ' (الاختلاف في ' + diff + '). وحّد الشكل' + (spec ? ' حسب المخطط: ' + spec.shape : ' في الشاشتين (المصفوفة [{ id, title, price, qty }] أوضح للسلال والقوائم)') + '، قراءةً وكتابةً.';
       if (res[a.id].indexOf(msg) < 0) res[a.id].push(msg); if (res[b.id].indexOf(msg) < 0) res[b.id].push(msg);
     });
+  });
+  // قيم الحالة: شاشة تفلتر على status لا تكتبه أي شاشة ولا البيانات الأولية = قائمة فارغة دائماً
+  var written = {}, wre = /status\s*:\s*['"`]([^'"`$]+)['"`]/g, m, allJs = '';
+  plan.screens.forEach(function(s){ allJs += (app.ck.screens[s.id] || '') + '\n'; });
+  var seedTxt = ''; try { seedTxt = JSON.stringify(app.ck.seed || app.ck.content || ''); } catch(e){}
+  while ((m = wre.exec(allJs))) written[m[1]] = 1;
+  var sre = /"status"\s*:\s*"([^"]+)"/g; while ((m = sre.exec(seedTxt))) written[m[1]] = 1;
+  var wl = Object.keys(written);
+  if (wl.length) plan.screens.forEach(function(s){
+    var js = app.ck.screens[s.id] || '', used = {}, cre = /status\s*[!=]==?\s*['"`]([^'"`$]+)['"`]|['"`]([^'"`$]+)['"`]\s*[!=]==?\s*\w*\.?status\b/g;
+    while ((m = cre.exec(js))) used[m[1] || m[2]] = 1;
+    var bad = Object.keys(used).filter(function(v){ return !written[v]; });
+    if (bad.length && bad.length === Object.keys(used).length) res[s.id].push('هذه الشاشة تقارن status بالقيم «' + bad.join('، ') + '» لكن لا شاشة تكتب هذه القيم؛ القيم المكتوبة فعلاً في التطبيق: «' + wl.join('، ') + '». وحّد القيم مع الشاشات الأخرى وإلا ستبقى القائمة فارغة دائماً.');
   });
   return res;
 }

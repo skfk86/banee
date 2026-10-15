@@ -415,16 +415,17 @@ _e(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&
       async call(body) {
         // داخل معاينة بانِي: يمر الطلب عبر حساب صاحب التطبيق في بانِي
         if (!LIVE) { let p = null; try { p = window.parent !== window && window.parent.baneeAppCall; } catch (e) {} if (p) return p(body); }
-        if (!META.api) throw new Error('هذه الميزة تعمل بعد نشر التطبيق');
+        if (!META.api) throw new Error('هذه الميزة غير مفعّلة من صاحب التطبيق بعد');
         let auth;
-        if (META.cloud && FS && FS.auth.currentUser) auth = { idToken: await FS.auth.currentUser.getIdToken() };
-        else if (META.appKey) { let dev = Store.get('dev_id'); if (!dev) { dev = genId() + genId(); Store.set('dev_id', dev); } auth = { appKey: META.appKey, device: (Auth.user && Auth.user.uid) || dev }; }
-        else throw new Error('هذه الميزة تعمل بعد نشر التطبيق مع قاعدة البيانات');
+        // التطبيق المنشور: خادم صاحب التطبيق الخاص (Apps Script بمفتاحه)، ولا يمر بخادم بانِي
+        if (META.own) { let dev = Store.get('dev_id'); if (!dev) { dev = genId() + genId(); Store.set('dev_id', dev); } auth = { device: (Auth.user && Auth.user.uid) || dev }; }
+        else if (META.cloud && FS && FS.auth.currentUser) auth = { idToken: await FS.auth.currentUser.getIdToken() };
+        else throw new Error('هذه الميزة غير مفعّلة من صاحب التطبيق بعد');
         const r = await fetch(META.api, { method: 'POST', body: JSON.stringify(Object.assign({}, body, auth)) });
         return r.json();
       }
     };
-    // بيانات حية من أي رابط https (JSON أو نص) عبر خادم بانِي، مع تخزين مؤقت
+    // بيانات حية من أي رابط https (JSON أو نص) عبر الخادم، مع تخزين مؤقت
     const Net = {
       async get(url, { ttl = 600 } = {}) {
         if (META.test) return {};
@@ -433,11 +434,11 @@ _e(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&
         try { return JSON.parse(r.body); } catch (e) { return r.body; }
       }
     };
-    // ذكاء اصطناعي داخل التطبيق: تُخصم تكلفته من رصيد صاحب التطبيق في بانِي
+    // ذكاء اصطناعي داخل التطبيق: بمفتاح Gemini الخاص بصاحب التطبيق على خادمه
     const AI = {
       async ask(prompt, { system = '', json = false } = {}) {
         if (META.test) return json ? {} : 'رد تجريبي من المساعد الذكي.';
-        const r = await Cloud.call({ op: 'appAsk', appId: META.cloud ? META.cloud.id : META.appKey ? 'key' : 'preview', prompt: String(prompt), system, json });
+        const r = await Cloud.call({ op: 'appAsk', appId: META.cloud ? META.cloud.id : META.own ? 'own' : 'preview', prompt: String(prompt), system, json });
         if (!r || !r.ok) throw new Error((r && r.error && r.error.message) || 'تعذّر الرد، حاول مرة أخرى');
         if (json) { try { return JSON.parse(r.text); } catch (e) { return {}; } }
         return r.text;

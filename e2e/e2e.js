@@ -18,7 +18,7 @@ const log = (...a) => { const s = '[' + new Date().toISOString().slice(11, 19) +
     localStorage.setItem('bgkey', k); localStorage.setItem('bonb', '1');
   }, [KEY || 'FAKE']);
   const p = await ctx.newPage(); const perr = [];
-  p.on('pageerror', e => perr.push(e.message));
+  p.on('pageerror', e => perr.push(e.message + ' @ ' + String(e.stack || '').split('\n').slice(1, 3).join(' | ').slice(0, 300)));
   let lastToast = ''; setInterval(async () => { try { const tx = await p.evaluate(() => { const t = document.querySelector('.toast.on, #toast.on, .toast'); return t ? t.textContent.trim() : ''; }); if (tx && tx !== lastToast) { lastToast = tx; log('رسالة:', tx); } } catch (e) {} }, 1500);
   p.on('response', async r => { const u = r.url(); if (/generativelanguage/.test(u) && r.status() !== 200) { let body = ''; try { body = (await r.text()).slice(0, 1500); } catch (e) {} log('Gemini', r.status(), (u.match(/models\/([^:?]+)/) || [])[1] || '', body.replace(/\s+/g, ' ')); } });
   p.on('requestfailed', r => { if (/generativelanguage/.test(r.url())) log('Gemini طلب فشل:', (r.url().match(/models\/([^:?]+)/) || [])[1] || '', r.failure() && r.failure().errorText); });

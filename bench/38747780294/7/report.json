@@ -1,0 +1,160 @@
+{
+  "status": "ready",
+  "error": "",
+  "name": "مطعم وطلب",
+  "steps": [
+    "done · هوية «نكهة وطازج» · الخطة: ٥ شاشات · ٤ مجموعات · ٢٠ عنصر محتوى",
+    "done · المحتوى: ٢٠ عنصر مكتوب كاملاً",
+    "done · الهيكل جاهز: التنقّل، البيانات، الدخول، التصميم",
+    "done · ٥ شاشات مكتوبة",
+    "done · الفحص: ٢ شاشات بها ملاحظات، راجعها في الاستوديو · رحلات المستخدم: ٢ من ٢ تعمل كاملة · المراجعة: أُصلحت ٠ من ٢",
+    "done · جاهز للمعاينة والتحميل"
+  ],
+  "runtime": {
+    "home": [],
+    "store": [],
+    "checkout": [],
+    "track": [],
+    "kitchenOrders": []
+  },
+  "flows": [
+    "طلب توصيل طعام (8 خطوات)",
+    "إدارة طلبات المطبخ (9 خطوات)"
+  ],
+  "flowSteps": [
+    {
+      "flow": "طلب توصيل طعام",
+      "steps": [
+        {
+          "go": "/"
+        },
+        {
+          "click": "[data-act=store][data-id=stores-1]"
+        },
+        {
+          "click": "[data-act=add][data-id=items-1]"
+        },
+        {
+          "click": "[data-act=checkout]"
+        },
+        {
+          "fill": {
+            "[name=userName]": "محمد أحمد",
+            "[name=phone]": "0512345678",
+            "[name=address]": "الرياض، شارع الملك فهد"
+          }
+        },
+        {
+          "click": "text:تأكيد وإرسال الطلب"
+        },
+        {
+          "expect": "طلباتي السابقة والحالية"
+        },
+        {
+          "expectDb": {
+            "col": "orders",
+            "min": 1
+          }
+        }
+      ]
+    },
+    {
+      "flow": "إدارة طلبات المطبخ",
+      "steps": [
+        {
+          "role": "kitchen"
+        },
+        {
+          "go": "/kitchen"
+        },
+        {
+          "click": "text:قبول الطلب"
+        },
+        {
+          "expect": "مقبول"
+        },
+        {
+          "click": "text:في الطريق"
+        },
+        {
+          "expect": "في الطريق"
+        },
+        {
+          "click": "text:تم التسليم"
+        },
+        {
+          "expect": "تم التسليم"
+        },
+        {
+          "expectDb": {
+            "col": "orders",
+            "min": 1
+          }
+        }
+      ]
+    }
+  ],
+  "reviewIssues": {
+    "home": [],
+    "store": [],
+    "checkout": [],
+    "track": [],
+    "kitchenOrders": [
+      "مراجعة: التحقق من طريقة الطلب يتم عبر o.method === 'delivery' بينما يتم حفظها في شاشة إتمام الطلب كـ cash أو transfer، والإصلاح هو مقارنة القيمة بشكل صحيح بناءً على طرق الدفع المتاحة.",
+      "مراجعة: تظهر طلبات السلة التي يتم تخزينها مؤقتاً في مجموعة orders بالحالة cart داخل لوحة المطبخ عند اختيار فلتر الكل، والإصلاح هو استبعاد الطلبات ذات الحالة cart من قائمة المطبخ."
+    ]
+  },
+  "agent": {
+    "ran": false,
+    "fixed": 0,
+    "steps": 0,
+    "log": []
+  },
+  "fixErrors": [],
+  "review": {
+    "found": 2,
+    "fixed": 0
+  },
+  "screens": [
+    {
+      "id": "home",
+      "route": "/",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 4917
+    },
+    {
+      "id": "store",
+      "route": "/store/:id",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 10267
+    },
+    {
+      "id": "checkout",
+      "route": "/checkout",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 9060
+    },
+    {
+      "id": "track",
+      "route": "/orders",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 8737
+    },
+    {
+      "id": "kitchenOrders",
+      "route": "/kitchen",
+      "roles": [
+        "kitchen"
+      ],
+      "bytes": 6597
+    }
+  ]
+}

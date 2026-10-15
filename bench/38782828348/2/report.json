@@ -1,0 +1,203 @@
+{
+  "status": "ready",
+  "error": "",
+  "name": "فرصتي للوظائف",
+  "steps": [
+    "done · هوية «مسار المهنة» · الخطة: ٨ شاشات · ٣ مجموعات · ١٢ عنصر محتوى",
+    "done · المحتوى: ١٢ عنصر مكتوب كاملاً",
+    "done · الهيكل جاهز: التنقّل، البيانات، الدخول، التصميم",
+    "done · ٨ شاشات مكتوبة",
+    "done · جُرّبت كل الشاشات وأُصلحت ٢، لا أخطاء · رحلات المستخدم: ٢ من ٢ تعمل كاملة · المراجعة: أُصلحت ١ من ١",
+    "done · جاهز للمعاينة والتحميل"
+  ],
+  "runtime": {
+    "home": [],
+    "jobDetails": [],
+    "apply": [],
+    "myApplications": [],
+    "employerDashboard": [],
+    "addJob": [],
+    "applicants": [],
+    "profile": []
+  },
+  "flows": [
+    "تقديم الباحث على وظيفة (10 خطوات)",
+    "نشر وإدارة الوظائف للشركة (8 خطوات)"
+  ],
+  "flowSteps": [
+    {
+      "flow": "تقديم الباحث على وظيفة",
+      "steps": [
+        {
+          "role": "seeker"
+        },
+        {
+          "go": "/"
+        },
+        {
+          "click": "[data-act=view-job]"
+        },
+        {
+          "expect": "تفاصيل الوظيفة"
+        },
+        {
+          "click": "text:التقدم للوظيفة"
+        },
+        {
+          "fill": {
+            "#userName": "أحمد محمد",
+            "#userEmail": "ahmed@test.com",
+            "#cvUrl": "https://example.com/cv.pdf",
+            "#coverLetter": "أهلاً بكم، أنا مهتم جداً بهذه الوظيفة."
+          }
+        },
+        {
+          "click": "[data-act=submitBtn]"
+        },
+        {
+          "expectDb": {
+            "col": "applications",
+            "min": 1
+          }
+        },
+        {
+          "go": "/my-applications"
+        },
+        {
+          "expect": "طلبات التوظيف"
+        }
+      ]
+    },
+    {
+      "flow": "نشر وإدارة الوظائف للشركة",
+      "steps": [
+        {
+          "role": "employer"
+        },
+        {
+          "go": "/employer"
+        },
+        {
+          "click": "[data-act=add-job]"
+        },
+        {
+          "fill": {
+            "[name=title]": "مطور واجهات",
+            "[name=companyName]": "شركة التقنية",
+            "[name=location]": "عن بعد",
+            "[name=type]": "دوام كامل",
+            "[name=salary]": "1000$",
+            "[name=description]": "وصف الوظيفة هنا",
+            "[name=requirementsText]": "خبرة سنتين"
+          }
+        },
+        {
+          "click": "text:نشر الوظيفة"
+        },
+        {
+          "expectDb": {
+            "col": "jobs",
+            "min": 1
+          }
+        },
+        {
+          "click": "[data-act=view-applicants]"
+        },
+        {
+          "expect": "المتقدمون للوظيفة"
+        }
+      ]
+    }
+  ],
+  "reviewIssues": {
+    "home": [],
+    "jobDetails": [],
+    "apply": [],
+    "myApplications": [
+      "مراجعة: حقل تاريخ التقديم يُقرأ باسم createdAt بينما يُحفظ باسم order في شاشة التقديم apply، والإصلاح هو قراءة app.order بدلاً من app.createdAt في عرض تاريخ التقديم."
+    ],
+    "employerDashboard": [],
+    "addJob": [],
+    "applicants": [],
+    "profile": []
+  },
+  "flowErr": "",
+  "agent": {
+    "ran": false,
+    "fixed": 0,
+    "steps": 0,
+    "log": []
+  },
+  "fixErrors": [],
+  "review": {
+    "found": 1,
+    "fixed": 1
+  },
+  "screens": [
+    {
+      "id": "home",
+      "route": "/",
+      "roles": [
+        "seeker"
+      ],
+      "bytes": 4753
+    },
+    {
+      "id": "jobDetails",
+      "route": "/job/:id",
+      "roles": [
+        "seeker"
+      ],
+      "bytes": 6564
+    },
+    {
+      "id": "apply",
+      "route": "/apply/:id",
+      "roles": [
+        "seeker"
+      ],
+      "bytes": 4057
+    },
+    {
+      "id": "myApplications",
+      "route": "/my-applications",
+      "roles": [
+        "seeker"
+      ],
+      "bytes": 3193
+    },
+    {
+      "id": "employerDashboard",
+      "route": "/employer",
+      "roles": [
+        "employer"
+      ],
+      "bytes": 4618
+    },
+    {
+      "id": "addJob",
+      "route": "/employer/add-job",
+      "roles": [
+        "employer"
+      ],
+      "bytes": 3842
+    },
+    {
+      "id": "applicants",
+      "route": "/employer/applicants/:jobId",
+      "roles": [
+        "employer"
+      ],
+      "bytes": 5453
+    },
+    {
+      "id": "profile",
+      "route": "/profile",
+      "roles": [
+        "seeker",
+        "employer"
+      ],
+      "bytes": 5426
+    }
+  ]
+}

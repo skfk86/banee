@@ -1,0 +1,186 @@
+{
+  "status": "ready",
+  "error": "",
+  "name": "فرصتي",
+  "steps": [
+    "done · هوية «مسار المهنة» · الخطة: ٧ شاشات · ٣ مجموعات · ٦ عنصر محتوى",
+    "done · المحتوى: ٦ عنصر مكتوب كاملاً",
+    "done · الهيكل جاهز: التنقّل، البيانات، الدخول، التصميم",
+    "done · ٧ شاشات مكتوبة",
+    "done · جُرّبت كل الشاشات وأُصلحت ١، لا أخطاء · رحلات المستخدم: ٢ من ٢ تعمل كاملة · المراجعة: أُصلحت ١ من ١",
+    "done · جاهز للمعاينة والتحميل"
+  ],
+  "runtime": {
+    "home": [],
+    "jobDetails": [],
+    "apply": [],
+    "myApplications": [],
+    "employerDashboard": [],
+    "postJob": [],
+    "applicantsList": []
+  },
+  "flows": [
+    "تقديم الباحث على وظيفة (8 خطوات)",
+    "إدارة الوظائف والمتقدمين للشركة (8 خطوات)"
+  ],
+  "flowSteps": [
+    {
+      "flow": "تقديم الباحث على وظيفة",
+      "steps": [
+        {
+          "role": "seeker"
+        },
+        {
+          "go": "/"
+        },
+        {
+          "click": "[data-act=select-job][data-id=jobs-1]"
+        },
+        {
+          "expect": "متطلبات الوظيفة"
+        },
+        {
+          "click": "[data-act=apply-now]"
+        },
+        {
+          "fill": {
+            "[name=applicantName]": "محمد أحمد",
+            "[name=applicantEmail]": "mohamed@example.com",
+            "[name=phone]": "+249123456789",
+            "[name=cvText]": "مطور ويب خبرة 3 سنوات"
+          }
+        },
+        {
+          "click": "text:إرسال الطلب الآن"
+        },
+        {
+          "expectDb": {
+            "col": "applications",
+            "min": 1
+          }
+        }
+      ]
+    },
+    {
+      "flow": "إدارة الوظائف والمتقدمين للشركة",
+      "steps": [
+        {
+          "role": "employer"
+        },
+        {
+          "go": "/employer"
+        },
+        {
+          "click": "[data-act=post-job]"
+        },
+        {
+          "fill": {
+            "[name=title]": "مطور تطبيقات",
+            "[name=company]": "تقانة",
+            "[name=location]": "الخرطوم",
+            "[name=type]": "دوام كامل",
+            "[name=salary]": "1000$",
+            "[name=description]": "مطلوب مطور",
+            "[name=requirements]": "خبرة جيدة"
+          }
+        },
+        {
+          "click": "text:نشر الوظيفة الآن"
+        },
+        {
+          "expectDb": {
+            "col": "jobs",
+            "min": 4
+          }
+        },
+        {
+          "go": "/applicants/jobs-1"
+        },
+        {
+          "click": "[data-act=status][data-status=accepted]"
+        }
+      ]
+    }
+  ],
+  "reviewIssues": {
+    "home": [],
+    "jobDetails": [],
+    "apply": [
+      "مراجعة: حقل البريد الإلكتروني يستخدم نوعاً غير صالح 'email5' بدلاً من 'email' في السطر <input type=\"email5\" class=\"input\" name=\"applicantEmail\" ... />، والإصلاح هو تعديله إلى type=\"email\"."
+    ],
+    "myApplications": [],
+    "employerDashboard": [],
+    "postJob": [],
+    "applicantsList": []
+  },
+  "flowErr": "",
+  "agent": {
+    "ran": false,
+    "fixed": 0,
+    "steps": 0,
+    "log": []
+  },
+  "fixErrors": [],
+  "review": {
+    "found": 1,
+    "fixed": 1
+  },
+  "screens": [
+    {
+      "id": "home",
+      "route": "/",
+      "roles": [
+        "seeker"
+      ],
+      "bytes": 4084
+    },
+    {
+      "id": "jobDetails",
+      "route": "/job/:id",
+      "roles": [
+        "seeker"
+      ],
+      "bytes": 3713
+    },
+    {
+      "id": "apply",
+      "route": "/apply/:jobId",
+      "roles": [
+        "seeker"
+      ],
+      "bytes": 3447
+    },
+    {
+      "id": "myApplications",
+      "route": "/my-applications",
+      "roles": [
+        "seeker"
+      ],
+      "bytes": 6195
+    },
+    {
+      "id": "employerDashboard",
+      "route": "/employer",
+      "roles": [
+        "employer"
+      ],
+      "bytes": 4189
+    },
+    {
+      "id": "postJob",
+      "route": "/post-job",
+      "roles": [
+        "employer"
+      ],
+      "bytes": 4847
+    },
+    {
+      "id": "applicantsList",
+      "route": "/applicants/:jobId",
+      "roles": [
+        "employer"
+      ],
+      "bytes": 4243
+    }
+  ]
+}

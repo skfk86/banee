@@ -2689,18 +2689,31 @@ function crossCheck(app){
       if (res[a.id].indexOf(msg) < 0) res[a.id].push(msg); if (res[b.id].indexOf(msg) < 0) res[b.id].push(msg);
     });
   });
-  // قيم الحالة: شاشة تفلتر على status لا تكتبه أي شاشة ولا البيانات الأولية = قائمة فارغة دائماً
-  var written = {}, wre = /status\s*:\s*['"`]([^'"`$]+)['"`]/g, m, allJs = '';
+  // قيم الحقول المرمّزة (status, type, category...): شاشة تقارن حقلاً بقيمة لا تكتبها أي شاشة ولا البيانات الأولية = قائمة فارغة دائماً
+  var allJs = '', m, W = {};
   plan.screens.forEach(function(s){ allJs += (app.ck.screens[s.id] || '') + '\n'; });
-  var seedTxt = ''; try { seedTxt = JSON.stringify(app.ck.seed || app.ck.content || ''); } catch(e){}
-  while ((m = wre.exec(allJs))) written[m[1]] = 1;
-  var sre = /"status"\s*:\s*"([^"]+)"/g; while ((m = sre.exec(seedTxt))) written[m[1]] = 1;
-  var wl = Object.keys(written);
-  if (wl.length) plan.screens.forEach(function(s){
-    var js = app.ck.screens[s.id] || '', used = {}, cre = /status\s*[!=]==?\s*['"`]([^'"`$]+)['"`]|['"`]([^'"`$]+)['"`]\s*[!=]==?\s*\w*\.?status\b/g;
-    while ((m = cre.exec(js))) used[m[1] || m[2]] = 1;
-    var bad = Object.keys(used).filter(function(v){ return !written[v]; });
-    if (bad.length && bad.length === Object.keys(used).length) res[s.id].push('هذه الشاشة تقارن status بالقيم «' + bad.join('، ') + '» لكن لا شاشة تكتب هذه القيم؛ القيم المكتوبة فعلاً في التطبيق: «' + wl.join('، ') + '». وحّد القيم مع الشاشات الأخرى وإلا ستبقى القائمة فارغة دائماً.');
+  var seedTxt = ''; try { seedTxt = JSON.stringify([app.ck.seed, app.ck.content, plan.seed]); } catch(e){}
+  var wre = /\b(\w+)\s*:\s*['"`]([^'"`$\n]{1,40})['"`]/g; while ((m = wre.exec(allJs))) (W[m[1]] = W[m[1]] || {})[m[2]] = 1;
+  var sre = /"(\w+)"\s*:\s*"([^"\n]{1,40})"/g; while ((m = sre.exec(seedTxt))) (W[m[1]] = W[m[1]] || {})[m[2]] = 1;
+  if (plan.statuses) Object.keys(plan.statuses).forEach(function(c){ [].concat(plan.statuses[c]).forEach(function(v){ (W.status = W.status || {})[v] = 1; }); });
+  var codeJs = allJs.replace(/(^|[^:\\])\/\/[^\n]*/g, '$1');
+  var SKIP = /^(id|uid|role|route|title|name|type|icon|label|text|placeholder|value|key|mode|act|lang|dir|color|theme|tab|view|sort|order)$/;
+  plan.screens.forEach(function(s){
+    var js = app.ck.screens[s.id] || '', used = {};
+    var cre = /\.(\w+)\s*[!=]==?\s*['"`]([^'"`$\n]{1,40})['"`]|['"`]([^'"`$\n]{1,40})['"`]\s*[!=]==?\s*\w+\.(\w+)\b/g;
+    while ((m = cre.exec(js))) { var f = m[1] || m[4], v = m[2] || m[3]; if (SKIP.test(f) && f !== 'type' && f !== 'role') continue; (used[f] = used[f] || {})[v] = 1; }
+    var dre = /DB\.\w+\(\s*['"`]\w+['"`]\s*,\s*['"`](\w+)['"`]\s*,\s*['"`]?[=!<>]*['"`]?\s*,?\s*['"`]([^'"`$\n]{1,40})['"`]/g;
+    while ((m = dre.exec(js))) (used[m[1]] = used[m[1]] || {})[m[2]] = 1;
+    Object.keys(used).forEach(function(f){
+      if (!W[f] || f === 'role') return; // حقل لا يُكتب بقيم ثابتة أصلاً: لا نحكم
+      var vals = Object.keys(used[f]), bad = vals.filter(function(v){
+        if (W[f][v]) return false;
+        // قيمة تظهر في مكان آخر غير المقارنات (data-status="..." أو option أو متغير) قد تُكتب ديناميكياً: لا نحكم
+        var ev = v.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), total = (codeJs.match(new RegExp('(?:^|[^|?]\\s*|[^|?\\s])[\'"`]' + ev + '[\'"`]', 'g')) || []).length - (codeJs.match(new RegExp('(?:\\|\\||\\?\\?)\\s*[\'"`]' + ev + '[\'"`]', 'g')) || []).length, cmp = (codeJs.match(new RegExp('(?:[!=]==?|\\bcase)\\s*[\'"`]' + v.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '[\'"`]|[\'"`]' + v.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '[\'"`]\\s*[!=]==?', 'g')) || []).length;
+        return total <= cmp;
+      });
+      if (bad.length && bad.length === vals.length) res[s.id].push('هذه الشاشة تقارن الحقل ' + f + ' بالقيم «' + bad.join('، ') + '» لكن لا شاشة ولا بيانات أولية تكتب هذه القيم؛ القيم المكتوبة فعلاً: «' + Object.keys(W[f]).slice(0, 8).join('، ') + '». وحّد القيم مع بقية الشاشات وإلا ستبقى النتيجة فارغة دائماً.');
+    });
   });
   return res;
 }

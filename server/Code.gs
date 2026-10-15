@@ -35,7 +35,7 @@ var CFG = {
   PUSH_PER_DAY: 10,         // إشعارات يرسلها صاحب التطبيق يومياً
   // ── إعلانات بانِي للمستخدمين غير المشتركين ──
   FREE_APPS_PER_DAY: 1,     // تطبيقات جديدة يومياً للمستخدم المجاني (التعديل والإصلاح بلا حد)
-  AD_POINTS: 5,             // نقاط كل إعلان بمكافأة (≈ قيمة الإعلان الفعلية، فلا خسارة). عدّلها بعد معرفة دخلك من AdMob
+  AD_POINTS: 15,             // نقاط كل إعلان بمكافأة (≈ قيمة الإعلان الفعلية، فلا خسارة). عدّلها بعد معرفة دخلك من AdMob
   AD_PER_DAY: 10,           // أقصى إعلانات بمكافأة لكل حساب يومياً
   AD_MIN_GAP_MS: 20000      // أقل مدة بين مكافأتين (طول الإعلان)
 };
@@ -207,13 +207,13 @@ function askGemini(user, req, t0) {
     if (s.blocked) return { ok: false, error: { code: 'blocked', message: 'أُوقف حسابك لاستخدام غير طبيعي. تواصل مع الدعم.' } };
     var day = Utilities.formatDate(now, 'UTC', 'yyyy-MM-dd');
     var spent = Number(prop('day:' + day) || 0);
-    if (spent >= CFG.DAILY_CAP_USD) return { ok: false, error: { code: 'daily_cap', message: 'الخدمة مزدحمة اليوم، حاول غداً' } };
+    if (spent >= CFG.DAILY_CAP_USD) return { ok: false, error: { code: 'daily_cap', message: 'الخادم المجاني يواجه ضغطاً كبيراً الآن. مشروعك محفوظ، وتستطيع المتابعة من حيث توقفت لاحقاً، أو اشترك بمفتاحك الخاص لتبني الآن بلا انتظار.' } };
     var v = creditsView(user, s);
     if (v.remaining <= 0) return { ok: false, error: { code: 'no_credits', message: 'نفد رصيدك' }, credits: v };
     // المجانيون (الذين لا رصيد إضافي مدفوع لهم) يُصرف عليهم من ميزانيتك المحددة فقط
     if (s.plan === 'free' && !(s.bonus > 0)) {
       if (Number(prop('free:total') || 0) >= CFG.FREE_BUDGET_USD) return { ok: false, error: { code: 'free_ended', message: 'انتهت المقاعد المجانية. اشترك لتكمل البناء من حيث توقف.' }, credits: v };
-      if (Number(prop('freeday:' + day) || 0) >= CFG.FREE_DAILY_USD) return { ok: false, error: { code: 'free_day', message: 'انتهت حصة اليوم المجانية. عُد غداً لتكمل من حيث توقفت، أو اشترك لتكمل الآن.' }, credits: v };
+      if (Number(prop('freeday:' + day) || 0) >= CFG.FREE_DAILY_USD) return { ok: false, error: { code: 'free_day', message: 'الخادم المجاني يواجه ضغطاً كبيراً الآن. مشروعك محفوظ، وتستطيع المتابعة من حيث توقفت لاحقاً، أو اشترك بمفتاحك الخاص لتبني الآن بلا انتظار.' }, credits: v };
     }
     // حدود الغش: لا يصلها استخدام حقيقي
     var mk = Utilities.formatDate(now, 'UTC', 'yyyyMMddHHmm'), hk = mk.slice(0, 10);
@@ -241,7 +241,7 @@ function askGemini(user, req, t0) {
   // حصة Google المجانية لكل موديل منفصلة: الموديل الذي انتهت حصته اليوم يُتخطى حتى الغد
   var cacheD = CacheService.getScriptCache(), today = Utilities.formatDate(new Date(), 'UTC', 'yyyyMMdd');
   var chain = [model].concat((FALLBACK[model] || []).filter(function(m){ return PRICES[m]; })).filter(function(m){ return !cacheD.get('dead:' + today + ':' + m); }), r, code, data;
-  if (!chain.length) return { ok: false, error: { code: 'free_day', message: 'انتهت حصة الخدمة المجانية لليوم من Google. عُد غداً لتكمل من حيث توقفت، أو اشترك بمفتاحك الخاص لتبني الآن بلا توقف.' } };
+  if (!chain.length) return { ok: false, error: { code: 'free_day', message: 'الخادم المجاني يواجه ضغطاً كبيراً الآن. مشروعك محفوظ، وتستطيع المتابعة من حيث توقفت لاحقاً، أو اشترك بمفتاحك الخاص لتبني الآن بلا انتظار.' } };
   for (var ci = 0; ci < chain.length; ci++) {
     model = chain[ci];
     try {
@@ -260,7 +260,7 @@ function askGemini(user, req, t0) {
     console.warn('busy', model, code);
   }
   if (code !== 200) {
-    if (code === 429 && chain.every(function(m){ return cacheD.get('dead:' + today + ':' + m); })) return { ok: false, error: { code: 'free_day', message: 'انتهت حصة الخدمة المجانية لليوم من Google. عُد غداً لتكمل من حيث توقفت، أو اشترك بمفتاحك الخاص لتبني الآن بلا توقف.' } };
+    if (code === 429 && chain.every(function(m){ return cacheD.get('dead:' + today + ':' + m); })) return { ok: false, error: { code: 'free_day', message: 'الخادم المجاني يواجه ضغطاً كبيراً الآن. مشروعك محفوظ، وتستطيع المتابعة من حيث توقفت لاحقاً، أو اشترك بمفتاحك الخاص لتبني الآن بلا انتظار.' } };
     var busy = code === 429 || code === 503 || code === 500 || code === 404;
     return { ok: false, error: { code: busy ? 'busy' : 'gemini', status: code, message: (data.error && data.error.message) || 'خطأ من Gemini' }, model: model };
   }
@@ -323,7 +323,7 @@ function netFetch(user, req) {
   if (!hit('net:' + user.uid + ':' + Utilities.formatDate(new Date(), 'UTC', 'yyyyMMddHH'), CFG.NET_PER_HOUR, 3700)) return { ok: false, error: { code: 'rate', message: 'طلبات كثيرة، حاول بعد قليل' } };
   var c = CacheService.getScriptCache(), ck = 'net:' + hash(url), cached = c.get(ck);
   if (cached) return JSON.parse(cached);
-  if (!hit('netall:' + Utilities.formatDate(new Date(), 'UTC', 'yyyyMMdd'), CFG.NET_PER_DAY_ALL, 90000)) return { ok: false, error: { code: 'rate', message: 'الخدمة مزدحمة اليوم، حاول لاحقاً' } };
+  if (!hit('netall:' + Utilities.formatDate(new Date(), 'UTC', 'yyyyMMdd'), CFG.NET_PER_DAY_ALL, 90000)) return { ok: false, error: { code: 'rate', message: 'الخدمة تواجه ضغطاً الآن، حاول بعد قليل' } };
   var r;
   try { r = UrlFetchApp.fetch(url, { muteHttpExceptions: true, followRedirects: true, headers: { 'User-Agent': 'Banee/1.0', Accept: 'application/json, text/plain, */*' } }); }
   catch (e) { return { ok: false, error: { code: 'net', message: 'تعذّر الوصول للمصدر' } }; }
@@ -360,7 +360,7 @@ function appAsk(user, req, t0) {
     var remaining = planPoints(s) - (s.used || 0) + (s.bonus || 0);
     if (remaining <= 0) return { ok: false, error: { code: 'owner_credits', message: 'الخدمة غير متاحة حالياً، أبلغ صاحب التطبيق' } };
     var day = Utilities.formatDate(new Date(), 'UTC', 'yyyy-MM-dd');
-    if (Number(prop('day:' + day) || 0) >= CFG.DAILY_CAP_USD) return { ok: false, error: { code: 'daily_cap', message: 'الخدمة مزدحمة اليوم، حاول غداً' } };
+    if (Number(prop('day:' + day) || 0) >= CFG.DAILY_CAP_USD) return { ok: false, error: { code: 'daily_cap', message: 'الخدمة تواجه ضغطاً الآن، حاول بعد قليل' } };
   } finally { lock.releaseLock(); }
   var body = { contents: [{ role: 'user', parts: [{ text: prompt }] }], generationConfig: { temperature: 0.6, maxOutputTokens: 2000 } };
   if (system) body.systemInstruction = { parts: [{ text: system + '\nأجب بالعربية بوضوح واختصار ما لم يُطلب غير ذلك.' }] };

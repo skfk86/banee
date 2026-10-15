@@ -1,0 +1,148 @@
+{
+  "status": "ready",
+  "error": "",
+  "name": "سوق المستعمل",
+  "steps": [
+    "done · هوية «سوق متجدد» · الخطة: ٤ شاشات · ٣ مجموعات · ١٧ عنصر محتوى",
+    "done · المحتوى: ١٧ عنصر مكتوب كاملاً",
+    "done · الهيكل جاهز: التنقّل، البيانات، الدخول، التصميم",
+    "done · ٤ شاشات مكتوبة",
+    "done · جُرّبت كل الشاشات وأُصلحت ٢، لا أخطاء · رحلات المستخدم: ٢ من ٢ تعمل كاملة · المراجعة: أُصلحت ٢ من ٣",
+    "done · جاهز للمعاينة والتحميل"
+  ],
+  "runtime": {
+    "home": [],
+    "product": [],
+    "add_product": [],
+    "offers": []
+  },
+  "flows": [
+    "تقديم عرض سعر (8 خطوات)",
+    "نشر إعلان بيع (6 خطوات)"
+  ],
+  "flowSteps": [
+    {
+      "flow": "تقديم عرض سعر",
+      "steps": [
+        {
+          "go": "/"
+        },
+        {
+          "expect": "سوق المستعمل"
+        },
+        {
+          "click": "[data-act=open-product]"
+        },
+        {
+          "expect": "تقديم عرض سعر للتفاوض"
+        },
+        {
+          "fill": {
+            "#offerPriceInput": "450"
+          }
+        },
+        {
+          "click": "[data-act=submit-offer]"
+        },
+        {
+          "expectDb": {
+            "col": "offers",
+            "min": 1
+          }
+        },
+        {
+          "expect": "إدارة العروض والتفاوض"
+        }
+      ]
+    },
+    {
+      "flow": "نشر إعلان بيع",
+      "steps": [
+        {
+          "go": "/add"
+        },
+        {
+          "expect": "إضافة إعلان جديد"
+        },
+        {
+          "fill": {
+            "#title": "طاولة مكتب خشبية نظيفة جدا",
+            "#category": "categories-1",
+            "#price": "250",
+            "#image-url": "https://images.unsplash.com/photo-1518455027359-f3f8164ba6bd",
+            "#description": "طاولة مكتبية مستعملة بحالة ممتازة وخالية من الخدوش مع درجين للتخزين"
+          }
+        },
+        {
+          "click": "text:نشر الإعلان"
+        },
+        {
+          "expectDb": {
+            "col": "products",
+            "min": 1
+          }
+        },
+        {
+          "expect": "سوق المستعمل"
+        }
+      ]
+    }
+  ],
+  "reviewIssues": {
+    "home": [
+      "مراجعة: استخدام الكائن غير المعرّف Data بدلاً من كائن قاعدة البيانات DB في استدعاء Data.categories.list وData.products.list مما يسبب خطأ ReferenceError وفشل تحميل التصنيفات والمنتجات؛ الإصلاح هو استخدام DB.list('categories', ...) وDB.list('products', ...)."
+    ],
+    "product": [
+      "مراجعة: استخدام الكائن غير المعرّف Data بدلاً من DB في استدعاء Data.products.get وData.offers.create مما يسبب ReferenceError وفشل عرض تفاصيل المنتج أو تقديم العرض؛ الإصلاح هو استبدالهما بـ DB.get('products', productId) وDB.add('offers', ...)."
+    ],
+    "add_product": [],
+    "offers": [
+      "مراجعة: استخدام الحقل غير الموجود createdAt في الترتيب DB.list('offers', { orderBy: ['createdAt', 'desc'] }) وفي عرض التاريخ item.createdAt، بينما الحقل المعتمد في المخطط والمخزن عند إنشاء العرض هو order؛ الإصلاح استخدام orderBy: ['order', 'desc'] وقراءة item.order."
+    ]
+  },
+  "agent": {
+    "ran": false,
+    "fixed": 0,
+    "steps": 0,
+    "log": []
+  },
+  "fixErrors": [],
+  "review": {
+    "found": 3,
+    "fixed": 2
+  },
+  "screens": [
+    {
+      "id": "home",
+      "route": "/",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 6672
+    },
+    {
+      "id": "product",
+      "route": "/product/:id",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 7069
+    },
+    {
+      "id": "add_product",
+      "route": "/add",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 6521
+    },
+    {
+      "id": "offers",
+      "route": "/offers",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 8511
+    }
+  ]
+}

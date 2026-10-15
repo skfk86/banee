@@ -1,0 +1,223 @@
+{
+  "status": "ready",
+  "error": "",
+  "name": "سوق بانِي",
+  "steps": [
+    "done · هوية «سوق باني» · الخطة: ٦ شاشات · ٤ مجموعات · ٣٠ عنصر محتوى",
+    "done · المحتوى: ٣٠ عنصر مكتوب كاملاً",
+    "done · الهيكل جاهز: التنقّل، البيانات، الدخول، التصميم",
+    "done · ٦ شاشات مكتوبة",
+    "done · الفحص: ٢ شاشات بها ملاحظات، راجعها في الاستوديو · رحلات المستخدم: ٠ من ٢ تعمل كاملة · المراجعة: أُصلحت ٢ من ٦ · وكيل الإصلاح: أصلح ٢ في ١٤ خطوة",
+    "done · جاهز للمعاينة والتحميل"
+  ],
+  "runtime": {
+    "home": [],
+    "product": [],
+    "cart": [
+      "رحلة «شراء منتج» توقفت عند الخطوة ٨: ظهرت رسالة خطأ: حدث خطأ أثناء إتمام الطلب"
+    ],
+    "orders": [],
+    "sellerOrders": [],
+    "sellerProducts": [
+      "رحلة «إدارة المتجر» توقفت عند الخطوة ٣: ظهرت رسالة خطأ: حدث خطأ أثناء إتمام الطلب"
+    ]
+  },
+  "flows": [
+    "شراء منتج (9 خطوات)",
+    "إدارة المتجر (13 خطوات)"
+  ],
+  "flowSteps": [
+    {
+      "flow": "شراء منتج",
+      "steps": [
+        {
+          "role": "customer"
+        },
+        {
+          "go": "/"
+        },
+        {
+          "click": "[data-act=open][data-id=products-1]"
+        },
+        {
+          "click": "text:إضافة إلى السلة"
+        },
+        {
+          "click": "text:إتمام الطلب"
+        },
+        {
+          "fill": {
+            "#address": "الرياض، حي النخيل"
+          }
+        },
+        {
+          "fill": {
+            "#phone": "0501234567"
+          }
+        },
+        {
+          "click": "text:تأكيد الطلب"
+        },
+        {
+          "expectDb": {
+            "col": "orders",
+            "min": 1
+          }
+        }
+      ]
+    },
+    {
+      "flow": "إدارة المتجر",
+      "steps": [
+        {
+          "role": "seller"
+        },
+        {
+          "go": "/seller/products"
+        },
+        {
+          "click": "[data-act=add-product]"
+        },
+        {
+          "fill": {
+            "#p-title": "منتج تجريبي"
+          }
+        },
+        {
+          "fill": {
+            "#p-price": "100"
+          }
+        },
+        {
+          "fill": {
+            "#p-stock": "10"
+          }
+        },
+        {
+          "fill": {
+            "#p-desc": "وصف المنتج التجريبي"
+          }
+        },
+        {
+          "click": "text:اختيار صورة"
+        },
+        {
+          "click": "text:حفظ المنتج"
+        },
+        {
+          "expectDb": {
+            "col": "products",
+            "min": 1
+          }
+        },
+        {
+          "go": "/seller"
+        },
+        {
+          "click": "text:قبول"
+        },
+        {
+          "expectDb": {
+            "col": "orders",
+            "min": 1
+          }
+        }
+      ]
+    }
+  ],
+  "reviewIssues": {
+    "home": [],
+    "product": [
+      "مراجعة: مجموعة 'cart' مستخدمة في الكود وغير معرفة في المخطط (collections)؛ يجب إضافتها للمخطط لتتمكن من تخزين بيانات السلة.",
+      "مراجعة: حقل 'sellerId' مطلوب في مجموعة 'orders' عند إنشاء الطلب، ولكن في شاشة 'cart' يتم إرسال قائمة منتجات قد تنتمي لبائعين مختلفين؛ يجب تعديل منطق الطلب ليتم تقسيم الطلبات حسب البائع أو إضافة 'sellerId' لكل منتج في الطلب."
+    ],
+    "cart": [
+      "مراجعة: مجموعة 'cart' مستخدمة في الكود وغير معرفة في المخطط (collections)؛ يجب إضافتها للمخطط.",
+      "مراجعة: حقل 'sellerId' مفقود في عملية 'Data.orders.create'؛ يجب إضافته ليتوافق مع مخطط مجموعة 'orders'."
+    ],
+    "orders": [
+      "مراجعة: حقل 'createdAt' مستخدم في شاشة 'orders' (في الترتيب والعرض) وغير معرف في مخطط مجموعة 'orders'؛ يجب إضافته للمخطط."
+    ],
+    "sellerOrders": [],
+    "sellerProducts": [
+      "مراجعة: حقل 'order' مستخدم في شاشة 'home' للترتيب وغير معرف عند إنشاء المنتج في 'Data.products.create'؛ يجب إضافة قيمة افتراضية لحقل 'order' عند الحفظ لتجنب انهيار الترتيب."
+    ]
+  },
+  "flowErr": "",
+  "agent": {
+    "ran": true,
+    "fixed": 2,
+    "steps": 14,
+    "log": [
+      "read product — سأقوم بقراءة شاشة 'product' وشاشة 'cart' لفهم كيفية تنفيذ الإضافة للسلة وكيفية تحميل بيانات السلة، حيث أن هناك خطأ في الوصول إلى 'list' في 'cart' → 1| App.screen({\n2|   id: 'product',\n3|   route: '/product/:id',\n4|   title: 'تفاصيل المنتج',\n5|   icon: 'package',\n6|   nav: false,\n7|   render(params) {\n8|    ",
+      "read cart — لقد اكتشفت أن 'Data.cart' غير موجود في طبقة البيانات المعرفة (Data)، مما يفسر خطأ 'undefined (reading 'list')'. سأقوم بقراءة شاشة 'cart' لأرى كيف يت → 1| App.screen({\n2|   id: 'cart',\n3|   route: '/cart',\n4|   title: 'السلة',\n5|   icon: 'shopping-cart',\n6|   nav: true,\n7|   render(params) {\n8|     return `\n9| ",
+      "edit product — لقد تبين أن مجموعة 'cart' غير موجودة في طبقة البيانات 'Data' المعرفة، مما يسبب خطأ 'undefined' عند محاولة الوصول إليها في شاشتي 'product' و 'cart → تم التعديل. ملاحظات الفحص الثابت بعده: لا تحفظ بيانات المستخدم في Store ('cart'): الشاشات الأخرى لن تراها. احفظها في مجموعة DB من الخطة بحقل userId، واقرأها بـ ",
+      "edit product — لقد تبين أن 'Data.cart' غير معرف في طبقة البيانات، ولكن يمكنني استخدام 'DB' مباشرة للتعامل مع مجموعة 'cart' في قاعدة البيانات. سأقوم بتعديل شاشتي → find غير موجود حرفياً في product؛ اقرأ الشاشة وانسخ النص بدقة (المسافات مهمة)",
+      "read product — سأقوم بقراءة شاشة 'product' مرة أخرى للحصول على النص الدقيق لاستبدال 'Data.cart' بـ 'DB' في عمليات الإضافة للسلة، حيث أن 'Data.cart' غير موجود في → 1| App.screen({\n2|   id: 'product',\n3|   route: '/product/:id',\n4|   title: 'تفاصيل المنتج',\n5|   icon: 'package',\n6|   nav: false,\n7|   render(params) {\n8|    ",
+      "edit product — لقد تبين أن مجموعة 'cart' ليست في طبقة البيانات 'Data' ولكن يمكن استخدام 'DB' مباشرة للتعامل مع أي مجموعة. سأقوم بتعديل شاشة 'product' لاستخدام ' → تم التعديل. ملاحظات الفحص الثابت بعده: مجموعة غير موجودة في الخطة: cart — المتاح: categories, products, orders, members, users, orders, notices | مجموعة غير موج",
+      "edit product — لقد تبين أن مجموعة 'cart' غير موجودة في الخطة، لذا سأقوم بتخزين السلة داخل مجموعة 'orders' باستخدام حالة 'cart' بدلاً من 'Store' أو مجموعة غير مو → find غير موجود حرفياً في product؛ اقرأ الشاشة وانسخ النص بدقة (المسافات مهمة)",
+      "edit product — لقد أدركت أن الحل الصحيح هو استخدام مجموعة 'orders' مع حالة 'cart' لتخزين السلة، حيث أن 'orders' تحتوي بالفعل على حقل 'items'. سأقوم بتعديل شاشة  → find غير موجود حرفياً في product؛ اقرأ الشاشة وانسخ النص بدقة (المسافات مهمة)",
+      "read product — سأقوم بقراءة شاشة 'product' مرة أخرى للحصول على النص الدقيق لعملية الإضافة للسلة، حيث أنني سأقوم بتغيير المنطق من استخدام Store إلى استخدام DB.li → 1| App.screen({\n2|   id: 'product',\n3|   route: '/product/:id',\n4|   title: 'تفاصيل المنتج',\n5|   icon: 'package',\n6|   nav: false,\n7|   render(params) {\n8|    ",
+      "edit product — لقد حددت الخطأ: الكود يحاول الوصول إلى مجموعة 'cart' غير الموجودة في المخطط. سأقوم بتعديل شاشة 'product' لتخزين وإدارة السلة داخل مجموعة 'orders' → تم التعديل",
+      "read cart — لقد قمت بتعديل شاشة 'product' لاستخدام مجموعة 'orders' بحالة 'cart' بدلاً من مجموعة 'cart' غير الموجودة. الآن يجب عليّ تعديل شاشة 'cart' لتتوافق مع  → 1| App.screen({\n2|   id: 'cart',\n3|   route: '/cart',\n4|   title: 'السلة',\n5|   icon: 'shopping-cart',\n6|   nav: true,\n7|   render(params) {\n8|     return `\n9| ",
+      "edit cart — لقد اكتشفت أن شاشة 'cart' لا تزال تستخدم 'Data.cart' (وهي مجموعة غير موجودة في المخطط) في السطر 32 والسطر 63 والسطر 104. يجب استبدالها باستخدام 'Dat → تم التعديل",
+      "run — لقد قمت بتعديل شاشة 'cart' لتستخدم مجموعة 'orders' بحالة 'cart' بدلاً من 'Data.cart' غير الموجودة. الآن يجب أن أقوم بتشغيل التطبيق للتأكد من أن الأخطاء ال → نتيجة التشغيل (درجة الأخطاء 60، الأفضل حتى الآن 60):\n[cart] رحلة «شراء منتج» توقفت عند الخطوة ٨: ظهرت رسالة خطأ: حدث خطأ أثناء إتمام الطلب\n[sellerProducts] رحلة",
+      "read sellerProducts — لقد قمت بتعديل شاشة cart لتستخدم مجموعة orders بحالة 'cart' ولكن يبدو أن هناك خطأ في التعامل مع البيانات أو الحالة. سأقوم بقراءة شاشة sell → 1| App.screen({\n2|   id: 'sellerProducts',\n3|   route: '/seller/products',\n4|   title: 'إدارة المنتجات',\n5|   icon: 'package',\n6|   nav: true,\n7|   render(param"
+    ]
+  },
+  "fixErrors": [],
+  "review": {
+    "found": 6,
+    "fixed": 2
+  },
+  "screens": [
+    {
+      "id": "home",
+      "route": "/",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 2810
+    },
+    {
+      "id": "product",
+      "route": "/product/:id",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 2506
+    },
+    {
+      "id": "cart",
+      "route": "/cart",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 4018
+    },
+    {
+      "id": "orders",
+      "route": "/orders",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 2292
+    },
+    {
+      "id": "sellerOrders",
+      "route": "/seller",
+      "roles": [
+        "seller"
+      ],
+      "bytes": 2423
+    },
+    {
+      "id": "sellerProducts",
+      "route": "/seller/products",
+      "roles": [
+        "seller"
+      ],
+      "bytes": 4522
+    }
+  ]
+}

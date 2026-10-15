@@ -82,6 +82,8 @@ function doPost(e) {
   try {
     var req = JSON.parse((e && e.postData && e.postData.contents) || '{}');
     // تطبيق منشور بمشروع Firebase خاص بصاحبه: يُعرَّف بمفتاح التطبيق، ولا يصل إلا للبيانات الحية والذكاء الاصطناعي
+    // التطبيقات المنشورة لها خادمها الخاص (يولّده بانِي وينشره صاحب التطبيق بمفتاحه)، فلا تمر من هنا
+    if (req.appKey) return out({ ok: false, error: { code: 'own_server', message: 'هذه الميزة غير مفعّلة من صاحب التطبيق بعد' } });
     if (req.appKey) {
       var ak = prop('ak:' + String(req.appKey).slice(0, 64)); if (!ak) return out({ ok: false, error: { code: 'auth', message: 'التطبيق غير مسجل في بانِي' } });
       ak = JSON.parse(ak);

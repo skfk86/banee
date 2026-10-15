@@ -2880,7 +2880,7 @@ function runBuild(app, key){
     })).then(function(){ return bad.length; });
   }).then(function(nFixed){
     alive();
-    var round = 0, fixedLive = 0;
+    var round = 0, fixedLive = 0, miss = 0;
     function liveRound(known){
       if (round === 0 && !known && !app.ck.flowTests && (app.ck.plan.flows || []).length) {
         jstep(app,4,'cur','كتابة سيناريوهات اختبار رحلات المستخدم');
@@ -2891,9 +2891,9 @@ function runBuild(app, key){
         .then(function(res){
           alive();
           if (!known) { var cx = crossCheck(app); Object.keys(cx).forEach(function(id){ (cx[id] || []).forEach(function(m){ if (res[id] && res[id].indexOf(m) < 0) res[id].push(m); }); }); setRuntime(app, res); }
-          if (!runtimeIssues(res) || round > 4) return res;
-          return fixRuntime(app, key, res, function(k){ jstep(app,4,'cur','إصلاح أخطاء التشغيل في ' + toAr(k) + ' شاشات'); })
-            .then(function(k){ alive(); fixedLive += k; return k ? liveRound(app.ck.runtime) : app.ck.runtime; });
+          if (!runtimeIssues(res) || round > 6) return res;
+          return fixRuntime(app, key, res, function(k){ jstep(app,4,'cur', (miss ? 'محاولة إصلاح أعمق (' + toAr(miss + 1) + ') لـ ' : 'إصلاح أخطاء التشغيل في ') + toAr(k) + ' شاشات'); }, false, miss + 1)
+            .then(function(k){ alive(); fixedLive += k; if (k) { miss = 0; return liveRound(app.ck.runtime); } miss++; return miss < 3 ? liveRound(app.ck.runtime) : app.ck.runtime; });
         });
     }
     // ٦) مراجعة شاملة كمهندس خبير، ثم تجديد سيناريوهات الاختبار إن كانت قديمة، ثم جولة تشغيل أخيرة
@@ -3574,7 +3574,14 @@ function baseline(app){
 }
 
 // إصلاح موجّه بالأخطاء الحية: كل إصلاح يُجرَّب فعلياً، ويُرفض إن لم يحسّن الشاشة
-function fixRuntime(app, key, res, onStage, review){
+// خطوات سيناريو الرحلة كما سيُنفّذها المختبِر: يحتاجها المصلح ليعرف العناصر والقيم المتوقعة بالضبط
+function flowSpec(app, msgs){
+  var ft = app.ck.flowTests || [], txt = (msgs || []).join('\n'), out = '';
+  ft.forEach(function(f){ if (txt.indexOf('«' + f.flow + '»') < 0) return; var j = ''; try { j = JSON.stringify(f.steps || f).slice(0, 2500); } catch(e){} out += '\n\nخطوات اختبار رحلة «' + f.flow + '» كما ستُنفَّذ حرفياً (اجعل الشاشة تنجح فيها كمستخدم حقيقي: العناصر بنفس data-act/name، والحفظ في نفس المجموعة):\n' + j; });
+  return out;
+}
+function fixRuntime(app, key, res, onStage, review, attempt){
+  attempt = attempt || 1;
   var plan = app.ck.plan;
   var bad = plan.screens.filter(function(s){ return res[s.id] && res[s.id].length; });
   if (!bad.length) return Promise.resolve(0);
@@ -3585,7 +3592,9 @@ function fixRuntime(app, key, res, onStage, review){
   return Promise.all(bad.map(function(s){
     var prompt = (review ? 'راجع كبير المهندسين النظام كاملاً ووجد هذه المشاكل في هذه الشاشة:\n- ' : 'شُغّل التطبيق فعلياً وجُرّبت هذه الشاشة بالضغط على أزرارها، وظهرت هذه الأخطاء أثناء التشغيل:\n- ') + res[s.id].join('\n- ') +
       '\n\nحدّد السبب الجذري (اسم حقل خاطئ، متغير غير معرّف، عنصر غير موجود في الـ DOM، بيانات قد تكون null...) وأصلحه.' +
-      '\nمهم جداً: غيّر أقل ما يمكن. لا تحذف أي ميزة أو زر أو قسم يعمل، ولا تعِد كتابة الشاشة من الصفر. أعد الشاشة كاملة.' +
+      (attempt >= 3 ? '\nمحاولتا إصلاح سابقتان لم تنجحا. أعد كتابة منطق هذه الشاشة بشكل أنظف وأبسط ليعمل بثبات، مع الإبقاء على كل الميزات والأزرار ونفس قيم data-act وأسماء الحقول ونفس أشكال البيانات المشتركة. أعد الشاشة كاملة.' :
+        (attempt === 2 ? '\nمحاولة إصلاح سابقة لم تحلّ هذه الأخطاء: لا تكرر نفس التعديل، ابحث عن سبب أعمق (البيانات الفعلية، المسار، توقيت التحميل، الحقل المطلوب). ' : '') + '\nمهم جداً: غيّر أقل ما يمكن. لا تحذف أي ميزة أو زر أو قسم يعمل، ولا تعِد كتابة الشاشة من الصفر. أعد الشاشة كاملة.') +
+      flowSpec(app, res[s.id]) +
       (res[s.id].some(function(m){ return /^رحلة/.test(m); }) ? '\nأخطاء «رحلة» جاءت من اختبار آلي يتصرف كمستخدم: أصلح السبب الحقيقي (زر لا يعمل، حفظ لا يتم، تنقّل خاطئ). لا تحذف التحقق من الحقول المطلوبة ولا رسائل الخطأ المفيدة لتمرير الاختبار، وإذا كان الخطأ في السيناريو نفسه (عنصر باسم آخر) فيمكنك إضافة data-act المذكور للعنصر الصحيح.' : '') +
       '\n\nسياق الشاشة:\n' + screenCtx(plan, s, app.ck.content) + relatedCode(app, s) +
       '\n\nبيانات تجريبية متاحة:\n' + JSON.stringify(plan.seed || {}).slice(0, 1500) +

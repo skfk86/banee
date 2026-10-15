@@ -1,0 +1,126 @@
+{
+  "status": "ready",
+  "error": "",
+  "name": "حلاقة برو",
+  "steps": [
+    "done · هوية «حلاقة عصرية» · الخطة: ٤ شاشات · ٤ مجموعات · ١٠ عنصر محتوى",
+    "done · المحتوى: ١٠ عنصر مكتوب كاملاً",
+    "done · الهيكل جاهز: التنقّل، البيانات، الدخول، التصميم",
+    "done · ٤ شاشات مكتوبة",
+    "done · جُرّبت كل الشاشات وأُصلحت ٣، لا أخطاء · رحلات المستخدم: ١ من ١ تعمل كاملة · المراجعة: أُصلحت ٢ من ٦",
+    "done · جاهز للمعاينة والتحميل"
+  ],
+  "runtime": {
+    "home": [],
+    "book": [],
+    "mine": [],
+    "providerDashboard": []
+  },
+  "flows": [
+    "حجز موعد (9 خطوات)"
+  ],
+  "flowSteps": [
+    {
+      "flow": "حجز موعد",
+      "steps": [
+        {
+          "role": "customer"
+        },
+        {
+          "go": "/"
+        },
+        {
+          "click": "[data-id=services-1]"
+        },
+        {
+          "fill": {
+            "#provider-select": "providers-1"
+          }
+        },
+        {
+          "fill": {
+            "#date-input": "2023-12-25"
+          }
+        },
+        {
+          "fill": {
+            "#time-select": "10:00"
+          }
+        },
+        {
+          "click": "text:تأكيد الحجز"
+        },
+        {
+          "expect": "مواعيدي"
+        },
+        {
+          "expectDb": {
+            "col": "bookings",
+            "min": 1
+          }
+        }
+      ]
+    }
+  ],
+  "reviewIssues": {
+    "home": [],
+    "book": [
+      "مراجعة: حقل phone في مجموعة bookings مطلوب ولكنه يُحفظ كقيمة فارغة (empty string) في دالة الحجز.",
+      "مراجعة: لا يوجد تحقق من صحة التاريخ (date) أو الوقت (time) قبل الحفظ، مما قد يؤدي لحجز مواعيد في الماضي أو مواعيد غير متاحة."
+    ],
+    "mine": [
+      "مراجعة: يتم عرض providerId كاسم للحلاق في واجهة المستخدم، بينما يجب عرض اسم الحلاق (provider name) من مجموعة providers.",
+      "مراجعة: يتم استخدام حقل createdAt في الاستعلام orderBy بينما هذا الحقل غير موجود في تعريف مجموعة bookings في المخطط."
+    ],
+    "providerDashboard": [
+      "مراجعة: يتم استخدام Auth.user.uid في الاستعلام عن الحجوزات، بينما يجب استخدام معرف الحلاق (providerId) المرتبط بحسابه في مجموعة providers.",
+      "مراجعة: يتم استخدام حقل createdAt في الاستعلام orderBy بينما هذا الحقل غير موجود في تعريف مجموعة bookings في المخطط."
+    ]
+  },
+  "flowErr": "",
+  "agent": {
+    "ran": false,
+    "fixed": 0,
+    "steps": 0,
+    "log": []
+  },
+  "fixErrors": [],
+  "review": {
+    "found": 6,
+    "fixed": 2
+  },
+  "screens": [
+    {
+      "id": "home",
+      "route": "/",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 1875
+    },
+    {
+      "id": "book",
+      "route": "/book/:id",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 3241
+    },
+    {
+      "id": "mine",
+      "route": "/bookings",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 1916
+    },
+    {
+      "id": "providerDashboard",
+      "route": "/dashboard",
+      "roles": [
+        "provider"
+      ],
+      "bytes": 3063
+    }
+  ]
+}

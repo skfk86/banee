@@ -2255,7 +2255,7 @@ var ROLES = {
 '{"tool":"edit","screen":"id","find":"نص موجود حرفياً مرة واحدة","replace":"النص الجديد"} ← تعديل جراحي؛ انسخ find حرفياً من نتيجة read (بدون أرقام الأسطر) واجعله قصيراً ومميزاً\n' +
 '{"tool":"run"} ← تشغيل التطبيق كاملاً وتجربة كل الشاشات والرحلات، يعيد الأخطاء الحالية\n' +
 '{"tool":"done","summary":"ما أصلحته"} ← عندما تنتهي الأخطاء أو لا يمكنك المزيد\n' +
-'المنهج: اقرأ الخطأ، تتبّع السبب الجذري عبر الشاشات بـ search وread (حقل مختلف الاسم، قيمة حالة مختلفة، فلترة خاطئة، زر لا يظهر لهذا الدور، عنصر يظهر فقط عند وجود بيانات)، عدّل أقل قدر ممكن، ثم run للتحقق. لا تحذف ميزات ولا تغيّر قيم data-act الموجودة. استخدم طبقة Data للمجموعات المعرّفة في العقد. لا تعدّل لإرضاء الاختبار بنص وهمي، أصلح السلوك الحقيقي.',
+'المنهج: اقرأ الخطأ، تتبّع السبب الجذري عبر الشاشات بـ search وread (حقل مختلف الاسم، قيمة حالة مختلفة، فلترة خاطئة، زر لا يظهر لهذا الدور، عنصر يظهر فقط عند وجود بيانات)، عدّل أقل قدر ممكن، ثم run للتحقق. لا تحذف ميزات ولا تغيّر قيم data-act الموجودة. استخدم طبقة Data للمجموعات المعرّفة في العقد. لا تعدّل لإرضاء الاختبار بنص وهمي، أصلح السلوك الحقيقي. خطأ مثل «X is not a function» يعني استدعاء دالة غير موجودة في الهيكل: استبدلها بالدالة الصحيحة من عقد الهيكل أدناه أو اكتب المنطق مباشرة.\nعقد الهيكل الذي تُكتب به الشاشات:\n' + CONTRACT,
   fixer: 'أنت مصلّح أخطاء. ستستلم كود شاشة واحدة وقائمة أخطاء مكتشفة آلياً. أصلح الأخطاء فقط مع الالتزام بالعقد التالي، وأعد الشاشة كاملة داخل ```javascript بلا شرح.\n' + CONTRACT
 };
 
@@ -2676,7 +2676,7 @@ function dataModule(plan){
   '        update(id, p) { if (p && "status" in p) chk(c, p.status); warn(c, p); return DB.update(c, id, p); },\n' +
   '        remove: (id) => DB.remove(c, id)\n' +
   '      });\n' +
-  '      const D = { label: s => L[s] || s || "" }; Object.keys(C).forEach(c => { D[c] = api(c); }); return D;\n' +
+  '      const D = { label: s => L[s] || s || "" }; Object.keys(C).forEach(c => { D[c] = api(c); }); try { if (typeof UI.label !== "function") UI.label = D.label; if (typeof UI.status !== "function") UI.status = D.label; } catch (e) {} return D;\n' +
   '    })();\n\n';
 }
 function dataDoc(plan){
@@ -3670,6 +3670,7 @@ function agentFix(app, key, res, onStep){
       ((app.ck.flowTests || []).length ? '\nسيناريوهات الاختبار الآلي: ' + JSON.stringify(app.ck.flowTests).slice(0, 3000) : '') +
       '\n\nالأخطاء الحالية من آخر تشغيل:\n' + issuesText(app, cur) +
       '\n\nسجل خطواتك حتى الآن (' + n + ' من ' + MAX + '):\n' + (hist.length ? hist.map(function(h, i){ var last = i >= hist.length - 3; return '#' + (i + 1) + ' ' + h.call + '\n→ ' + (last ? h.obs : h.obs.slice(0, 400) + (h.obs.length > 400 ? ' …' : '')); }).join('\n\n') : '(لا شيء بعد)') +
+      (function(){ var edits = hist.filter(function(h){ return /^edit/.test(h.call) && /^تم التعديل/.test(h.obs); }).length; return (n >= 5 && !edits) ? '\n\nتنبيه: مضت ' + n + ' خطوات بلا أي تعديل. لديك ما يكفي من المعلومات: نفّذ edit الآن على السبب الأرجح ثم run.' : (n >= MAX - 2 ? '\n\nتبقّت خطوات قليلة: إن عدّلت فشغّل run للتحقق، أو أنهِ بـ done.' : ''); })() +
       '\n\nما الخطوة التالية؟';
   }
   function act(a){
@@ -3709,13 +3710,15 @@ function agentFix(app, key, res, onStep){
       var a = parseJSON(raw) || {};
       if (onStep) onStep(n, a);
       if (a.tool === 'done' || !a.tool) { hist.push({ call: 'done', obs: String(a.summary || '') }); return finish(); }
+      var sig = JSON.stringify([a.tool, a.screen, a.text, a.find, a.replace]), dup = hist.filter(function(h){ return h.sig === sig; })[0];
+      if (dup && a.tool !== 'run') { hist.push({ call: a.tool + ' (مكرر)', sig: sig, obs: 'نفّذت هذه الخطوة نفسها سابقاً (#' + (hist.indexOf(dup) + 1) + ') ولن تتغير النتيجة. انتقل لخطوة مختلفة: عدّل أو أنهِ.' }); return loop(); }
       var call = a.tool + (a.screen ? ' ' + a.screen : '') + (a.text ? ' «' + String(a.text).slice(0, 60) + '»' : '') + (a.think ? ' — ' + String(a.think).slice(0, 200) : '');
-      return act(a).then(function(obs){ hist.push({ call: call, obs: String(obs) }); return loop(); });
+      return act(a).then(function(obs){ hist.push({ call: call, sig: sig, obs: String(obs) }); return loop(); });
     }, function(e){ if (e && /رصيد|حصة/.test(e.message || '')) throw e; return finish(); });
   }
   function finish(){
     var changed = plan.screens.some(function(s){ return app.ck.screens[s.id] !== start[s.id]; });
-    if (!changed) return Promise.resolve({ fixed: 0, res: res, steps: n });
+    if (!changed) { app.ck.agentLog = hist.map(function(h){ return h.call.slice(0, 160) + ' → ' + String(h.obs).slice(0, 160); }); return Promise.resolve({ fixed: 0, res: res, steps: n }); }
     var ran = hist.length && /^run/.test(hist[hist.length - 1].call);
     return (ran ? Promise.resolve(cur) : runtimeTest(app)).then(function(r){
       var s = appScore(app, r);
@@ -3724,9 +3727,9 @@ function agentFix(app, key, res, onStep){
       return r;
     }).then(function(r){
       var before = appScore(app, res), after = appScore(app, r);
+      app.ck.agentLog = hist.map(function(h){ return h.call.slice(0, 160) + ' → ' + String(h.obs).slice(0, 160); });
       if (after >= before) { plan.screens.forEach(function(x){ app.ck.screens[x.id] = start[x.id]; }); setRuntime(app, res); saveApps(); return { fixed: 0, res: res, steps: n, log: hist }; }
       setRuntime(app, r); saveApps();
-      app.ck.agentLog = hist.map(function(h){ return h.call; });
       return { fixed: runtimeIssues(res) - runtimeIssues(r), res: r, steps: n, log: hist };
     });
   }

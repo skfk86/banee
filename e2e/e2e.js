@@ -86,14 +86,17 @@ const log = (...a) => { const s = '[' + new Date().toISOString().slice(11, 19) +
   if (process.env.SABOTAGE && rep.status === 'ready') {
     const sb = await p.evaluate(async () => {
       const a = S.apps[0], plan = a.ck.plan, scr = a.ck.screens; let done = null;
+      const allKeys = {};
       for (const s of plan.screens) {
-        const js = scr[s.id] || ''; const m = /(?:Data\.(\w+)\.create|DB\.add)\(\s*(?:['"`](\w+)['"`]\s*,\s*)?\{([\s\S]{0,600}?)\}\s*\)/.exec(js);
-        if (!m) continue;
-        const keys = (m[3].match(/\b([a-z]\w*Id)\s*:/g) || []).map(k => k.replace(/\s*:$/, '')).filter(k => k !== 'userId');
-        const k = keys.find(k => plan.screens.some(o => o.id !== s.id && (scr[o.id] || '').indexOf(k) > -1));
-        if (!k) continue;
-        const seg = m[0].replace(new RegExp('\\b' + k + '\\s*:'), k + 'Ref:');
-        scr[s.id] = js.replace(m[0], seg); done = { screen: s.id, field: k }; break;
+        const js = scr[s.id] || ''; const re = /(?:Data\.\w+\.create|DB\.add)\(/g; let mm;
+        while (!done && (mm = re.exec(js))) {
+          const win = js.slice(mm.index, mm.index + 900); const km = win.match(/\b([a-z]\w*Id)\s*:/g) || [];
+          const k = km.map(x => x.replace(/\s*:$/, '')).find(k => k !== 'userId' && plan.screens.some(o => o.id !== s.id && (scr[o.id] || '').indexOf(k) > -1));
+          if (!k) continue;
+          const nw = win.replace(new RegExp('\\b' + k + '(\\s*):'), k + 'Ref$1:');
+          scr[s.id] = js.slice(0, mm.index) + nw + js.slice(mm.index + 900); done = { screen: s.id, field: k };
+        }
+        if (done) break;
       }
       if (!done) return { skipped: 'لم أجد موضعاً مناسباً للزرع' };
       a.ck.agentRan = false;

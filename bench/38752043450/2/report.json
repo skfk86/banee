@@ -1,0 +1,177 @@
+{
+  "status": "ready",
+  "error": "",
+  "name": "منصة تعلُّم",
+  "steps": [
+    "done · هوية «مستقبل معرفي» · الخطة: ٦ شاشات · ٦ مجموعات · ٢٠ عنصر محتوى",
+    "done · المحتوى: ٢٠ عنصر مكتوب كاملاً",
+    "done · الهيكل جاهز: التنقّل، البيانات، الدخول، التصميم",
+    "done · ٦ شاشات مكتوبة",
+    "done · الفحص: ١ شاشات بها ملاحظات، راجعها في الاستوديو · رحلات المستخدم: ١ من ٢ تعمل كاملة · المراجعة: أُصلحت ١ من ١ · وكيل الإصلاح: أصلح ١ في ١٤ خطوة",
+    "done · جاهز للمعاينة والتحميل"
+  ],
+  "runtime": {
+    "home": [],
+    "course": [],
+    "lesson": [],
+    "quiz": [],
+    "me": [
+      "رحلة «إكمال درس واختبار» توقفت عند الخطوة ٤: لم يُعثر على [data-act=open-lesson] (الزر غير موجود أو اسمه مختلف) — الظاهر الآن: الشاشة me (#/progress) بدور student؛ الأزرار: لا شيء؛ الحقول: لا شيء"
+    ],
+    "results": []
+  },
+  "flows": [
+    "إكمال درس واختبار (12 خطوات)",
+    "المعلم يتابع (3 خطوات)"
+  ],
+  "flowSteps": [
+    {
+      "flow": "إكمال درس واختبار",
+      "steps": [
+        {
+          "role": "student"
+        },
+        {
+          "go": "/"
+        },
+        {
+          "click": "[data-act=course-detail]"
+        },
+        {
+          "click": "[data-act=open-lesson]"
+        },
+        {
+          "click": "[data-act=complete]"
+        },
+        {
+          "expectDb": {
+            "col": "progress",
+            "min": 1
+          }
+        },
+        {
+          "click": "text:بدء الاختبار"
+        },
+        {
+          "click": "input[type=radio]"
+        },
+        {
+          "click": "[data-act=submit]"
+        },
+        {
+          "expectDb": {
+            "col": "results",
+            "min": 1
+          }
+        },
+        {
+          "click": "text:عرض تقدّمي"
+        },
+        {
+          "expect": "سجل إنجازك التعليمي"
+        }
+      ]
+    },
+    {
+      "flow": "المعلم يتابع",
+      "steps": [
+        {
+          "role": "teacher"
+        },
+        {
+          "go": "/results"
+        },
+        {
+          "expect": "لوحة متابعة نتائج الطلاب"
+        }
+      ]
+    }
+  ],
+  "reviewIssues": {
+    "home": [],
+    "course": [],
+    "lesson": [],
+    "quiz": [],
+    "me": [],
+    "results": [
+      "مراجعة: في شاشة results، يتم جلب النتائج باستخدام orderBy: ['createdAt', 'desc'] ولكن حقل createdAt غير موجود في مخطط مجموعة results في الـ schema. يجب إضافته أو تعديل الترتيب."
+    ]
+  },
+  "flowErr": "",
+  "agent": {
+    "ran": true,
+    "fixed": 1,
+    "steps": 14,
+    "log": [
+      "read course — الخطأ يشير إلى أن الرحلة 'إكمال درس واختبار' توقفت في شاشة معينة أو لم يتم العثور على [data-act=open-lesson]. دعنا نقرأ شاشة course أولاً لنتأكد م → 1| App.screen({\n2|   id: 'course',\n3|   route: '/course/:id',\n4|   title: 'تفاصيل الدورة',\n5|   icon: 'book-open',\n6|   nav: false,\n7|   render(params) {\n8|    ",
+      "read home — نقرأ شاشة home لنعرف كيف تعرض الدورات وما إذا كانت تحتوي على زر [data-act=course-detail] أو غيره. → 1| App.screen({\n2|   id: 'home',\n3|   route: '/',\n4|   title: 'الدورات',\n5|   icon: 'book-open',\n6|   nav: true,\n7|   render(params) {\n8|     return `\n9|       ",
+      "edit home — في شاشة الرئيسية (home)، حدث النقر على بطاقة الدورة [data-act=course-detail] قد يتم على عنصر داخلي (مثل الصورة أو النص)، مما يجعل target.dataset.id  → تم التعديل",
+      "run — بعد تعديل محتمل في home أو فحص الخطأ، سنقوم بتشغيل التطبيق لنرى ما إذا كانت رحلة 'إكمال درس واختبار' ستنجح أو تنتقل إلى الخطوة التالية. → نتيجة التشغيل (درجة الأخطاء 30، الأفضل حتى الآن 30):\n[me] رحلة «إكمال درس واختبار» توقفت عند الخطوة ٤: لم يُعثر على [data-act=open-lesson] (الزر غير موجود أو اس",
+      "edit (مكرر) → نتيجة هذه الخطوة نفسها ظاهرة أعلاه في #3 والكود لم يتغير منذها. استخدمها: نفّذ edit أو run أو done.",
+      "read me — اقرأ شاشة me لمعرفة لماذا يتوقف الاختبار فيها وما إذا كانت تحتوي على الأزرار أو الروابط المطلوبة أو لماذا انتقل إليها الاختبار → 1| App.screen({\n2|   id: 'me',\n3|   route: '/progress',\n4|   title: 'تقدّمي',\n5|   icon: 'trophy',\n6|   nav: true,\n7|   render(params) {\n8|     return `\n9|     ",
+      "edit home — في شاشة الرئيسية (home)، محدد الحدث استعمل [data-act=\"course-detail\"] وtarget.dataset.سنقوم بتحسينه ليكون أكثر دقة باستخدام closest وجعل محدد App.on → find غير موجود حرفياً في home؛ اقرأ الشاشة وانسخ النص بدقة (المسافات مهمة)",
+      "read course → 1| App.screen({\n2|   id: 'course',\n3|   route: '/course/:id',\n4|   title: 'تفاصيل الدورة',\n5|   icon: 'book-open',\n6|   nav: false,\n7|   render(params) {\n8|    ",
+      "read home — اقرأ شاشة home لمعرفة كيف تعرض الدورات وما إذا كانت تحتوي على زر [data-act=course-detail] ولماذا فشلت الخطوة أو إذا كانت بحاجة لإصلاح رابط أو زر. → 1| App.screen({\n2|   id: 'home',\n3|   route: '/',\n4|   title: 'الدورات',\n5|   icon: 'book-open',\n6|   nav: true,\n7|   render(params) {\n8|     return `\n9|       ",
+      "edit home — في شاشة home، محدد الأحداث App.on استعمل [data-act=\"course-detail\"] بعلامات تنصيص مزدوجة، وسنقوم بتعديله إلى [data-act=course-detail] ليتطابق مع معي → تم التعديل",
+      "run — تشغيل التطبيق لمعرفة ما إذا كانت مشكلة شاشة home قد انتهت وانتقلت رحلة الاختبار إلى الخطوة التالية → نتيجة التشغيل (درجة الأخطاء 30، الأفضل حتى الآن 30):\n[me] رحلة «إكمال درس واختبار» توقفت عند الخطوة ٤: لم يُعثر على [data-act=open-lesson] (الزر غير موجود أو اس",
+      "read lesson — اقرأ شاشة lesson لنعرف كيف تعرض الدرس وهل تحتوي على زر [data-act=complete] وكيف يتم إتمام الدرس. → 1| App.screen({\n2|   id: 'lesson',\n3|   route: '/lesson/:id',\n4|   title: 'الدرس',\n5|   icon: 'circle',\n6|   nav: false,\n7|   \n8|   render(params) {\n9|     retu",
+      "search «Data.lessons» → course:57| Data.lessons.list({ where: ['courseId', '==', courseId], orderBy: ['order', 'asc'] }),\nlesson:36| const lesson = await Data.lessons.get(params.id);\nm",
+      "read me → 1| App.screen({\n2|   id: 'me',\n3|   route: '/progress',\n4|   title: 'تقدّمي',\n5|   icon: 'trophy',\n6|   nav: true,\n7|   render(params) {\n8|     return `\n9|     "
+    ]
+  },
+  "fixErrors": [],
+  "review": {
+    "found": 1,
+    "fixed": 1
+  },
+  "screens": [
+    {
+      "id": "home",
+      "route": "/",
+      "roles": [
+        "student"
+      ],
+      "bytes": 3079
+    },
+    {
+      "id": "course",
+      "route": "/course/:id",
+      "roles": [
+        "student"
+      ],
+      "bytes": 7515
+    },
+    {
+      "id": "lesson",
+      "route": "/lesson/:id",
+      "roles": [
+        "student"
+      ],
+      "bytes": 4302
+    },
+    {
+      "id": "quiz",
+      "route": "/quiz/:id",
+      "roles": [
+        "student"
+      ],
+      "bytes": 7843
+    },
+    {
+      "id": "me",
+      "route": "/progress",
+      "roles": [
+        "student"
+      ],
+      "bytes": 3694
+    },
+    {
+      "id": "results",
+      "route": "/results",
+      "roles": [
+        "teacher"
+      ],
+      "bytes": 3803
+    }
+  ]
+}

@@ -1,0 +1,210 @@
+{
+  "status": "ready",
+  "error": "",
+  "name": "صيدليتي",
+  "steps": [
+    "done · هوية «صيدلية آمنة» · الخطة: ٧ شاشات · ٥ مجموعات · ٢٠ عنصر محتوى",
+    "done · المحتوى: ٢٠ عنصر مكتوب كاملاً",
+    "done · الهيكل جاهز: التنقّل، البيانات، الدخول، التصميم",
+    "done · ٧ شاشات مكتوبة",
+    "done · الفحص: ٣ شاشات بها ملاحظات، راجعها في الاستوديو · رحلات المستخدم: ١ من ٢ تعمل كاملة · المراجعة: أُصلحت ٢ من ٤ · وكيل الإصلاح: أصلح ٢ في ١٤ خطوة",
+    "done · جاهز للمعاينة والتحميل"
+  ],
+  "runtime": {
+    "home": [],
+    "store": [
+      "تصميم: العنصر \"[object SVGAnimatedString]\" يخرج عن عرض الشاشة (-9→11 من 390px). اجعل النص يلتف واحذف العرض الثابت أو nowrap."
+    ],
+    "prescription": [],
+    "checkout": [],
+    "track": [],
+    "pharmacist_orders": [],
+    "driver_deliveries": [
+      "رحلة «مراجعة وتوصيل الطلب» توقفت عند الخطوة ٩: لم يُعثر على [data-act=complete] (الزر غير موجود أو اسمه مختلف) — الظاهر الآن: الشاشة driver_deliveries (#/driver) بدور driver؛ الأزرار: لا شيء؛ الحقول: لا شيء"
+    ]
+  },
+  "flows": [
+    "طلب أدوية (8 خطوات)",
+    "مراجعة وتوصيل الطلب (11 خطوات)"
+  ],
+  "flowSteps": [
+    {
+      "flow": "طلب أدوية",
+      "steps": [
+        {
+          "go": "/"
+        },
+        {
+          "click": "[data-act=open-store][data-id=stores-1]"
+        },
+        {
+          "click": "[data-act=inc][data-id=items-1]"
+        },
+        {
+          "click": "[data-act=checkout]"
+        },
+        {
+          "fill": {
+            "[name=userName]": "محمد أحمد",
+            "[name=phone]": "0912345678",
+            "[name=address]": "الخرطوم، شارع الاستقلال"
+          }
+        },
+        {
+          "click": "text:تأكيد وإرسال الطلب"
+        },
+        {
+          "expect": "طلباتي الطبية"
+        },
+        {
+          "expectDb": {
+            "col": "orders",
+            "min": 1
+          }
+        }
+      ]
+    },
+    {
+      "flow": "مراجعة وتوصيل الطلب",
+      "steps": [
+        {
+          "role": "pharmacist"
+        },
+        {
+          "go": "/pharmacist"
+        },
+        {
+          "click": "[data-act=tab][data-tab=orders]"
+        },
+        {
+          "click": "[data-act=accept]"
+        },
+        {
+          "expect": "جاري التجهيز بانتظار المندوب"
+        },
+        {
+          "role": "driver"
+        },
+        {
+          "go": "/driver"
+        },
+        {
+          "click": "[data-act=accept]"
+        },
+        {
+          "click": "[data-act=complete]"
+        },
+        {
+          "expect": "تم التسليم بنجاح"
+        },
+        {
+          "expectDb": {
+            "col": "orders",
+            "min": 1
+          }
+        }
+      ]
+    }
+  ],
+  "reviewIssues": {
+    "home": [],
+    "store": [],
+    "prescription": [],
+    "checkout": [
+      "مراجعة: قيمة طريقة الدفع تُحفظ كـ cod أو bankk بينما يفحصها الصيدلي باسم cash، ويجب توحيد القيم."
+    ],
+    "track": [
+      "مراجعة: استخدام حقل order.createdAt لعرض وترتيب الطلبات وهو غير موجود في مخطط مجموعة orders."
+    ],
+    "pharmacist_orders": [
+      "مراجعة: يتم فحص طريقة الدفع بـ o.method === 'cash' بينما تُحفظ بقيم cod أو bankk.",
+      "مراجعة: استخدام حقل غير موجود في مخطط مجموعة orders وهو createdAt لترتيب الطلبات."
+    ],
+    "driver_deliveries": []
+  },
+  "flowErr": "",
+  "agent": {
+    "ran": true,
+    "fixed": 2,
+    "steps": 14,
+    "log": [
+      "read home — قراءة شاشة الرئيسية home لمعرفة كيف تستخدم Data.stores وكيف يتم جلب الصيدليات → 1| App.screen({\n2|   id: 'home',\n3|   route: '/',\n4|   title: 'الصيدليات',\n5|   icon: 'store',\n6|   nav: true,\n7|   render(params) {\n8|     return `\n9|       <d",
+      "read store — الخطأ يقول Data.stores.find is not a function في شاشة store (أو صيدلية)، لنقرأ شاشة store لتعرف كيف تستخدم Data.stores وData.items. → 1| App.screen({\n2|   id: 'store', route: '/store/:id', title: 'تفاصيل الصيدلية', icon: 'shopping-bag', nav: false,\n3|   render(params) {\n4|     return `\n5|     ",
+      "edit store — استخدام Data.stores.get بدلاً من Data.stores.find المتزامنة لأن Data.stores عبارة عن واجهة برمجة بيانات غير متزامنة، وجلب الأدوية بـ Data.items.lis → تم التعديل. ملاحظات الفحص الثابت بعده: لا تحفظ بيانات المستخدم في Store ('cart'): الشاشات الأخرى لن تراها. احفظها في مجموعة DB من الخطة بحقل userId، واقرأها بـ ",
+      "edit store — سأقوم بتعديل شاشة 'store' لاستخدام Data.stores.get بدلاً من .find، وجلب الأدوية باستخدام Data.items.list، مع استبدال التعامل مع Store بـ Data.order → find غير موجود في store حتى مع تجاهل المسافات؛ استخدم search بكلمة مميزة منه لتعرف النص الحالي، ثم انسخ سطراً أو سطرين فقط",
+      "edit store — لقد قمت بقراءة شاشة store سابقاً، والخطأ يكمن في استخدام .find() و .filter() على واجهة Data التي تتطلب استدعاءات غير متزامنة (async/await). سأقوم ب → find غير موجود في store حتى مع تجاهل المسافات؛ استخدم search بكلمة مميزة منه لتعرف النص الحالي، ثم انسخ سطراً أو سطرين فقط",
+      "edit (مكرر) → نتيجة هذه الخطوة نفسها ظاهرة أعلاه في #5 والكود لم يتغير منذها. استخدمها: نفّذ edit أو run أو done.",
+      "edit (مكرر) → نتيجة هذه الخطوة نفسها ظاهرة أعلاه في #5 والكود لم يتغير منذها. استخدمها: نفّذ edit أو run أو done.",
+      "edit (مكرر) → نتيجة هذه الخطوة نفسها ظاهرة أعلاه في #5 والكود لم يتغير منذها. استخدمها: نفّذ edit أو run أو done.",
+      "search «.find(» — سأقوم بالبحث عن استخدام .find() في كامل التطبيق لتحديد الشاشات التي تستخدم واجهة Data بشكل خاطئ، حيث أن Data.stores لا تدعم .find() ويجب استخد → store:37| const cartItem = cart.items.find(i => i.id === item.id);\nstore:60| const item = items.find(i => i.id === id);\nstore:67| const existing = cart.items.fi",
+      "read home — سأقوم بقراءة شاشة 'home' لأرى كيف يتم استدعاء Data.stores بشكل خاطئ، حيث أن الخطأ يشير إلى محاولة استخدام .find() على كائن Data.stores بدلاً من استخ → 1| App.screen({\n2|   id: 'home',\n3|   route: '/',\n4|   title: 'الصيدليات',\n5|   icon: 'store',\n6|   nav: true,\n7|   render(params) {\n8|     return `\n9|       <d",
+      "read store — الخطأ يشير إلى أن Data.stores.find لا تعمل، لكن في شاشة home الكود يستخدم Data.stores.list() وهو صحيح. سأقوم بقراءة شاشة store مرة أخرى للبحث عن أي → 1| App.screen({\n2|   id: 'store', route: '/store/:id', title: 'تفاصيل الصيدلية', icon: 'shopping-bag', nav: false,\n3|   render(params) {\n4|     return `\n5|     ",
+      "run — لقد قمت بمراجعة الكود في شاشتي home و store، وكلاهما يستخدم Data.stores.list() و Data.stores.get() بشكل صحيح. الخطأ 'Data.stores.find is not a function' ق → نتيجة التشغيل (درجة الأخطاء 51، الأفضل حتى الآن 51):\n[driver_deliveries] رحلة «مراجعة وتوصيل الطلب» توقفت عند الخطوة ٩: لم يُعثر على [data-act=complete] (الزر غ",
+      "read driver_deliveries — سأقوم بقراءة شاشة driver_deliveries لمعرفة سبب عدم ظهور الطلبات للمندوب، حيث أن الخطأ يشير إلى أن الشاشة فارغة ولا تحتوي على أزرار، مما → 1| App.screen({\n2|   id: 'driver_deliveries',\n3|   route: '/driver',\n4|   title: 'التوصيلات',\n5|   icon: 'bike',\n6|   nav: true,\n7|   render(params) {\n8|     re",
+      "run — لقد راجعت شاشة driver_deliveries ووجدت أن كود زر 'complete' موجود فعلاً في السطر 63، وهو مرتبط بـ data-act=\"complete\". يبدو أن الاختبار الآلي يفشل لأن الح → نتيجة التشغيل (درجة الأخطاء 51، الأفضل حتى الآن 51):\n[driver_deliveries] رحلة «مراجعة وتوصيل الطلب» توقفت عند الخطوة ٩: لم يُعثر على [data-act=complete] (الزر غ"
+    ]
+  },
+  "fixErrors": [],
+  "review": {
+    "found": 4,
+    "fixed": 2
+  },
+  "screens": [
+    {
+      "id": "home",
+      "route": "/",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 2022
+    },
+    {
+      "id": "store",
+      "route": "/store/:id",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 3343
+    },
+    {
+      "id": "prescription",
+      "route": "/prescription",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 5203
+    },
+    {
+      "id": "checkout",
+      "route": "/checkout",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 10052
+    },
+    {
+      "id": "track",
+      "route": "/orders",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 5343
+    },
+    {
+      "id": "pharmacist_orders",
+      "route": "/pharmacist",
+      "roles": [
+        "pharmacist"
+      ],
+      "bytes": 9272
+    },
+    {
+      "id": "driver_deliveries",
+      "route": "/driver",
+      "roles": [
+        "driver"
+      ],
+      "bytes": 6208
+    }
+  ]
+}

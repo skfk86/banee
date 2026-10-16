@@ -1,0 +1,243 @@
+{
+  "status": "ready",
+  "error": "",
+  "name": "سوق اللُّقطة",
+  "steps": [
+    "done · هوية «صفقة ذكية» · الخطة: ٧ شاشات · ٥ مجموعات · ١٦ عنصر محتوى",
+    "done · المحتوى: ١٦ عنصر مكتوب كاملاً",
+    "done · الهيكل جاهز: التنقّل، البيانات، الدخول، التصميم",
+    "done · ٧ شاشات مكتوبة",
+    "done · الفحص: ١ شاشات بها ملاحظات، راجعها في الاستوديو · رحلات المستخدم: ٢ من ٣ تعمل كاملة · المراجعة: أُصلحت ١ من ١ · وكيل الإصلاح: لم يجد تحسيناً آمناً",
+    "done · جاهز للمعاينة والتحميل"
+  ],
+  "runtime": {
+    "home": [],
+    "listing_detail": [],
+    "my_offers": [],
+    "favorites": [],
+    "seller_listings": [],
+    "seller_offers": [
+      "رحلة «إدارة عروض الأسعار من البائع» توقفت عند الخطوة ٤: لم يُعثر على [data-act=accept] (الزر غير موجود أو اسمه مختلف) — الظاهر الآن: الشاشة seller_offers (#/seller/offers) بدور seller؛ الأزرار: لا شيء؛ الحقول: لا شيء"
+    ],
+    "add_listing": []
+  },
+  "flows": [
+    "تصفح سلعة وتقديم عرض سعر (11 خطوات)",
+    "إدارة عروض الأسعار من البائع (5 خطوات)",
+    "نشر إعلان سلعة جديدة (12 خطوات)"
+  ],
+  "flowSteps": [
+    {
+      "flow": "تصفح سلعة وتقديم عرض سعر",
+      "steps": [
+        {
+          "role": "buyer"
+        },
+        {
+          "go": "/"
+        },
+        {
+          "click": "[data-act=open-listing][data-id=listings-1]"
+        },
+        {
+          "expect": "تفاصيل السلعة"
+        },
+        {
+          "click": "[data-act=make-offer]"
+        },
+        {
+          "fill": {
+            "#offer-price-input": "50000"
+          }
+        },
+        {
+          "fill": {
+            "#offer-note-input": "أنا مهتم جداً"
+          }
+        },
+        {
+          "click": "#submit-offer-btn"
+        },
+        {
+          "expectDb": {
+            "col": "offers",
+            "min": 1
+          }
+        },
+        {
+          "go": "/my-offers"
+        },
+        {
+          "expect": "عروض الأسعار المقدمة"
+        }
+      ]
+    },
+    {
+      "flow": "إدارة عروض الأسعار من البائع",
+      "steps": [
+        {
+          "role": "seller"
+        },
+        {
+          "go": "/seller/offers"
+        },
+        {
+          "expect": "العروض الواردة"
+        },
+        {
+          "click": "[data-act=accept]"
+        },
+        {
+          "expectDb": {
+            "col": "offers",
+            "min": 1
+          }
+        }
+      ]
+    },
+    {
+      "flow": "نشر إعلان سلعة جديدة",
+      "steps": [
+        {
+          "role": "seller"
+        },
+        {
+          "go": "/seller/add"
+        },
+        {
+          "expect": "نشر سلعة جديدة"
+        },
+        {
+          "fill": {
+            "#listing-image": "https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f"
+          }
+        },
+        {
+          "fill": {
+            "#listing-title": "آيفون مستعمل نظيف"
+          }
+        },
+        {
+          "fill": {
+            "#listing-price": "250000"
+          }
+        },
+        {
+          "fill": {
+            "#listing-category": "s1"
+          }
+        },
+        {
+          "fill": {
+            "#listing-condition": "ممتازة"
+          }
+        },
+        {
+          "fill": {
+            "#listing-city": "الخرطوم"
+          }
+        },
+        {
+          "fill": {
+            "#listing-description": "الجهاز بحالة ممتازة مع الملحقات الأصلية"
+          }
+        },
+        {
+          "click": "#submit-btn"
+        },
+        {
+          "expectDb": {
+            "col": "listings",
+            "min": 1
+          }
+        }
+      ]
+    }
+  ],
+  "reviewIssues": {
+    "home": [],
+    "listing_detail": [],
+    "my_offers": [
+      "مراجعة: حقل الحالة يُقرأ باسم خاطئ (is-accepted) بينما يتم حفظه باسم (accepted)، مما يمنع ظهور أزرار الاتصال والواتساب. الإصلاح: تعديل الشرط في السطر 45 ليصبح: const isAccepted = offer.status === 'accepted';"
+    ],
+    "favorites": [],
+    "seller_listings": [],
+    "seller_offers": [],
+    "add_listing": []
+  },
+  "flowErr": "رد غير صالح: {\"tests\":[{\"flow\":\"تصفح سلعة وتقديم عرض سعر\",\"steps\":[{\"role\":\"buyer\"},{\"go\":\"/\"},{\"click\":\"[data-act=open-listing][data",
+  "agent": {
+    "ran": true,
+    "fixed": 0,
+    "steps": 2,
+    "log": [
+      "read seller_offers — قراءة شاشة seller_offers لمعرفة سبب عدم وجود زر [data-act=accept] → 1| App.screen({\n2|   id: 'seller_offers',\n3|   route: '/seller/offers',\n4|   title: 'العروض الواردة',\n5|   icon: 'inbox',\n6|   nav: true,\n7|   render(params) {\n",
+      "done → "
+    ]
+  },
+  "fixErrors": [],
+  "review": {
+    "found": 1,
+    "fixed": 1
+  },
+  "screens": [
+    {
+      "id": "home",
+      "route": "/",
+      "roles": [
+        "buyer",
+        "seller"
+      ],
+      "bytes": 9644
+    },
+    {
+      "id": "listing_detail",
+      "route": "/listing/:id",
+      "roles": [
+        "buyer",
+        "seller"
+      ],
+      "bytes": 9759
+    },
+    {
+      "id": "my_offers",
+      "route": "/my-offers",
+      "roles": [
+        "buyer"
+      ],
+      "bytes": 5449
+    },
+    {
+      "id": "favorites",
+      "route": "/favorites",
+      "roles": [
+        "buyer"
+      ],
+      "bytes": 4125
+    },
+    {
+      "id": "seller_listings",
+      "route": "/seller/listings",
+      "roles": [
+        "seller"
+      ],
+      "bytes": 7174
+    },
+    {
+      "id": "seller_offers",
+      "route": "/seller/offers",
+      "roles": [
+        "seller"
+      ],
+      "bytes": 5773
+    },
+    {
+      "id": "add_listing",
+      "route": "/seller/add",
+      "roles": [
+        "seller"
+      ],
+      "bytes": 8494
+    }
+  ]
+}

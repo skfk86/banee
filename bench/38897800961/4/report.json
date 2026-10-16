@@ -1,0 +1,139 @@
+{
+  "status": "ready",
+  "error": "",
+  "name": "نادي النخبة الرياضي",
+  "steps": [
+    "done · هوية «نبض رياضي» · الخطة: ٤ شاشات · ٥ مجموعات · ١٦ عنصر محتوى",
+    "done · المحتوى: ١٦ عنصر مكتوب كاملاً",
+    "done · الهيكل جاهز: التنقّل، البيانات، الدخول، التصميم",
+    "done · ٤ شاشات مكتوبة",
+    "done · الفحص: ١ شاشات بها ملاحظات، راجعها في الاستوديو · رحلات المستخدم: ١ من ٢ تعمل كاملة · المراجعة الشاملة: لا مشاكل · وكيل الإصلاح: لم يجد تحسيناً آمناً",
+    "done · جاهز للمعاينة والتحميل"
+  ],
+  "runtime": {
+    "home": [
+      "رحلة «حجز حصة» توقفت عند الخطوة ٥: لم يُحفظ شيء في bookings بعد العملية (الحفظ لا يعمل)"
+    ],
+    "packages": [],
+    "myBookings": [],
+    "coachDashboard": []
+  },
+  "flows": [
+    "حجز حصة (5 خطوات)",
+    "تسجيل حضور (8 خطوات)"
+  ],
+  "flowSteps": [
+    {
+      "flow": "حجز حصة",
+      "steps": [
+        {
+          "role": "member"
+        },
+        {
+          "go": "/"
+        },
+        {
+          "click": "[data-act=book][data-id=sessions-1]"
+        },
+        {
+          "expect": "مواعيدي"
+        },
+        {
+          "expectDb": {
+            "col": "bookings",
+            "min": 1
+          }
+        }
+      ]
+    },
+    {
+      "flow": "تسجيل حضور",
+      "steps": [
+        {
+          "role": "coach"
+        },
+        {
+          "go": "/"
+        },
+        {
+          "click": "[data-act=manage][data-id=sessions-1]"
+        },
+        {
+          "click": "[data-act=confirm-booking]"
+        },
+        {
+          "click": "[data-act=manage][data-id=sessions-1]"
+        },
+        {
+          "click": "[data-act=attend-booking]"
+        },
+        {
+          "expect": "الحصص المتاحة"
+        },
+        {
+          "expectDb": {
+            "col": "bookings",
+            "min": 1
+          }
+        }
+      ]
+    }
+  ],
+  "reviewIssues": {
+    "home": [],
+    "packages": [],
+    "myBookings": [],
+    "coachDashboard": []
+  },
+  "flowErr": "",
+  "agent": {
+    "ran": true,
+    "fixed": 0,
+    "steps": 4,
+    "log": [
+      "read home — سأقوم بقراءة كود شاشة 'home' لفهم كيفية معالجة عملية الحجز ولماذا لا يتم حفظ البيانات في مجموعة 'bookings'. → 1| App.screen({\n2|   id: 'home',\n3|   route: '/',\n4|   title: 'الحصص المتاحة',\n5|   icon: 'calendar',\n6|   nav: true,\n7|   render(params) {\n8|     const isCoach",
+      "seed → أُضيفت 1 عناصر إلى sessions (ids: sessions-1). شغّل run للتحقق.",
+      "run — سأقوم بتشغيل التطبيق للتحقق من سبب فشل الحجز، حيث أن الكود يبدو صحيحاً ولكن الاختبار يشير إلى عدم حفظ البيانات. ربما هناك قيود في طبقة Data تمنع تمرير حقو → نتيجة التشغيل (درجة الأخطاء 30، الأفضل حتى الآن 30):\n[home] رحلة «حجز حصة» توقفت عند الخطوة ٥: لم يُحفظ شيء في bookings بعد العملية (الحفظ لا يعمل)"
+    ]
+  },
+  "fixErrors": [],
+  "review": {
+    "found": 0,
+    "fixed": 0
+  },
+  "screens": [
+    {
+      "id": "home",
+      "route": "/",
+      "roles": [
+        "member",
+        "coach"
+      ],
+      "bytes": 7732
+    },
+    {
+      "id": "packages",
+      "route": "/packages",
+      "roles": [
+        "member"
+      ],
+      "bytes": 3680
+    },
+    {
+      "id": "myBookings",
+      "route": "/my-bookings",
+      "roles": [
+        "member"
+      ],
+      "bytes": 4616
+    },
+    {
+      "id": "coachDashboard",
+      "route": "/coach",
+      "roles": [
+        "coach"
+      ],
+      "bytes": 6019
+    }
+  ]
+}

@@ -4,9 +4,16 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>بانِي</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <!-- الخط وFirebase مضمّنان محلياً (vendor/): إقلاع أسرع ولا اعتماد على CDN -->
   <style>
+    @font-face { font-family: 'IBM Plex Sans Arabic'; font-weight: 400; font-display: swap; src: url(vendor/fonts/ibm-plex-sans-arabic-arabic-400-normal.woff2) format('woff2'); unicode-range: U+0600-06FF, U+0750-077F, U+0870-088E, U+0890-0891, U+0897-08E1, U+08E3-08FF, U+200C-200E, U+2010-2011, U+204F, U+2E41, U+FB50-FDFF, U+FE70-FE74, U+FE76-FEFC; }
+    @font-face { font-family: 'IBM Plex Sans Arabic'; font-weight: 400; font-display: swap; src: url(vendor/fonts/ibm-plex-sans-arabic-latin-400-normal.woff2) format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+    @font-face { font-family: 'IBM Plex Sans Arabic'; font-weight: 500; font-display: swap; src: url(vendor/fonts/ibm-plex-sans-arabic-arabic-500-normal.woff2) format('woff2'); unicode-range: U+0600-06FF, U+0750-077F, U+0870-088E, U+0890-0891, U+0897-08E1, U+08E3-08FF, U+200C-200E, U+2010-2011, U+204F, U+2E41, U+FB50-FDFF, U+FE70-FE74, U+FE76-FEFC; }
+    @font-face { font-family: 'IBM Plex Sans Arabic'; font-weight: 500; font-display: swap; src: url(vendor/fonts/ibm-plex-sans-arabic-latin-500-normal.woff2) format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+    @font-face { font-family: 'IBM Plex Sans Arabic'; font-weight: 600; font-display: swap; src: url(vendor/fonts/ibm-plex-sans-arabic-arabic-600-normal.woff2) format('woff2'); unicode-range: U+0600-06FF, U+0750-077F, U+0870-088E, U+0890-0891, U+0897-08E1, U+08E3-08FF, U+200C-200E, U+2010-2011, U+204F, U+2E41, U+FB50-FDFF, U+FE70-FE74, U+FE76-FEFC; }
+    @font-face { font-family: 'IBM Plex Sans Arabic'; font-weight: 600; font-display: swap; src: url(vendor/fonts/ibm-plex-sans-arabic-latin-600-normal.woff2) format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+    @font-face { font-family: 'IBM Plex Sans Arabic'; font-weight: 700; font-display: swap; src: url(vendor/fonts/ibm-plex-sans-arabic-arabic-700-normal.woff2) format('woff2'); unicode-range: U+0600-06FF, U+0750-077F, U+0870-088E, U+0890-0891, U+0897-08E1, U+08E3-08FF, U+200C-200E, U+2010-2011, U+204F, U+2E41, U+FB50-FDFF, U+FE70-FE74, U+FE76-FEFC; }
+    @font-face { font-family: 'IBM Plex Sans Arabic'; font-weight: 700; font-display: swap; src: url(vendor/fonts/ibm-plex-sans-arabic-latin-700-normal.woff2) format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
     [hidden] { display: none !important; }
 
@@ -708,6 +715,11 @@
       .opt-row { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
     }
 
+    /* زر البناء يبقى ظاهراً أسفل الشاشة على الجوال بدل أن يختفي تحت الأمثلة والخيارات */
+    @media (max-width: 899px) {
+      #bld-btn { position: sticky; bottom: 10px; z-index: 5; box-shadow: 0 8px 24px rgba(14,21,37,.28); }
+    }
+
     @media (min-width: 900px) {
       /* شريط جانبي بدل القائمة السفلية */
       #app-shell.on { display: grid; grid-template-columns: 248px 1fr; grid-template-rows: auto 1fr; }
@@ -991,7 +1003,6 @@
             <button class="chip" data-ex="quran" onclick="fillEx(this)"><svg class="i"><use href="#i-book"/></svg>أذكار يومية</button>
             <button class="chip" data-ex="gym" onclick="fillEx(this)"><svg class="i"><use href="#i-zap"/></svg>لياقة وتمارين</button>
             <button class="chip" data-ex="money" onclick="fillEx(this)"><svg class="i"><use href="#i-wallet"/></svg>مصروف شهري</button>
-            <button class="chip" data-ex="ride" onclick="fillEx(this)"><svg class="i"><use href="#i-map-pin"/></svg>توصيل طلبات</button>
           </div>
 
           <div class="divider"></div>
@@ -1384,8 +1395,9 @@ var FB = null, CLOUD = false;
 
 // ════ Firebase ════
 function fbLoad(){
-  var base = 'https://www.gstatic.com/firebasejs/' + FB_VERSION + '/';
-  var load = Promise.all([import(base + 'firebase-app.js'), import(base + 'firebase-auth.js'), import(base + 'firebase-firestore.js')]);
+  // النسخة المضمّنة في vendor/firebase (تُبنى بـ npm run vendor)، ثم CDN احتياطاً
+  var imp = function(base){ return Promise.all([import(base + 'firebase-app.js'), import(base + 'firebase-auth.js'), import(base + 'firebase-firestore.js')]); };
+  var load = imp('./vendor/firebase/').catch(function(){ return imp('https://www.gstatic.com/firebasejs/' + FB_VERSION + '/'); });
   var timeout = new Promise(function(_, rej){ setTimeout(function(){ rej(new Error('timeout')); }, 9000); });
   return Promise.race([load, timeout]).then(function(m){
     var app = m[0].initializeApp(FB_CONFIG);

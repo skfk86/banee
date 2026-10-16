@@ -1,0 +1,150 @@
+{
+  "status": "ready",
+  "error": "",
+  "name": "سوق المستعمل",
+  "steps": [
+    "done · هوية «سوق الثقة» · الخطة: ٤ شاشات · ٤ مجموعات · ١١ عنصر محتوى",
+    "done · المحتوى: ١١ عنصر مكتوب كاملاً",
+    "done · الهيكل جاهز: التنقّل، البيانات، الدخول، التصميم",
+    "done · ٤ شاشات مكتوبة",
+    "done · جُرّبت كل الشاشات وأُصلحت ١، لا أخطاء · رحلات المستخدم: ٢ من ٢ تعمل كاملة · المراجعة: أُصلحت ١ من ٢",
+    "done · جاهز للمعاينة والتحميل"
+  ],
+  "runtime": {
+    "home": [],
+    "product": [],
+    "myOffers": [],
+    "sellerDashboard": []
+  },
+  "flows": [
+    "تقديم عرض سعر ومتابعته (8 خطوات)",
+    "نشر وإدارة إعلان للبائع (7 خطوات)"
+  ],
+  "flowSteps": [
+    {
+      "flow": "تقديم عرض سعر ومتابعته",
+      "steps": [
+        {
+          "role": "customer"
+        },
+        {
+          "go": "/"
+        },
+        {
+          "click": "[data-act=open-product][data-id=products-6]"
+        },
+        {
+          "expect": "تفاصيل المنتج"
+        },
+        {
+          "fill": {
+            "#offer-price": "70000"
+          }
+        },
+        {
+          "click": "#submit-offer"
+        },
+        {
+          "expect": "عروض الأسعار"
+        },
+        {
+          "expectDb": {
+            "col": "offers",
+            "min": 1
+          }
+        }
+      ]
+    },
+    {
+      "flow": "نشر وإدارة إعلان للبائع",
+      "steps": [
+        {
+          "role": "seller"
+        },
+        {
+          "go": "/seller"
+        },
+        {
+          "click": "[data-act=add-product]"
+        },
+        {
+          "fill": {
+            "#p-title": "مكتب خشبي مستعمل",
+            "#p-price": "50000",
+            "#p-image": "https://example.com/desk.jpg",
+            "#p-stock": "1",
+            "#p-desc": "مكتب بحالة ممتازة وخشب قوي جداً"
+          }
+        },
+        {
+          "click": "#save-product-btn"
+        },
+        {
+          "expect": "لوحة تحكم البائع"
+        },
+        {
+          "expectDb": {
+            "col": "products",
+            "min": 1
+          }
+        }
+      ]
+    }
+  ],
+  "reviewIssues": {
+    "home": [],
+    "product": [],
+    "myOffers": [],
+    "sellerDashboard": [
+      "مراجعة: تستخدم Data.products.visible() في شاشة sellerDashboard لعرض منتجات البائع، ولكن يجب استخدام Data.products.list مع فلتر sellerId == Auth.user.uid لأن products ليس لها approve في المخطط وكل المنتجات تظهر للجميع بلا فلتر.",
+      "مراجعة: تستخدم Data.offers.visible() في شاشة sellerDashboard لعرض العروض الواردة، ويجب فلترتها حسب sellerId لأن البائع سيرى عروض باقي البائعين هكذا."
+    ]
+  },
+  "flowErr": "",
+  "agent": {
+    "ran": false,
+    "fixed": 0,
+    "steps": 0,
+    "log": []
+  },
+  "fixErrors": [],
+  "review": {
+    "found": 2,
+    "fixed": 1
+  },
+  "screens": [
+    {
+      "id": "home",
+      "route": "/",
+      "roles": [
+        "customer",
+        "seller"
+      ],
+      "bytes": 3728
+    },
+    {
+      "id": "product",
+      "route": "/product/:id",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 2714
+    },
+    {
+      "id": "myOffers",
+      "route": "/offers",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 3476
+    },
+    {
+      "id": "sellerDashboard",
+      "route": "/seller",
+      "roles": [
+        "seller"
+      ],
+      "bytes": 9045
+    }
+  ]
+}

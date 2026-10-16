@@ -1,0 +1,160 @@
+{
+  "status": "ready",
+  "error": "",
+  "name": "سوق المستعمل",
+  "steps": [
+    "done · هوية «سوق المستعمل» · الخطة: ٤ شاشات · ٤ مجموعات · ١٧ عنصر محتوى",
+    "done · المحتوى: ١٧ عنصر مكتوب كاملاً",
+    "done · الهيكل جاهز: التنقّل، البيانات، الدخول، التصميم",
+    "done · ٤ شاشات مكتوبة",
+    "done · جُرّبت كل الشاشات وأُصلحت ٢، لا أخطاء · رحلات المستخدم: ٢ من ٢ تعمل كاملة · المراجعة: أُصلحت ٢ من ٢",
+    "done · جاهز للمعاينة والتحميل"
+  ],
+  "runtime": {
+    "home": [],
+    "product": [],
+    "myOffers": [],
+    "sellerDashboard": []
+  },
+  "flows": [
+    "تقديم عروض الأسعار (9 خطوات)",
+    "نشر وإدارة المنتجات (9 خطوات)"
+  ],
+  "flowSteps": [
+    {
+      "flow": "تقديم عروض الأسعار",
+      "steps": [
+        {
+          "role": "customer"
+        },
+        {
+          "go": "/"
+        },
+        {
+          "click": "[data-act=product-detail][data-id=products-12]"
+        },
+        {
+          "expect": "تفاصيل المنتج"
+        },
+        {
+          "click": "[data-act=open-offer]"
+        },
+        {
+          "fill": {
+            "#offer-price-input": "50"
+          }
+        },
+        {
+          "click": "text:إرسال العرض للبائع"
+        },
+        {
+          "expect": "عروض الأسعار المقدمة"
+        },
+        {
+          "expectDb": {
+            "col": "offers",
+            "min": 1
+          }
+        }
+      ]
+    },
+    {
+      "flow": "نشر وإدارة المنتجات",
+      "steps": [
+        {
+          "role": "seller"
+        },
+        {
+          "go": "/seller"
+        },
+        {
+          "click": "[data-act=add-product]"
+        },
+        {
+          "fill": {
+            "#p-title": "آيفون 11 مستعمل",
+            "#p-price": "1200",
+            "#p-image": "https://example.com/img.jpg",
+            "#p-desc": "جهاز بحالة ممتازة مع الكرتون."
+          }
+        },
+        {
+          "click": "text:حفظ ونشر المنتج"
+        },
+        {
+          "expect": "لوحة البائع"
+        },
+        {
+          "expectDb": {
+            "col": "products",
+            "min": 1
+          }
+        },
+        {
+          "click": "[data-act=tab][data-tab=offers]"
+        },
+        {
+          "expect": "لا توجد عروض واردة"
+        }
+      ]
+    }
+  ],
+  "reviewIssues": {
+    "home": [],
+    "product": [
+      "مراجعة: في شاشة تفاصيل المنتج، رسالة المنتج غير الموجود تحتوي على نص غير صحيح 'النتج غير موجود' والصحيح هو 'المنتج غير موجود' لتجنب الأخطاء الإملائية."
+    ],
+    "myOffers": [],
+    "sellerDashboard": [
+      "مراجعة: أزرار قبول أو رفض العروض في لوحة البائع تستخدم `Data.offers.setStatus(id, 'accepted')` بينما مجموعة العروض لا تحتوي على وظيفة `setStatus` المعيارية، والصحيح استخدام `Data.offers.update(id, { status: 'accepted' })`."
+    ]
+  },
+  "flowErr": "",
+  "agent": {
+    "ran": false,
+    "fixed": 0,
+    "steps": 0,
+    "log": []
+  },
+  "fixErrors": [],
+  "review": {
+    "found": 2,
+    "fixed": 2
+  },
+  "screens": [
+    {
+      "id": "home",
+      "route": "/",
+      "roles": [
+        "customer",
+        "seller"
+      ],
+      "bytes": 5090
+    },
+    {
+      "id": "product",
+      "route": "/product/:id",
+      "roles": [
+        "customer",
+        "seller"
+      ],
+      "bytes": 5152
+    },
+    {
+      "id": "myOffers",
+      "route": "/my-offers",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 3776
+    },
+    {
+      "id": "sellerDashboard",
+      "route": "/seller",
+      "roles": [
+        "seller"
+      ],
+      "bytes": 12424
+    }
+  ]
+}

@@ -2204,6 +2204,7 @@ var ROLES = {
 ' "flows":[{"name":"اسم الرحلة مثل: طلب منتج","steps":["يفتح الرئيسية","يختار منتجاً","يضيفه للسلة","يدفع ببنكك","يتابع حالة الطلب"]}],\n' +
 ' "relations":["orders.userId ← المستخدم","quizzes.lessonId ← lessons.id"],\n' +
 ' "statuses":{"orders":["new","accepted","delivering","done","cancelled"]},   ← القيم الوحيدة المسموحة لحقل status في كل مجموعة لها حالة (إنجليزية صغيرة)، الشاشة التي تُنشئ تكتب الأولى\n' +
+' "visibility":{"orders":{"customer":"own","driver":"assigned+open"}},   ← في الأنظمة متعددة الأدوار: ما يراه كل دور من كل مجموعة يشترك فيها أكثر من دور. own = ما أنشأه، assigned = المسند إليه (حقل <role>Id)، open = الجديد غير المسند، all = الكل (المطبخ، الإدارة، المعلم لتسليمات طلابه…). أضف حقل <role>Id للمجموعة إذا كان الدور يستلم عناصر بعينها\n' +
 ' "shared":[{"key":"cart","shape":"{ storeId, storeName, items:[{ id, title, price, qty }] }","writes":["store"],"reads":["checkout"]}],   ← كل حالة تنتقل بين الشاشات عبر Store (سلة، اختيارات حجز...) بشكلها الدقيق\n' +
 ' "screens":[{"id":"home","route":"/","title":"الرئيسية","icon":"home","nav":true,"roles":["user"],"purpose":"..."}]}\n' +
 ' "payments":{"methods":["bankak","cod"],"currency":"ج.س"},   ← فقط إذا كان في التطبيق بيع أو حجز مدفوع\n' +
@@ -2664,7 +2665,9 @@ function contractOf(plan){
     if (!c || !c.name || /^(users|members|notices|devices)$/.test(c.name)) return;
     var f = Object.keys(c.fields || {}), st = plan.statuses && plan.statuses[c.name];
     if ((!st || !st.length) && f.indexOf('status') > -1) { var m = (String((c.fields || {}).status || '').match(/[a-z_]+/g) || []).filter(function(w){ return !/^(string|number|enum|text|one|of|or)$/.test(w); }); if (m.length > 1) st = m; }
-    out[c.name] = { fields: f, statuses: (st || []).map(String), owner: f.indexOf('userId') > -1 ? 'userId' : null, byRole: roles.filter(function(r){ return f.indexOf(r + 'Id') > -1; }) };
+    var vis = {}, pv = (plan.visibility || {})[c.name] || {};
+    Object.keys(pv).forEach(function(r){ var v = String(pv[r] || '').toLowerCase().split(/[+,\s]+/).filter(function(x){ return /^(own|assigned|open|all)$/.test(x); }); if (v.length && roles.indexOf(r) > -1) vis[r] = v.join('+'); });
+    out[c.name] = { fields: f, statuses: (st || []).map(String), owner: f.indexOf('userId') > -1 ? 'userId' : null, byRole: roles.filter(function(r){ return f.indexOf(r + 'Id') > -1; }), vis: vis, base: roles[0] || '' };
   });
   return out;
 }
@@ -2687,6 +2690,9 @@ function dataModule(plan){
   '        list: (opt) => DB.list(c, opt || {}),\n' +
   '        get: (id) => DB.get(c, id),\n' +
   '        mine(opt) { opt = { ...(opt || {}) }; const u = Auth.user || {}; let r = ""; try { r = __banee.Roles.current(); } catch (e) {} const f = (r && C[c].byRole.indexOf(r) > -1) ? r + "Id" : (C[c].owner || "userId"); const w = [f, "==", u.uid || "-"]; opt.where = opt.where ? (Array.isArray(opt.where[0]) ? opt.where.concat([w]) : [opt.where, w]) : w; return DB.list(c, opt); },\n' +
+  '        rule() { let r = ""; try { r = __banee.Roles.current(); } catch (e) {} const v = C[c].vis && C[c].vis[r]; if (v) return v; if (C[c].byRole.indexOf(r) > -1) return "assigned+open"; if (C[c].owner && (!r || r === C[c].base)) return "own"; return "all"; },\n' +
+  '        async visible(opt) { const u = Auth.user || {}; let r = ""; try { r = __banee.Roles.current(); } catch (e) {} const parts = this.rule().split("+"), all = await DB.list(c, opt || {}); if (parts.indexOf("all") > -1) return all; const rf = r + "Id", first = C[c].statuses[0], has = C[c].fields.indexOf(rf) > -1; return all.filter(x => parts.some(p => p === "own" ? x[C[c].owner || "userId"] === u.uid : p === "assigned" ? (has && x[rf] === u.uid) : p === "open" ? (!(has && x[rf]) && (!first || !x.status || x.status === first)) : false)); },\n' +
+  '        take(id, s, extra) { let r = ""; try { r = __banee.Roles.current(); } catch (e) {} const p = { ...(extra || {}) }; if (r && C[c].fields.indexOf(r + "Id") > -1) p[r + "Id"] = (Auth.user || {}).uid; if (s != null) { chk(c, s); p.status = s; } else if (C[c].statuses[1]) p.status = C[c].statuses[1]; return DB.update(c, id, p); },\n' +
   '        byStatus(s, opt) { opt = { ...(opt || {}) }; [].concat(s).forEach(x => chk(c, x)); const all = [].concat(s); return DB.list(c, opt).then(a => a.filter(x => all.indexOf(x.status) > -1)); },\n' +
   '        setStatus(id, s, extra) { chk(c, s); return DB.update(c, id, { ...(extra || {}), status: s }); },\n' +
   '        update(id, p) { if (p && "status" in p) chk(c, p.status); return DB.update(c, id, p); },\n' +
@@ -2699,6 +2705,8 @@ function dataDoc(plan){
   var C = contractOf(plan), ks = Object.keys(C); if (!ks.length) return '';
   return '\n\nطبقة البيانات Data (مولَّدة من العقد ومتاحة لكل الشاشات — استخدمها بدل DB لهذه المجموعات، فهي تملأ الحالة الأولى وuserId واسم المستخدم وحقل الدور تلقائياً وترفض قيم الحالة الخاطئة):\n' +
     ks.map(function(k){ var c = C[k]; return '- Data.' + k + (c.statuses.length ? ' — الحالات بالترتيب: ' + c.statuses.join(' → ') : '') + (c.owner ? ' — مالك العنصر userId' : '') + (c.byRole.length ? ' — حقل الدور: ' + c.byRole.map(function(r){ return r + 'Id'; }).join('، ') : ''); }).join('\n') +
+    '\nمن يرى ماذا (عقد الرؤية — تطبقه Data.X.visible() تلقائياً حسب دور المستخدم الحالي):\n' + ks.map(function(k){ var c = C[k], roles = (plan.roles || []).map(function(r){ return r.id; }); if (roles.length < 2) return ''; return '- ' + k + ': ' + roles.map(function(r){ var v = c.vis[r] || (c.byRole.indexOf(r) > -1 ? 'assigned+open' : (c.owner && r === c.base ? 'own' : 'all')); return r + ' يرى ' + v.replace('own', 'ما أنشأه').replace('assigned', 'المسند إليه').replace('open', 'الجديد غير المسند').replace('all', 'الكل').replace(/\+/g, ' و'); }).join('، '); }).filter(Boolean).join('\n') +
+    '\nكل قائمة تعرض عناصر مجموعة في العقد تستخدم await Data.X.visible() (ثم فلترة إضافية في الواجهة إن احتجت كتبويب أو بحث)، لا DB.list مع where خاص بالدور، فتظهر لكل دور العناصر التي أنشأها الدور الآخر. لقبول/استلام عنصر جديد: await Data.X.take(id) يسند العنصر للمستخدم الحالي وينقل الحالة للخطوة التالية.' +
     '\nالدوال: await Data.X.create(obj) ← يعيد id | Data.X.list({ where, orderBy, limit }) | Data.X.get(id) | Data.X.mine() ← عناصر المستخدم الحالي (أو عناصر دوره كالبائع والمعلم) | Data.X.byStatus("new") أو byStatus(["new","accepted"]) | Data.X.setStatus(id, "accepted", { driverId: Auth.user.uid }) | Data.X.update(id, patch) | Data.X.remove(id) | Data.label(status) ← الاسم العربي للحالة للعرض.' +
     '\nقاعدة: الشاشة التي تعرض عناصر بحالة معينة تستخدم byStatus بقيم العقد نفسها التي تكتبها create/setStatus في الشاشات الأخرى، ولا تكتب نصوص الحالة بالعربي في البيانات أبداً (العرض فقط عبر Data.label).';
 }

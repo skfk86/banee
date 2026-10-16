@@ -1,0 +1,116 @@
+{
+  "status": "ready",
+  "error": "",
+  "name": "مكتبة القارئ",
+  "steps": [
+    "done · هوية «رف وقارئ» · الخطة: ٣ شاشات · ٣ مجموعات · ١٢ عنصر محتوى",
+    "done · المحتوى: ١٢ عنصر مكتوب كاملاً",
+    "done · الهيكل جاهز: التنقّل، البيانات، الدخول، التصميم",
+    "done · ٣ شاشات مكتوبة",
+    "done · جُرّبت كل الشاشات وأُصلحت ٤، لا أخطاء · رحلات المستخدم: ١ من ١ تعمل كاملة · المراجعة: أُصلحت ٢ من ٢",
+    "done · جاهز للمعاينة والتحميل"
+  ],
+  "runtime": {
+    "home": [],
+    "mine": [],
+    "librarianDashboard": []
+  },
+  "flows": [
+    "استعارة كتاب (11 خطوات)"
+  ],
+  "flowSteps": [
+    {
+      "flow": "استعارة كتاب",
+      "steps": [
+        {
+          "role": "customer"
+        },
+        {
+          "go": "/"
+        },
+        {
+          "click": "[data-act=view-book][data-id=books-1]"
+        },
+        {
+          "fill": {
+            "#return-date-input": "2025-12-31"
+          }
+        },
+        {
+          "click": "text:تأكيد طلب الاستعارة"
+        },
+        {
+          "expectDb": {
+            "col": "borrows",
+            "min": 1
+          }
+        },
+        {
+          "expect": "طلبات الاستعارة"
+        },
+        {
+          "role": "librarian"
+        },
+        {
+          "go": "/librarian"
+        },
+        {
+          "click": "text:قبول الطلب"
+        },
+        {
+          "expectDb": {
+            "col": "borrows",
+            "min": 1
+          }
+        }
+      ]
+    }
+  ],
+  "reviewIssues": {
+    "home": [],
+    "mine": [
+      "مراجعة: استخدام الحقل b.createdAt في عرض تاريخ الطلب بينما هو غير موجود في مخطط borrows، والصواب استخدام b.borrowDate"
+    ],
+    "librarianDashboard": [
+      "مراجعة: عدم خصم نسختين أو نسخة من availableCopies عند قبول طلب الاستعارة، والصواب خصم نسخة من الكتاب عند الموافقة ليتطابق مع إضافتها عند الإرجاع"
+    ]
+  },
+  "flowErr": "",
+  "agent": {
+    "ran": false,
+    "fixed": 0,
+    "steps": 0,
+    "log": []
+  },
+  "fixErrors": [],
+  "review": {
+    "found": 2,
+    "fixed": 2
+  },
+  "screens": [
+    {
+      "id": "home",
+      "route": "/",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 7653
+    },
+    {
+      "id": "mine",
+      "route": "/borrows",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 2104
+    },
+    {
+      "id": "librarianDashboard",
+      "route": "/librarian",
+      "roles": [
+        "librarian"
+      ],
+      "bytes": 6790
+    }
+  ]
+}

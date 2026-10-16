@@ -2966,7 +2966,7 @@ function runBuild(app, key){
     function liveRound(known){
       if (round === 0 && !known && !app.ck.flowTests && (app.ck.plan.flows || []).length) {
         jstep(app,4,'cur','كتابة سيناريوهات اختبار رحلات المستخدم');
-        return writeFlowTests(app, key).then(function(){ alive(); return liveRound(known); });
+        return runtimeTest(app).then(function(){ alive(); return writeFlowTests(app, key); }).then(function(){ alive(); return liveRound(known); });
       }
       round++;
       return (known ? Promise.resolve(known) : runtimeTest(app, function(s, n, t){ jstep(app,4,'cur','تشغيل وتجربة "' + s.title + '" (' + toAr(n) + ' من ' + toAr(t) + ')'); }))
@@ -3570,6 +3570,9 @@ function runtimeTest(app, onProgress){
         if (/undefined|\[object Object\]|NaN/.test(el.textContent.replace(new RegExp(LEGIT_WORDS, 'g'), ''))) note(s.id, 'يظهر للمستخدم نص مثل undefined أو [object Object] أو NaN — حقل غير موجود أو اسم خاطئ');
         try { designAudit(w, d, el).forEach(function(m){ note(s.id, 'تصميم: ' + m); }); } catch(e){}
       }
+      // خريطة الواجهة الفعلية: ما يظهر في كل شاشة، وما يفعله كل زر (يفتح نافذة بحقول، أو ينقل لشاشة) — يكتب منها وكيل الاختبار سيناريوهات صحيحة
+      function uiOf(root){ var acts = [], ins = []; if (!root) return { acts: acts, ins: ins }; var seenA = {}; [].forEach.call(root.querySelectorAll('[data-act]'), function(b){ var a = b.getAttribute('data-act'); if (seenA[a]) return; seenA[a] = 1; var ex = ''; [].forEach.call(b.attributes, function(at){ if (/^data-/.test(at.name) && at.name !== 'data-act' && !ex) ex = '[' + at.name + '=' + String(at.value).slice(0, 30) + ']'; }); acts.push('[data-act=' + a + ']' + ex + (b.textContent.trim() ? ' «' + b.textContent.trim().replace(/\s+/g, ' ').slice(0, 24) + '»' : '')); }); [].forEach.call(root.querySelectorAll('input, textarea, select'), function(e){ if (ins.length < 14 && e.type !== 'hidden') ins.push((e.id ? '#' + e.id : e.name ? '[name=' + e.name + ']' : e.tagName.toLowerCase()) + (e.type === 'radio' || e.type === 'checkbox' ? '(' + e.type + ')' : '')); }); return { acts: acts.slice(0, 16), ins: ins }; }
+      function mapScreen(s){ try { var m = (app.ck.uiMap = app.ck.uiMap || {}); var u = uiOf(screenEl()); var R = w.__banee && w.__banee.Roles; m[s.id] = { at: w.location.hash, role: R ? R.current() : '', acts: u.acts, ins: u.ins, after: {} }; } catch(e){} }
       function clickActions(s, route){
         var el = screenEl(); if (!el) return Promise.resolve();
         var seen = {}, list = [];
@@ -3581,7 +3584,9 @@ function runtimeTest(app, onProgress){
             if (!b) return;
             b.click();
             return sleep(450).then(function(){
-              var sh = d.getElementById('sheet'); if (sh) sh.remove();
+              var sh = d.getElementById('sheet');
+              try { var mm = app.ck.uiMap && app.ck.uiMap[s.id]; if (mm) { var now = w.location.hash.slice(1) || '/'; if (sh) { var su = uiOf(sh); mm.after[a] = 'يفتح نافذة فيها الحقول: ' + (su.ins.join('، ') || 'لا شيء') + ' والأزرار: ' + (su.acts.join('، ') || 'لا شيء'); } else if (now !== route) mm.after[a] = 'ينقل إلى ' + now; } } catch(e){}
+              if (sh) sh.remove();
               if ((w.location.hash.slice(1) || '/') !== route) return visit(route);
             });
           });
@@ -3599,7 +3604,7 @@ function runtimeTest(app, onProgress){
         if (onProgress) onProgress(s, i, plan.screens.length);
         try { w.__banee.setRole((plan.roles || []).length > 1 && s.roles && s.roles.length ? s.roles[0] : null); } catch(e){}
         var route = s.route.replace(/:\w+/g, function(){ return encodeURIComponent(seedIdFor({ seed: mergedSeed(app) }, app.ck.screens[s.id])); });
-        return visit(route).then(function(){ inspect(s); return clickActions(s, route); }).then(function(){ inspect(s); }).then(next, function(e){ note(s.id, e.message); return next(); });
+        return visit(route).then(function(){ inspect(s); mapScreen(s); return clickActions(s, route); }).then(function(){ inspect(s); }).then(next, function(e){ note(s.id, e.message); return next(); });
       }
       sleep(700).then(next);
     };
@@ -3616,6 +3621,7 @@ function writeFlowTests(app, key, again){
     ((plan.roles || []).length > 1 ? '\nالأدوار: ' + plan.roles.map(function(r){ return r.id + ' (' + r.name + ')'; }).join('، ') + '\nشاشات كل دور: ' + plan.screens.map(function(s){ return s.route + '→' + ((s.roles || []).join('/') || 'الجميع'); }).join('، ') : '') +
     '\n\nرحلات المستخدم:\n' + plan.flows.map(function(f){ return '- ' + f.name + ': ' + (f.steps || []).join(' ← '); }).join('\n') +
     '\n\nids حقيقية من البيانات: ' + JSON.stringify(ids) +
+    (app.ck.uiMap ? '\n\nخريطة الواجهة الفعلية كما ظهرت عند تشغيل التطبيق (المصدر الأوثق: استخدم هذه الأزرار والحقول حرفياً، والحقول التي تظهر بعد ضغط زر يجب أن يسبقها ضغط ذلك الزر):\n' + plan.screens.map(function(s){ var m = app.ck.uiMap[s.id]; if (!m) return ''; return '### ' + s.route + ' بدور ' + (m.role || '-') + ' (فُتحت فعلياً على ' + m.at + ')\n- الأزرار الظاهرة: ' + (m.acts.join('، ') || 'لا شيء (القائمة فارغة أو تحتاج بيانات)') + '\n- الحقول الظاهرة: ' + (m.ins.join('، ') || 'لا شيء') + Object.keys(m.after || {}).map(function(k){ return '\n- ضغط ' + k + ': ' + m.after[k]; }).join(''); }).filter(Boolean).join('\n') : '') +
     '\n\nكود الشاشات:\n' + plan.screens.map(function(s){ return '### ' + s.route + ' (' + s.title + ')\n' + String(app.ck.screens[s.id] || '').slice(0, 40000); }).join('\n\n');
   if (again) ctx += '\n\nمهم: أعد JSON صالحاً قصيراً فقط، بحد أقصى ٣ رحلات و١٠ خطوات لكل رحلة.';
   if (app.ck.flowPrev) ctx += '\n\nالنسخة السابقة من السيناريوهات فشلت هكذا (مع وصف ما كان ظاهراً فعلاً على الشاشة). صحّح السيناريو: أضف الخطوات الناقصة (فتح عنصر، فتح نافذة، تبديل دور) واستخدم الأزرار والحقول الظاهرة فعلاً:\n' + app.ck.flowPrev;

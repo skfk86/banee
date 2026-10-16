@@ -1,0 +1,189 @@
+{
+  "status": "ready",
+  "error": "",
+  "name": "صوت مدينتي",
+  "steps": [
+    "done · هوية «مدينتي الرقمية» · الخطة: ٤ شاشات · ٢ مجموعات · ٥ عنصر محتوى",
+    "done · المحتوى: ٥ عنصر مكتوب كاملاً",
+    "done · الهيكل جاهز: التنقّل، البيانات، الدخول، التصميم",
+    "done · ٤ شاشات مكتوبة",
+    "done · الفحص: ١ شاشات بها ملاحظات، راجعها في الاستوديو · رحلات المستخدم: ١ من ٢ تعمل كاملة · المراجعة: أُصلحت ١ من ١ · وكيل الإصلاح: لم يجد تحسيناً آمناً",
+    "done · جاهز للمعاينة والتحميل"
+  ],
+  "runtime": {
+    "home": [],
+    "employee_dashboard": [],
+    "add_complaint": [],
+    "complaint_details": [
+      "رحلة «معالجة بلاغ» توقفت عند الخطوة ٣: لم يُعثر على [data-act=view][data-id=complaints-5] (الزر غير موجود أو اسمه مختلف) — الظاهر الآن: الشاشة complaint_details (#/complaint/mvasgj3qbhbi9) بدور employee؛ الأزرار: لا شيء؛ الحقول: #status-select، #notes-input"
+    ]
+  },
+  "flows": [
+    "تقديم شكوى (10 خطوات)",
+    "معالجة بلاغ (12 خطوات)"
+  ],
+  "flowSteps": [
+    {
+      "flow": "تقديم شكوى",
+      "steps": [
+        {
+          "role": "citizen"
+        },
+        {
+          "go": "/"
+        },
+        {
+          "click": "[data-act=add]"
+        },
+        {
+          "fill": {
+            "#title": "تراكم نفايات في الحي"
+          }
+        },
+        {
+          "fill": {
+            "#description": "يوجد تراكم كبير للنفايات يتطلب تدخل سريع"
+          }
+        },
+        {
+          "click": "[data-act=pick-location]"
+        },
+        {
+          "click": "#image-preview"
+        },
+        {
+          "click": "[data-act=submit]"
+        },
+        {
+          "expect": "تم إرسال بلاغك بنجاح"
+        },
+        {
+          "expectDb": {
+            "col": "complaints",
+            "min": 1
+          }
+        }
+      ]
+    },
+    {
+      "flow": "معالجة بلاغ",
+      "steps": [
+        {
+          "role": "employee"
+        },
+        {
+          "go": "/dashboard"
+        },
+        {
+          "click": "[data-act=view][data-id=complaints-5]"
+        },
+        {
+          "fill": {
+            "#status-select": "processing"
+          }
+        },
+        {
+          "fill": {
+            "#notes-input": "تمت معاينة الموقع وجاري التنظيف"
+          }
+        },
+        {
+          "click": "#save-btn"
+        },
+        {
+          "expect": "تم تحديث البلاغ بنجاح"
+        },
+        {
+          "go": "/dashboard"
+        },
+        {
+          "click": "[data-act=view][data-id=complaints-5]"
+        },
+        {
+          "fill": {
+            "#status-select": "resolved"
+          }
+        },
+        {
+          "click": "#save-btn"
+        },
+        {
+          "expectDb": {
+            "col": "complaints",
+            "min": 1
+          }
+        }
+      ]
+    }
+  ],
+  "reviewIssues": {
+    "home": [],
+    "employee_dashboard": [],
+    "add_complaint": [],
+    "complaint_details": [
+      "مراجعة: ثغرة أمنية: يمكن للمواطن الوصول إلى تفاصيل أي بلاغ عبر تغيير معرف البلاغ في الرابط. الإصلاح: أضف شرطاً للتحقق من ملكية البلاغ (complaint.userId === Auth.user.uid) إذا لم يكن المستخدم موظفاً."
+    ]
+  },
+  "flowErr": "",
+  "agent": {
+    "ran": true,
+    "fixed": 0,
+    "steps": 14,
+    "log": [
+      "read employee_dashboard — سأقوم بقراءة شاشة employee_dashboard للتأكد من كيفية عرض البلاغات وما هي المعرفات (data-act و data-id) المستخدمة في الأزرار، لأن الاخت → 1| App.screen({\n2|   id: 'employee_dashboard',\n3|   route: '/dashboard',\n4|   title: 'لوحة الموظف',\n5|   icon: 'list',\n6|   nav: true,\n7|   render(params) {\n8| ",
+      "read complaint_details — The error message says the test failed to find [data-act=view][data-id=complaints-5] in the dashboard. Looking at the `employee_dashboa → 1| App.screen({\n2|   id: 'complaint_details',\n3|   route: '/complaint/:id',\n4|   title: 'تفاصيل البلاغ',\n5|   icon: 'info',\n6|   nav: false,\n7|   render(params)",
+      "flow — الخطأ في سيناريو الاختبار هو الاعتماد على معرف ثابت (complaints-5) غير موجود في قاعدة البيانات الفعلية. سأقوم بتعديل سيناريو الاختبار ليقوم باختيار أول ب → حُدّث سيناريو «معالجة بلاغ». شغّل run للتحقق.",
+      "run — لقد قمت بتعديل سيناريو الاختبار في الخطوة السابقة ليناسب الواقع (اختيار أول عنصر بدلاً من معرف ثابت)، والآن يجب تشغيل التطبيق للتأكد من أن الرحلات تعمل بش → نتيجة التشغيل (درجة الأخطاء 30، الأفضل حتى الآن 30):\n[complaint_details] رحلة «معالجة بلاغ» توقفت عند الخطوة ٣: لم يُعثر على [data-act=view]:first-child (الزر غ",
+      "flow (مكرر) → نتيجة هذه الخطوة نفسها ظاهرة أعلاه في #3 والكود لم يتغير منذها. استخدمها: نفّذ edit أو run أو done.",
+      "seed — لقد فشل الاختبار لأن قائمة البلاغات فارغة، مما يعني عدم وجود عناصر تحمل [data-act=view]. سأقوم بإضافة بيانات أولية (Seed) لمجموعة complaints لضمان وجود ب → أُضيفت 2 عناصر إلى complaints (ids: complaints-1، complaints-2). شغّل run للتحقق.",
+      "run — لقد أضفت بيانات أولية (Seed) ولكن الاختبار لا يزال يفشل في العثور على [data-act=view]:first-child في dashboard. سأقوم بتشغيل run للتأكد من أن البيانات تظه → نتيجة التشغيل (درجة الأخطاء 30، الأفضل حتى الآن 30):\n[complaint_details] رحلة «معالجة بلاغ» توقفت عند الخطوة ٣: لم يُعثر على [data-act=view]:first-child (الزر غ",
+      "edit employee_dashboard — الخطأ هو أن الاختبار يبحث عن [data-act=view] في شاشة dashboard، لكن بالنظر إلى كود employee_dashboard (الذي قرأته في الخطوة 1)، لا يوج → find غير موجود في employee_dashboard حتى مع تجاهل المسافات؛ استخدم search بكلمة مميزة منه لتعرف النص الحالي، ثم انسخ سطراً أو سطرين فقط",
+      "read employee_dashboard — سأقوم بقراءة كود شاشة employee_dashboard مرة أخرى للتأكد من وجود الأزرار وتعديلها لتشمل data-act=view كما يتوقع الاختبار. → 1| App.screen({\n2|   id: 'employee_dashboard',\n3|   route: '/dashboard',\n4|   title: 'لوحة الموظف',\n5|   icon: 'list',\n6|   nav: true,\n7|   render(params) {\n8| ",
+      "flow — لقد تأكدت من وجود data-act=view في employee_dashboard، ولكن يبدو أن محدد الاختبار [data-act=view]:first-child يواجه مشكلة في التفسير. سأقوم بتعديل رحلة ا → حُدّث سيناريو «معالجة بلاغ». شغّل run للتحقق.",
+      "flow (مكرر) → نتيجة هذه الخطوة نفسها ظاهرة أعلاه في #10 والكود لم يتغير منذها. استخدمها: نفّذ edit أو run أو done.",
+      "read complaint_details — لقد قرأت كود complaint_details. يبدو أن الموظف لا يرى أزرار الحفظ لأن الشاشة لا تتحقق من صلاحيات الموظف لعرض حقول التعديل. سأقوم بقراءة → 1| App.screen({\n2|   id: 'complaint_details',\n3|   route: '/complaint/:id',\n4|   title: 'تفاصيل البلاغ',\n5|   icon: 'info',\n6|   nav: false,\n7|   render(params)",
+      "edit complaint_details — لقد لاحظت أن الموظف يرى حقول التعديل في `complaint_details` ولكن الاختبار يفشل لأن زر الحفظ `save-btn` لا يُعثر عليه في الاختبار. بالنظ → تم التعديل. ملاحظات الفحص الثابت بعده: زر ميت: data-act=\"save\" موجود في الواجهة بلا معالج App.on(el, 'click', '[data-act=save]', ...) فلا يحدث شيء عند الضغط",
+      "edit complaint_details — لقد قمت بتعديل الزر في complaint_details ليكون data-act='save' بدلاً من id='save-btn' ليتوافق مع معايير التطبيق، والآن سأقوم بتحديث معا → تم التعديل"
+    ]
+  },
+  "fixErrors": [],
+  "review": {
+    "found": 1,
+    "fixed": 1
+  },
+  "screens": [
+    {
+      "id": "home",
+      "route": "/",
+      "roles": [
+        "citizen"
+      ],
+      "bytes": 1888
+    },
+    {
+      "id": "employee_dashboard",
+      "route": "/dashboard",
+      "roles": [
+        "employee"
+      ],
+      "bytes": 1669
+    },
+    {
+      "id": "add_complaint",
+      "route": "/add",
+      "roles": [
+        "citizen"
+      ],
+      "bytes": 3241
+    },
+    {
+      "id": "complaint_details",
+      "route": "/complaint/:id",
+      "roles": [
+        "citizen",
+        "employee"
+      ],
+      "bytes": 3755
+    }
+  ]
+}

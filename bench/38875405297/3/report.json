@@ -1,0 +1,136 @@
+{
+  "status": "ready",
+  "error": "",
+  "name": "عيادتي",
+  "steps": [
+    "done · هوية «رعاية مطمئنة» · الخطة: ٤ شاشات · ٤ مجموعات · ١٠ عنصر محتوى",
+    "done · المحتوى: ١٠ عنصر مكتوب كاملاً",
+    "done · الهيكل جاهز: التنقّل، البيانات، الدخول، التصميم",
+    "done · ٤ شاشات مكتوبة",
+    "done · الفحص: ١ شاشات بها ملاحظات، راجعها في الاستوديو · رحلات المستخدم: ٢ من ٢ تعمل كاملة · المراجعة: أُصلحت ١ من ١",
+    "done · جاهز للمعاينة والتحميل"
+  ],
+  "runtime": {
+    "home": [
+      "تصميم: النص \"عيادتي — رعاية مطمئنة\" غير مقروء: تباين 1.2:1 — لونه #ffffff والخلفية #e0eff1 من العنصر <div class=\"hero\">. الخلفية فاتحة: استخدم var(--text) للنص، أو أزل خلفية ذلك العنصر إن كان داخل hero."
+    ],
+    "book": [],
+    "mine": [],
+    "doctorSchedule": []
+  },
+  "flows": [
+    "حجز موعد (11 خطوات)",
+    "إدارة مواعيد الطبيب (2 خطوات)"
+  ],
+  "flowSteps": [
+    {
+      "flow": "حجز موعد",
+      "steps": [
+        {
+          "role": "customer"
+        },
+        {
+          "go": "/"
+        },
+        {
+          "click": "[data-act=select-service][data-id=\"services-1\"]"
+        },
+        {
+          "go": "/book/services-1"
+        },
+        {
+          "click": "[data-id=\"providers-1\"]"
+        },
+        {
+          "click": ".day-btn"
+        },
+        {
+          "click": ".slot-btn"
+        },
+        {
+          "fill": {
+            "#patient-name": "محمد أحمد",
+            "#patient-phone": "0912345678"
+          }
+        },
+        {
+          "click": "#confirm-booking-btn"
+        },
+        {
+          "expect": "سجل المواعيد"
+        },
+        {
+          "expectDb": {
+            "col": "bookings",
+            "min": 1
+          }
+        }
+      ]
+    },
+    {
+      "flow": "إدارة مواعيد الطبيب",
+      "steps": [
+        {
+          "role": "provider"
+        },
+        {
+          "go": "/doctor"
+        }
+      ]
+    }
+  ],
+  "reviewIssues": {
+    "home": [],
+    "book": [],
+    "mine": [],
+    "doctorSchedule": [
+      "مراجعة: الدالة Data.label(b.status) تستدعي label لـ status مباشرة بينما الصيغة الصحيحة هي Data.label('bookings', b.status) كما استخدمت في شاشة mine."
+    ]
+  },
+  "flowErr": "",
+  "agent": {
+    "ran": false,
+    "fixed": 0,
+    "steps": 0,
+    "log": []
+  },
+  "fixErrors": [],
+  "review": {
+    "found": 1,
+    "fixed": 1
+  },
+  "screens": [
+    {
+      "id": "home",
+      "route": "/",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 3771
+    },
+    {
+      "id": "book",
+      "route": "/book/:id",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 9773
+    },
+    {
+      "id": "mine",
+      "route": "/bookings",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 5066
+    },
+    {
+      "id": "doctorSchedule",
+      "route": "/doctor",
+      "roles": [
+        "provider"
+      ],
+      "bytes": 2949
+    }
+  ]
+}

@@ -2578,8 +2578,65 @@ function parseJSON(raw){
 }
 
 // فحص آلي لكل شاشة بدون ذكاء اصطناعي
+// ════ وضع المواصفات: النموذج يصف الشاشة بـ JSON صغير، والمحرك الثابت في القالب يبنيها ════
+var SPEC_BLOCKS = { hero: 1, list: 1, detail: 1, form: 1, stats: 1, text: 1, links: 1, custom: 1 };
+function specMode(app){ try { if (localStorage.getItem('bspec') === '1') return true; } catch(e){} return !!(app && app.ck && app.ck.spec); }
+function specOf(js){ var m = /^\s*Spec\.screen\(\s*([\s\S]*)\)\s*;?\s*$/.exec(String(js || '')); if (!m) return null; try { return JSON.parse(m[1]); } catch(e){ return null; } }
+function specCode(sp, s){ var o = Object.assign({}, sp, { id: s.id, route: s.route, title: s.title, icon: s.icon || sp.icon || 'circle', nav: !!s.nav }); return 'Spec.screen(' + JSON.stringify(o, null, 1) + ');'; }
+// إصلاح شاشة مواصفات: نعيد طلب المواصفات مع الأخطاء (لا نحوّلها لكود)
+function fixSpec(app, key, s, errs){
+  var plan = app.ck.plan, cur = specOf(app.ck.screens[s.id]) || {};
+  return ask(key, 'specwriter', specCtx(plan, s, app) + '\n\nهذه مواصفات الشاشة الحالية:\n' + JSON.stringify(cur).slice(0, 6000) + '\n\nوظهرت فيها هذه المشاكل عند الفحص أو التشغيل الفعلي، أعد المواصفات كاملة بعد إصلاحها دون حذف ما يعمل:\n- ' + errs.join('\n- '), true)
+    .then(function(raw){ var sp = parseJSON(raw); return sp && !validateSpec(sp, s, plan).length ? specCode(sp, s) : null; }, function(e){ if (e && /رصيد|حصة/.test(e.message || '')) throw e; return null; });
+}
+// فحص المواصفات آلياً مقابل المخطط والعقد: مجموعات وحقول وإجراءات وحالات ومسارات موجودة فعلاً
+function validateSpec(sp, s, plan){
+  var errs = [], cols = {}, routes = plan.screens.map(function(x){ return new RegExp('^' + x.route.replace(/:\w+/g, '[^/]+') + '$'); }), C = contractOf(plan);
+  (plan.collections || []).forEach(function(c){ if (c && c.name) cols[c.name] = Object.keys(c.fields || {}).concat(['id', 'createdAt', 'updatedAt', 'status', 'userId', 'userName']); });
+  if (!sp || typeof sp !== 'object' || !Array.isArray(sp.blocks) || !sp.blocks.length) return ['المواصفات يجب أن تحتوي blocks غير فارغة'];
+  function route(r, where){ if (!r) return; var p = String(r).replace(/^go:/, '').replace(/:id\b/g, 'x').replace(/\{[^}]+\}/g, 'x'); if (!routes.some(function(re){ return re.test(p); })) errs.push(where + ': المسار ' + r + ' غير موجود في الشاشات'); }
+  function field(col, k, where){ if (!k || !cols[col]) return; var root = String(k).split('.')[0]; if (cols[col].indexOf(root) < 0) errs.push(where + ': الحقل ' + k + ' غير موجود في ' + col + ' (الموجود: ' + cols[col].join('، ') + ')'); }
+  function acts(list, col, where){ (list || []).forEach(function(a){ var d = String(a && a.do || ''); if (!/^(take|remove|status:\w+|go:\/.*|set:\w+=.+)$/.test(d)) errs.push(where + ': إجراء غير مدعوم «' + d + '» (المسموح: take، status:X، remove، go:/route، set:field=value)'); if (/^status:/.test(d) && C[col] && C[col].statuses.length && C[col].statuses.indexOf(d.slice(7)) < 0) errs.push(where + ': الحالة ' + d.slice(7) + ' ليست من حالات ' + col + ': ' + C[col].statuses.join('، ')); if (/^go:/.test(d)) route(d, where); if (a.when) Object.keys(a.when).forEach(function(k){ field(col, k, where); }); }); }
+  sp.blocks.forEach(function(b, i){
+    var w = 'المكوّن ' + (i + 1) + ' (' + (b && b.type) + ')';
+    if (!b || !SPEC_BLOCKS[b.type]) { errs.push(w + ': نوع غير معروف. المتاح: ' + Object.keys(SPEC_BLOCKS).join('، ')); return; }
+    if (/^(list|detail|form)$/.test(b.type)) {
+      if (!cols[b.collection]) { errs.push(w + ': المجموعة ' + b.collection + ' غير موجودة (الموجود: ' + Object.keys(cols).join('، ') + ')'); return; }
+      var c = b.card || {}; ['title', 'sub', 'meta', 'badge', 'image'].forEach(function(k){ field(b.collection, c[k], w + ' card.' + k); });
+      if (b.type === 'detail') { field(b.collection, b.title, w); (b.fields || []).forEach(function(f){ field(b.collection, f && f.key, w); }); if (!/:/.test(s.route)) errs.push(w + ': شاشة التفاصيل تحتاج مساراً فيه :id'); }
+      if (b.type === 'form') { if (!(b.fields || []).length) errs.push(w + ': النموذج بلا حقول'); (b.fields || []).forEach(function(f){ field(b.collection, f && f.key, w); }); Object.keys(b.set || {}).forEach(function(k){ field(b.collection, k, w + ' set'); }); route(b.after, w + ' after'); }
+      if (b.filter) Object.keys(b.filter).forEach(function(k){ field(b.collection, k, w + ' filter'); });
+      if (b.tabs) field(b.collection, b.tabs.field || 'status', w + ' tabs');
+      if (b.link) route(b.link, w + ' link');
+      acts(b.actions, b.collection, w);
+    }
+    if (b.type === 'stats') (b.items || []).forEach(function(it){ if (!cols[it.collection]) errs.push(w + ': المجموعة ' + it.collection + ' غير موجودة'); });
+    if (b.type === 'links') (b.items || []).forEach(function(it){ route(it.go, w); });
+    if (b.type === 'hero' && b.button) route(b.button.go, w);
+    if (b.type === 'custom' && b.js) { try { new Function('el', 'params', 'App', 'DB', 'Data', 'UI', 'Auth', 'Store', b.js); } catch(e){ errs.push(w + ': خطأ صياغة في js: ' + e.message); } }
+  });
+  return errs;
+}
+function specCtx(plan, s, app){
+  return screenCtx(plan, s, app.ck.content).replace(/\n\nاكتب الآن هذه الشاشة فقط:[\s\S]*$/, '') +
+    '\n\nاكتب الآن مواصفات هذه الشاشة فقط: id=' + s.id + ' route=' + s.route + ' title=' + s.title + (s.roles && s.roles.length ? ' أدوار: ' + s.roles.join('/') : '') + '\nالغرض: ' + (s.purpose || '');
+}
+ROLES.specwriter =
+'أنت مصمم شاشات تطبيقات موبايل عربية. لا تكتب كوداً: تصف الشاشة بمواصفات JSON يبنيها محرك جاهز مختبر. أعد JSON فقط: {"blocks":[ ... ]}\n' +
+'المكوّنات المتاحة:\n' +
+'- {"type":"hero","title":"…","sub":"…","icon":"lucide","button":{"label":"…","go":"/route"}}\n' +
+'- {"type":"list","title":"…","collection":"x","show":"visible|all|mine","filter":{"field":"value"},"byParam":"courseId","sort":"-createdAt","search":true,"tabs":{"field":"status","values":["new","done"]},"card":{"title":"field","sub":"field","meta":"field","badge":"status","image":"field","icon":"lucide","subKind":"money|date|ago|num"},"link":"/item/:id","add":{"label":"إضافة","go":"/new"},"actions":[{"label":"قبول","do":"take","when":{"status":"new"}},{"label":"تم","do":"status:done","when":{"status":"accepted"}},{"label":"حذف","do":"remove","style":"danger","confirm":"متأكد؟"},{"label":"تفاصيل","do":"go:/item/:id"}],"empty":"لا توجد عناصر"}\n' +
+'- {"type":"detail","collection":"x","title":"field","image":"field","badge":"status","fields":[{"key":"price","label":"السعر","kind":"money|date|rich|text|num"}],"actions":[...كما في list]}  ← فقط لشاشة مسارها فيه :id\n' +
+'- {"type":"form","title":"…","collection":"x","mode":"create|edit","fields":[{"key":"name","label":"…","kind":"text|textarea|number|money|tel|email|date|time|select","options":["a","b"],"required":true}],"set":{"courseId":"param:id"},"submit":"إرسال","done":"تم الإرسال","after":"/mine"}\n' +
+'- {"type":"stats","items":[{"label":"…","collection":"x","where":{"status":"new"},"sum":"amount","kind":"money"}]}\n' +
+'- {"type":"text","text":"نص بتنسيق: # عنوان، - نقطة، **عريض**"}\n' +
+'- {"type":"links","items":[{"label":"…","sub":"…","icon":"lucide","go":"/route"}]}\n' +
+'- {"type":"custom","html":"<div>…</div>","js":"كود يعمل بعد العرض: (el, params, App, DB, Data, UI, Auth, Store)"}  ← فقط لما لا يغطيه غيره (عدّاد، مؤقت، اختبار تفاعلي، خريطة…)\n' +
+'القواعد: استخدم أسماء المجموعات والحقول والحالات من العقد حرفياً. show:"visible" (الافتراضي) يعرض لكل دور ما يحق له حسب عقد الرؤية؛ "all" للمحتوى العام (منتجات، دروس، خدمات). القائمة التي يستلم منها دور مهام تحتاج إجراء take للعنصر الجديد وإجراءات status لما بعده. النموذج يملأ userId والحالة الأولى وحقل الدور تلقائياً، فلا تضعها في fields. المسارات من قائمة الشاشات فقط. شاشة كاملة مفيدة: hero أو stats في الرئيسية، ثم القوائم، ونصوص واضحة بالعربي.';
+
 function checkScreen(js, s, plan){
   var errs = [];
+  if (/^\s*Spec\.screen\(/.test(js || '')) { var spx = specOf(js); return spx ? validateSpec(spx, s, plan) : ['مواصفات Spec.screen غير صالحة (JSON)']; }
   try { new Function('App','DB','Auth','UI','Store', js); }
   catch(e){ errs.push('خطأ صياغة JavaScript: ' + e.message); return errs; }
   if (js.indexOf('App.screen(') < 0) errs.push('الكود لا يستدعي App.screen');
@@ -2927,12 +2984,26 @@ function runBuild(app, key){
     function label(){ var n = Object.keys(app.ck.screens).length; app.screenFrac = n / total; return 'بناء الشاشات (' + toAr(n) + ' من ' + toAr(total) + ')'; }
     jstep(app,3, todo.length ? 'cur' : 'done', label());
     var queue = todo.slice();
+    // وضع المواصفات: وصف JSON يُفحص آلياً؛ إن فشل مرتين نعود لكتابة الكود لهذه الشاشة فقط
+    function writeScreen(s){
+      if (!specMode(app)) return ask(key, 'screen', screenCtx(plan, s, app.ck.content)).then(function(r){ return grab(r, 'javascript'); });
+      app.ck.spec = true;
+      function once(extra){ return ask(key, 'specwriter', specCtx(plan, s, app) + (extra || ''), true).then(function(raw){ var sp = parseJSON(raw); var errs = validateSpec(sp, s, plan); return { sp: sp, errs: errs }; }); }
+      return once().then(function(r){
+        if (!r.errs.length) return specCode(r.sp, s);
+        return once('\n\nمواصفاتك السابقة فيها أخطاء، صححها:\n- ' + r.errs.join('\n- ') + '\n\nالسابقة:\n' + JSON.stringify(r.sp || {}).slice(0, 4000)).then(function(r2){
+          if (!r2.errs.length) return specCode(r2.sp, s);
+          (app.ck.specFallback = app.ck.specFallback || []).push(s.id);
+          return ask(key, 'screen', screenCtx(plan, s, app.ck.content)).then(function(x){ return grab(x, 'javascript'); });
+        });
+      });
+    }
     function worker(){
       var s = queue.shift(); if (!s) return Promise.resolve();
       app.live = s.title;
-      return ask(key, 'screen', screenCtx(plan, s, app.ck.content)).then(function(r){
+      return writeScreen(s).then(function(code){
         alive();
-        app.ck.screens[s.id] = grab(r, 'javascript');
+        app.ck.screens[s.id] = code;
         app.lastScreen = s.id;
         jstep(app,3,'cur', label());
         return worker();
@@ -2952,6 +3023,7 @@ function runBuild(app, key){
     if (!bad.length) return 0;
     jstep(app,4,'cur','إصلاح ' + toAr(bad.length) + ' شاشات');
     return Promise.all(bad.map(function(b){
+      if (specOf(app.ck.screens[b.s.id])) return fixSpec(app, key, b.s, b.errs).then(function(c){ if (c) app.ck.screens[b.s.id] = c; app.ck.fixed[b.s.id] = true; });
       return ask(key, 'fixer', 'الأخطاء:\n- ' + b.errs.join('\n- ') + '\n\nسياق الشاشة:\n' + screenCtx(plan, b.s, app.ck.content) + relatedCode(app, b.s) + '\n\nالكود الحالي:\n```javascript\n' + app.ck.screens[b.s.id] + '\n```')
         .then(function(r){
           var js = grab(r, 'javascript');
@@ -3904,6 +3976,7 @@ function agentFix(app, key, res, onStep){
       }
       var errs = checkScreen(nj, sc, plan);
       var hard = errs.filter(function(e){ return /صياغ|نحوي|SyntaxError|Unexpected|App\.screen/.test(e); });
+      if (/^\s*Spec\.screen\(/.test(nj) && !specOf(nj)) hard.push('مواصفات Spec.screen صارت JSON غير صالح');
       if (hard.length) return Promise.resolve('رُفض التعديل لأنه يكسر الكود: ' + hard.join(' | ').slice(0, 400));
       app.ck.screens[sc.id] = nj;
       return Promise.resolve('تم التعديل' + (errs.length ? '. ملاحظات الفحص الثابت بعده: ' + errs.slice(0, 4).join(' | ').slice(0, 500) : ''));
@@ -4014,6 +4087,7 @@ function fixRuntime(app, key, res, onStage, review, attempt){
       '\n\nسياق الشاشة:\n' + screenCtx(plan, s, app.ck.content) + relatedCode(app, s) +
       '\n\nبيانات تجريبية متاحة:\n' + JSON.stringify(plan.seed || {}).slice(0, 1500) +
       '\n\nالكود الحالي:\n```javascript\n' + old[s.id] + '\n```';
+    if (specOf(old[s.id])) return fixSpec(app, key, s, res[s.id] || []).then(function(c){ if (c) app.ck.screens[s.id] = c; });
     return ask(key, 'fixer', prompt).then(function(r){
       var js = grab(r, 'javascript');
       if (!checkScreen(js, s, plan).length && js.length > (old[s.id] || '').length * 0.6) app.ck.screens[s.id] = js;
@@ -4740,7 +4814,7 @@ function chatAgent(app, key, msg, onStep){
       '\n\nخطواتك حتى الآن (' + n + ' من ' + MAX + '):\n' + (hist.length ? hist.map(function(h, i){ var last = i >= hist.length - 6; return '#' + (i + 1) + ' ' + h.call + '\n→ ' + (last ? h.obs : h.obs.slice(0, 300) + (h.obs.length > 300 ? ' …' : '')); }).join('\n\n') : '(لا شيء بعد)') +
       (n >= MAX - 3 ? '\n\nتبقّت خطوات قليلة: شغّل run إن عدّلت ولم تجرّب، ثم أنهِ بـ done.' : '') + '\n\nما الخطوة التالية؟';
   }
-  function okCode(js, s){ var hard = checkScreen(js, s, plan).filter(function(e){ return /صياغ|نحوي|SyntaxError|Unexpected|App\.screen/.test(e); }); return hard; }
+  function okCode(js, s){ if (/^\s*Spec\.screen\(/.test(js) && !specOf(js)) return ['JSON غير صالح في Spec.screen']; var hard = checkScreen(js, s, plan).filter(function(e){ return /صياغ|نحوي|SyntaxError|Unexpected|App\.screen/.test(e); }); return hard; }
   function act(a){
     var s = scr(a.screen);
     if (a.tool === 'read') return Promise.resolve(s ? numbered(app.ck.screens[s.id]).slice(0, 45000) : 'لا توجد شاشة بهذا id');

@@ -5,6 +5,9 @@ on:
       set:
         description: 'مجموعة الأفكار: a | b | c'
         default: 'a'
+      spec:
+        description: 'وضع المواصفات (المحرك): 1 للتفعيل'
+        default: ''
 permissions:
   contents: write
 jobs:
@@ -45,6 +48,7 @@ jobs:
           IDEA: ${{ matrix.it.idea || '' }}
           OUT: out
           MAX_MIN: 75
+          SPEC: ${{ github.event.inputs.spec }}
         run: node e2e/e2e.js
       - name: حفظ النتيجة
         if: always()

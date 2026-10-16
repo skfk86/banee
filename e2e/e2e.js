@@ -11,12 +11,13 @@ const log = (...a) => { const s = '[' + new Date().toISOString().slice(11, 19) +
   const ctx = await b.newContext({ viewport: { width: 390, height: 844 } });
   if (process.env.FAKE) await require(path.resolve(process.env.FAKE))(ctx);
   await ctx.route(/gstatic\.com\/firebasejs/, r => r.abort()); // وضع محلي: بلا تسجيل دخول Firebase
-  await ctx.addInitScript(([k]) => {
+  await ctx.addInitScript(([k, spec]) => {
     if (sessionStorage.getItem('e2e')) return; sessionStorage.setItem('e2e', '1');
     localStorage.setItem('buser', JSON.stringify({ uid: 'e2e', name: 'علوش', email: 'e2e@banee.app' }));
     localStorage.setItem('bprofile', JSON.stringify({ plan: 'business', name: 'علوش' }));
     localStorage.setItem('bgkey', k); localStorage.setItem('bonb', '1');
-  }, [KEY || 'FAKE']);
+    if (spec) localStorage.setItem('bspec', '1');
+  }, [KEY || 'FAKE', !!process.env.SPEC]);
   const p = await ctx.newPage(); const perr = [];
   p.on('console', m => { if (/^AGENT/.test(m.text())) log(m.text()); }); p.on('pageerror', e => perr.push(e.message + ' @ ' + String(e.stack || '').split('\n').slice(1, 3).join(' | ').slice(0, 300)));
   let lastToast = ''; setInterval(async () => { try { const tx = await p.evaluate(() => { const t = document.querySelector('.toast.on, #toast.on, .toast'); return t ? t.textContent.trim() : ''; }); if (tx && tx !== lastToast) { lastToast = tx; log('رسالة:', tx); } } catch (e) {} }, 1500);
@@ -55,7 +56,7 @@ const log = (...a) => { const s = '[' + new Date().toISOString().slice(11, 19) +
     if (st.status === 'ready' || st.status === 'failed') break;
   }
   const rep = await p.evaluate(() => { const a = S.apps[0], ck = a.ck || {}; return { status: a.status, error: a.error || '', name: a.name, steps: a.steps.map(s => s.state + ' · ' + s.label),
-    runtime: ck.runtime || {}, flows: (ck.flowTests || []).map(f => f.flow + ' (' + f.steps.length + ' خطوات)'), flowSteps: ck.flowTests || [], reviewIssues: ck.reviewIssues || null, flowErr: ck.flowErr || '', agent: { ran: !!ck.agentRan, fixed: ck.agentFixed || 0, steps: ck.agentSteps || 0, log: ck.agentLog || [] }, fixErrors: ck.fixErrors || [], review: { found: ck.reviewCount || 0, fixed: ck.reviewFixed || 0 }, screens: (ck.plan ? ck.plan.screens : []).map(s => ({ id: s.id, route: s.route, roles: s.roles || [], bytes: (ck.screens[s.id] || '').length })) }; });
+    runtime: ck.runtime || {}, flows: (ck.flowTests || []).map(f => f.flow + ' (' + f.steps.length + ' خطوات)'), flowSteps: ck.flowTests || [], reviewIssues: ck.reviewIssues || null, spec: !!ck.spec, specFallback: ck.specFallback || [], flowErr: ck.flowErr || '', agent: { ran: !!ck.agentRan, fixed: ck.agentFixed || 0, steps: ck.agentSteps || 0, log: ck.agentLog || [] }, fixErrors: ck.fixErrors || [], review: { found: ck.reviewCount || 0, fixed: ck.reviewFixed || 0 }, screens: (ck.plan ? ck.plan.screens : []).map(s => ({ id: s.id, route: s.route, roles: s.roles || [], bytes: (ck.screens[s.id] || '').length })) }; });
   const mins = ((Date.now() - t0) / 60000).toFixed(1);
   fs.writeFileSync(path.join(OUT, 'report.json'), JSON.stringify(rep, null, 2));
   log('النتيجة:', rep.status, rep.error, '| الزمن:', mins, 'دقيقة');

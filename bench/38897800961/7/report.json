@@ -1,0 +1,131 @@
+{
+  "status": "failed",
+  "error": "انتهت الحصة اليومية لمفتاح Gemini. أكمل غداً من حيث توقفت، أو فعّل الفوترة في Google AI Studio",
+  "name": "وجبتي",
+  "steps": [
+    "done · هوية «نكهة طازجة» · الخطة: ٤ شاشات · ٤ مجموعات · ٢٤ عنصر محتوى",
+    "done · المحتوى: ٢٤ عنصر مكتوب كاملاً",
+    "done · الهيكل جاهز: التنقّل، البيانات، الدخول، التصميم",
+    "done · ٤ شاشات مكتوبة",
+    "err · إصلاح أخطاء التشغيل في ١ شاشات",
+    " · التجميع النهائي"
+  ],
+  "runtime": {
+    "home": [],
+    "store": [],
+    "track": [],
+    "checkout": [
+      "رحلة «طلب طعام» توقفت عند الخطوة ٩: ظهرت رسالة خطأ: حدث خطأ أثناء إرسال الطلب — السبب الفعلي الملتقط: Data.remove is not a function"
+    ]
+  },
+  "flows": [
+    "طلب طعام (11 خطوات)"
+  ],
+  "flowSteps": [
+    {
+      "flow": "طلب طعام",
+      "steps": [
+        {
+          "role": "customer"
+        },
+        {
+          "go": "/"
+        },
+        {
+          "click": "[data-act=open-store][data-id=stores-1]"
+        },
+        {
+          "expect": "قائمة الطعام"
+        },
+        {
+          "click": "[data-act=add][data-id=items-1]"
+        },
+        {
+          "click": "[data-act=go-checkout]"
+        },
+        {
+          "fill": {
+            "#address": "حي النرجس، شارع 10"
+          }
+        },
+        {
+          "fill": {
+            "#phone": "0500000000"
+          }
+        },
+        {
+          "click": "text:تأكيد الطلب الآن"
+        },
+        {
+          "expectDb": {
+            "col": "orders",
+            "min": 1
+          }
+        },
+        {
+          "expect": "سجل الطلبات"
+        }
+      ]
+    }
+  ],
+  "reviewIssues": {
+    "home": [],
+    "store": [
+      "مراجعة: تضارب في تخزين السلة: يتم حفظ السلة محلياً عبر Store.set بينما يحاول شاشة checkout قراءتها من قاعدة البيانات Data.list، مما يجعل السلة غير مرئية في صفحة إتمام الطلب."
+    ],
+    "track": [
+      "مراجعة: حقل مفقود: يتم استخدام 'createdAt' في استعلام orderBy لقائمة الطلبات، بينما هذا الحقل غير معرف في مخطط مجموعة orders.",
+      "مراجعة: بيانات غير مكتملة: عند قبول الطلب، يتم تحديث driverId في مجموعة orders دون تحديث حقل driverName، مما يترك بيانات الطلب ناقصة."
+    ],
+    "checkout": [
+      "مراجعة: مجموعة غير معرفة: يتم التعامل مع مجموعة 'cart' في قاعدة البيانات (قراءة وحذف) بينما لا توجد مجموعة بهذا الاسم في مخطط النظام."
+    ]
+  },
+  "flowErr": "",
+  "agent": {
+    "ran": true,
+    "fixed": 0,
+    "steps": 0,
+    "log": []
+  },
+  "fixErrors": [],
+  "review": {
+    "found": 4,
+    "fixed": 1
+  },
+  "screens": [
+    {
+      "id": "home",
+      "route": "/",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 1746
+    },
+    {
+      "id": "store",
+      "route": "/store/:id",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 2783
+    },
+    {
+      "id": "track",
+      "route": "/orders",
+      "roles": [
+        "customer",
+        "kitchen"
+      ],
+      "bytes": 2504
+    },
+    {
+      "id": "checkout",
+      "route": "/checkout",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 3367
+    }
+  ]
+}

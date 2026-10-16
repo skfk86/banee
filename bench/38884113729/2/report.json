@@ -1,0 +1,150 @@
+{
+  "status": "ready",
+  "error": "",
+  "name": "سوق المستعمل",
+  "steps": [
+    "done · هوية «سوق الحرف» · الخطة: ٤ شاشات · ٤ مجموعات · ١٧ عنصر محتوى",
+    "done · المحتوى: ١٧ عنصر مكتوب كاملاً",
+    "done · الهيكل جاهز: التنقّل، البيانات، الدخول، التصميم",
+    "done · ٤ شاشات مكتوبة",
+    "done · جُرّبت كل الشاشات وأُصلحت ١، لا أخطاء · رحلات المستخدم: ٢ من ٢ تعمل كاملة · المراجعة: أُصلحت ١ من ٤",
+    "done · جاهز للمعاينة والتحميل"
+  ],
+  "runtime": {
+    "home": [],
+    "product": [],
+    "myOffers": [],
+    "addProduct": []
+  },
+  "flows": [
+    "نشر منتج جديد (7 خطوات)",
+    "تقديم ومتابعة عرض سعر (7 خطوات)"
+  ],
+  "flowSteps": [
+    {
+      "flow": "نشر منتج جديد",
+      "steps": [
+        {
+          "role": "user"
+        },
+        {
+          "go": "/"
+        },
+        {
+          "click": "[data-act=add-product]"
+        },
+        {
+          "fill": {
+            "[name=title]": "آيفون 12 مستعمل",
+            "[name=price]": "1500",
+            "[name=stock]": "1",
+            "#catSelect": "categories-1",
+            "[name=description]": "حالة ممتازة مع الكرتون والشاحن"
+          }
+        },
+        {
+          "click": "text:نشر الإعلان"
+        },
+        {
+          "expect": "سوق المستعمل"
+        },
+        {
+          "expectDb": {
+            "col": "products",
+            "min": 1
+          }
+        }
+      ]
+    },
+    {
+      "flow": "تقديم ومتابعة عرض سعر",
+      "steps": [
+        {
+          "role": "user"
+        },
+        {
+          "go": "/"
+        },
+        {
+          "click": "[data-act=product-detail][data-id=products-12]"
+        },
+        {
+          "fill": {
+            "#offeredPrice": "1400"
+          }
+        },
+        {
+          "click": "text:تقديم عرض السعر الآن"
+        },
+        {
+          "expect": "عروض الأسعار"
+        },
+        {
+          "expectDb": {
+            "col": "offers",
+            "min": 1
+          }
+        }
+      ]
+    }
+  ],
+  "reviewIssues": {
+    "home": [],
+    "product": [
+      "مراجعة: إمكانية تقديم عرض سعر على المنتج الخاص بالمستخدم نفسه: يجب إضافة تحقق (if product.sellerId === Auth.user.uid) لمنع المستخدم من تقديم عرض على منتجاته الخاصة.",
+      "مراجعة: خطر الانهيار عند غياب بيانات المستخدم: استخدام Auth.user.uid و Auth.user.name في إنشاء العرض سيسبب خطأ إذا لم يكن المستخدم مسجلاً، يجب التحقق من وجود Auth.user قبل تنفيذ العملية."
+    ],
+    "myOffers": [
+      "مراجعة: استدعاء دالة غير معرفة: استخدام Data.label(offer.status) سيؤدي إلى خطأ في التنفيذ (Runtime Error) لأنها غير معرفة في النظام، يجب استبدالها بـ (offer.status === 'pending' ? 'قيد الانتظار' : ...)."
+    ],
+    "addProduct": [
+      "مراجعة: غياب التحقق من صورة المنتج: حقل الصورة يُحفظ بقيمة افتراضية إذا كان فارغاً، لكن لا يوجد تحقق من أن المستخدم قد رفع صورة بالفعل، يجب إضافة تحقق من وجود قيمة في imageInput قبل الحفظ."
+    ]
+  },
+  "flowErr": "",
+  "agent": {
+    "ran": false,
+    "fixed": 0,
+    "steps": 0,
+    "log": []
+  },
+  "fixErrors": [],
+  "review": {
+    "found": 4,
+    "fixed": 1
+  },
+  "screens": [
+    {
+      "id": "home",
+      "route": "/",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 7222
+    },
+    {
+      "id": "product",
+      "route": "/product/:id",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 5239
+    },
+    {
+      "id": "myOffers",
+      "route": "/offers",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 5599
+    },
+    {
+      "id": "addProduct",
+      "route": "/add-product",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 6667
+    }
+  ]
+}

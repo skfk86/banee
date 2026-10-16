@@ -4700,6 +4700,98 @@ ROLES.assistant =
 'القواعد: عدّل أقل عدد ممكن من الملفات. code يكون كاملاً وليس جزءاً. إذا كان سؤالاً بلا تعديل أعد reply فقط ومصفوفات فارغة. ' +
 'عند إضافة شاشة في القائمة السفلية لا تتجاوز ٤ شاشات nav. حافظ على كل ما يعمل ولا تحذف ميزات لم يطلب حذفها.';
 
+// ════ مساعد المحادثة كوكيل: يفهم الطلب، يقرأ ويبحث، يعدّل جراحياً أو يضيف شاشات، يجرّب التطبيق فعلياً، ثم يشرح ما فعله ════
+ROLES.editor =
+'أنت مهندس تطبيقات خبير يعمل داخل محرر بانِي كوكيل مستقل. المستخدم صاحب التطبيق يكلمك بالعربية العامية أو الفصحى ويطلب تعديلاً أو ميزة جديدة أو إصلاحاً أو يسأل سؤالاً. افهم ما يريده فعلاً ونفّذه كاملاً حتى يعمل.\n' +
+'أعد JSON فقط في كل خطوة: {"think":"تفكيرك القصير","tool":"اسم الأداة", ...معاملاتها}\n' +
+'الأدوات:\n' +
+'{"tool":"read","screen":"id"} ← كود شاشة بأرقام الأسطر\n' +
+'{"tool":"search","text":"نص"} ← الأسطر التي تحتوي النص في كل الشاشات\n' +
+'{"tool":"edit","screen":"id","find":"نص موجود حرفياً مرة واحدة","replace":"البديل"} ← تعديل جراحي (الأفضل دائماً)\n' +
+'{"tool":"write","screen":"id","code":"App.screen({...}) كاملة"} ← إعادة كتابة شاشة كاملة فقط عند تغيير جذري\n' +
+'{"tool":"add","id":"favorites","route":"/favorites","title":"المفضلة","icon":"heart","nav":true,"roles":["customer"],"code":"App.screen({...}) كاملة"} ← شاشة جديدة\n' +
+'{"tool":"remove","screen":"id"} ← حذف شاشة (فقط إذا طلب ذلك صراحة)\n' +
+'{"tool":"collection","name":"favorites","fields":{"userId":"string","itemId":"string"}} ← إضافة مجموعة بيانات أو حقول لها\n' +
+'{"tool":"seed","collection":"x","items":[{...}]} ← بيانات أولية لمجموعة\n' +
+'{"tool":"set","color":"blue|green|purple|orange","name":"اسم جديد"} ← اللون أو الاسم\n' +
+'{"tool":"run"} ← تشغيل التطبيق كاملاً وتجربة كل الشاشات والرحلات، يعيد الأخطاء الحالية\n' +
+'{"tool":"ask","question":"سؤال واحد قصير"} ← فقط إذا كان الطلب غامضاً فعلاً ولا يمكن تخمين المقصود بشكل معقول\n' +
+'{"tool":"done","reply":"ردك للمستخدم"} ← عند الانتهاء\n' +
+'المنهج: (١) افهم الطلب ومكانه: اقرأ الشاشات المعنية وابحث عن الأماكن المرتبطة قبل أي تعديل. (٢) نفّذ بأقل تغيير يحقق الطلب كاملاً: ميزة جديدة تعني الواجهة + الحفظ + العرض في كل شاشة تحتاجها + التنقل إليها. (٣) شغّل run بعد التعديل وأصلح ما ينكسر. (٤) أنهِ بـ done.\n' +
+'reply: عربي بسيط ومختصر منسّق Markdown: ماذا فعلت بالضبط، وأين يجده المستخدم في التطبيق وكيف يجرّبه. إن كان سؤالاً بلا تعديل أجب مباشرة بـ done.\n' +
+'قواعد: لا تحذف ميزات لم يُطلب حذفها. لا تتجاوز ٤ شاشات nav لكل دور. استخدم طبقة Data وعقد البيانات. القوائم التي تعرض عناصر الآخرين بـ Data.X.visible().\n' +
+'عقد الهيكل الذي تُكتب به الشاشات:\n' + CONTRACT;
+THINK.editor = 'low';
+
+function chatAgent(app, key, msg, onStep){
+  var plan = app.ck.plan, MAX = paidUser() ? 24 : 14, n = 0, hist = [], touched = {}, asked = null, reply = '';
+  var history = (app.chat || []).slice(-9, -1).filter(function(m){ return m.role !== 'sys'; }).map(function(m){ return (m.role === 'me' ? 'المستخدم: ' : 'أنت: ') + String(m.text).slice(0, 600); }).join('\n');
+  function numbered(js){ return String(js || '').split('\n').map(function(l, i){ return (i + 1) + '| ' + l; }).join('\n'); }
+  function scr(id){ return plan.screens.filter(function(s){ return s.id === id; })[0]; }
+  function ctx(){
+    return 'التطبيق: ' + plan.name + ' — ' + (plan.summary || '') + '\nاللون: ' + app.color + ' | تسجيل الدخول: ' + (plan.auth ? 'مفعّل' : 'غير مفعّل') +
+      ((plan.roles || []).length > 1 ? '\nالأدوار: ' + plan.roles.map(function(r){ return r.id + ' (' + r.name + ')'; }).join('، ') : '') +
+      '\nالشاشات:\n' + plan.screens.map(function(s){ return '- ' + s.id + ' ' + s.route + ' «' + s.title + '»' + (s.nav ? ' [قائمة سفلية]' : '') + (s.roles && s.roles.length ? ' أدوار: ' + s.roles.join('/') : '') + ' (' + String(app.ck.screens[s.id] || '').split('\n').length + ' سطر)'; }).join('\n') +
+      '\nالمجموعات: ' + JSON.stringify(plan.collections || []).slice(0, 3000) + dataDoc(plan) +
+      (ST.file && scr(ST.file) ? '\nالملف المفتوح الآن في المحرر: ' + ST.file : '') +
+      (history ? '\n\nآخر المحادثة:\n' + history : '') +
+      (app.ck.runtime && runtimeIssues(app.ck.runtime) ? '\n\nأخطاء من آخر تشغيل فعلي: ' + issuesText(app, app.ck.runtime).slice(0, 1500) : '') +
+      '\n\nطلب المستخدم الآن: ' + msg +
+      '\n\nخطواتك حتى الآن (' + n + ' من ' + MAX + '):\n' + (hist.length ? hist.map(function(h, i){ var last = i >= hist.length - 6; return '#' + (i + 1) + ' ' + h.call + '\n→ ' + (last ? h.obs : h.obs.slice(0, 300) + (h.obs.length > 300 ? ' …' : '')); }).join('\n\n') : '(لا شيء بعد)') +
+      (n >= MAX - 3 ? '\n\nتبقّت خطوات قليلة: شغّل run إن عدّلت ولم تجرّب، ثم أنهِ بـ done.' : '') + '\n\nما الخطوة التالية؟';
+  }
+  function okCode(js, s){ var hard = checkScreen(js, s, plan).filter(function(e){ return /صياغ|نحوي|SyntaxError|Unexpected|App\.screen/.test(e); }); return hard; }
+  function act(a){
+    var s = scr(a.screen);
+    if (a.tool === 'read') return Promise.resolve(s ? numbered(app.ck.screens[s.id]).slice(0, 45000) : 'لا توجد شاشة بهذا id');
+    if (a.tool === 'search') { var q = String(a.text || ''), hits = []; if (!q) return Promise.resolve('النص فارغ'); plan.screens.forEach(function(x){ String(app.ck.screens[x.id] || '').split('\n').forEach(function(l, i){ if (hits.length < 40 && l.indexOf(q) > -1) hits.push(x.id + ':' + (i + 1) + '| ' + l.trim().slice(0, 220)); }); }); return Promise.resolve(hits.length ? hits.join('\n') : 'لا نتائج'); }
+    if (a.tool === 'edit') {
+      if (!s) return Promise.resolve('لا توجد شاشة بهذا id');
+      var js = app.ck.screens[s.id] || '', f = String(a.find || '').replace(/^\d+\| /gm, ''), rep = String(a.replace == null ? '' : a.replace), nj;
+      if (!f) return Promise.resolve('find فارغ');
+      var cnt = js.split(f).length - 1;
+      if (cnt === 1) nj = js.split(f).join(rep);
+      else if (cnt > 1) return Promise.resolve('find موجود ' + cnt + ' مرات، اجعله أطول');
+      else { var toks = f.trim().split(/\s+/).map(function(x){ return x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }), re = new RegExp(toks.join('\\s*'), 'g'), ms = js.match(re) || []; if (ms.length !== 1) return Promise.resolve('find غير موجود حرفياً، استخدم read أو search وانسخ سطراً أو سطرين فقط'); var at = js.search(re); nj = js.slice(0, at) + rep + js.slice(at + ms[0].length); }
+      var h = okCode(nj, s); if (h.length) return Promise.resolve('رُفض لأنه يكسر الكود: ' + h.join(' | ').slice(0, 300));
+      app.ck.screens[s.id] = nj; touched[s.id] = 'edit'; return Promise.resolve('تم التعديل');
+    }
+    if (a.tool === 'write') {
+      if (!s) return Promise.resolve('لا توجد شاشة بهذا id');
+      var wj = grab(String(a.code || ''), 'javascript'); if (wj.length < 200) return Promise.resolve('الكود قصير جداً');
+      if (wj.length < (app.ck.screens[s.id] || '').length * 0.5 && !/احذف|حذف|أزل|ازل|بسّط|بسط|اختصر/.test(msg)) return Promise.resolve('رُفض: الكود الجديد أقصر بكثير من الحالي وقد يحذف ميزات. استخدم edit');
+      var h2 = okCode(wj, s); if (h2.length) return Promise.resolve('رُفض لأنه يكسر الكود: ' + h2.join(' | ').slice(0, 300));
+      app.ck.screens[s.id] = wj; touched[s.id] = 'edit'; return Promise.resolve('كُتبت الشاشة');
+    }
+    if (a.tool === 'add') {
+      var id = String(a.id || '').replace(/[^\w]/g, ''), route = String(a.route || '');
+      if (!id || !/^\//.test(route) || scr(id)) return Promise.resolve('id مكرر أو route غير صالح');
+      var navCount = plan.screens.filter(function(x){ return x.nav; }).length;
+      var ns = { id: id, route: route, title: a.title || id, icon: a.icon || 'circle', nav: !!a.nav && navCount < 6, purpose: msg }; if (Array.isArray(a.roles) && a.roles.length) ns.roles = a.roles;
+      var aj = grab(String(a.code || ''), 'javascript'), h3 = okCode(aj, ns); if (h3.length || aj.length < 150) return Promise.resolve('رُفض: ' + (h3.join(' | ') || 'الكود ناقص').slice(0, 300));
+      plan.screens.push(ns); app.ck.screens[id] = aj; touched[id] = 'add'; return Promise.resolve('أُضيفت الشاشة ' + id);
+    }
+    if (a.tool === 'remove') { if (!s || plan.screens.length < 2) return Promise.resolve('لا يمكن'); plan.screens = plan.screens.filter(function(x){ return x.id !== s.id; }); delete app.ck.screens[s.id]; touched[s.id] = 'remove'; return Promise.resolve('حُذفت'); }
+    if (a.tool === 'collection') { var cn = String(a.name || '').replace(/[^\w]/g, ''); if (!cn || typeof a.fields !== 'object') return Promise.resolve('name/fields غير صالح'); plan.collections = plan.collections || []; var ex = plan.collections.filter(function(c){ return c.name === cn; })[0]; if (ex) ex.fields = Object.assign({}, ex.fields || {}, a.fields); else plan.collections.push({ name: cn, fields: a.fields }); touched.__data = 1; return Promise.resolve('حُدّثت المجموعة ' + cn); }
+    if (a.tool === 'seed') { var sc = String(a.collection || ''), it = (Array.isArray(a.items) ? a.items : []).filter(function(x){ return x && typeof x === 'object'; }).slice(0, 20); if (!sc || !it.length) return Promise.resolve('غير صالح'); plan.seed = plan.seed || {}; var arr = plan.seed[sc] = plan.seed[sc] || []; it.forEach(function(x){ if (!x.id) x.id = sc + '-' + (arr.length + 1); arr.push(x); }); touched.__data = 1; return Promise.resolve('أُضيفت ' + it.length + ' عناصر'); }
+    if (a.tool === 'set') { var said = []; if (a.color && COLORS[a.color]) { app.color = a.color; said.push('اللون'); } if (a.name) { plan.name = String(a.name).slice(0, 40); app.name = plan.name; said.push('الاسم'); } if (said.length) touched.__meta = 1; return Promise.resolve(said.length ? 'غُيّر ' + said.join(' و') : 'لا شيء صالح'); }
+    if (a.tool === 'run') return runtimeTest(app).then(function(r){ setRuntime(app, r); return 'نتيجة التشغيل:\n' + issuesText(app, r); });
+    return Promise.resolve('أداة غير معروفة');
+  }
+  function loop(){
+    if (n >= MAX) return Promise.resolve();
+    n++;
+    return ask(key, 'editor', ctx(), true).then(function(raw){
+      var a = parseJSON(raw) || {};
+      if (onStep) onStep(n, a);
+      if (a.tool === 'done' || !a.tool) { reply = String(a.reply || a.think || ''); return; }
+      if (a.tool === 'ask') { asked = String(a.question || ''); return; }
+      var call = a.tool + (a.screen || a.id ? ' ' + (a.screen || a.id) : '') + (a.text ? ' «' + String(a.text).slice(0, 50) + '»' : '') + (a.think ? ' — ' + String(a.think).slice(0, 180) : '');
+      return act(a).then(function(obs){ hist.push({ call: call, obs: String(obs) }); return loop(); });
+    });
+  }
+  return loop().then(function(){ return { reply: reply, asked: asked, touched: touched, steps: n, log: hist }; });
+}
 var ST = { id: null, file: null, tab: 'editor', dirty: false, busy: false };
 
 // ════ سحابة بانِي: قاعدة بيانات حقيقية لكل تطبيق تلقائياً ════
@@ -4958,13 +5050,22 @@ function stTest(){
   runtimeTest(app, function(s, n, t){ ST.stage = 'يجرّب "' + s.title + '" (' + toAr(n) + ' من ' + toAr(t) + ')'; var e = document.getElementById('chat-stage'); if (e) e.textContent = ST.stage; })
   .then(function(res){
     setRuntime(app, res);
-    var plan = app.ck.plan, lines = [], n = 0;
+    var plan = app.ck.plan, groups = { crash: [], flow: [], data: [], design: [], other: [] }, okScreens = 0;
     plan.screens.forEach(function(s){
-      var st = checkScreen(app.ck.screens[s.id] || '', s, plan), rt = res[s.id] || [];
-      if (st.length || rt.length) { n += st.length + rt.length; lines.push('• ' + s.id + '.js: ' + st.concat(rt).slice(0,3).join(' | ')); }
+      var items = checkScreen(app.ck.screens[s.id] || '', s, plan).concat(res[s.id] || []);
+      if (!items.length) { okScreens++; return; }
+      items.forEach(function(m){
+        var t = '«' + s.title + '»: ' + String(m).replace(/ — الظاهر الآن:[\s\S]*$/, '').slice(0, 170);
+        (/لم تُعرض|رمت خطأ|فارغة تماماً|عالقة|is not|undefined|Cannot/.test(m) ? groups.crash : /^رحلة/.test(m) ? groups.flow : /^تصميم:/.test(m) ? groups.design : /Data\.|حفظ|status|الحقل|المشتركة/.test(m) ? groups.data : groups.other).push(t);
+      });
     });
-    app.chat.push(n ? { role: 'ai', text: 'شغّلت التطبيق وجرّبت ' + toAr(plan.screens.length) + ' شاشات وضغطت أزرارها. وجدت ' + toAr(n) + ' مشاكل:\n' + lines.join('\n') + '\n\nاكتب "أصلح الأخطاء" وسأصلحها.', fixable: true }
-                    : { role: 'ai', text: 'شغّلت التطبيق وجرّبت كل الشاشات (' + toAr(plan.screens.length) + ') وضغطت أزرارها. لا توجد أخطاء.' });
+    var flows = (app.ck.flowTests || []).length, flowFail = {}; groups.flow.forEach(function(t){ var m = t.match(/رحلة «([^»]+)»/); if (m) flowFail[m[1]] = 1; });
+    var nF = Object.keys(flowFail).length, total = groups.crash.length + groups.flow.length + groups.data.length + groups.other.length;
+    var out = '### نتيجة الفحص\n- ✅ **' + toAr(okScreens) + ' من ' + toAr(plan.screens.length) + '** شاشات تعمل بلا ملاحظات' + (flows ? '\n- ' + (nF ? '⚠️' : '✅') + ' رحلات المستخدم: **' + toAr(flows - nF) + ' من ' + toAr(flows) + '** تعمل كاملة' : '');
+    function sec(title, arr){ if (!arr.length) return ''; return '\n\n**' + title + '**\n' + arr.slice(0, 6).map(function(x){ return '- ' + x; }).join('\n') + (arr.length > 6 ? '\n- و' + toAr(arr.length - 6) + ' أخرى' : ''); }
+    out += sec('🔴 أعطال في الشاشات', groups.crash) + sec('🟠 رحلات لا تكتمل', groups.flow) + sec('🟡 البيانات', groups.data) + sec('ملاحظات أخرى', groups.other) + sec('🎨 التصميم', groups.design);
+    out += total ? '\n\nاكتب **أصلح** وسأصلحها بنفسي، ثم أجرّب التطبيق من جديد ولا أبقي إلا ما يحسّنه.' : (groups.design.length ? '\n\nلا أعطال وظيفية. ملاحظات التصميم اختيارية، اكتب **أصلح** إن أردت تحسينها.' : '\n\nكل شيء يعمل 👌');
+    app.chat.push({ role: 'ai', text: out, fixable: !!(total || groups.design.length) });
   }).then(function(){ ST.busy = false; saveApps(); stChat(); stFiles(); });
 }
 // زر الرجوع في أندرويد: يغلق ما هو مفتوح خطوة بخطوة بدل الخروج من بانِي
@@ -5262,7 +5363,7 @@ function stSend(){
     var plan0 = app.ck.plan, combined = {};
     plan0.screens.forEach(function(s){ combined[s.id] = checkScreen(app.ck.screens[s.id] || '', s, plan0).concat(app.ck.runtime[s.id] || []); });
     var oldScr = deepCopy(app.ck.screens);
-    fixRuntime(app, key, combined).then(function(k){ return baseline(app).then(function(res){ var left = runtimeIssues(res);
+    fixRuntime(app, key, combined).then(function(k){ return baseline(app).then(function(res){ var fn = 0; for (var id in res) fn += (res[id] || []).filter(function(m){ return !/^تصميم:/.test(m); }).length; if (!fn) return { k: k, res: res }; ST.stage = 'وكيل الإصلاح يتتبّع ما تبقى'; return agentFix(app, key, res, function(n, a){ var e = document.getElementById('chat-stage'); if (e) e.textContent = 'وكيل الإصلاح — خطوة ' + toAr(n); }).then(function(r){ return { k: k + Math.max(0, r.fixed || 0), res: r.res }; }); }).then(function(o){ var k = o.k, res = o.res; var left = runtimeIssues(res);
       if (!k) { app.versions.pop(); app.chat.push({ role: 'ai', text: 'حاولت الإصلاح وجرّبت النتيجة، لكنها لم تكن أفضل من الحالي، **فأبقيت تطبيقك كما هو** حتى لا يتعطل شيء يعمل.\n\nإذا كانت المشكلة مهمة، صِفها لي بكلماتك (ماذا تضغط وماذا يحدث) وسأعالجها مباشرة.' }); return; }
       app.ver = verNo(app) + 1;
       app.chat.push({ role: 'ai', text: 'أصلحت **' + toAr(k) + '** ملفات، وتأكدت بالتشغيل الفعلي أن كل إصلاح حسّن الشاشة ولم يكسر شيئاً. ' + (left ? 'بقيت ' + toAr(left) + ' ملاحظات، اضغط فحص للتفاصيل.' : 'كل الشاشات تعمل الآن بلا أخطاء.'),
@@ -5271,26 +5372,48 @@ function stSend(){
     .then(function(){ ST.busy = false; saveApps(); if (ST.id === app.id) { stRender(); stPreview(); } });
     return;
   }
-  inp.value = ''; app.chat.push({ role: 'me', text: msg }); ST.busy = true; ST.stage = 'يقرأ ملفات التطبيق'; stChat();
+  inp.value = ''; app.chat.push({ role: 'me', text: msg }); ST.busy = true; ST.stage = 'يفهم طلبك'; stChat();
   var plan = app.ck.plan;
-  var history = app.chat.slice(-7, -1).filter(function(m){ return m.role !== 'sys'; }).map(function(m){ return (m.role==='me'?'المستخدم: ':'أنت: ') + m.text; }).join('\n');
-  var ctx = 'التطبيق: ' + plan.name + ' — ' + (plan.summary||'') + '\nاللون الحالي: ' + app.color + '\nتسجيل الدخول: ' + (plan.auth?'مفعّل':'غير مفعّل') +
-    '\n\nالمجموعات:\n' + JSON.stringify(plan.collections||[], null, 1) +
-    '\n\nالشاشات:\n' + plan.screens.map(function(s){ return '- id=' + s.id + ' route=' + s.route + ' title=' + s.title + ' nav=' + !!s.nav; }).join('\n') +
-    '\n\nكود الشاشات الحالي:\n' + plan.screens.map(function(s){ return '### ' + s.id + '.js\n```javascript\n' + (app.ck.screens[s.id]||'') + '\n```'; }).join('\n\n') +
-    (ST.file && ST.file !== 'plan' && ST.file !== 'index' ? '\n\nالملف المفتوح الآن في المحرر: ' + ST.file + '.js' : '') +
-    (history ? '\n\nآخر المحادثة:\n' + history : '') +
-    (app.ck.runtime && runtimeIssues(app.ck.runtime) ? '\n\nأخطاء ظهرت في آخر تشغيل فعلي للتطبيق:\n' + JSON.stringify(app.ck.runtime) : '') +
-    '\n\nطلب المستخدم الآن: ' + msg;
-  setTimeout(function(){ if (ST.busy) { ST.stage = 'يكتب التعديلات'; var e = document.getElementById('chat-stage'); if (e) e.textContent = ST.stage; } }, 2500);
-  var base = baseline(app).catch(function(){ return null; });
-  ask(key, 'assistant', ctx, true).then(function(raw){
-    var r = parseJSON(raw);
-    if (!r || typeof r !== 'object') throw new Error('لم أفهم رد المساعد، أعد صياغة طلبك');
-    return stApply(app, r, msg, key, base);
+  function stage(t){ ST.stage = t; var el = document.getElementById('chat-stage'); if (el) el.textContent = t; }
+  var prev = { ck: deepCopy({ plan: app.ck.plan, screens: app.ck.screens, seed: app.ck.plan.seed || null }), color: app.color, name: app.name, approved: app.approved, screens: app.screens };
+  var base = baseline(app).catch(function(){ return null; }), b0 = null;
+  var LBL = { read: 'يقرأ ', search: 'يبحث عن ', edit: 'يعدّل ', write: 'يعيد كتابة ', add: 'يضيف شاشة ', remove: 'يحذف ', collection: 'يضيف بيانات ', seed: 'يضيف بيانات أولية ', set: 'يغيّر الإعدادات', run: 'يشغّل التطبيق ويجرّبه', ask: 'يحتاج توضيحاً', done: 'يكتب الرد' };
+  Promise.resolve(base).then(function(x){ b0 = x; return chatAgent(app, key, msg, function(k, a){ stage((LBL[a.tool] || 'يعمل') + (a.screen || a.id || (a.text ? '«' + String(a.text).slice(0, 24) + '»' : '') || '') ); }); })
+  .then(function(r){
+    var ids = Object.keys(r.touched).filter(function(k){ return k.indexOf('__') !== 0; }), changed = ids.length || r.touched.__data || r.touched.__meta;
+    if (!changed) { app.chat.push({ role: 'ai', text: r.asked ? r.asked : (r.reply || 'لم أجد ما يحتاج تعديلاً. صف لي ما تريده بتفصيل أكثر.') }); return; }
+    snapshot(app, msg.slice(0, 60)); unapprove(app);
+    app.screens = app.ck.plan.screens.map(function(x){ return x.title; });
+    function worse(res){
+      var out = [], p = app.ck.plan;
+      p.screens.forEach(function(x){ var now = scrScore(p, app.ck.screens, res, x.id), was = prev.ck.screens[x.id] !== undefined && b0 ? scrScore(prev.ck.plan, prev.ck.screens, b0, x.id) : 0; if (now - was >= 10 || (prev.ck.screens[x.id] === undefined && now >= 100)) out.push(x.id); });
+      return out;
+    }
+    stage('يجرّب التطبيق بعد التعديل ويقارنه بما قبله');
+    return runtimeTest(app).then(function(res){
+      setRuntime(app, res);
+      var bad = worse(res); if (!bad.length) return null;
+      stage('التعديل أوقع أخطاء، يصلحها');
+      var sub = {}; bad.forEach(function(k){ sub[k] = res[k] || []; });
+      return fixRuntime(app, key, sub).then(function(){ var still = worse(app.ck.runtime); return still.length ? still : null; });
+    }).then(function(still){
+      if (still) {
+        var why = still.map(function(id){ return '`' + id + '`: ' + ((app.ck.runtime[id] || []).slice(0, 2).join('، ') || 'أخطاء تشغيل'); }).join('\n- ');
+        app.ck.plan = prev.ck.plan; app.ck.screens = prev.ck.screens; app.color = prev.color; app.name = prev.name; app.screens = prev.screens; app.approved = prev.approved;
+        if (app.versions && app.versions.length) app.versions.pop(); if (b0) setRuntime(app, b0); else app.ck.runtime = null;
+        app.chat.push({ role: 'ai', text: '### لم أطبّق هذا التعديل\nنفّذته ثم جرّبت التطبيق فوجدته **أسوأ مما كان**، وحاولت الإصلاح فلم ينجح، فأعدت تطبيقك كما كان تماماً:\n- ' + why + '\n\nجرّب صياغة الطلب بشكل أبسط أو على خطوات.' });
+        return;
+      }
+      app.ver = verNo(app) + 1;
+      var files = ids.map(function(id){ return { id: id, kind: r.touched[id] }; });
+      app.chat.push({ role: 'ai', text: (r.reply || 'تم التعديل.') + (r.asked ? '\n\n' + r.asked : ''), files: files });
+      if (ST.id === app.id && files[0] && files[0].kind !== 'remove') ST.file = files[0].id;
+    });
   }).catch(function(e){
-    app.chat.push({ role: 'ai', text: 'تعذّر تنفيذ الطلب: ' + (e.message || 'خطأ غير معروف') + '. ملفاتك لم تتغير.' });
-  }).then(function(){ ST.busy = false; saveApps(); if (ST.id === app.id) stChat(); });
+    // توقف في المنتصف (انتهاء الرصيد أو الحصة): نعيد التطبيق كما كان، فلا يبقى نصف تعديل
+    app.ck.plan = prev.ck.plan; app.ck.screens = prev.ck.screens; app.color = prev.color; app.name = prev.name; app.screens = prev.screens; app.approved = prev.approved;
+    app.chat.push({ role: 'ai', text: 'تعذّر إكمال الطلب: ' + (e && (e.message || e.text) || 'خطأ غير معروف') + '. أعدت تطبيقك كما كان، ملفاتك لم تتغير.' });
+  }).then(function(){ ST.busy = false; saveApps(); if (ST.id === app.id) { stRender(); stPreview(); stChat(); if (window.innerWidth < 900) toast('انتهى المساعد، افتح المعاينة لترى النتيجة','suc'); } });
 }
 
 function stApply(app, r, msg, key, base){

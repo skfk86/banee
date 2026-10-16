@@ -1,0 +1,221 @@
+{
+  "status": "ready",
+  "error": "",
+  "name": "فرصتي",
+  "steps": [
+    "done · هوية «مسار المهنة» · الخطة: ٧ شاشات · ٣ مجموعات · ١٢ عنصر محتوى",
+    "done · المحتوى: ١٢ عنصر مكتوب كاملاً",
+    "done · الهيكل جاهز: التنقّل، البيانات، الدخول، التصميم",
+    "done · ٧ شاشات مكتوبة",
+    "done · جُرّبت كل الشاشات وأُصلحت ٣، لا أخطاء · رحلات المستخدم: ٢ من ٢ تعمل كاملة · المراجعة: أُصلحت ٣ من ٣",
+    "done · جاهز للمعاينة والتحميل"
+  ],
+  "runtime": {
+    "home": [],
+    "apply": [],
+    "myApplications": [],
+    "newJob": [],
+    "applicants": [],
+    "employerDashboard": [],
+    "notifications": []
+  },
+  "flows": [
+    "رحلة الباحث عن عمل (10 خطوات)",
+    "رحلة الشركة (14 خطوات)"
+  ],
+  "flowSteps": [
+    {
+      "flow": "رحلة الباحث عن عمل",
+      "steps": [
+        {
+          "role": "seeker"
+        },
+        {
+          "go": "/"
+        },
+        {
+          "expect": "الوظائف المتاحة"
+        },
+        {
+          "click": "[data-act=apply-now][data-id=jobs-1]"
+        },
+        {
+          "fill": {
+            "#applicant-name": "أحمد محمد"
+          }
+        },
+        {
+          "fill": {
+            "#cv-summary": "خبرة 5 سنوات في تطوير البرمجيات"
+          }
+        },
+        {
+          "click": "text:إرسال الطلب"
+        },
+        {
+          "expectDb": {
+            "col": "applications",
+            "min": 1
+          }
+        },
+        {
+          "go": "/my-applications"
+        },
+        {
+          "expect": "طلبات التوظيف"
+        }
+      ]
+    },
+    {
+      "flow": "رحلة الشركة",
+      "steps": [
+        {
+          "role": "employer"
+        },
+        {
+          "go": "/employer-dashboard"
+        },
+        {
+          "click": "[data-act=new-job]"
+        },
+        {
+          "fill": {
+            "[name=title]": "مطور ويب"
+          }
+        },
+        {
+          "fill": {
+            "[name=company]": "شركة التقنية"
+          }
+        },
+        {
+          "fill": {
+            "[name=location]": "الرياض"
+          }
+        },
+        {
+          "fill": {
+            "[name=salary]": "10000"
+          }
+        },
+        {
+          "fill": {
+            "[name=type]": "دوام كامل"
+          }
+        },
+        {
+          "fill": {
+            "[name=description]": "وصف الوظيفة هنا"
+          }
+        },
+        {
+          "fill": {
+            "[name=requirements]": "الخبرة في React"
+          }
+        },
+        {
+          "click": "text:نشر الوظيفة"
+        },
+        {
+          "expectDb": {
+            "col": "jobs",
+            "min": 1
+          }
+        },
+        {
+          "go": "/applicants/jobs-1"
+        },
+        {
+          "click": "text:قبول"
+        }
+      ]
+    }
+  ],
+  "reviewIssues": {
+    "home": [],
+    "apply": [],
+    "myApplications": [
+      "مراجعة: يتم ترتيب الطلبات حسب حقل createdAt غير الموجود في مخطط مجموعة applications (المتوفر هو order). الإصلاح: تعديل الترتيب ليصبح باستخدام حقل order."
+    ],
+    "newJob": [],
+    "applicants": [
+      "مراجعة: يتم ترتيب المتقدمين حسب حقل createdAt غير الموجود في مخطط مجموعة applications (المتوفر هو order). الإصلاح: تعديل الترتيب ليصبح باستخدام حقل order."
+    ],
+    "employerDashboard": [],
+    "notifications": [
+      "مراجعة: تتم قراءة البيانات من مجموعة notices غير المعرفة في مخطط النظام. الإصلاح: إضافة مجموعة notices إلى مخطط النظام."
+    ]
+  },
+  "flowErr": "",
+  "agent": {
+    "ran": false,
+    "fixed": 0,
+    "steps": 0,
+    "log": []
+  },
+  "fixErrors": [],
+  "review": {
+    "found": 3,
+    "fixed": 3
+  },
+  "screens": [
+    {
+      "id": "home",
+      "route": "/",
+      "roles": [
+        "seeker",
+        "employer"
+      ],
+      "bytes": 4756
+    },
+    {
+      "id": "apply",
+      "route": "/apply/:id",
+      "roles": [
+        "seeker"
+      ],
+      "bytes": 4422
+    },
+    {
+      "id": "myApplications",
+      "route": "/my-applications",
+      "roles": [
+        "seeker"
+      ],
+      "bytes": 2191
+    },
+    {
+      "id": "newJob",
+      "route": "/new-job",
+      "roles": [
+        "employer"
+      ],
+      "bytes": 3778
+    },
+    {
+      "id": "applicants",
+      "route": "/applicants/:jobId",
+      "roles": [
+        "employer"
+      ],
+      "bytes": 5101
+    },
+    {
+      "id": "employerDashboard",
+      "route": "/employer-dashboard",
+      "roles": [
+        "employer"
+      ],
+      "bytes": 2166
+    },
+    {
+      "id": "notifications",
+      "route": "/notifications",
+      "roles": [
+        "seeker",
+        "employer"
+      ],
+      "bytes": 2364
+    }
+  ]
+}

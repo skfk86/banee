@@ -1,0 +1,169 @@
+{
+  "status": "ready",
+  "error": "",
+  "name": "مفتاحك لتأجير السيارات",
+  "steps": [
+    "done · هوية «طريق آمن» · الخطة: ٥ شاشات · ٣ مجموعات · ١٢ عنصر محتوى",
+    "done · المحتوى: ١٢ عنصر مكتوب كاملاً",
+    "done · الهيكل جاهز: التنقّل، البيانات، الدخول، التصميم",
+    "done · ٥ شاشات مكتوبة",
+    "done · الفحص: ٢ شاشات بها ملاحظات، راجعها في الاستوديو · رحلات المستخدم: ٢ من ٢ تعمل كاملة · المراجعة: أُصلحت ٢ من ٨",
+    "done · جاهز للمعاينة والتحميل"
+  ],
+  "runtime": {
+    "home": [
+      "تصميم: صورة لا تُحمَّل: https://images.unsplash.com/photo-1629897048514-3c605483250f. استخدم صورة من بيانات التطبيق أو أيقونة بديلة."
+    ],
+    "checkout": [],
+    "myBookings": [],
+    "ownerCars": [],
+    "ownerOrders": []
+  },
+  "flows": [
+    "حجز سيارة (7 خطوات)",
+    "إضافة سيارة للمالك (6 خطوات)"
+  ],
+  "flowSteps": [
+    {
+      "flow": "حجز سيارة",
+      "steps": [
+        {
+          "role": "customer"
+        },
+        {
+          "go": "/"
+        },
+        {
+          "click": "[data-act=select][data-id=cars-1]"
+        },
+        {
+          "fill": {
+            "#start-date": "2023-12-01",
+            "#end-date": "2023-12-05",
+            "#user-name": "أحمد محمد",
+            "#user-phone": "0912345678"
+          }
+        },
+        {
+          "click": "[data-act=confirm-booking]"
+        },
+        {
+          "expect": "حجوزاتي"
+        },
+        {
+          "expectDb": {
+            "col": "orders",
+            "min": 1
+          }
+        }
+      ]
+    },
+    {
+      "flow": "إضافة سيارة للمالك",
+      "steps": [
+        {
+          "role": "owner"
+        },
+        {
+          "go": "/owner-cars"
+        },
+        {
+          "click": "[data-act=add-car]"
+        },
+        {
+          "fill": {
+            "[name=title]": "هيونداي النترا 2022",
+            "[name=brand]": "هيونداي",
+            "[name=model]": "النترا",
+            "[name=year]": "2022",
+            "[name=pricePerDay]": "40",
+            "[name=category]": "سيدان",
+            "[name=image]": "https://example.com/car.jpg"
+          }
+        },
+        {
+          "click": "text:إضافة السيارة"
+        },
+        {
+          "expectDb": {
+            "col": "cars",
+            "min": 4
+          }
+        }
+      ]
+    }
+  ],
+  "reviewIssues": {
+    "home": [],
+    "checkout": [
+      "مراجعة: تضارب في قيم حقل طريقة الدفع (payment-method)؛ الكود يستخدم 'bankk' و 'cash' بينما المخطط يحدد 'bankak' و 'cod'. يجب توحيد القيم لتطابق المخطط.",
+      "مراجعة: حساب التواريخ ينهار عند البدء بقيم فارغة في Store؛ يجب التحقق من وجود startDate و endDate قبل الحساب أو تعيين قيم افتراضية صحيحة لمنع NaN في amount.",
+      "مراجعة: حقل 'method' في Data.orders.create قد يُحفظ بقيمة 'bankk' الافتراضية إذا لم يتم اختيار زر الراديو، مما يخالف القيم المسموحة في المخطط."
+    ],
+    "myBookings": [
+      "مراجعة: تضارب في عرض طريقة الدفع؛ الكود يفحص 'receipt' بينما الحقول المحفوظة هي 'bankak' أو 'cod'. يجب تحديث منطق العرض ليتوافق مع القيم المحددة في المخطط.",
+      "مراجعة: استخدام 'order.id.slice' قد يسبب انهياراً إذا كان order.id غير موجود أو null. يجب إضافة تحقق من وجود المعرف قبل استخدامه."
+    ],
+    "ownerCars": [
+      "مراجعة: حقل 'available' يُحفظ كـ boolean بينما في نموذج التعديل يتم إرسال القيمة من select كـ string (true/false). يجب تحويل القيمة لـ boolean قبل الحفظ لضمان اتساق البيانات."
+    ],
+    "ownerOrders": [
+      "مراجعة: استخدام Data.orders.mine() لجلب طلبات المالك قد لا يعمل كما هو متوقع إذا لم تكن الدالة تدعم الفلترة التلقائية بناءً على ownerId. يجب التأكد من تمرير شرط {ownerId: Auth.user.uid} في الاستعلام.",
+      "مراجعة: تضارب في عرض حالة الطلب؛ الكود يستخدم Data.label(order.status) بينما المخطط لا يحدد وجود دالة label. يجب استخدام مصفوفة أو كائن لترجمة الحالة نصياً."
+    ]
+  },
+  "flowErr": "",
+  "agent": {
+    "ran": false,
+    "fixed": 0,
+    "steps": 0,
+    "log": []
+  },
+  "fixErrors": [],
+  "review": {
+    "found": 8,
+    "fixed": 2
+  },
+  "screens": [
+    {
+      "id": "home",
+      "route": "/",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 3282
+    },
+    {
+      "id": "checkout",
+      "route": "/checkout",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 7731
+    },
+    {
+      "id": "myBookings",
+      "route": "/bookings",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 5564
+    },
+    {
+      "id": "ownerCars",
+      "route": "/owner-cars",
+      "roles": [
+        "owner"
+      ],
+      "bytes": 8169
+    },
+    {
+      "id": "ownerOrders",
+      "route": "/owner-orders",
+      "roles": [
+        "owner"
+      ],
+      "bytes": 6733
+    }
+  ]
+}

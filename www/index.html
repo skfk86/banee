@@ -715,6 +715,17 @@
       .opt-row { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
     }
 
+    .cmp { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 13px; margin-bottom: 12px; border: 1px solid var(--border); border-radius: 14px; overflow: hidden; }
+    .cmp th, .cmp td { padding: 9px 10px; text-align: center; border-bottom: 1px solid var(--border); }
+    .cmp tr:last-child td { border-bottom: 0; }
+    .cmp td:first-child, .cmp th:first-child { text-align: start; color: var(--text2, inherit); font-weight: 500; }
+    .cmp .hl { background: var(--primary-soft); color: var(--primary-ink); font-weight: 700; }
+    .first-win { text-align: center; margin-bottom: 12px; }
+    .first-win .fw-ic { font-size: 44px; line-height: 1; margin-bottom: 6px; }
+    .adv-opts > summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 14px; }
+    .adv-opts > summary::-webkit-details-marker { display: none; }
+    .adv-opts > summary::after { content: '▾'; margin-inline-start: auto; transition: transform .2s; }
+    .adv-opts[open] > summary::after { transform: rotate(180deg); }
     .out-note { display: flex; flex-direction: column; gap: 4px; padding: 14px 16px; margin-bottom: 12px; border-radius: 14px; background: var(--error-soft, #FDECEC); color: var(--text); }
     .out-note b { color: var(--error, #C42D33); font-size: 15px; }
     .out-note span { font-size: 13.5px; line-height: 1.7; color: var(--text2, inherit); }
@@ -1013,6 +1024,7 @@
 
           <div class="divider"></div>
 
+          <details class="adv-opts"><summary><svg class="i"><use href="#i-palette"/></svg>خيارات إضافية: اللون وتسجيل الدخول</summary>
           <p class="sec-label"><svg class="i"><use href="#i-palette"/></svg>اللون الأساسي</p>
           <div class="opt-row" id="col-opts">
             <button class="opt on" data-v="auto" onclick="pick(this,'col')"><svg class="i"><use href="#i-sparkles"/></svg>يختاره المصمم</button>
@@ -1028,6 +1040,7 @@
             <button class="opt" data-v="no" onclick="pick(this,'ath')"><svg class="i"><use href="#i-unlock"/></svg>بدون تسجيل</button>
           </div>
 
+          </details>
           <button class="btn btn-accent btn-lg" id="bld-btn" onclick="buildApp()"><svg class="i"><use href="#i-wand"/></svg>ابنِ التطبيق</button>
         </div>
         </div>
@@ -1971,6 +1984,9 @@ function renderPlans(){
       (on ? '<button class="btn btn-ghost btn-sm po-btn" onclick="Billing.manage()">خطتك الحالية · إدارة الاشتراك</button>'
           : '<button class="btn btn-primary btn-sm po-btn" onclick="Billing.buy(\'' + k + '\')">اشترك</button>') + '</div>';
   }).join('');
+  if (px && cur !== 'key') document.getElementById('plans-box').insertAdjacentHTML('afterbegin', '<table class="cmp"><thead><tr><th></th><th>مجاني</th><th class="hl">مفتاحك الخاص</th></tr></thead><tbody>' +
+    [['التطبيقات', 'واحد يومياً', 'بلا حد'], ['النقاط', '٢٥٠ كل ٤ ساعات', 'بلا نقاط ولا انتظار'], ['الإعلانات', 'نعم', 'لا'], ['عند ازدحام الخدمة', 'قد يتوقف', 'لا يتأثر'], ['مزامنة بين أجهزتك', '—', '✓']]
+      .map(function(r){ return '<tr><td>' + r[0] + '</td><td>' + r[1] + '</td><td class="hl">' + r[2] + '</td></tr>'; }).join('') + '</tbody></table>');
   if (px && Ads.eligible()) document.getElementById('plans-box').insertAdjacentHTML('afterbegin', '<div class="ad-earn"><div><b>نقاط مجانية</b><span>شاهد إعلاناً قصيراً واحصل على ' + toAr(S.credits.adPoints || 15) + ' نقطة · ' + (S.credits.adsLeft ? 'متبقي ' + toAr(S.credits.adsLeft) + ' اليوم' : 'انتهت إعلانات اليوم') + '</span></div><button class="btn btn-accent btn-sm" onclick="Ads.reward(this)"' + (S.credits.adsLeft ? '' : ' disabled') + '><svg class="i i-sm"><use href="#i-play"/></svg>شاهد</button></div>');
   document.getElementById('plans-box').insertAdjacentHTML('beforeend', px && SHOW_PACKS ? '<div class="packs"><div class="packs-h">رصيد إضافي (لا ينتهي)</div>' +
     Object.keys(PACKS).map(function(id){ return '<button class="pack" onclick="Billing.buyPack(\'' + id + '\')"><b>' + toAr(PACKS[id].points.toLocaleString('en')) + '</b><span>نقطة</span><em>' + esc(Billing.packPrice(id)) + '</em></button>'; }).join('') + '</div>' : '');
@@ -3060,7 +3076,8 @@ function runBuild(app, key){
     if (openJob === app.id) { closeJob(); openStudio(app.id); }
     if (app.fb && !app.fbRulesShown) { app.fbRulesShown = true; saveApps(); setTimeout(function(){ showOwnRules(app); }, 900); }
     else toast('تطبيق "'+app.name+'" جاهز','suc');
-    setTimeout(function(){ Ads.inter(); }, 1500);
+    var firstWin = false; try { firstWin = !localStorage.getItem('bfirstwin'); localStorage.setItem('bfirstwin', '1'); } catch(_){}
+    if (firstWin) FIRST_WIN = true; else setTimeout(function(){ Ads.inter(); }, 1500); // لا إعلان بعد أول نجاح: لحظة احتفال
     updatePlan();
   }).catch(function(e){
     if (e && (e.message === '__stale' || e.message === '__review')) return;
@@ -4801,11 +4818,21 @@ function openStudio(id){
   stRender(); stTab(window.innerWidth >= 900 ? 'editor' : 'preview');
   stPreview();
 }
+// بعد أول تطبيق ناجح، عند الخروج من الاستوديو: تهنئة + عرض الاشتراك للمجاني
+var FIRST_WIN = false;
+function firstWinOffer(){
+  if (!FIRST_WIN) return; FIRST_WIN = false;
+  if (!(proxyMode() && S.credits && S.credits.plan === 'free')) return;
+  setTimeout(function(){
+    openUpgrade();
+    document.getElementById('plans-box').insertAdjacentHTML('afterbegin', '<div class="first-win"><div class="fw-ic">🎉</div><b>مبروك! بنيت تطبيقك الأول</b><p class="msub">هذا ما يقدر بانِي يفعله بالرصيد المجاني. اشترك وابنِ كل أفكارك بلا انتظار ولا إعلانات.</p></div>');
+  }, 600);
+}
 function closeStudio(){
   if (ST.dirty && !window._stLeave) { window._stLeave = true; toast('لديك تعديلات غير محفوظة، اضغط رجوع مرة أخرى للخروج','err'); setTimeout(function(){ window._stLeave = false; }, 3000); return; }
   window._stLeave = false;
   document.getElementById('studio').hidden = true; document.body.classList.remove('in-studio');
-  ST.id = null; renderApps();
+  ST.id = null; renderApps(); firstWinOffer();
 }
 function stApp(){ return findApp(ST.id); }
 

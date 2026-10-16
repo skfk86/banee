@@ -1,0 +1,194 @@
+{
+  "status": "ready",
+  "error": "",
+  "name": "مزرعتي",
+  "steps": [
+    "done · هوية «حصاد المزرعة» · الخطة: ٥ شاشات · ٣ مجموعات",
+    "done · لا يحتاج التطبيق محتوى جاهزاً",
+    "done · الهيكل جاهز: التنقّل، البيانات، الدخول، التصميم",
+    "done · ٥ شاشات مكتوبة",
+    "done · الفحص: ١ شاشات بها ملاحظات، راجعها في الاستوديو · رحلات المستخدم: ١ من ٢ تعمل كاملة · المراجعة: أُصلحت ٤ من ٤ · وكيل الإصلاح: لم يجد تحسيناً آمناً",
+    "done · جاهز للمعاينة والتحميل"
+  ],
+  "runtime": {
+    "home": [],
+    "workerRecords": [],
+    "addRecord": [
+      "رحلة «تسجيل البيانات اليومية» توقفت عند الخطوة ٣: ظهرت رسالة خطأ: يرجى ملء جميع الحقول"
+    ],
+    "ownerReports": [],
+    "ownerAlerts": []
+  },
+  "flows": [
+    "تسجيل البيانات اليومية (10 خطوات)",
+    "متابعة التقارير وإرسال التنبيهات (10 خطوات)"
+  ],
+  "flowSteps": [
+    {
+      "flow": "تسجيل البيانات اليومية",
+      "steps": [
+        {
+          "role": "worker"
+        },
+        {
+          "go": "/"
+        },
+        {
+          "click": "[data-act=go-add]"
+        },
+        {
+          "fill": {
+            "[name=eggCount]": "500"
+          }
+        },
+        {
+          "fill": {
+            "[name=mortality]": "1"
+          }
+        },
+        {
+          "fill": {
+            "[name=feedConsumed]": "20"
+          }
+        },
+        {
+          "fill": {
+            "[name=notes]": "سجل تجريبي"
+          }
+        },
+        {
+          "click": "text:حفظ السجل اليومي"
+        },
+        {
+          "expect": "السجلات اليومية"
+        },
+        {
+          "expectDb": {
+            "col": "records",
+            "min": 1
+          }
+        }
+      ]
+    },
+    {
+      "flow": "متابعة التقارير وإرسال التنبيهات",
+      "steps": [
+        {
+          "role": "owner"
+        },
+        {
+          "go": "/"
+        },
+        {
+          "go": "/reports"
+        },
+        {
+          "expect": "لوحة تقارير المزرعة"
+        },
+        {
+          "click": "[data-act=go-alerts]"
+        },
+        {
+          "fill": {
+            "#title": "تنبيه هام"
+          }
+        },
+        {
+          "fill": {
+            "#message": "يرجى فحص العنابر"
+          }
+        },
+        {
+          "click": "[data-act=send]"
+        },
+        {
+          "expect": "قائمة التوجيهات"
+        },
+        {
+          "expectDb": {
+            "col": "alerts",
+            "min": 1
+          }
+        }
+      ]
+    }
+  ],
+  "reviewIssues": {
+    "home": [
+      "مراجعة: Sorting by 'createdAt' in Data.records.list is invalid as the field does not exist in the 'records' collection; use 'order' instead."
+    ],
+    "workerRecords": [
+      "مراجعة: Sorting by 'createdAt' in the items array is invalid as the field does not exist in the 'records' collection; use 'order' instead."
+    ],
+    "addRecord": [],
+    "ownerReports": [
+      "مراجعة: Sorting by 'createdAt' in Data.records.list is invalid as the field does not exist in the 'records' collection; use 'order' instead."
+    ],
+    "ownerAlerts": [
+      "مراجعة: The 'alerts' collection schema requires a 'userId' field, but it is missing from the Data.alerts.create call in the mount function."
+    ]
+  },
+  "flowErr": "رد غير صالح: {\"tests\":[{\"flow\":\"تسجيل البيانات اليومية\",\"steps\":[{\"role\":\"worker\"},{\"go\":\"/records\"},{\"click\":\"[data-act=add-record]\"",
+  "agent": {
+    "ran": true,
+    "fixed": 0,
+    "steps": 6,
+    "log": [
+      "read addRecord — سأقوم بقراءة كود شاشة إضافة السجل (addRecord) لفهم كيفية التحقق من الحقول ولماذا يفشل الاختبار في التعرف عليها أو ملئها. → 1| App.screen({\n2|   id: 'addRecord',\n3|   route: '/add-record',\n4|   title: 'إضافة سجل',\n5|   icon: 'plus-circle',\n6|   nav: false,\n7|   render(params) {\n8|   ",
+      "search «يرجى ملء جميع الحقول» — سأقوم بالبحث عن النص 'يرجى ملء جميع الحقول' في جميع الشاشات للتأكد من مصدره، حيث أنه غير موجود في كود شاشة addRecord. ربما يكون  → ownerAlerts:60| if (!title || !message) return UI.toast('يرجى ملء جميع الحقول', 'error');",
+      "edit addRecord — لقد بحثت عن نص الخطأ 'يرجى ملء جميع الحقول' ووجدته فقط في شاشة 'ownerAlerts'. هذا يعني أن الاختبار الآلي قد يكون يواجه مشكلة في ملء الحقول في ' → تم التعديل. ملاحظات الفحص الثابت بعده: لا تحفظ بيانات المستخدم في Store ('dailyRecordForm'): الشاشات الأخرى لن تراها. احفظها في مجموعة DB من الخطة بحقل userId، ",
+      "edit addRecord — لقد قمت بمراجعة شاشة addRecord. المشكلة قد تكون في استخدام Store الذي لا يفضله الهيكل، ولكن الأهم هو أن الاختبار الآلي يواجه خطأ 'يرجى ملء جميع → تم التعديل. ملاحظات الفحص الثابت بعده: لا تحفظ بيانات المستخدم في Store ('dailyRecordForm'): الشاشات الأخرى لن تراها. احفظها في مجموعة DB من الخطة بحقل userId، ",
+      "read home — الخطأ 'يرجى ملء جميع الحقول' غير موجود في شاشة addRecord، مما يعني أن الاختبار الآلي قد يكون يواجه مشكلة في العثور على الحقول أو أن هناك تداخلاً في  → 1| App.screen({\n2|   id: 'home',\n3|   route: '/',\n4|   title: 'الرئيسية',\n5|   icon: 'home',\n6|   nav: true,\n7|   render(params) {\n8|     return `\n9|       <div",
+      "done → "
+    ]
+  },
+  "fixErrors": [],
+  "review": {
+    "found": 4,
+    "fixed": 4
+  },
+  "screens": [
+    {
+      "id": "home",
+      "route": "/",
+      "roles": [
+        "worker",
+        "owner"
+      ],
+      "bytes": 8129
+    },
+    {
+      "id": "workerRecords",
+      "route": "/records",
+      "roles": [
+        "worker"
+      ],
+      "bytes": 3994
+    },
+    {
+      "id": "addRecord",
+      "route": "/add-record",
+      "roles": [
+        "worker"
+      ],
+      "bytes": 3690
+    },
+    {
+      "id": "ownerReports",
+      "route": "/reports",
+      "roles": [
+        "owner"
+      ],
+      "bytes": 5837
+    },
+    {
+      "id": "ownerAlerts",
+      "route": "/alerts",
+      "roles": [
+        "owner",
+        "worker"
+      ],
+      "bytes": 3219
+    }
+  ]
+}

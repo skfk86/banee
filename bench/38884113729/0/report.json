@@ -1,0 +1,113 @@
+{
+  "status": "ready",
+  "error": "",
+  "name": "مدرستي",
+  "steps": [
+    "done · هوية «منار المعرفة» · الخطة: ٤ شاشات · ٣ مجموعات · ١٢ عنصر محتوى",
+    "done · المحتوى: ١٢ عنصر مكتوب كاملاً",
+    "done · الهيكل جاهز: التنقّل، البيانات، الدخول، التصميم",
+    "done · ٤ شاشات مكتوبة",
+    "done · جُرّبت كل الشاشات وأُصلحت ٢، لا أخطاء · رحلات المستخدم: ١ من ١ تعمل كاملة · المراجعة: أُصلحت ٢ من ٢",
+    "done · جاهز للمعاينة والتحميل"
+  ],
+  "runtime": {
+    "home": [],
+    "assignment": [],
+    "grades": [],
+    "manage": []
+  },
+  "flows": [
+    "تسليم واجب (6 خطوات)"
+  ],
+  "flowSteps": [
+    {
+      "flow": "تسليم واجب",
+      "steps": [
+        {
+          "role": "student"
+        },
+        {
+          "go": "/"
+        },
+        {
+          "click": "[data-act=open-assignment][data-id=assignments-1]"
+        },
+        {
+          "fill": {
+            "[name=content]": "حل الواجب بالتفصيل"
+          }
+        },
+        {
+          "click": "text:إرسال الواجب للمعلم"
+        },
+        {
+          "expectDb": {
+            "col": "submissions",
+            "min": 1
+          }
+        }
+      ]
+    }
+  ],
+  "reviewIssues": {
+    "home": [
+      "مراجعة: نموذج إضافة واجب في شاشة الرئيسية ينشئ الواجب بلا حقل teacherId المطلوب في المخطط، مما يعطل ظهور الواجبات المعلم في Data.assignments.mine(). الإصلاح: إضافة teacherId: Auth.user.uid عند استدعاء Data.assignments.create."
+    ],
+    "assignment": [],
+    "grades": [
+      "مراجعة: جلب التسليمات في شاشة سجل الدرجات يتم عبر Data.submissions.list بلا فلتر لـ userId أو studentId، مما يجعل الطالب يرى درجات وتسليمات جميع الطلاب الآخرين. الإصلاح: إضافة شرط فلترة حسب طالب النظام الحالي."
+    ],
+    "manage": []
+  },
+  "flowErr": "",
+  "agent": {
+    "ran": false,
+    "fixed": 0,
+    "steps": 0,
+    "log": []
+  },
+  "fixErrors": [],
+  "review": {
+    "found": 2,
+    "fixed": 2
+  },
+  "screens": [
+    {
+      "id": "home",
+      "route": "/",
+      "roles": [
+        "student",
+        "teacher",
+        "parent"
+      ],
+      "bytes": 7562
+    },
+    {
+      "id": "assignment",
+      "route": "/assignment/:id",
+      "roles": [
+        "student",
+        "teacher",
+        "parent"
+      ],
+      "bytes": 8141
+    },
+    {
+      "id": "grades",
+      "route": "/grades",
+      "roles": [
+        "student",
+        "parent"
+      ],
+      "bytes": 4299
+    },
+    {
+      "id": "manage",
+      "route": "/manage",
+      "roles": [
+        "teacher"
+      ],
+      "bytes": 7370
+    }
+  ]
+}

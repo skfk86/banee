@@ -104,6 +104,11 @@ function doPost(e) {
     if (req.op === 'regApp') return out(regApp(user, req));
     if (req.op === 'newApp') return out(newApp(user, req));
     if (req.op === 'deleteAccount') { PropertiesService.getScriptProperties().deleteProperty('u:' + user.uid); logRow(user, 'DELETE_ACCOUNT', '', 0, 0, 0); return out({ ok: true }); }
+    if (req.op === 'clientErr') { // أخطاء المستخدمين الفعلية (محدودة لكل مستخدم) لتعرفها قبل أن يشتكي أحد
+      if (!hit('err:' + user.uid, 20, 3600)) return out({ ok: true });
+      try { sheet('errors').appendRow([new Date(), user.uid, user.email, String(req.where || '').slice(0, 80), String(req.msg || '').slice(0, 500), String(req.stack || '').slice(0, 1500), String(req.ua || '').slice(0, 200)]); } catch (e) {}
+      return out({ ok: true });
+    }
     if (req.op === 'report') { try { sheet('reports').appendRow([new Date(), user.uid, user.email, String(req.appId || ''), String(req.text || '').slice(0, 1500)]); } catch (e) {} return out({ ok: true }); }
     // ── قدرات التطبيقات المبنية ببانِي (يستدعيها مستخدمو تلك التطبيقات) ──
     if (req.op === 'fetch') return out(netFetch(user, req));
@@ -514,6 +519,7 @@ function sheet(name) {
   if (!sh) {
     sh = ss.insertSheet(name);
     if (name === 'log') sh.appendRow(['الوقت', 'uid', 'البريد', 'الموديل/الحدث', 'الدور', 'رموز داخلة', 'رموز خارجة', 'التكلفة $']);
+    if (name === 'errors') sh.appendRow(['الوقت', 'uid', 'البريد', 'المكان', 'الخطأ', 'التفاصيل', 'الجهاز']);
     if (name === 'reports') sh.appendRow(['الوقت', 'uid', 'البريد', 'التطبيق', 'الرد المُبلغ عنه']);
   }
   return sh;

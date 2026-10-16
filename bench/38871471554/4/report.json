@@ -1,0 +1,139 @@
+{
+  "status": "ready",
+  "error": "",
+  "name": "صالة اللياقة",
+  "steps": [
+    "done · هوية «قوة ونشاط» · الخطة: ٤ شاشات · ٥ مجموعات · ١٠ عنصر محتوى",
+    "done · المحتوى: ١٠ عنصر مكتوب كاملاً",
+    "done · الهيكل جاهز: التنقّل، البيانات، الدخول، التصميم",
+    "done · ٤ شاشات مكتوبة",
+    "done · الفحص: ١ شاشات بها ملاحظات، راجعها في الاستوديو · رحلات المستخدم: ٢ من ٢ تعمل كاملة · المراجعة: أُصلحت ٠ من ٣",
+    "done · جاهز للمعاينة والتحميل"
+  ],
+  "runtime": {
+    "home": [
+      "تصميم: صورة لا تُحمَّل: https://images.unsplash.5.com/photo-1534438327276-14e5300c3a48. استخدم صورة من بيانات التطبيق أو أيقونة بديلة."
+    ],
+    "book": [],
+    "mine": [],
+    "trainer_dashboard": []
+  },
+  "flows": [
+    "حجز حصة رياضية (7 خطوات)",
+    "إدارة الحصص وتسجيل الحضور (5 خطوات)"
+  ],
+  "flowSteps": [
+    {
+      "flow": "حجز حصة رياضية",
+      "steps": [
+        {
+          "role": "customer"
+        },
+        {
+          "go": "/"
+        },
+        {
+          "click": "[data-act=select-service]"
+        },
+        {
+          "fill": {
+            "[name=phone]": "0512345678",
+            "[name=note]": "أرغب في تركيز التمرين على اللياقة"
+          }
+        },
+        {
+          "click": "text:تأكيد الحجز"
+        },
+        {
+          "expect": "مواعيدي وحجوزاتي"
+        },
+        {
+          "expectDb": {
+            "col": "bookings",
+            "min": 1
+          }
+        }
+      ]
+    },
+    {
+      "flow": "إدارة الحصص وتسجيل الحضور",
+      "steps": [
+        {
+          "role": "trainer"
+        },
+        {
+          "go": "/trainer"
+        },
+        {
+          "click": "[data-act=mark-att]"
+        },
+        {
+          "expect": "إدارة الحصص والحضور"
+        },
+        {
+          "expectDb": {
+            "col": "attendance",
+            "min": 1
+          }
+        }
+      ]
+    }
+  ],
+  "reviewIssues": {
+    "home": [
+      "مراجعة: استخدام DB.add و DB.update مباشرة في شاشة home بينما تستخدم باقي الشاشات Data.bookings.create و Data.bookings.setStatus، مما يسبب تضارباً في منطق التعامل مع البيانات (Data Access Layer)."
+    ],
+    "book": [],
+    "mine": [],
+    "trainer_dashboard": [
+      "مراجعة: حقل status في مجموعة attendance يُحفظ بقيم 'present' و 'absent' بينما المخطط يحدد القيم بـ 'حاضر' و 'غائب'. يجب توحيد القيم لتطابق المخطط.",
+      "مراجعة: استخدام Data.label في شاشة trainer_dashboard بينما المخطط يشير إلى Data.bookings.label كما في شاشة mine، مما قد يسبب خطأ undefined."
+    ]
+  },
+  "flowErr": "",
+  "agent": {
+    "ran": false,
+    "fixed": 0,
+    "steps": 0,
+    "log": []
+  },
+  "fixErrors": [],
+  "review": {
+    "found": 3,
+    "fixed": 0
+  },
+  "screens": [
+    {
+      "id": "home",
+      "route": "/",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 3900
+    },
+    {
+      "id": "book",
+      "route": "/book/:id",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 7360
+    },
+    {
+      "id": "mine",
+      "route": "/bookings",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 5280
+    },
+    {
+      "id": "trainer_dashboard",
+      "route": "/trainer",
+      "roles": [
+        "trainer"
+      ],
+      "bytes": 7195
+    }
+  ]
+}

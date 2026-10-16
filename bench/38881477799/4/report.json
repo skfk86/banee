@@ -1,0 +1,152 @@
+{
+  "status": "ready",
+  "error": "",
+  "name": "نقل أثاث",
+  "steps": [
+    "done · هوية «دروب مطمئنة» · الخطة: ٥ شاشات · ٤ مجموعات",
+    "done · لا يحتاج التطبيق محتوى جاهزاً",
+    "done · الهيكل جاهز: التنقّل، البيانات، الدخول، التصميم",
+    "done · ٥ شاشات مكتوبة",
+    "done · جُرّبت كل الشاشات وأُصلحت ٣، لا أخطاء · رحلات المستخدم: ١ من ١ تعمل كاملة · المراجعة: أُصلحت ٢ من ٢",
+    "done · جاهز للمعاينة والتحميل"
+  ],
+  "runtime": {
+    "home": [],
+    "newRequest": [],
+    "requestDetails": [],
+    "orders": [],
+    "profile": []
+  },
+  "flows": [
+    "طلب نقل واختيار عرض (14 خطوات)"
+  ],
+  "flowSteps": [
+    {
+      "flow": "طلب نقل واختيار عرض",
+      "steps": [
+        {
+          "go": "/"
+        },
+        {
+          "click": "[data-act=new-request]"
+        },
+        {
+          "fill": {
+            "#pickup": "الرياض، حي النرجس",
+            "#dropoff": "جدة، حي الروضة",
+            "#items": "غرفة نوم كاملة وكنب",
+            "#notes": "يرجى الحرص على الأثاث"
+          }
+        },
+        {
+          "click": "text:إرسال الطلب"
+        },
+        {
+          "expect": "طلبات النقل الخاصة بك"
+        },
+        {
+          "expectDb": {
+            "col": "requests",
+            "min": 1
+          }
+        },
+        {
+          "role": "driver"
+        },
+        {
+          "go": "/"
+        },
+        {
+          "click": "[data-act=view-request]"
+        },
+        {
+          "fill": {
+            "[name=price]": "50000",
+            "[name=notes]": "يشمل التغليف والتحميل"
+          }
+        },
+        {
+          "click": "text:إرسال العرض"
+        },
+        {
+          "role": "customer"
+        },
+        {
+          "go": "/"
+        },
+        {
+          "click": "[data-act=view-request]"
+        }
+      ]
+    }
+  ],
+  "reviewIssues": {
+    "home": [],
+    "newRequest": [],
+    "requestDetails": [
+      "مراجعة: ثغرة أمنية في جلب بيانات الطلب: يتم جلب جميع الطلبات عبر Data.requests.list({}) ثم الفلترة محلياً بدلاً من استخدام شرط userId أو معرف الطلب في الاستعلام، مما يسمح للمستخدم بالوصول لبيانات غيره. الإصلاح: استخدام Data.requests.list({ where: ['id', '==', requestId] })."
+    ],
+    "orders": [
+      "مراجعة: ثغرة أمنية في جلب الطلبات للسائق: يتم جلب جميع الطلبات عبر Data.orders.list({}) ثم الفلترة محلياً، مما يستهلك الموارد ويكشف بيانات الآخرين. الإصلاح: استخدام Data.orders.list({ where: ['driverId', '==', Auth.user.uid] })."
+    ],
+    "profile": []
+  },
+  "flowErr": "",
+  "agent": {
+    "ran": false,
+    "fixed": 0,
+    "steps": 0,
+    "log": []
+  },
+  "fixErrors": [],
+  "review": {
+    "found": 2,
+    "fixed": 2
+  },
+  "screens": [
+    {
+      "id": "home",
+      "route": "/",
+      "roles": [
+        "customer",
+        "driver"
+      ],
+      "bytes": 4455
+    },
+    {
+      "id": "newRequest",
+      "route": "/request/new",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 2303
+    },
+    {
+      "id": "requestDetails",
+      "route": "/request/:id",
+      "roles": [
+        "customer",
+        "driver"
+      ],
+      "bytes": 8910
+    },
+    {
+      "id": "orders",
+      "route": "/orders",
+      "roles": [
+        "customer",
+        "driver"
+      ],
+      "bytes": 5251
+    },
+    {
+      "id": "profile",
+      "route": "/profile",
+      "roles": [
+        "customer",
+        "driver"
+      ],
+      "bytes": 6326
+    }
+  ]
+}

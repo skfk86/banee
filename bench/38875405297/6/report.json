@@ -1,0 +1,146 @@
+{
+  "status": "ready",
+  "error": "",
+  "name": "مكتبة المعرفة",
+  "steps": [
+    "done · هوية «رف الكتب» · الخطة: ٤ شاشات · ٣ مجموعات · ١٢ عنصر محتوى",
+    "done · المحتوى: ١٢ عنصر مكتوب كاملاً",
+    "done · الهيكل جاهز: التنقّل، البيانات، الدخول، التصميم",
+    "done · ٤ شاشات مكتوبة",
+    "done · جُرّبت كل الشاشات وأُصلحت ٦، لا أخطاء · رحلات المستخدم: ٢ من ٢ تعمل كاملة · المراجعة: أُصلحت ١ من ٣",
+    "done · جاهز للمعاينة والتحميل"
+  ],
+  "runtime": {
+    "home": [],
+    "bookDetails": [],
+    "myBorrows": [],
+    "librarianDashboard": []
+  },
+  "flows": [
+    "استعارة كتاب (9 خطوات)",
+    "إدارة الاستعارات (6 خطوات)"
+  ],
+  "flowSteps": [
+    {
+      "flow": "استعارة كتاب",
+      "steps": [
+        {
+          "role": "customer"
+        },
+        {
+          "go": "/"
+        },
+        {
+          "click": "[data-act=details][data-id=books-1]"
+        },
+        {
+          "expect": "تفاصيل الإصدار والمؤلف"
+        },
+        {
+          "click": "[data-act=request-borrow]"
+        },
+        {
+          "fill": {
+            "#return-date-input": "2025-06-01"
+          }
+        },
+        {
+          "click": "text:تأكيد الطلب"
+        },
+        {
+          "expect": "سجل استعاراتي"
+        },
+        {
+          "expectDb": {
+            "col": "borrows",
+            "min": 1
+          }
+        }
+      ]
+    },
+    {
+      "flow": "إدارة الاستعارات",
+      "steps": [
+        {
+          "role": "librarian"
+        },
+        {
+          "go": "/librarian"
+        },
+        {
+          "expect": "إدارة مكتبة المعرفة"
+        },
+        {
+          "click": "[data-act=approve]"
+        },
+        {
+          "expectDb": {
+            "col": "borrows",
+            "min": 1
+          }
+        },
+        {
+          "click": "[data-act=return]"
+        }
+      ]
+    }
+  ],
+  "reviewIssues": {
+    "home": [],
+    "bookDetails": [
+      "مراجعة: حفظ الطلب يستخدم الحقل 'requested' كحالة بينما المخطط ينص على أن الحالات هي 'طلب جديد|مستعار|مُرجع|ملغي'. الإصلاح: تغيير status إلى 'طلب جديد'."
+    ],
+    "myBorrows": [
+      "مراجعة: الفرز يعتمد على الحقل 'createdAt' الغير موجود في مخطط مجموعة borrows (الموجود هو 'order'). الإصلاح: تغيير (b.createdAt || 0) إلى (b.order || 0)."
+    ],
+    "librarianDashboard": [
+      "مراجعة: جلب البيانات يعتمد على الترتيب بالحقل 'createdAt' غير الموجود في المخطط (الموجود هو 'order'). الإصلاح: تغيير orderBy إلى ['order', 'desc']."
+    ]
+  },
+  "flowErr": "",
+  "agent": {
+    "ran": false,
+    "fixed": 0,
+    "steps": 0,
+    "log": []
+  },
+  "fixErrors": [],
+  "review": {
+    "found": 3,
+    "fixed": 1
+  },
+  "screens": [
+    {
+      "id": "home",
+      "route": "/",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 4212
+    },
+    {
+      "id": "bookDetails",
+      "route": "/book/:id",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 6296
+    },
+    {
+      "id": "myBorrows",
+      "route": "/borrows",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 5465
+    },
+    {
+      "id": "librarianDashboard",
+      "route": "/librarian",
+      "roles": [
+        "librarian"
+      ],
+      "bytes": 6042
+    }
+  ]
+}

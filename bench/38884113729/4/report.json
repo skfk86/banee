@@ -1,0 +1,152 @@
+{
+  "status": "ready",
+  "error": "",
+  "name": "صالة الأبطال الرياضية",
+  "steps": [
+    "done · هوية «قوة ونشاط» · الخطة: ٤ شاشات · ٥ مجموعات · ١٠ عنصر محتوى",
+    "done · المحتوى: ١٠ عنصر مكتوب كاملاً",
+    "done · الهيكل جاهز: التنقّل، البيانات، الدخول، التصميم",
+    "done · ٤ شاشات مكتوبة",
+    "done · جُرّبت كل الشاشات وأُصلحت ٦، لا أخطاء · رحلات المستخدم: ٢ من ٢ تعمل كاملة · المراجعة: أُصلحت ٢ من ٢",
+    "done · جاهز للمعاينة والتحميل"
+  ],
+  "runtime": {
+    "home": [],
+    "book": [],
+    "mine": [],
+    "trainer": []
+  },
+  "flows": [
+    "حجز حصة رياضية (10 خطوات)",
+    "تسجيل الحضور للمدرب (7 خطوات)"
+  ],
+  "flowSteps": [
+    {
+      "flow": "حجز حصة رياضية",
+      "steps": [
+        {
+          "go": "/"
+        },
+        {
+          "click": "[data-act=select-service][data-id=services-1]"
+        },
+        {
+          "click": "[data-act=select-provider][data-id=providers-1]"
+        },
+        {
+          "click": "[data-act=select-day][data-day=الأحد]"
+        },
+        {
+          "click": "[data-act=select-time][data-slot=08:00]"
+        },
+        {
+          "fill": {
+            "[name=phone]": "0912345678"
+          }
+        },
+        {
+          "fill": {
+            "[name=note]": "ملاحظة اختبار الحجز"
+          }
+        },
+        {
+          "click": "text:تأكيد وحجز الحصة الآن"
+        },
+        {
+          "expect": "سجل حجوزاتك"
+        },
+        {
+          "expectDb": {
+            "col": "bookings",
+            "min": 1
+          }
+        }
+      ]
+    },
+    {
+      "flow": "تسجيل الحضور للمدرب",
+      "steps": [
+        {
+          "role": "driver"
+        },
+        {
+          "go": "/trainer"
+        },
+        {
+          "click": "[data-act=filter][data-val=active]"
+        },
+        {
+          "click": "[data-act=attendance]"
+        },
+        {
+          "click": "text:حضر (Present)"
+        },
+        {
+          "expect": "إدارة التدريب والحصص"
+        },
+        {
+          "expectDb": {
+            "col": "attendance",
+            "min": 1
+          }
+        }
+      ]
+    }
+  ],
+  "reviewIssues": {
+    "home": [],
+    "book": [],
+    "mine": [
+      "مراجعة: استعلام الحجوزات يستخدم حقل الترتيب 'createdAt' غير الموجود في مخطط مجموعة bookings، مما قد يسبب خطأ في الاستعلام."
+    ],
+    "trainer": [
+      "مراجعة: جلب الحجوزات يتم عبر Data.bookings.list و byStatus بدون فلترة حسب المدرب الحالي (providerId)، مما يتيح للمدرب رؤية حجوزات جميع المدربين الآخرين."
+    ]
+  },
+  "flowErr": "رد غير صالح: {\"tests\":[{\"flow\":\"حجز حصة رياضية\",\"steps\":[{\"go\":\"/\"},{\"click\":\"[data-act=select-service][data-id=services-1]\"},{\"click",
+  "agent": {
+    "ran": false,
+    "fixed": 0,
+    "steps": 0,
+    "log": []
+  },
+  "fixErrors": [],
+  "review": {
+    "found": 2,
+    "fixed": 2
+  },
+  "screens": [
+    {
+      "id": "home",
+      "route": "/",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 4347
+    },
+    {
+      "id": "book",
+      "route": "/book/:id",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 7212
+    },
+    {
+      "id": "mine",
+      "route": "/bookings",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 2444
+    },
+    {
+      "id": "trainer",
+      "route": "/trainer",
+      "roles": [
+        "driver"
+      ],
+      "bytes": 8882
+    }
+  ]
+}

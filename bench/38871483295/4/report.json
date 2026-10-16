@@ -1,0 +1,158 @@
+{
+  "status": "ready",
+  "error": "",
+  "name": "منقول",
+  "steps": [
+    "done · هوية «نقل آمن» · الخطة: ٥ شاشات · ٤ مجموعات",
+    "done · لا يحتاج التطبيق محتوى جاهزاً",
+    "done · الهيكل جاهز: التنقّل، البيانات، الدخول، التصميم",
+    "done · ٥ شاشات مكتوبة",
+    "done · الفحص: ١ شاشات بها ملاحظات، راجعها في الاستوديو · رحلات المستخدم: ٠ من ١ تعمل كاملة · المراجعة: أُصلحت ١ من ١ · وكيل الإصلاح: لم يجد تحسيناً آمناً",
+    "done · جاهز للمعاينة والتحميل"
+  ],
+  "runtime": {
+    "home": [],
+    "newOrder": [
+      "رحلة «إنشاء طلب وقبول عرض» توقفت عند الخطوة ٥: الحقل #pickupAddress غير موجود في الشاشة — الظاهر الآن: الشاشة newOrder (#/new-order) بدور customer؛ الأزرار: لا شيء؛ الحقول: لا شيء"
+    ],
+    "orderDetails": [],
+    "chat": [],
+    "notifications": []
+  },
+  "flows": [
+    "إنشاء طلب وقبول عرض (14 خطوات)"
+  ],
+  "flowSteps": [
+    {
+      "flow": "إنشاء طلب وقبول عرض",
+      "steps": [
+        {
+          "role": "customer"
+        },
+        {
+          "go": "/"
+        },
+        {
+          "click": "text:طلب نقل جديد"
+        },
+        {
+          "go": "/new-order"
+        },
+        {
+          "fill": {
+            "#pickupAddress": "الرياض، حي الملز"
+          }
+        },
+        {
+          "fill": {
+            "#deliveryAddress": "جدة، حي السلامة"
+          }
+        },
+        {
+          "fill": {
+            "#itemsDescription": "غرفة نوم كاملة وأجهزة كهربائية"
+          }
+        },
+        {
+          "fill": {
+            "#budget": "1500"
+          }
+        },
+        {
+          "click": "#submitBtn"
+        },
+        {
+          "expectDb": {
+            "col": "orders",
+            "min": 1
+          }
+        },
+        {
+          "role": "driver"
+        },
+        {
+          "go": "/"
+        },
+        {
+          "click": ".card"
+        },
+        {
+          "fill": {
+            "[name=price]": "1400"
+          }
+        }
+      ]
+    }
+  ],
+  "reviewIssues": {
+    "home": [],
+    "newOrder": [],
+    "orderDetails": [],
+    "chat": [],
+    "notifications": [
+      "مراجعة: في شاشة notifications، يتم استخدام حقل order.userName كبديل لرقم هاتف العميل عند محاولة الاتصال به، وهو خطأ منطقي حيث يجب تخزين رقم الهاتف في حقل مخصص أو في جدول المستخدمين."
+    ]
+  },
+  "flowErr": "",
+  "agent": {
+    "ran": true,
+    "fixed": 0,
+    "steps": 3,
+    "log": [
+      "read newOrder — الخطأ الحالي يخبرنا أن الشاشة newOrder (#/new-order) فارغة تماماً ولا تحتوي على حقل #pickupAddress أو أي محتوى. سنقوم بقراءة محتوى الشاشة newOrd → 1| App.screen({\n2|   id: 'newOrder',\n3|   route: '/new-order',\n4|   title: 'طلب نقل جديد',\n5|   icon: 'plus-circle',\n6|   nav: false,\n7|   async render(params) ",
+      "read home — قراءة الشاشة الرئيسية لمعرفة كيف يتم الانتقال إلى طلب نقل جديد أو كيف تُعرّف الشاشات والمسارات → 1| App.screen({\n2|   id: 'home',\n3|   route: '/',\n4|   title: 'الرئيسية',\n5|   icon: 'home',\n6|   nav: true,\n7|   render(params) {\n8|     const isDriver = Roles",
+      "done → "
+    ]
+  },
+  "fixErrors": [],
+  "review": {
+    "found": 1,
+    "fixed": 1
+  },
+  "screens": [
+    {
+      "id": "home",
+      "route": "/",
+      "roles": [
+        "customer",
+        "driver"
+      ],
+      "bytes": 5428
+    },
+    {
+      "id": "newOrder",
+      "route": "/new-order",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 8319
+    },
+    {
+      "id": "orderDetails",
+      "route": "/order-details/:id",
+      "roles": [
+        "customer",
+        "driver"
+      ],
+      "bytes": 10514
+    },
+    {
+      "id": "chat",
+      "route": "/chat/:id",
+      "roles": [
+        "customer",
+        "driver"
+      ],
+      "bytes": 8424
+    },
+    {
+      "id": "notifications",
+      "route": "/notifications",
+      "roles": [
+        "customer",
+        "driver"
+      ],
+      "bytes": 4468
+    }
+  ]
+}

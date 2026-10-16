@@ -1,0 +1,148 @@
+{
+  "status": "ready",
+  "error": "",
+  "name": "إنجازي",
+  "steps": [
+    "done · هوية «إنجاز مهام» · الخطة: ٤ شاشات · ٣ مجموعات · ٢٠ عنصر محتوى",
+    "done · المحتوى: ٢٠ عنصر مكتوب كاملاً",
+    "done · الهيكل جاهز: التنقّل، البيانات، الدخول، التصميم",
+    "done · ٤ شاشات مكتوبة",
+    "done · جُرّبت كل الشاشات وأُصلحت ٦، لا أخطاء · رحلات المستخدم: ١ من ١ تعمل كاملة · المراجعة: أُصلحت ١ من ٢",
+    "done · جاهز للمعاينة والتحميل"
+  ],
+  "runtime": {
+    "home": [],
+    "dashboard": [],
+    "task-details": [],
+    "notifications": []
+  },
+  "flows": [
+    "دورة حياة المهمة (14 خطوات)"
+  ],
+  "flowSteps": [
+    {
+      "flow": "دورة حياة المهمة",
+      "steps": [
+        {
+          "role": "manager"
+        },
+        {
+          "go": "/"
+        },
+        {
+          "click": "[data-act=add-project]"
+        },
+        {
+          "fill": {
+            "[name=title]": "مشروع جديد",
+            "[name=description]": "وصف تفصيلي للمشروع الجديد",
+            "[name=deadline]": "2025-12-31"
+          }
+        },
+        {
+          "click": "text:حفظ المشروع"
+        },
+        {
+          "expectDb": {
+            "col": "projects",
+            "min": 1
+          }
+        },
+        {
+          "click": "[data-act=view-project][data-id=projects-1]"
+        },
+        {
+          "click": "text:إضافة مهمة"
+        },
+        {
+          "fill": {
+            "[name=title]": "مهمة تجريبية",
+            "[name=description]": "تفاصيل المهمة",
+            "[name=assignedTo]": "موظف",
+            "[name=dueDate]": "2025-12-31"
+          }
+        },
+        {
+          "click": "text:إضافة المهمة"
+        },
+        {
+          "expectDb": {
+            "col": "tasks",
+            "min": 1
+          }
+        },
+        {
+          "role": "employee"
+        },
+        {
+          "go": "/task/tasks-1"
+        },
+        {
+          "fill": {
+            "#progress": "50"
+          },
+          "click": "text:حفظ التغييرات"
+        }
+      ]
+    }
+  ],
+  "reviewIssues": {
+    "home": [
+      "مراجعة: في شاشة home، عند جلب مهام الموظف يتم استخدام Data.tasks.mine() ولكن المخطط لا يوفر دالة mine للـ tasks بل يتم جلبها عادة بـ Data.tasks.list({ where: ['assignedTo', '==', Auth.user.name] }) أو ما شابه، والإصلاح هو استخدام Data.tasks.list مع الشرط الصحيح."
+    ],
+    "dashboard": [],
+    "task-details": [],
+    "notifications": [
+      "مراجعة: في شاشة notifications، يتم جلب البيانات باستخدام DB.list('notices', ...) بينما جدول notices غير معرف في قسم collections بالمخطط (الموجود فقط projects, tasks, members)، والإصلاح هو إضافة جدول notices للمخطط أو استخدام مجموعة معرّفة."
+    ]
+  },
+  "flowErr": "",
+  "agent": {
+    "ran": false,
+    "fixed": 0,
+    "steps": 0,
+    "log": []
+  },
+  "fixErrors": [],
+  "review": {
+    "found": 2,
+    "fixed": 1
+  },
+  "screens": [
+    {
+      "id": "home",
+      "route": "/",
+      "roles": [
+        "manager",
+        "employee"
+      ],
+      "bytes": 11860
+    },
+    {
+      "id": "dashboard",
+      "route": "/dashboard",
+      "roles": [
+        "manager"
+      ],
+      "bytes": 10042
+    },
+    {
+      "id": "task-details",
+      "route": "/task/:id",
+      "roles": [
+        "manager",
+        "employee"
+      ],
+      "bytes": 2400
+    },
+    {
+      "id": "notifications",
+      "route": "/notifications",
+      "roles": [
+        "manager",
+        "employee"
+      ],
+      "bytes": 4215
+    }
+  ]
+}

@@ -1,0 +1,222 @@
+{
+  "status": "ready",
+  "error": "",
+  "name": "سوق بانِي",
+  "steps": [
+    "done · هوية «سوق رائج» · الخطة: ٦ شاشات · ٤ مجموعات · ٢٥ عنصر محتوى",
+    "done · المحتوى: ٢٥ عنصر مكتوب كاملاً",
+    "done · الهيكل جاهز: التنقّل، البيانات، الدخول، التصميم",
+    "done · ٦ شاشات مكتوبة",
+    "done · الفحص: ٣ شاشات بها ملاحظات، راجعها في الاستوديو · رحلات المستخدم: ٠ من ٢ تعمل كاملة · المراجعة: أُصلحت ٠ من ١ · وكيل الإصلاح: لم يجد تحسيناً آمناً",
+    "done · جاهز للمعاينة والتحميل"
+  ],
+  "runtime": {
+    "home": [],
+    "product": [],
+    "cart": [
+      "رحلة «شراء منتج» توقفت عند الخطوة ٦: الحقل #address-input غير موجود في الشاشة — الظاهر الآن: الشاشة cart (#/cart) بدور customer؛ الأزرار: go-home؛ الحقول: لا شيء"
+    ],
+    "orders": [],
+    "sellerOrders": [
+      "رحلة «إدارة المتجر» توقفت عند الخطوة ١٤: لم يُعثر على [data-act=accept] (الزر غير موجود أو اسمه مختلف) — الظاهر الآن: الشاشة sellerOrders (#/seller) بدور seller؛ الأزرار: لا شيء؛ الحقول: لا شيء"
+    ],
+    "sellerProducts": []
+  },
+  "flows": [
+    "شراء منتج (10 خطوات)",
+    "إدارة المتجر (14 خطوات)"
+  ],
+  "flowSteps": [
+    {
+      "flow": "شراء منتج",
+      "steps": [
+        {
+          "role": "customer"
+        },
+        {
+          "go": "/"
+        },
+        {
+          "click": "[data-act=product][data-id=products-1]"
+        },
+        {
+          "click": "text:إضافة للسلة"
+        },
+        {
+          "go": "/cart"
+        },
+        {
+          "fill": {
+            "#address-input": "الخرطوم، شارع الستين"
+          }
+        },
+        {
+          "fill": {
+            "#phone-input": "0912345678"
+          }
+        },
+        {
+          "click": "[data-act=checkout]"
+        },
+        {
+          "expect": "طلباتي"
+        },
+        {
+          "expectDb": {
+            "col": "orders",
+            "min": 1
+          }
+        }
+      ]
+    },
+    {
+      "flow": "إدارة المتجر",
+      "steps": [
+        {
+          "role": "seller"
+        },
+        {
+          "go": "/seller/products"
+        },
+        {
+          "click": "[data-act=add-product]"
+        },
+        {
+          "fill": {
+            "[name=title]": "سماعة لاسلكية جديدة"
+          }
+        },
+        {
+          "fill": {
+            "[name=price]": "25000"
+          }
+        },
+        {
+          "fill": {
+            "[name=image]": "https://example.com/image.jpg"
+          }
+        },
+        {
+          "fill": {
+            "[name=category]": "categories-1"
+          }
+        },
+        {
+          "fill": {
+            "[name=stock]": "15"
+          }
+        },
+        {
+          "fill": {
+            "[name=description]": "سماعة عالية الجودة"
+          }
+        },
+        {
+          "click": "text:إضافة المنتج"
+        },
+        {
+          "expectDb": {
+            "col": "products",
+            "min": 1
+          }
+        },
+        {
+          "go": "/seller"
+        },
+        {
+          "click": "text:الجديدة"
+        },
+        {
+          "click": "[data-act=accept]"
+        }
+      ]
+    }
+  ],
+  "reviewIssues": {
+    "home": [],
+    "product": [
+      "مراجعة: في شاشة تفاصيل المنتج، يتم استخدام مجموعة Data.cart ولكنها غير معرفة في مخطط النظام (collections)، الإصلاح هو استخدام Store أو إضافة مجموعة cart للمخطط."
+    ],
+    "cart": [],
+    "orders": [],
+    "sellerOrders": [],
+    "sellerProducts": []
+  },
+  "flowErr": "",
+  "agent": {
+    "ran": true,
+    "fixed": 0,
+    "steps": 14,
+    "log": [
+      "read cart — أحتاج لقراءة شاشة سلة التسوق (cart) لمعرفة سبب غياب حقل #address-input وحقول إتمام الطلب → 1| App.screen({\n2|   id: 'cart',\n3|   route: '/cart',\n4|   title: 'سلة التسوق',\n5|   icon: 'shopping-cart',\n6|   nav: true,\n7|   render(params) {\n8|     return ",
+      "read sellerOrders — لقد قرأت كود شاشة cart، والحقول #address-input و #phone-input موجودة بالفعل في الـ DOM (الأسطر 68 و 72). يبدو أن الاختبار الآلي فشل لأنني رب → 1| App.screen({\n2|   id: 'sellerOrders',\n3|   route: '/seller',\n4|   title: 'طلبات متجري',\n5|   icon: 'inbox',\n6|   nav: true,\n7|   render(params) {\n8|     retu",
+      "seed — إضافة بيانات أولية للتصنيفات والمنتجات (بما فيها منتج بمعرف products-1) لضمان نجاح رحلة شراء منتج وإضافة المنتجات للسلة بشكل صحيح → أُضيفت 2 عناصر إلى categories (ids: categories-1، categories-2). شغّل run للتحقق.",
+      "run — تشغيل التطبيق لاختبار ما إذا كانت الأخطاء قد اختفت بعد إضافة البيانات الأولية وقراءة الشاشات → نتيجة التشغيل (درجة الأخطاء 80، الأفضل حتى الآن 80):\n[cart] رحلة «شراء منتج» توقفت عند الخطوة ٦: الحقل #address-input غير موجود في الشاشة — الظاهر الآن: الشاشة ",
+      "flow — السيناريو الآلي يبحث عن زر قبول الطلب بـ [data-act=accept] في مسار غير صحيح أو ربما السيناريو هو المخطئ في اسم الشاشة أو خطوة النقر (الخطوة تقول go /sell → حُدّث سيناريو «شراء منتج». شغّل run للتحقق.",
+      "seed (مكرر) → نتيجة هذه الخطوة نفسها ظاهرة أعلاه في #3 والكود لم يتغير منذها. استخدمها: نفّذ edit أو run أو done.",
+      "read product — قراءة شاشة تفاصيل المنتج (product) لمعرفة كيف يتم إضافة المنتج للسلة، حيث أن خطوة السلة تفشل لعدم وجود منتجات في السلة (السلة فارغة) وبالتالي لا  → 1| App.screen({\n2|   id: 'product',\n3|   route: '/product/:id',\n4|   title: 'تفاصيل المنتج',\n5|   icon: 'info',\n6|   nav: false,\n7|   render(params) {\n8|     re",
+      "read cart → 1| App.screen({\n2|   id: 'cart',\n3|   route: '/cart',\n4|   title: 'سلة التسوق',\n5|   icon: 'shopping-cart',\n6|   nav: true,\n7|   render(params) {\n8|     return ",
+      "edit product — شاشة تفاصيل المنتج تستخدم Data.cart غير الموجودة في العقد، مما يسبب فشل إضافة المنتجات للسلة وبقاء السلة فارغة وبالتالي عدم ظهور حقل #address-inp → تم التعديل. ملاحظات الفحص الثابت بعده: لا تحفظ بيانات المستخدم في Store ('cart'): الشاشات الأخرى لن تراها. احفظها في مجموعة DB من الخطة بحقل userId، واقرأها بـ ",
+      "edit product — سلة التسوق في شاشة cart تستخدم Store.get('cart') بينما شاشة product كانت تستخدم طريقة أخرى، وقد أشار نظام الفحص إلى أن تخزين سلة التسوق يجب أن يك → find غير موجود في product حتى مع تجاهل المسافات؛ استخدم search بكلمة مميزة منه لتعرف النص الحالي، ثم انسخ سطراً أو سطرين فقط",
+      "read sellerOrders — أحتاج لقراءة شاشة sellerOrders الكاملة لمعرفة أسباب عدم وجود [data-act=accept] وزر القبول وكيفية عرض الطلبات وحالتها. → 1| App.screen({\n2|   id: 'sellerOrders',\n3|   route: '/seller',\n4|   title: 'طلبات متجري',\n5|   icon: 'inbox',\n6|   nav: true,\n7|   render(params) {\n8|     retu",
+      "edit product — تعديل شاشة تفاصيل المنتج (product) لتستخدم Store لتخزين سلة التسوق بدلاً من Data.cart الوهمية، لضمان نجاح إضافة المنتج للسلة وظهور حقل عنوان التو → find غير موجود في product حتى مع تجاهل المسافات؛ استخدم search بكلمة مميزة منه لتعرف النص الحالي، ثم انسخ سطراً أو سطرين فقط",
+      "search «Data.cart» → لا نتائج لـ «Data.cart»",
+      "run → نتيجة التشغيل (درجة الأخطاء 90، الأفضل حتى الآن 80):\n[cart] رحلة «شراء منتج» توقفت عند الخطوة ٦: لم يُحفظ شيء في orders بعد العملية (الحفظ لا يعمل)\n[sellerOrder"
+    ]
+  },
+  "fixErrors": [],
+  "review": {
+    "found": 1,
+    "fixed": 0
+  },
+  "screens": [
+    {
+      "id": "home",
+      "route": "/",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 4637
+    },
+    {
+      "id": "product",
+      "route": "/product/:id",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 3048
+    },
+    {
+      "id": "cart",
+      "route": "/cart",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 7555
+    },
+    {
+      "id": "orders",
+      "route": "/orders",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 3384
+    },
+    {
+      "id": "sellerOrders",
+      "route": "/seller",
+      "roles": [
+        "seller"
+      ],
+      "bytes": 6815
+    },
+    {
+      "id": "sellerProducts",
+      "route": "/seller/products",
+      "roles": [
+        "seller"
+      ],
+      "bytes": 7878
+    }
+  ]
+}

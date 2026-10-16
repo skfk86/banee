@@ -825,6 +825,7 @@
   <symbol id="i-check-circle" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></symbol>
   <symbol id="i-x-circle" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6M9 9l6 6"/></symbol>
   <symbol id="i-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></symbol>
+  <symbol id="i-share" viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></symbol>
   <symbol id="i-copy" viewBox="0 0 24 24"><rect x="8" y="8" width="14" height="14" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></symbol>
   <symbol id="i-phone" viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/></symbol>
   <symbol id="i-brain" viewBox="0 0 24 24"><path d="M12 5a3 3 0 1 0-5.997.125 4 4 0 0 0-2.526 5.77 4 4 0 0 0 .556 6.588A4 4 0 1 0 12 18Z"/><path d="M12 5a3 3 0 1 1 5.997.125 4 4 0 0 1 2.526 5.77 4 4 0 0 1-.556 6.588A4 4 0 1 1 12 18ZM12 5v13"/></symbol>
@@ -1150,6 +1151,7 @@
     <div class="st-title"><b id="st-name"></b><span id="st-ver"></span></div>
     <button class="btn btn-sm st-approve" id="st-approve" onclick="stApproveOpen()"></button>
     <button class="btn btn-ghost btn-sm st-check" id="st-test" onclick="stTest()"><svg class="i i-sm"><use href="#i-search"/></svg><span>فحص</span></button>
+    <button class="icon-btn" id="st-share" onclick="shareApp()" aria-label="مشاركة رابط التطبيق"><svg class="i"><use href="#i-share"/></svg></button>
     <button class="icon-btn" id="st-undo" onclick="stUndo()" aria-label="تراجع"><svg class="i"><use href="#i-undo"/></svg></button>
     <button class="icon-btn" onclick="openModal('more-modal')" aria-label="المزيد"><svg class="i"><use href="#i-more"/></svg></button>
   </div>
@@ -1206,6 +1208,7 @@
   <div class="modal-sheet">
     <div class="mhandle"></div>
     <div class="slist" style="margin:0">
+      <button class="sitem" onclick="closeModal('more-modal');shareApp()"><span class="sico g"><svg class="i"><use href="#i-share"/></svg></span><span class="slbl">رابط مشاركة<small>يفتحه أي شخص من المتصفح بدون تثبيت</small></span></button>
       <button class="sitem" onclick="closeModal('more-modal');stTest()"><span class="sico b"><svg class="i"><use href="#i-search"/></svg></span><span class="slbl">فحص التطبيق<small>تشغيل كل شاشة وتجربة كل زر</small></span></button>
       <button class="sitem" onclick="closeModal('more-modal');stApproveOpen()"><span class="sico g"><svg class="i"><use href="#i-check-circle"/></svg></span><span class="slbl">الاعتماد والتحويل إلى أندرويد<small>بعد المراجعة</small></span></button>
       <button class="sitem" onclick="closeModal('more-modal');stStoreOpen()"><span class="sico b"><svg class="i"><use href="#i-bag"/></svg></span><span class="slbl">حزمة Google Play<small>وصف المتجر، الصور، سياسة الخصوصية</small></span></button>
@@ -5062,6 +5065,35 @@ function closeStudio(){
   window._stLeave = false;
   document.getElementById('studio').hidden = true; document.body.classList.remove('in-studio');
   ST.id = null; renderApps(); firstWinOffer();
+}
+// ════ رابط مشاركة: نسخة ويب من التطبيق يفتحها أي شخص (Firebase Hosting: /a/{slug}) ════
+var SHARE_BASE = 'https://' + FB_CONFIG.projectId + '.web.app/a/';
+function shareApp(){
+  var app = stApp();
+  if (!app || !app.ck || !app.ck.plan) { toast('شارك التطبيق بعد اكتمال بنائه', 'err'); return; }
+  if (!CLOUD || !FB || !FB.auth.currentUser) { toast('سجّل دخولك واتصل بالإنترنت لإنشاء رابط المشاركة', 'err'); return; }
+  var btn = document.getElementById('st-share'); if (btn) btn.disabled = true;
+  toast('جارٍ تجهيز رابط تطبيقك…');
+  var uid = FB.auth.currentUser.uid, f = FB.f;
+  var slug = app.shareSlug || (function(){ var c = 'abcdefghijkmnpqrstuvwxyz23456789', o = ''; for (var i = 0; i < 8; i++) o += c[Math.floor(Math.random() * c.length)]; return o; })();
+  // قاعدة البيانات الحقيقية أولاً (سحابة بانِي)، ثم نسخة المعاينة بدون شريط «داخل بانِي فقط»
+  cloudSync(app).then(function(){
+    var html = assemble(app, { preview: true }).replace("bn.textContent = 'قاعدة بيانات تجريبية حقيقية · تعمل داخل بانِي فقط'; document.body.appendChild(bn);", '');
+    var CH = 280000, n = Math.ceil(html.length / CH), writes = [];
+    // المستند الأب أولاً: القواعد تتحقق من صاحب الرابط قبل كتابة الأجزاء
+    return f.setDoc(fdoc('pub', slug), { owner: uid, name: app.ck.plan.name || app.name || '', summary: String(app.ck.plan.summary || '').slice(0, 300), parts: n, size: html.length, updatedAt: Date.now() }).then(function(){
+      for (var i = 0; i < n; i++) writes.push(f.setDoc(fdoc('pub', slug, 'parts', String(i)), { d: html.slice(i * CH, (i + 1) * CH) }));
+      return Promise.all(writes);
+    });
+  }).then(function(){
+    app.shareSlug = slug; saveApps();
+    var url = SHARE_BASE + slug, name = app.ck.plan.name || app.name;
+    var P = window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform() && window.Capacitor.Plugins;
+    if (P && P.Share) return P.Share.share({ title: name, text: 'جرّب تطبيقي «' + name + '»', url: url, dialogTitle: 'شارك تطبيقك' }).catch(function(){});
+    if (navigator.share) return navigator.share({ title: name, url: url }).catch(function(){});
+    return navigator.clipboard.writeText(url).then(function(){ toast('نُسخ الرابط: ' + url, 'suc'); }, function(){ prompt('رابط تطبيقك', url); });
+  }).catch(function(e){ console.warn('share', e); toast((e && e.message) || 'تعذّر إنشاء الرابط، حاول مرة أخرى', 'err'); })
+    .then(function(){ if (btn) btn.disabled = false; });
 }
 function stApp(){ return findApp(ST.id); }
 

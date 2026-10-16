@@ -1,0 +1,106 @@
+{
+  "status": "ready",
+  "error": "",
+  "name": "صيانة بلس",
+  "steps": [
+    "done · هوية «صيانة محترفة» · الخطة: ٣ شاشات · ٣ مجموعات · ٦ عنصر محتوى",
+    "done · المحتوى: ٦ عنصر مكتوب كاملاً",
+    "done · الهيكل جاهز: التنقّل، البيانات، الدخول، التصميم",
+    "done · ٣ شاشات مكتوبة",
+    "done · الفحص: ٢ شاشات بها ملاحظات، راجعها في الاستوديو · رحلات المستخدم: ١ من ١ تعمل كاملة · المراجعة الشاملة: لا مشاكل",
+    "done · جاهز للمعاينة والتحميل"
+  ],
+  "runtime": {
+    "home": [
+      "تصميم: صورة لا تُحمَّل: https://images.unsplash.com/photo-1542013936693-8942e54f9b0f. استخدم صورة من بيانات التطبيق أو أيقونة بديلة.",
+      "تصميم: صورة لا تُحمَّل: https://images.unsplash.com/photo-1631545728951-22920150937c. استخدم صورة من بيانات التطبيق أو أيقونة بديلة."
+    ],
+    "orders": [],
+    "checkout": []
+  },
+  "flows": [
+    "طلب خدمة صيانة (8 خطوات)"
+  ],
+  "flowSteps": [
+    {
+      "flow": "طلب خدمة صيانة",
+      "steps": [
+        {
+          "role": "customer"
+        },
+        {
+          "go": "/"
+        },
+        {
+          "click": "[data-act=select-service][data-id=services-1]"
+        },
+        {
+          "fill": {
+            "#address": "الرياض، حي الملز، شارع الجامعة"
+          }
+        },
+        {
+          "fill": {
+            "#scheduledTime": "غداً الساعة 10 صباحاً"
+          }
+        },
+        {
+          "click": "[data-act=submit-order]"
+        },
+        {
+          "expectDb": {
+            "col": "orders",
+            "min": 1
+          }
+        },
+        {
+          "expect": "سجل الطلبات"
+        }
+      ]
+    }
+  ],
+  "reviewIssues": {
+    "home": [],
+    "orders": [],
+    "checkout": []
+  },
+  "flowErr": "",
+  "agent": {
+    "ran": false,
+    "fixed": 0,
+    "steps": 0,
+    "log": []
+  },
+  "fixErrors": [],
+  "review": {
+    "found": 0,
+    "fixed": 0
+  },
+  "screens": [
+    {
+      "id": "home",
+      "route": "/",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 3587
+    },
+    {
+      "id": "orders",
+      "route": "/orders",
+      "roles": [
+        "customer",
+        "technician"
+      ],
+      "bytes": 8028
+    },
+    {
+      "id": "checkout",
+      "route": "/checkout",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 4135
+    }
+  ]
+}

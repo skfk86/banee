@@ -1,0 +1,193 @@
+{
+  "status": "failed",
+  "error": "انتهت الحصة اليومية لمفتاح Gemini. أكمل غداً من حيث توقفت، أو فعّل الفوترة في Google AI Studio",
+  "name": "عيادتي",
+  "steps": [
+    "done · هوية «عناية صحية» · الخطة: ٧ شاشات · ٤ مجموعات · ١٢ عنصر محتوى",
+    "done · المحتوى: ١٢ عنصر مكتوب كاملاً",
+    "done · الهيكل جاهز: التنقّل، البيانات، الدخول، التصميم",
+    "done · ٧ شاشات مكتوبة",
+    "err · إصلاح أخطاء التشغيل في ٧ شاشات",
+    " · التجميع النهائي"
+  ],
+  "runtime": {
+    "home": [
+      "تصميم: صورة لا تُحمَّل: https://images.unsplash.com/photo-1622253692010-339f2dd6a8f0?q=80&w=500&auto=for. استخدم صورة من بيانات التطبيق أو أيقونة بديلة.",
+      "تصميم: صورة لا تُحمَّل: https://images.unsplash.com/photo-1622253692010-339f2dd6a8f2?q=80&w=500&auto=for. استخدم صورة من بيانات التطبيق أو أيقونة بديلة.",
+      "تصميم: صورة لا تُحمَّل: . استخدم صورة من بيانات التطبيق أو أيقونة بديلة.",
+      "رحلة «إجراء الكشف الطبي وإنهاء الموعد» توقفت عند الخطوة ٣: لم يُعثر على [data-act=open] (الزر غير موجود أو اسمه مختلف) — الظاهر الآن: الشاشة profile (#/profile) بدور patient؛ الأزرار: call، logout؛ الحقول: لا شيء"
+    ],
+    "book": [
+      "تصميم: صورة لا تُحمَّل: https://images.unsplash.com/photo-1622253692010-339f2dd6a8f0?q=80&w=500&auto=for. استخدم صورة من بيانات التطبيق أو أيقونة بديلة.",
+      "تصميم: صورة لا تُحمَّل: https://images.unsplash.com/photo-1622253692010-339f2dd6a8f2?q=80&w=500&auto=for. استخدم صورة من بيانات التطبيق أو أيقونة بديلة.",
+      "رحلة «حجز موعد طبي» توقفت عند الخطوة ٣: لم يُعثر على [data-act=book][data-id=doctors-1] (الزر غير موجود أو اسمه مختلف) — الظاهر الآن: الشاشة book (#/book/doctors-1) بدور patient؛ الأزرار: لا شيء؛ الحقول: #service-select، #day-select، #time-select، #phone، #notes",
+      "تصميم: صورة لا تُحمَّل: . استخدم صورة من بيانات التطبيق أو أيقونة بديلة."
+    ],
+    "myBookings": [
+      "تصميم: صورة لا تُحمَّل: https://images.unsplash.com/photo-1622253692010-339f2dd6a8f0?q=80&w=500&auto=for. استخدم صورة من بيانات التطبيق أو أيقونة بديلة.",
+      "تصميم: صورة لا تُحمَّل: https://images.unsplash.com/photo-1622253692010-339f2dd6a8f2?q=80&w=500&auto=for. استخدم صورة من بيانات التطبيق أو أيقونة بديلة.",
+      "تصميم: صورة لا تُحمَّل: . استخدم صورة من بيانات التطبيق أو أيقونة بديلة."
+    ],
+    "doctorSchedule": [
+      "تصميم: صورة لا تُحمَّل: https://images.unsplash.com/photo-1622253692010-339f2dd6a8f0?q=80&w=500&auto=for. استخدم صورة من بيانات التطبيق أو أيقونة بديلة.",
+      "تصميم: صورة لا تُحمَّل: https://images.unsplash.com/photo-1622253692010-339f2dd6a8f2?q=80&w=500&auto=for. استخدم صورة من بيانات التطبيق أو أيقونة بديلة.",
+      "تصميم: صورة لا تُحمَّل: . استخدم صورة من بيانات التطبيق أو أيقونة بديلة.",
+      "رحلة «حجز موعد طبي» توقفت عند الخطوة ٣: لم يُعثر على [data-act=book][data-id=doctors-1] (الزر غير موجود أو اسمه مختلف) — الظاهر الآن: الشاشة doctorSchedule (#/doctor/schedule) بدور doctor؛ الأزرار: لا شيء؛ الحقول: #search"
+    ],
+    "doctorSession": [
+      "تصميم: صورة لا تُحمَّل: https://images.unsplash.com/photo-1622253692010-339f2dd6a8f0?q=80&w=500&auto=for. استخدم صورة من بيانات التطبيق أو أيقونة بديلة.",
+      "تصميم: صورة لا تُحمَّل: https://images.unsplash.com/photo-1622253692010-339f2dd6a8f2?q=80&w=500&auto=for. استخدم صورة من بيانات التطبيق أو أيقونة بديلة."
+    ],
+    "doctorHistory": [
+      "تصميم: صورة لا تُحمَّل: https://images.unsplash.com/photo-1622253692010-339f2dd6a8f0?q=80&w=500&auto=for. استخدم صورة من بيانات التطبيق أو أيقونة بديلة.",
+      "تصميم: صورة لا تُحمَّل: https://images.unsplash.com/photo-1622253692010-339f2dd6a8f2?q=80&w=500&auto=for. استخدم صورة من بيانات التطبيق أو أيقونة بديلة.",
+      "تصميم: صورة لا تُحمَّل: . استخدم صورة من بيانات التطبيق أو أيقونة بديلة."
+    ],
+    "profile": [
+      "تصميم: صورة لا تُحمَّل: https://images.unsplash.com/photo-1622253692010-339f2dd6a8f0?q=80&w=500&auto=for. استخدم صورة من بيانات التطبيق أو أيقونة بديلة.",
+      "تصميم: صورة لا تُحمَّل: https://images.unsplash.com/photo-1622253692010-339f2dd6a8f2?q=80&w=500&auto=for. استخدم صورة من بيانات التطبيق أو أيقونة بديلة."
+    ]
+  },
+  "flows": [
+    "حجز موعد طبي (7 خطوات)",
+    "إجراء الكشف الطبي وإنهاء الموعد (7 خطوات)"
+  ],
+  "flowSteps": [
+    {
+      "flow": "حجز موعد طبي",
+      "steps": [
+        {
+          "role": "patient"
+        },
+        {
+          "go": "/"
+        },
+        {
+          "click": "[data-act=book][data-id=doctors-1]"
+        },
+        {
+          "fill": {
+            "#phone": "0501234567",
+            "#notes": "أعاني من صداع مستمر"
+          }
+        },
+        {
+          "click": "#confirm-btn"
+        },
+        {
+          "expect": "تم حجز الموعد بنجاح"
+        },
+        {
+          "expectDb": {
+            "col": "bookings",
+            "min": 1
+          }
+        }
+      ]
+    },
+    {
+      "flow": "إجراء الكشف الطبي وإنهاء الموعد",
+      "steps": [
+        {
+          "role": "doctor"
+        },
+        {
+          "go": "/doctor/schedule"
+        },
+        {
+          "click": "[data-act=open]"
+        },
+        {
+          "fill": {
+            "#doctorNotes": "تشخيص الحالة: صداع توتري",
+            "#prescription": "مسكن ألم عند اللزوم"
+          }
+        },
+        {
+          "click": "#finishBtn"
+        },
+        {
+          "expect": "تم إنهاء الجلسة بنجاح"
+        },
+        {
+          "expectDb": {
+            "col": "bookings",
+            "min": 1
+          }
+        }
+      ]
+    }
+  ],
+  "reviewIssues": null,
+  "flowErr": "",
+  "agent": {
+    "ran": false,
+    "fixed": 0,
+    "steps": 0,
+    "log": []
+  },
+  "fixErrors": [],
+  "review": {
+    "found": 0,
+    "fixed": 0
+  },
+  "screens": [
+    {
+      "id": "home",
+      "route": "/",
+      "roles": [
+        "patient"
+      ],
+      "bytes": 3374
+    },
+    {
+      "id": "book",
+      "route": "/book/:id",
+      "roles": [
+        "patient"
+      ],
+      "bytes": 4339
+    },
+    {
+      "id": "myBookings",
+      "route": "/my-bookings",
+      "roles": [
+        "patient"
+      ],
+      "bytes": 3600
+    },
+    {
+      "id": "doctorSchedule",
+      "route": "/doctor/schedule",
+      "roles": [
+        "doctor"
+      ],
+      "bytes": 2659
+    },
+    {
+      "id": "doctorSession",
+      "route": "/doctor/session/:bookingId",
+      "roles": [
+        "doctor"
+      ],
+      "bytes": 3443
+    },
+    {
+      "id": "doctorHistory",
+      "route": "/doctor/history",
+      "roles": [
+        "doctor"
+      ],
+      "bytes": 3006
+    },
+    {
+      "id": "profile",
+      "route": "/profile",
+      "roles": [
+        "patient",
+        "doctor"
+      ],
+      "bytes": 3578
+    }
+  ]
+}

@@ -32,6 +32,54 @@ static func mat(c: Color, rough := 0.75, metal := 0.0, emis := 0.0) -> StandardM
 	return m
 
 
+## تمويه صحراوي ببقع متداخلة مبني على لون الفريق (إسقاط ثلاثي لا يحتاج UV)
+static func camo(tc: Color, rough := 0.6) -> StandardMaterial3D:
+	var k := "camo|%s" % tc.to_html()
+	if _mats.has(k):
+		return _mats[k]
+	var g := Gradient.new()
+	g.interpolation_mode = Gradient.GRADIENT_INTERPOLATE_CONSTANT
+	g.offsets = PackedFloat32Array([0.0, 0.38, 0.55, 0.72])
+	g.colors = PackedColorArray([tc.darkened(0.12), tc, tc.lerp(C_SAND, 0.35), tc.darkened(0.45)])
+	var m := _tex_mat(g, 0.035, 0.45)
+	m.roughness = rough
+	m.metallic = 0.25
+	m.metallic_specular = 0.6
+	_mats[k] = m
+	return m
+
+
+## خامة متسخة للخرسانة والجدران (بقع وتآكل)
+static func grime(c: Color, rough := 0.92) -> StandardMaterial3D:
+	var k := "grime|%s" % c.to_html()
+	if _mats.has(k):
+		return _mats[k]
+	var g := Gradient.new()
+	g.offsets = PackedFloat32Array([0.0, 0.5, 0.8, 1.0])
+	g.colors = PackedColorArray([c.darkened(0.3), c.darkened(0.08), c, c.lightened(0.08)])
+	var m := _tex_mat(g, 0.06, 0.25)
+	m.roughness = rough
+	_mats[k] = m
+	return m
+
+
+static func _tex_mat(g: Gradient, freq: float, scl: float) -> StandardMaterial3D:
+	var n := FastNoiseLite.new()
+	n.frequency = freq
+	n.fractal_octaves = 3
+	var t := NoiseTexture2D.new()
+	t.width = 128
+	t.height = 128
+	t.seamless = true
+	t.noise = n
+	t.color_ramp = g
+	var m := StandardMaterial3D.new()
+	m.albedo_texture = t
+	m.uv1_triplanar = true
+	m.uv1_scale = Vector3.ONE * scl
+	return m
+
+
 static func unshaded(c: Color, prio := 0, billboard := false, depth := true) -> StandardMaterial3D:
 	var m := StandardMaterial3D.new()
 	m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
@@ -120,9 +168,11 @@ static func build_unit(e: Entity, tc: Color) -> void:
 	var body := Node3D.new()
 	e.add_child(body)
 	e.body = body
-	var mt := mat(tc, 0.55, 0.2)
+	var veh: bool = e.type in ["tank", "art", "worker"]
+	var mt := camo(tc) if veh else mat(tc, 0.55, 0.2)
 	var md := mat(tc.darkened(0.4), 0.6, 0.2)
 	var metal := mat(C_METAL, 0.45, 0.6)
+	var black := mat(Color(0.06, 0.06, 0.06), 0.85)
 	match e.type:
 		"tank":
 			_tracks(body, 3.6, 0.95, 5)
@@ -147,6 +197,26 @@ static func build_unit(e: Entity, tc: Color) -> void:
 			e.barrel_x0 = 0.95
 			cyl(bar, 0.09, 2.0, Vector3(1.0, 0, 0), metal, Vector3(0, 0, 90))
 			cyl(bar, 0.15, 0.32, Vector3(1.95, 0, 0), metal, Vector3(0, 0, 90))
+			cyl(bar, 0.12, 0.35, Vector3(0.9, 0, 0), md, Vector3(0, 0, 90))  # مبخّر الدخان
+			# تنانير جانبية فوق الجنازير
+			for zs in [-1.0, 1.0]:
+				box(body, Vector3(3.3, 0.42, 0.06), Vector3(0.05, 0.62, 1.27 * zs), mt)
+				for i in 4:
+					box(body, Vector3(0.05, 0.36, 0.07), Vector3(-1.2 + i * 0.85, 0.62, 1.29 * zs), md)
+			# دروع تفاعلية أمام البرج
+			for i in 3:
+				for zs in [-1.0, 1.0]:
+					box(tur, Vector3(0.28, 0.2, 0.3), Vector3(0.62, 0.42, (0.2 + i * 0.12) * zs), md, Vector3(0, 0, -22))
+			# قاذفات الدخان والرشاش وصندوق التخزين الخلفي
+			for zs in [-1.0, 1.0]:
+				for i in 3:
+					cyl(tur, 0.05, 0.22, Vector3(0.35, 0.58, (0.48 + i * 0.07) * zs), black, Vector3(0, 0, -60))
+			box(tur, Vector3(0.45, 0.32, 1.4), Vector3(-1.35, 0.3, 0), mat(Color(0.32, 0.3, 0.2), 0.9))
+			cyl(tur, 0.03, 0.75, Vector3(-0.1, 0.78, 0.28), black, Vector3(0, 0, 90))
+			box(tur, Vector3(0.18, 0.14, 0.1), Vector3(-0.4, 0.74, 0.28), black)
+			# شبكة العادم الخلفية
+			for i in 4:
+				box(body, Vector3(0.05, 0.06, 1.2), Vector3(-1.72, 0.85 + i * 0.09, 0), black)
 			e.h = 2.1
 		"art":
 			_tracks(body, 3.8, 0.9, 5)
@@ -168,11 +238,21 @@ static func build_unit(e: Entity, tc: Color) -> void:
 			cyl(bar, 0.13, 3.2, Vector3(1.6, 0, 0), metal, Vector3(0, 0, 90))
 			cyl(bar, 0.2, 0.4, Vector3(3.2, 0, 0), metal, Vector3(0, 0, 90))
 			cyl(bar, 0.22, 0.9, Vector3(0.3, 0, 0), md, Vector3(0, 0, 90))
+			cyl(bar, 0.17, 0.5, Vector3(2.3, 0, 0), md, Vector3(0, 0, 90))
+			# مساند خلفية وصناديق ذخيرة
+			for zs in [-1.0, 1.0]:
+				box(body, Vector3(0.9, 0.08, 0.25), Vector3(-2.15, 0.45, 0.6 * zs), metal, Vector3(0, 0, 35))
+			var ammo := mat(Color(0.33, 0.36, 0.22), 0.85)
+			box(body, Vector3(0.7, 0.35, 0.5), Vector3(1.25, 1.08, 0.95), ammo)
+			box(body, Vector3(0.7, 0.35, 0.5), Vector3(1.25, 1.08, -0.95), ammo)
+			box(tur, Vector3(0.35, 0.3, 0.35), Vector3(0.4, 1.0, 0.45), md)
+			cyl(tur, 0.02, 1.2, Vector3(-0.8, 1.4, -0.6), black)
 			e.h = 2.4
 		"worker":
-			var black := mat(Color(0.08, 0.08, 0.08), 0.9)
+			var hub := mat(Color(0.6, 0.6, 0.58), 0.4, 0.7)
 			for wp in [Vector3(-1.0, 0.34, -0.72), Vector3(-0.2, 0.34, -0.72), Vector3(1.0, 0.34, -0.72), Vector3(-1.0, 0.34, 0.72), Vector3(-0.2, 0.34, 0.72), Vector3(1.0, 0.34, 0.72)]:
 				cyl(body, 0.34, 0.28, wp, black, Vector3(90, 0, 0))
+				cyl(body, 0.16, 0.3, wp, hub, Vector3(90, 0, 0), -1.0, 8)
 			box(body, Vector3(3.0, 0.28, 1.25), Vector3(0, 0.6, 0), mat(C_METAL, 0.7, 0.3))
 			box(body, Vector3(0.95, 1.05, 1.35), Vector3(1.0, 1.25, 0), mat(Color(0.9, 0.88, 0.82), 0.45))
 			box(body, Vector3(0.06, 0.5, 1.15), Vector3(1.49, 1.42, 0), mat(C_GLASS, 0.08, 0.6))
@@ -188,6 +268,12 @@ static func build_unit(e: Entity, tc: Color) -> void:
 			e.cargo = cg
 			cyl(cg, 0.48, 1.6, Vector3(-0.5, 1.35, 0), mat(Color(0.05, 0.05, 0.05), 0.2, 0.7), Vector3(0, 0, 90))
 			box(cg, Vector3(1.5, 0.06, 0.12), Vector3(-0.5, 1.84, 0), mat(Color(0.85, 0.65, 0.2), 0.4, 0.5))
+			# عادم عمودي ومنارة تحذير برتقالية وصدّام أمامي
+			cyl(body, 0.06, 1.1, Vector3(0.45, 1.6, 0.6), metal)
+			cyl(body, 0.1, 0.12, Vector3(1.0, 1.88, 0), mat(Color(1.0, 0.5, 0.1), 0.3, 0.0, 2.5))
+			box(body, Vector3(0.12, 0.2, 1.4), Vector3(1.55, 0.55, 0), metal)
+			for zs in [-1.0, 1.0]:
+				box(body, Vector3(0.1, 0.14, 0.06), Vector3(1.3, 1.45, 0.72 * zs), black)
 			e.h = 2.0
 		"inf", "rocket":
 			var legm := mat(tc.darkened(0.55), 0.85)
@@ -200,6 +286,10 @@ static func build_unit(e: Entity, tc: Color) -> void:
 			box(body, Vector3(0.5, 0.13, 0.13), Vector3(0.22, 1.08, -0.22), mt)
 			sph(body, 0.16, Vector3(0.03, 1.5, 0), mat(C_SKIN, 0.8))
 			sph(body, 0.21, Vector3(0, 1.58, 0), md, Vector3(1, 0.62, 1))
+			# سترة واقية وحزام ونظارة
+			box(body, Vector3(0.36, 0.42, 0.46), Vector3(0.05, 1.05, 0), md)
+			box(body, Vector3(0.38, 0.08, 0.5), Vector3(0.05, 0.78, 0), mat(Color(0.25, 0.2, 0.12), 0.9))
+			box(body, Vector3(0.06, 0.06, 0.24), Vector3(0.17, 1.52, 0), black)
 			if e.type == "rocket":
 				cyl(body, 0.11, 1.3, Vector3(0.05, 1.42, 0.25), mat(Color(0.38, 0.4, 0.28), 0.8), Vector3(0, 0, 90))
 				cyl(body, 0.11, 0.3, Vector3(0.85, 1.42, 0.25), mat(Color(0.85, 0.4, 0.12), 0.6), Vector3(0, 0, -90), 0.0)
@@ -209,6 +299,10 @@ static func build_unit(e: Entity, tc: Color) -> void:
 			body.scale = Vector3.ONE * 1.3
 			e.h = 2.3
 	overlays(e)
+
+
+static func black_mat() -> StandardMaterial3D:
+	return mat(Color(0.06, 0.06, 0.06), 0.85)
 
 
 static func _tracks(body: Node3D, length: float, z: float, wheels: int) -> void:
@@ -230,8 +324,11 @@ static func build_bld(e: Entity, tc: Color) -> void:
 	e.body = b
 	var mt := mat(tc, 0.6, 0.15)
 	var md := mat(tc.darkened(0.35), 0.65, 0.15)
-	var conc := mat(C_CONC, 0.92)
-	var wall := mat(C_WALL, 0.9)
+	var conc := grime(C_CONC)
+	var wall := grime(C_WALL, 0.9)
+	var crate := mat(Color(0.45, 0.33, 0.18), 0.9)
+	var unit_box := mat(Color(0.78, 0.78, 0.75), 0.6, 0.3)
+	var sand := mat(C_SAND, 0.95)
 	var dark := mat(C_DARK, 0.9)
 	var glow := mat(C_LIGHT, 0.4, 0.0, 1.2)
 	var metal := mat(Color(0.55, 0.57, 0.6), 0.35, 0.7)
@@ -261,6 +358,19 @@ static func build_bld(e: Entity, tc: Color) -> void:
 			cyl(dish, 0.15, 0.35, Vector3(0.25, 1.5, 0), mat(Color(0.9, 0.9, 0.88), 0.4, 0.3), Vector3(0, 0, -60), 1.05)
 			cyl(b, 0.06, 3.4, Vector3(-3.6, 5.2, 3.6), metal)
 			box(b, Vector3(1.4, 0.85, 0.05), Vector3(-2.85, 6.4, 3.6), mt)
+			# مكيفات وألواح شمسية ودرابزين على السطح
+			for i in 3:
+				box(b, Vector3(0.9, 0.55, 0.7), Vector3(2.6, 3.9, -3.0 + i * 1.1), unit_box)
+				cyl(b, 0.25, 0.04, Vector3(2.6, 4.19, -3.0 + i * 1.1), black_mat())
+			var solar := mat(Color(0.08, 0.12, 0.25), 0.15, 0.6)
+			for i in 2:
+				box(b, Vector3(1.6, 0.06, 1.0), Vector3(1.5, 3.85, -0.6 + i * 1.2), solar, Vector3(0, 0, 18))
+			for x in [-4.0, 4.0]:
+				box(b, Vector3(0.08, 0.35, 8.2), Vector3(x, 3.85, 0), metal)
+				box(b, Vector3(8.2, 0.35, 0.08), Vector3(0, 3.85, x), metal)
+			# أكياس رمل عند المدخل
+			for i in 6:
+				box(b, Vector3(0.7, 0.32, 0.4), Vector3(-2.2 + i * 0.88, 0.46, 4.9), sand)
 			e.h = 6.8
 		"barracks":
 			box(b, Vector3(7.2, 0.25, 5.6), Vector3(0, 0.12, 0), mat(Color(0.5, 0.47, 0.42), 0.95))
@@ -269,13 +379,18 @@ static func build_bld(e: Entity, tc: Color) -> void:
 			box(b, Vector3(1.3, 1.5, 0.1), Vector3(0, 0.95, 2.33), dark)
 			for x in [-2.4, -1.4, 1.4, 2.4]:
 				box(b, Vector3(0.55, 0.45, 0.06), Vector3(x, 1.4, 2.33), glow)
-			var sand := mat(C_SAND, 0.95)
 			for i in 8:
 				box(b, Vector3(0.7, 0.32, 0.4), Vector3(-3.1 + i * 0.88, 0.16, 3.3), sand)
 				if i < 7:
 					box(b, Vector3(0.7, 0.32, 0.4), Vector3(-2.66 + i * 0.88, 0.48, 3.3), sand)
 			cyl(b, 0.05, 3.0, Vector3(3.3, 1.5, 2.6), metal)
 			box(b, Vector3(1.0, 0.6, 0.04), Vector3(2.8, 2.7, 2.6), mt)
+			# خزان ماء وصناديق إمداد
+			for lx in [-2.6, -2.0]:
+				cyl(b, 0.06, 2.4, Vector3(lx, 1.2, -2.0), metal)
+			cyl(b, 0.6, 0.9, Vector3(-2.3, 2.8, -2.0), mat(Color(0.25, 0.4, 0.6), 0.5, 0.3), Vector3.ZERO, -1.0, 12)
+			box(b, Vector3(0.8, 0.6, 0.8), Vector3(3.3, 0.55, -1.5), crate)
+			box(b, Vector3(0.6, 0.5, 0.6), Vector3(3.3, 1.1, -1.5), crate, Vector3(0, 25, 0))
 			e.h = 3.8
 		"factory":
 			box(b, Vector3(9.2, 0.3, 8.6), Vector3(0, 0.15, 0), mat(Color(0.48, 0.46, 0.42), 0.95))
@@ -291,6 +406,13 @@ static func build_bld(e: Entity, tc: Color) -> void:
 			box(b, Vector3(1.0, 0.5, 0.06), Vector3(2.6, 2.2, 3.63), glow)
 			cyl(b, 0.5, 5.0, Vector3(3.0, 4.6, -2.6), metal)
 			cyl(b, 0.42, 4.0, Vector3(1.8, 4.1, -2.6), metal)
+			# أنابيب ومراوح تهوية وصناديق شحن
+			box(b, Vector3(0.2, 0.2, 5.5), Vector3(-4.2, 2.6, -0.5), metal)
+			box(b, Vector3(0.2, 2.4, 0.2), Vector3(-4.2, 1.4, 2.2), metal)
+			for i in 3:
+				cyl(b, 0.4, 0.35, Vector3(-2.73 + i * 2.73, 5.3, -2.5), unit_box, Vector3.ZERO, -1.0, 10)
+			for i in 3:
+				box(b, Vector3(1.0, 0.9, 1.0), Vector3(3.6, 0.75 + (0.9 if i == 2 else 0.0), 4.2 - (i % 2) * 1.1), crate)
 			var sm := Fx.chimney_smoke(b, Vector3(3.0, 7.2, -2.6))
 			e.smoke = sm
 			e.h = 7.2
@@ -303,11 +425,18 @@ static func build_bld(e: Entity, tc: Color) -> void:
 				cyl(b, 1.13, 0.35, Vector3(x, 2.2, 0), mt, Vector3.ZERO, -1.0, 20)
 			box(b, Vector3(2.6, 0.18, 0.18), Vector3(0, 1.0, 1.0), mat(Color(0.3, 0.3, 0.3), 0.5, 0.6))
 			box(b, Vector3(0.6, 0.6, 0.6), Vector3(2.4, 0.75, 2.4), mat(Color(0.75, 0.55, 0.15), 0.6))
+			# سلّم وممر علوي وأنبوب تفريغ
+			for x in [-1.25, 1.25]:
+				box(b, Vector3(0.05, 2.6, 0.05), Vector3(x + 0.2, 1.75, 1.15), metal)
+				box(b, Vector3(0.05, 2.6, 0.05), Vector3(x - 0.2, 1.75, 1.15), metal)
+				for i in 6:
+					box(b, Vector3(0.4, 0.04, 0.04), Vector3(x, 0.7 + i * 0.42, 1.15), metal)
+			box(b, Vector3(1.5, 0.08, 0.6), Vector3(0, 3.0, 0), metal)
+			cyl(b, 0.14, 2.4, Vector3(0, 0.6, -1.6), mat(Color(0.3, 0.3, 0.3), 0.5, 0.6), Vector3(0, 0, 90))
 			e.h = 3.6
 		"tower":
 			cyl(b, 1.9, 3.0, Vector3(0, 1.5, 0), mat(Color(0.55, 0.52, 0.47), 0.95), Vector3.ZERO, 1.55, 10)
 			cyl(b, 1.85, 0.3, Vector3(0, 3.15, 0), conc, Vector3.ZERO, -1.0, 10)
-			var sand := mat(C_SAND, 0.95)
 			for i in 10:
 				var a := i / 10.0 * TAU
 				box(b, Vector3(0.7, 0.32, 0.4), Vector3(cos(a) * 1.55, 3.45, sin(a) * 1.55), sand, Vector3(0, -rad_to_deg(a) + 90, 0))
@@ -319,6 +448,12 @@ static func build_bld(e: Entity, tc: Color) -> void:
 			box(tur, Vector3(0.5, 0.55, 1.1), Vector3(0.85, 0.35, 0), mt, Vector3(0, 0, -25))
 			for z in [-0.25, 0.25]:
 				cyl(tur, 0.08, 2.0, Vector3(1.6, 0.45, z), mat(C_METAL, 0.45, 0.6), Vector3(0, 0, 90))
+			# رادار صغير وهوائي وضوء تحذير
+			cyl(tur, 0.03, 1.0, Vector3(-0.5, 1.2, 0.45), metal)
+			box(tur, Vector3(0.1, 0.35, 0.7), Vector3(-0.4, 0.95, -0.2), md)
+			box(tur, Vector3(0.12, 0.12, 0.12), Vector3(-0.5, 1.75, 0.45), mat(Color(1, 0.2, 0.1), 0.3, 0.0, 3.0))
+			for i in 4:
+				box(b, Vector3(0.06, 2.6, 0.12), Vector3(cos(i * PI / 2.0) * 1.72, 1.5, sin(i * PI / 2.0) * 1.72), dark, Vector3(0, -i * 90, 0))
 			e.h = 4.8
 	overlays(e)
 

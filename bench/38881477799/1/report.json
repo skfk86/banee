@@ -1,0 +1,177 @@
+{
+  "status": "ready",
+  "error": "",
+  "name": "فعاليات",
+  "steps": [
+    "done · هوية «نبض الفعاليات» · الخطة: ٥ شاشات · ٣ مجموعات · ١٢ عنصر محتوى",
+    "done · المحتوى: ١٢ عنصر مكتوب كاملاً",
+    "done · الهيكل جاهز: التنقّل، البيانات، الدخول، التصميم",
+    "done · ٥ شاشات مكتوبة",
+    "done · الفحص: ٢ شاشات بها ملاحظات، راجعها في الاستوديو · رحلات المستخدم: ٢ من ٢ تعمل كاملة · المراجعة: أُصلحت ٤ من ٤",
+    "done · جاهز للمعاينة والتحميل"
+  ],
+  "runtime": {
+    "home": [
+      "تصميم: صورة لا تُحمَّل: https://images.unsplash.com/photo-1579783902614-a3fb3927b675. استخدم صورة من بيانات التطبيق أو أيقونة بديلة.",
+      "تصميم: صورة لا تُحمَّل: https://images.unsplash.com/photo-1516280440614-62972800d001?q=80&w=2070&auto=fo. استخدم صورة من بيانات التطبيق أو أيقونة بديلة."
+    ],
+    "book": [],
+    "tickets": [],
+    "organizerDashboard": [
+      "تصميم: صورة لا تُحمَّل: https://images.unsplash.com/photo-1579783902614-a3fb3927b675. استخدم صورة من بيانات التطبيق أو أيقونة بديلة.",
+      "تصميم: صورة لا تُحمَّل: https://images.unsplash.com/photo-1516280440614-62972800d001?q=80&w=2070&auto=fo. استخدم صورة من بيانات التطبيق أو أيقونة بديلة."
+    ],
+    "notifications": []
+  },
+  "flows": [
+    "حجز فعالية (7 خطوات)",
+    "إدارة ونشر فعالية وتسجيل الحضور (8 خطوات)"
+  ],
+  "flowSteps": [
+    {
+      "flow": "حجز فعالية",
+      "steps": [
+        {
+          "role": "customer"
+        },
+        {
+          "go": "/"
+        },
+        {
+          "click": "[data-act=book][data-id=events-1]"
+        },
+        {
+          "fill": {
+            "[name=userName]": "أحمد محمد",
+            "[name=phone]": "0912345678"
+          }
+        },
+        {
+          "click": "text:تأكيد الحجز والدفع"
+        },
+        {
+          "expect": "تذاكري وحجوزاتي"
+        },
+        {
+          "expectDb": {
+            "col": "bookings",
+            "min": 1
+          }
+        }
+      ]
+    },
+    {
+      "flow": "إدارة ونشر فعالية وتسجيل الحضور",
+      "steps": [
+        {
+          "role": "organizer"
+        },
+        {
+          "go": "/organizer"
+        },
+        {
+          "click": "[data-act=add-event]"
+        },
+        {
+          "fill": {
+            "#f-title": "مؤتمر الذكاء الاصطناعي",
+            "#f-category": "تقنية",
+            "#f-date": "2025-06-01",
+            "#f-time": "10:00 AM",
+            "#f-location": "الخرطوم",
+            "#f-seats": "100",
+            "#f-price": "5000",
+            "#f-image": "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=600",
+            "#f-desc": "مؤتمر تقني شامل"
+          }
+        },
+        {
+          "click": "text:نشر الفعالية"
+        },
+        {
+          "expectDb": {
+            "col": "events",
+            "min": 1
+          }
+        },
+        {
+          "click": "[data-act=attend]"
+        },
+        {
+          "expect": "تم تسجيل الحضور بنجاح"
+        }
+      ]
+    }
+  ],
+  "reviewIssues": {
+    "home": [],
+    "book": [
+      "مراجعة: حفظ طريقة الدفع بالقيمة 'bankk' بينما المخطط يحددها 'bankak'، الإصلاح: تعديل قيمة الـ radio والتحقق إلى 'bankak'."
+    ],
+    "tickets": [
+      "مراجعة: التحقق من طريقة الدفع يتم بـ 'transfer' بينما تُحفظ 'bankk'، الإصلاح: مقارنة b.method مع 'bankak'."
+    ],
+    "organizerDashboard": [
+      "مراجعة: استخدام حقل غير موجود في مخطط bookings وهو 'createdAt' للترتيب، الإصلاح: استبداله بالحقل 'order'."
+    ],
+    "notifications": [
+      "مراجعة: استخدام مجموعة 'notices' غير معرفة في مخطط النظام، الإصلاح: استخدام مجموعة مطابقة للمخطط."
+    ]
+  },
+  "flowErr": "",
+  "agent": {
+    "ran": false,
+    "fixed": 0,
+    "steps": 0,
+    "log": []
+  },
+  "fixErrors": [],
+  "review": {
+    "found": 4,
+    "fixed": 4
+  },
+  "screens": [
+    {
+      "id": "home",
+      "route": "/",
+      "roles": [
+        "customer",
+        "organizer"
+      ],
+      "bytes": 7597
+    },
+    {
+      "id": "book",
+      "route": "/book/:id",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 7926
+    },
+    {
+      "id": "tickets",
+      "route": "/tickets",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 5208
+    },
+    {
+      "id": "organizerDashboard",
+      "route": "/organizer",
+      "roles": [
+        "organizer"
+      ],
+      "bytes": 10361
+    },
+    {
+      "id": "notifications",
+      "route": "/notifications",
+      "roles": [
+        "customer",
+        "organizer"
+      ],
+      "bytes": 2473
+    }
+  ]
+}

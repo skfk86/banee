@@ -2268,8 +2268,9 @@ var ROLES = {
 '{"tool":"edit","screen":"id","find":"نص موجود حرفياً مرة واحدة","replace":"النص الجديد"} ← تعديل جراحي؛ انسخ find حرفياً من نتيجة read (بدون أرقام الأسطر) واجعله قصيراً ومميزاً\n' +
 '{"tool":"run"} ← تشغيل التطبيق كاملاً وتجربة كل الشاشات والرحلات، يعيد الأخطاء الحالية، ومعها ناتج أي console.log("DBG", ...) تضيفه في الكود لترى القيم الفعلية (تُحذف تلقائياً في النهاية)\n' +
 '{"tool":"seed","collection":"providers","items":[{...},{...}]} ← إضافة بيانات أولية حقيقية لمجموعة فارغة تعرضها الشاشات ولا يُنشئها المستخدم (مدربون، أطباء، خدمات، تصنيفات…). حقول العناصر بأسماء المجموعة حرفياً، ٤-٨ عناصر واقعية بالعربي\n' +
+'{"tool":"flow","name":"اسم الرحلة حرفياً","steps":[...]} ← تصحيح سيناريو اختبار آلي كتبه ذكاء اصطناعي وأخطأ فيه (زر في شاشة أخرى، خطوة فتح ناقصة، selector خاطئ) بينما التطبيق يعمل صحيحاً. نفس صيغة الخطوات، ويجب أن تبقى كل خطوات expectDb الأصلية. لا تستخدمه لإخفاء خطأ حقيقي في التطبيق\n' +
 '{"tool":"done","summary":"ما أصلحته"} ← عندما تنتهي الأخطاء أو لا يمكنك المزيد\n' +
-'المنهج: اقرأ الخطأ، تتبّع السبب الجذري عبر الشاشات بـ search وread (حقل مختلف الاسم، قيمة حالة مختلفة، فلترة خاطئة، زر لا يظهر لهذا الدور، عنصر يظهر فقط عند وجود بيانات)، عدّل أقل قدر ممكن، ثم run للتحقق. لا تحذف ميزات ولا تغيّر قيم data-act الموجودة. استخدم طبقة Data للمجموعات المعرّفة في العقد. لا تعدّل لإرضاء الاختبار بنص وهمي، أصلح السلوك الحقيقي. خطأ مثل «X is not a function» يعني استدعاء دالة غير موجودة في الهيكل: استبدلها بالدالة الصحيحة من عقد الهيكل أدناه أو اكتب المنطق مباشرة.\nعقد الهيكل الذي تُكتب به الشاشات:\n' + CONTRACT,
+'المنهج: اقرأ الخطأ، تتبّع السبب الجذري عبر الشاشات بـ search وread (حقل مختلف الاسم، قيمة حالة مختلفة، فلترة خاطئة، زر لا يظهر لهذا الدور، عنصر يظهر فقط عند وجود بيانات)، عدّل أقل قدر ممكن، ثم run للتحقق. لا تحذف ميزات ولا تغيّر قيم data-act الموجودة. استخدم طبقة Data للمجموعات المعرّفة في العقد. لا تعدّل لإرضاء الاختبار بنص وهمي، أصلح السلوك الحقيقي. قبل تعديل التطبيق اسأل: هل التطبيق يعمل صحيحاً والسيناريو هو المخطئ (يبحث عن زر في شاشة أخرى، أو ينسى فتح نافذة)؟ عندها صحّح السيناريو بأداة flow بدل تشويه التطبيق. وإن كان التطبيق نفسه لا يعمل (قائمة لا تعرض بيانات دور آخر، حفظ لا يتم) فأصلح التطبيق. خطأ مثل «X is not a function» يعني استدعاء دالة غير موجودة في الهيكل: استبدلها بالدالة الصحيحة من عقد الهيكل أدناه أو اكتب المنطق مباشرة.\nعقد الهيكل الذي تُكتب به الشاشات:\n' + CONTRACT,
   fixer: 'أنت مصلّح أخطاء. ستستلم كود شاشة واحدة وقائمة أخطاء مكتشفة آلياً. أصلح الأخطاء فقط مع الالتزام بالعقد التالي، وأعد الشاشة كاملة داخل ```javascript بلا شرح.\n' + CONTRACT
 };
 
@@ -2959,7 +2960,7 @@ function runBuild(app, key){
       if (!fn || app.ck.agentRan) return res;
       app.ck.agentRan = true; saveApps();
       jstep(app,4,'cur','وكيل الإصلاح يتتبّع الأخطاء بين الشاشات');
-      return agentFix(app, key, res, function(k, a){ alive(); jstep(app,4,'cur','وكيل الإصلاح — خطوة ' + toAr(k) + ': ' + ({ read:'يقرأ ', search:'يبحث عن ', edit:'يعدّل ', run:'يشغّل التطبيق ويجرّبه', done:'ينهي' }[a.tool] || '') + (a.screen || (a.text ? '«' + String(a.text).slice(0, 30) + '»' : ''))); })
+      return agentFix(app, key, res, function(k, a){ alive(); jstep(app,4,'cur','وكيل الإصلاح — خطوة ' + toAr(k) + ': ' + ({ read:'يقرأ ', search:'يبحث عن ', edit:'يعدّل ', run:'يشغّل التطبيق ويجرّبه', seed:'يضيف بيانات لـ ', flow:'يصحّح سيناريو اختبار ', done:'ينهي' }[a.tool] || '') + (a.screen || (a.text ? '«' + String(a.text).slice(0, 30) + '»' : ''))); })
         .then(function(r){ alive(); fixedLive += Math.max(0, r.fixed || 0); app.ck.agentFixed = r.fixed || 0; app.ck.agentSteps = r.steps; return r.res; });
     }
     function liveRound(known){
@@ -3670,8 +3671,10 @@ function runFlows(app, w, d, note, setCur){
     return null;
   }
   // العنصر غير موجود؟ ربما السيناريو نسي تبديل الدور: نجرّب أدوار الشاشة الأخرى ونعيد عرضها قبل إعلان الفشل
+  var seenBefore = '';
   function findRole(sel){
     var el = find(sel); if (el) return Promise.resolve(el);
+    seenBefore = seen();
     var R; try { R = w.__banee.Roles; } catch(e){}
     if (!R || (plan.roles || []).length < 2) return Promise.resolve(null);
     var hash = w.location.hash, sc = plan.screens.filter(function(x){ return x.id === here(); })[0];
@@ -3732,7 +3735,7 @@ function runFlows(app, w, d, note, setCur){
           });
         }
         else if (st.click) p = findRole(st.click).then(function(el){
-          if (!el) fail('لم يُعثر على ' + st.click + ' (الزر غير موجود أو اسمه مختلف)' + seen());
+          if (!el) fail('لم يُعثر على ' + st.click + ' (الزر غير موجود أو اسمه مختلف)' + (seenBefore || seen()));
           else {
             var form = el.closest && el.closest('form');
             if (form && (el.type === 'submit' || el.tagName === 'BUTTON')) {
@@ -3832,7 +3835,7 @@ function issuesText(app, res){
 function agentFix(app, key, res, onStep){
   var plan = app.ck.plan, start = {}, MAX = 14, n = 0, hist = [], cur = res, best = appScore(app, res), bestScreens = null;
   plan.screens.forEach(function(s){ start[s.id] = app.ck.screens[s.id]; });
-  var startSeed = JSON.stringify(plan.seed || {}), seedChanged = false;
+  var startSeed = JSON.stringify(plan.seed || {}), seedChanged = false, flowBackup = null;
   function numbered(js){ return String(js || '').split('\n').map(function(l, i){ return (i + 1) + '| ' + l; }).join('\n'); }
   function ctx(){
     return 'التطبيق: ' + plan.name + ' — ' + (plan.summary || '') +
@@ -3890,10 +3893,20 @@ function agentFix(app, key, res, onStep){
       return runtimeTest(app).then(function(r){
         var cx = crossCheck(app); Object.keys(cx).forEach(function(id){ (cx[id] || []).forEach(function(m){ if (r[id] && r[id].indexOf(m) < 0) r[id].push(m); }); });
         cur = r; var s = appScore(app, r);
-        if (s < best) { best = s; bestScreens = {}; plan.screens.forEach(function(x){ bestScreens[x.id] = app.ck.screens[x.id]; }); bestScreens.__seed = JSON.stringify(plan.seed || {}); }
+        if (s < best) { best = s; bestScreens = {}; plan.screens.forEach(function(x){ bestScreens[x.id] = app.ck.screens[x.id]; }); bestScreens.__seed = JSON.stringify(plan.seed || {}); bestScreens.__flows = JSON.stringify(app.ck.flowTests || []); }
         var dbg = (window.__agentDbg || []).slice(-25);
         return 'نتيجة التشغيل (درجة الأخطاء ' + s + '، الأفضل حتى الآن ' + best + '):\n' + issuesText(app, r) + (dbg.length ? '\n\nمخرجات console.log("DBG", ...) أثناء التشغيل:\n' + dbg.join('\n') : '');
       });
+    }
+    if (a.tool === 'flow') {
+      var ft = (app.ck.flowTests || []).filter(function(x){ return x.flow === a.name; })[0];
+      if (!ft) return Promise.resolve('لا توجد رحلة بهذا الاسم. الموجود: ' + (app.ck.flowTests || []).map(function(x){ return x.flow; }).join('، '));
+      var ns = (Array.isArray(a.steps) ? a.steps : []).filter(function(x){ return x && typeof x === 'object'; }).slice(0, 16);
+      if (!ns.length) return Promise.resolve('steps فارغة');
+      var lost = ft.steps.filter(function(o){ return o.expectDb; }).filter(function(o){ return !ns.some(function(n){ return n.expectDb && n.expectDb.col === o.expectDb.col && (n.expectDb.min || 1) >= (o.expectDb.min || 1); }); });
+      if (lost.length) return Promise.resolve('رُفض: السيناريو الجديد يحذف تحقق الحفظ ' + JSON.stringify(lost.map(function(o){ return o.expectDb; })) + '. أبقِه، فهو ما يثبت أن التطبيق يعمل');
+      flowBackup = flowBackup || JSON.stringify(app.ck.flowTests); ft.steps = ns;
+      return Promise.resolve('حُدّث سيناريو «' + ft.flow + '». شغّل run للتحقق.');
     }
     if (a.tool === 'seed') {
       var cn = String(a.collection || ''), cdef = (plan.collections || []).filter(function(c){ return c && c.name === cn; })[0];
@@ -3923,18 +3936,18 @@ function agentFix(app, key, res, onStep){
   }
   function finish(){
     plan.screens.forEach(function(s){ var js = app.ck.screens[s.id]; if (js && js.indexOf('DBG') > -1) app.ck.screens[s.id] = js.replace(/^[ \t]*console\.log\(\s*['"`]DBG[^\n]*\n/gm, ''); });
-    var changed = seedChanged || plan.screens.some(function(s){ return app.ck.screens[s.id] !== start[s.id]; });
+    var changed = seedChanged || !!flowBackup || plan.screens.some(function(s){ return app.ck.screens[s.id] !== start[s.id]; });
     if (!changed) { app.ck.agentLog = hist.map(function(h){ return h.call.slice(0, 160) + ' → ' + String(h.obs).slice(0, 160); }); return Promise.resolve({ fixed: 0, res: res, steps: n }); }
     var ran = hist.length && /^run/.test(hist[hist.length - 1].call);
     return (ran ? Promise.resolve(cur) : runtimeTest(app)).then(function(r){
       var s = appScore(app, r);
       if (s < best) { best = s; bestScreens = null; cur = r; }
-      else if (bestScreens) { plan.screens.forEach(function(x){ app.ck.screens[x.id] = bestScreens[x.id]; }); if (bestScreens.__seed) plan.seed = JSON.parse(bestScreens.__seed); return runtimeTest(app).then(function(r2){ cur = r2; return r2; }); }
+      else if (bestScreens) { plan.screens.forEach(function(x){ app.ck.screens[x.id] = bestScreens[x.id]; }); if (bestScreens.__seed) plan.seed = JSON.parse(bestScreens.__seed); if (bestScreens.__flows) app.ck.flowTests = JSON.parse(bestScreens.__flows); return runtimeTest(app).then(function(r2){ cur = r2; return r2; }); }
       return r;
     }).then(function(r){
       var before = appScore(app, res), after = appScore(app, r);
       app.ck.agentLog = hist.map(function(h){ return h.call.slice(0, 160) + ' → ' + String(h.obs).slice(0, 160); });
-      if (after >= before) { plan.screens.forEach(function(x){ app.ck.screens[x.id] = start[x.id]; }); plan.seed = JSON.parse(startSeed); setRuntime(app, res); saveApps(); return { fixed: 0, res: res, steps: n, log: hist }; }
+      if (after >= before) { plan.screens.forEach(function(x){ app.ck.screens[x.id] = start[x.id]; }); plan.seed = JSON.parse(startSeed); if (flowBackup) app.ck.flowTests = JSON.parse(flowBackup); setRuntime(app, res); saveApps(); return { fixed: 0, res: res, steps: n, log: hist }; }
       setRuntime(app, r); saveApps();
       return { fixed: runtimeIssues(res) - runtimeIssues(r), res: r, steps: n, log: hist };
     });

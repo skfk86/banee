@@ -1,0 +1,255 @@
+{
+  "status": "ready",
+  "error": "",
+  "name": "مدرستي الذكية",
+  "steps": [
+    "done · هوية «أكاديميا الواثقة» · الخطة: ٨ شاشات · ٦ مجموعات · ١٨ عنصر محتوى",
+    "done · المحتوى: ١٨ عنصر مكتوب كاملاً",
+    "done · الهيكل جاهز: التنقّل، البيانات، الدخول، التصميم",
+    "done · ٨ شاشات مكتوبة",
+    "done · الفحص: ٢ شاشات بها ملاحظات، راجعها في الاستوديو · رحلات المستخدم: ٠ من ٣ تعمل كاملة · المراجعة: أُصلحت ٣ من ٣ · وكيل الإصلاح: لم يجد تحسيناً آمناً",
+    "done · جاهز للمعاينة والتحميل"
+  ],
+  "runtime": {
+    "student_home": [
+      "رحلة «تسليم الواجب المدرسي من قبل الطالب» توقفت عند الخطوة ٤: الحقل #answerText غير موجود في الشاشة — الظاهر الآن: الشاشة student_home (#/) بدور student؛ الأزرار: filter، open-assignment؛ الحقول: #search-input",
+      "رحلة «متابعة ولي الأمر لأداء الأبناء» توقفت عند الخطوة ٣: لم يُعثر على [data-act=select-child] (الزر غير موجود أو اسمه مختلف) — الظاهر الآن: الشاشة student_home (#/) بدور student؛ الأزرار: filter، open-assignment؛ الحقول: #search-input"
+    ],
+    "teacher_dashboard": [],
+    "parent_dashboard": [],
+    "assignment_details": [],
+    "grade_submission": [],
+    "student_grades": [],
+    "add_assignment": [
+      "رحلة «نشر واجب وتقييم الطلاب من قبل المعلم» توقفت عند الخطوة ٣: لم يُعثر على [data-act=add-assignment] (الزر غير موجود أو اسمه مختلف) — الظاهر الآن: الشاشة add_assignment (#/add-assignment) بدور teacher؛ الأزرار: لا شيء؛ الحقول: [name=title]، [name=subject]، [name=gradeLevel]، [name=dueDate]، [name="
+    ],
+    "announcements_screen": []
+  },
+  "flows": [
+    "تسليم الواجب المدرسي من قبل الطالب (6 خطوات)",
+    "نشر واجب وتقييم الطلاب من قبل المعلم (11 خطوات)",
+    "متابعة ولي الأمر لأداء الأبناء (6 خطوات)"
+  ],
+  "flowSteps": [
+    {
+      "flow": "تسليم الواجب المدرسي من قبل الطالب",
+      "steps": [
+        {
+          "role": "student"
+        },
+        {
+          "go": "/"
+        },
+        {
+          "click": "[data-id=assignments-1]"
+        },
+        {
+          "fill": {
+            "#answerText": "هذا هو حل الواجب الخاص بي"
+          }
+        },
+        {
+          "click": "#submitAssignmentBtn"
+        },
+        {
+          "expectDb": {
+            "col": "submissions",
+            "min": 1
+          }
+        }
+      ]
+    },
+    {
+      "flow": "نشر واجب وتقييم الطلاب من قبل المعلم",
+      "steps": [
+        {
+          "role": "teacher"
+        },
+        {
+          "go": "/teacher"
+        },
+        {
+          "click": "[data-act=add-assignment]"
+        },
+        {
+          "fill": {
+            "[name=title]": "واجب الرياضيات",
+            "[name=subject]": "رياضيات",
+            "[name=gradeLevel]": "الصف الخامس",
+            "[name=dueDate]": "2023-12-31",
+            "[name=maxScore]": "100",
+            "[name=description]": "حل تمارين الصفحة 50",
+            "[name=instructions]": "يرجى حل جميع التمارين"
+          }
+        },
+        {
+          "click": "#publishBtn"
+        },
+        {
+          "expectDb": {
+            "col": "assignments",
+            "min": 1
+          }
+        },
+        {
+          "go": "/teacher"
+        },
+        {
+          "click": "[data-act=grade-submission]"
+        },
+        {
+          "fill": {
+            "[name=score]": "95",
+            "[name=feedback]": "أحسنت، عمل ممتاز"
+          }
+        },
+        {
+          "click": "#save-btn"
+        },
+        {
+          "expectDb": {
+            "col": "grades",
+            "min": 1
+          }
+        }
+      ]
+    },
+    {
+      "flow": "متابعة ولي الأمر لأداء الأبناء",
+      "steps": [
+        {
+          "role": "parent"
+        },
+        {
+          "go": "/parent"
+        },
+        {
+          "click": "[data-act=select-child]"
+        },
+        {
+          "expect": "المعدل التراكمي العام"
+        },
+        {
+          "click": "[data-act=view-all-grades]"
+        },
+        {
+          "expect": "كشف الدرجات الشامل"
+        }
+      ]
+    }
+  ],
+  "reviewIssues": {
+    "student_home": [],
+    "teacher_dashboard": [
+      "مراجعة: تستخدم `Data.submissions.list` بينما المخطط يحدد أن مجموعة `submissions` مخصصة لدور المعلم عبر `roleAccess` ولكن الدوال المُعرّفة لـ `Data` لا تتطابق مع الدوال الافتراضية، الأصح استخدام `DB.list('submissions')` كما في باقي الشاشات."
+    ],
+    "parent_dashboard": [
+      "مراجعة: يتم جلب الواجبات عبر `DB.list('assignments', { where: ['gradeLevel', '==', child.gradeLevel] })` ولكن حقل `gradeLevel` في جدول `assignments` نصي قد لايطابق تماماً إن لم يُعالج، والمشكلة الأكبر هي حساب `completedCount` بناءً على `submissions.filter(s => s.status === 'graded' || s.status === 'pending')` حيث قد لا يتم جلب submissions الخاصة بالابن هنا لأنه جلب `DB.list('submissions', { where: ['userI"
+    ],
+    "assignment_details": [],
+    "grade_submission": [
+      "مراجعة: يتم إنشاء سجل جديد في جدول `grades` عند اعتماد الدرجة باستخدام `DB.add('grades', gradePayload)` بينما المفترض استخدام `Data.grades.create` أو التأكد من توفر الدالة، وإصلاحها باستبدالها بـ `DB.create('grades', gradePayload)` أو استخدام `Data.grades` بشكل موحد."
+    ],
+    "student_grades": [],
+    "add_assignment": [],
+    "announcements_screen": []
+  },
+  "flowErr": "",
+  "agent": {
+    "ran": true,
+    "fixed": 0,
+    "steps": 14,
+    "log": [
+      "read student_home — سأبدأ بقراءة شاشة student_home وشاشة teacher_dashboard لفهم هيكلية الأزرار المفقودة والتأكد من توزيع المهام في الشاشات الصحيحة. → 1| App.screen({\n2|   id: 'student_home',\n3|   route: '/',\n4|   title: 'واجباتي المدرسية',\n5|   icon: 'book-open',\n6|   nav: true,\n7|   render(params) {\n8|     c",
+      "read teacher_dashboard — سأقوم بقراءة شاشتي teacher_dashboard و parent_dashboard للتحقق من وجود الأزرار المفقودة (add-assignment و select-child) وتصحيحها إذا لز → 1| App.screen({\n2|   id: 'teacher_dashboard',\n3|   route: '/teacher',\n4|   title: 'إدارة الواجبات',\n5|   icon: 'clipboard-list',\n6|   nav: true,\n7| \n8|   render",
+      "run — سأقوم بتشغيل التطبيق أولاً للحصول على تقرير دقيق بالأخطاء الحالية، حيث أن بعض الأخطاء قد تكون ناتجة عن عدم تحديث الحالة بعد التعديلات السابقة. بعد ذلك سأق → نتيجة التشغيل (درجة الأخطاء 90، الأفضل حتى الآن 90):\n[student_home] رحلة «تسليم الواجب المدرسي من قبل الطالب» توقفت عند الخطوة ٤: الحقل #answerText غير موجود في",
+      "read assignment_details — سأقوم بقراءة شاشة assignment_details للتحقق من وجود الحقل #answerText، حيث أن الطالب يقوم بتسليم الواجب من خلال هذه الشاشة وليس من الش → 1| App.screen({\n2|   id: 'assignment_details',\n3|   route: '/assignment/:id',\n4|   title: 'تفاصيل الواجب والتسليم',\n5|   icon: 'file-text',\n6|   nav: false,\n7| ",
+      "read add_assignment — سأقوم بقراءة شاشة add_assignment للتأكد من وجود زر النشر، وسأقوم بإضافة بيانات أولية لمجموعة students لأنها فارغة وتسبب مشاكل في رحلات ولي → 1| App.screen({\n2|   id: 'add_assignment',\n3|   route: '/add-assignment',\n4|   title: 'نشر واجب جديد',\n5|   icon: 'plus-circle',\n6|   nav: true,\n7|   render(par",
+      "seed — الخطأ في رحلة الطالب هو أن الاختبار يبحث عن #answerText في الشاشة الرئيسية (student_home) بينما هو موجود في شاشة التفاصيل (assignment_details). يجب تعديل → أُضيفت 2 عناصر إلى students (ids: students-1، students-2). شغّل run للتحقق.",
+      "read parent_dashboard → 1| App.screen({\n2|   id: 'parent_dashboard',\n3|   route: '/parent',\n4|   title: 'متابعة الأبناء',\n5|   icon: 'users',\n6|   nav: true,\n7|   render(params) {\n8|  ",
+      "edit student_home — الأخطاء تشير إلى أن الاختبار الآلي يتوقع عناصر معينة في شاشات لا تحتوي عليها، أو أن المسارات غير متطابقة. رحلة الطالب تتوقع #answerText في ا → تم التعديل",
+      "edit teacher_dashboard — لقد قمت بتحليل الأخطاء في رحلات المستخدم. رحلة الطالب تتوقع وجود #answerText في الشاشة الرئيسية بينما هو في شاشة التفاصيل، ورحلة المعلم → تم التعديل",
+      "edit teacher_dashboard — لقد قمت بمراجعة كافة الشاشات والأخطاء. رحلات المستخدم تتطلب وجود أزرار معينة في الشاشات الرئيسية. في teacher_dashboard، يجب إضافة زر 'إ → find غير موجود في teacher_dashboard حتى مع تجاهل المسافات؛ استخدم search بكلمة مميزة منه لتعرف النص الحالي، ثم انسخ سطراً أو سطرين فقط",
+      "edit teacher_dashboard — سأقوم بإضافة زر إضافة واجب في شاشة teacher_dashboard لتمكين المعلم من الانتقال لشاشة إضافة الواجب، وسأتحقق من وجود زر اختيار الابن في ش → find غير موجود في teacher_dashboard حتى مع تجاهل المسافات؛ استخدم search بكلمة مميزة منه لتعرف النص الحالي، ثم انسخ سطراً أو سطرين فقط",
+      "search «إدارة الواجبات» — لقد قمت بمراجعة الأخطاء. رحلة المعلم تفشل لأن زر [data-act=add-assignment] غير موجود في شاشة teacher_dashboard. سأقوم بإضافة الزر في ش → teacher_dashboard:4| title: 'إدارة الواجبات',\nteacher_dashboard:12| <div class=\"title\">إدارة الواجبات</div>",
+      "edit teacher_dashboard — سأقوم بإضافة زر 'إضافة واجب' في شاشة teacher_dashboard لتمكين المعلم من الانتقال لشاشة إضافة الواجب، حيث أن الاختبار الآلي يتوقع وجود ه → تم التعديل",
+      "run — تشغيل التطبيق لمعرفة الأخطاء الحالية بعد التعديلات الأخيرة والتأكد مما إذا كانت رحلات المستخدم تعمل بشكل صحيح الآن. → نتيجة التشغيل (درجة الأخطاء 90، الأفضل حتى الآن 90):\n[student_home] رحلة «تسليم الواجب المدرسي من قبل الطالب» توقفت عند الخطوة ٤: الحقل #answerText غير موجود في"
+    ]
+  },
+  "fixErrors": [],
+  "review": {
+    "found": 3,
+    "fixed": 3
+  },
+  "screens": [
+    {
+      "id": "student_home",
+      "route": "/",
+      "roles": [
+        "student"
+      ],
+      "bytes": 10124
+    },
+    {
+      "id": "teacher_dashboard",
+      "route": "/teacher",
+      "roles": [
+        "teacher"
+      ],
+      "bytes": 11587
+    },
+    {
+      "id": "parent_dashboard",
+      "route": "/parent",
+      "roles": [
+        "parent"
+      ],
+      "bytes": 8629
+    },
+    {
+      "id": "assignment_details",
+      "route": "/assignment/:id",
+      "roles": [
+        "student",
+        "teacher",
+        "parent"
+      ],
+      "bytes": 18125
+    },
+    {
+      "id": "grade_submission",
+      "route": "/grade/:submissionId",
+      "roles": [
+        "teacher"
+      ],
+      "bytes": 7328
+    },
+    {
+      "id": "student_grades",
+      "route": "/grades",
+      "roles": [
+        "student",
+        "parent"
+      ],
+      "bytes": 9768
+    },
+    {
+      "id": "add_assignment",
+      "route": "/add-assignment",
+      "roles": [
+        "teacher"
+      ],
+      "bytes": 4218
+    },
+    {
+      "id": "announcements_screen",
+      "route": "/announcements",
+      "roles": [
+        "student",
+        "teacher",
+        "parent"
+      ],
+      "bytes": 3840
+    }
+  ]
+}

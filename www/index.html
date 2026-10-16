@@ -3686,6 +3686,10 @@ function runFlows(app, w, d, note, setCur){
   }
   // العنصر غير موجود؟ ربما السيناريو نسي تبديل الدور: نجرّب أدوار الشاشة الأخرى ونعيد عرضها قبل إعلان الفشل
   var seenBefore = '';
+  // سجل عمليات الحفظ الفعلية: عند «لم يُحفظ شيء» نعرف هل استُدعي الحفظ أصلاً، وفي أي مجموعة، وهل فشل
+  try { var DBw = w.__banee && w.__banee.DB; if (DBw && !DBw.__wrapped) { DBw.__wrapped = 1; ['add', 'update', 'remove'].forEach(function(m){ var o = DBw[m]; if (typeof o !== 'function') return; DBw[m] = function(c){ var rec = m + '(' + c + ')'; (w.__dbCalls = w.__dbCalls || []).push(rec); var r = o.apply(this, arguments); try { return Promise.resolve(r).catch(function(e){ w.__dbCalls.push(rec + ' فشل: ' + (e && e.message || e)); throw e; }); } catch (e) { return r; } }; }); } } catch (e) {}
+  function dbInfo(col){ var c = (w.__dbCalls || []).slice(-4); return c.length ? ' — عمليات الحفظ التي حدثت فعلاً: ' + c.join('، ') + (c.some(function(x){ return x.indexOf('(' + col + ')') > -1; }) ? '' : ' (لا شيء في ' + col + ')') : ' — لم تُستدعَ أي عملية حفظ إطلاقاً بعد الضغط (الزر لا يحفظ، أو التحقق من الحقول أوقفه بصمت)'; }
+
   function findRole(sel){
     var el = find(sel); if (el) return Promise.resolve(el);
     seenBefore = seen();
@@ -3718,6 +3722,7 @@ function runFlows(app, w, d, note, setCur){
     chain = chain.then(function(){
       var k = 0, failed = false, base = {};
       try { w.__banee.setRole(null); } catch(e){}
+      try { w.__dbCalls = []; } catch(e){}
       var snap = {}; function docSnap(a){ var o = {}; (a || []).forEach(function(x, i){ try { o[x.id || i] = JSON.stringify(x); } catch(e){} }); return o; }
       var cols = tc.steps.filter(function(s){ return s && s.expectDb && s.expectDb.col; }).map(function(s){ return s.expectDb.col; });
       function fail(msg){ failed = true; note(here(), 'رحلة «' + tc.flow + '» توقفت عند الخطوة ' + toAr(k) + ': ' + msg); }
@@ -3769,7 +3774,7 @@ function runFlows(app, w, d, note, setCur){
         });
         else if (st.expect) { if ((d.body.textContent || '').indexOf(st.expect) < 0) fail('كان متوقعاً ظهور «' + String(st.expect).slice(0, 60) + '» ولم يظهر'); }
         else if (st.expectDb) {
-          var q = st.expectDb, acted = tc.steps.slice(0, k).some(function(s){ return s && (s.click || s.fill); }); p = Promise.resolve(w.__banee.DB.list(q.col)).then(function(a){ var now = docSnap(a), touched = acted && Object.keys(now).some(function(id){ return (snap[q.col] || {})[id] !== now[id]; }); if (!touched && (a || []).length - (acted ? (base[q.col] || 0) : 0) < (q.min || 1)) fail('لم يُحفظ شيء في ' + q.col + ' بعد العملية (الحفظ لا يعمل)' + cause()); }, function(e){ fail('تعذّرت قراءة ' + q.col + ': ' + (e && e.message)); });
+          var q = st.expectDb, acted = tc.steps.slice(0, k).some(function(s){ return s && (s.click || s.fill); }); p = Promise.resolve(w.__banee.DB.list(q.col)).then(function(a){ var now = docSnap(a), touched = acted && Object.keys(now).some(function(id){ return (snap[q.col] || {})[id] !== now[id]; }); if (!touched && (a || []).length - (acted ? (base[q.col] || 0) : 0) < (q.min || 1)) fail('لم يُحفظ شيء في ' + q.col + ' بعد العملية (الحفظ لا يعمل)' + cause() + dbInfo(q.col)); }, function(e){ fail('تعذّرت قراءة ' + q.col + ': ' + (e && e.message)); });
         }
         return p.then(step);
       }

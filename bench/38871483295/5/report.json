@@ -1,0 +1,136 @@
+{
+  "status": "ready",
+  "error": "",
+  "name": "إدارة المشاريع",
+  "steps": [
+    "done · هوية «إنجاز أعمال» · الخطة: ٤ شاشات · ٢ مجموعات · ٥ عنصر محتوى",
+    "done · المحتوى: ٥ عنصر مكتوب كاملاً",
+    "done · الهيكل جاهز: التنقّل، البيانات، الدخول، التصميم",
+    "done · ٤ شاشات مكتوبة",
+    "done · جُرّبت كل الشاشات وأُصلحت ٧، لا أخطاء · رحلات المستخدم: ١ من ١ تعمل كاملة · المراجعة: أُصلحت ٢ من ٤",
+    "done · جاهز للمعاينة والتحميل"
+  ],
+  "runtime": {
+    "home": [],
+    "employeeTasks": [],
+    "managerDashboard": [],
+    "taskDetails": []
+  },
+  "flows": [
+    "إنشاء ومتابعة مهمة (12 خطوات)"
+  ],
+  "flowSteps": [
+    {
+      "flow": "إنشاء ومتابعة مهمة",
+      "steps": [
+        {
+          "role": "manager"
+        },
+        {
+          "go": "/"
+        },
+        {
+          "click": "[data-act=new-task]"
+        },
+        {
+          "fill": {
+            "[name=title]": "مهمة اختبارية",
+            "[name=description]": "وصف المهمة",
+            "[name=assignedTo]": "موظف",
+            "[name=dueDate]": "2023-12-31"
+          }
+        },
+        {
+          "click": "text:حفظ وإسناد المهمة"
+        },
+        {
+          "expectDb": {
+            "col": "tasks",
+            "min": 1
+          }
+        },
+        {
+          "role": "employee"
+        },
+        {
+          "go": "/my-tasks"
+        },
+        {
+          "click": "[data-act=open-task]"
+        },
+        {
+          "fill": {
+            "#sheetNotes": "تم البدء في العمل"
+          }
+        },
+        {
+          "click": "#saveTaskUpdate"
+        },
+        {
+          "go": "/dashboard"
+        }
+      ]
+    }
+  ],
+  "reviewIssues": {
+    "home": [
+      "مراجعة: الموظف يرى جميع المهام في النظام لأن Data.tasks.list لا تستخدم فلتر assignedTo. الإصلاح: إضافة { where: ['assignedTo', '==', Auth.user.name] } في حالة الموظف.",
+      "مراجعة: حقل assignedTo في نموذج إنشاء المهمة نصي حر مما يسبب أخطاء في الإسناد. الإصلاح: تحويل الحقل إلى قائمة منسدلة (select) بأسماء الموظفين من مجموعة members."
+    ],
+    "employeeTasks": [
+      "مراجعة: جلب جميع المهام من قاعدة البيانات ثم تصفيتها في المتصفح يمثل ثغرة أمنية وعبئاً على الأداء. الإصلاح: استخدام DB.list('tasks', { where: ['assignedTo', '==', Auth.user.name] }) بدلاً من جلب الكل."
+    ],
+    "managerDashboard": [],
+    "taskDetails": [
+      "مراجعة: الموظف يمكنه تعديل أي مهمة في النظام حتى لو لم تكن مسندة إليه. الإصلاح: إضافة شرط تحقق task.assignedTo === Auth.user.name قبل عرض أزرار التعديل (save) للموظف."
+    ]
+  },
+  "flowErr": "رد غير صالح: {\"tests\":[{\"flow\":\"إنشاء ومتابعة مهمة\",\"steps\":[{\"role\":\"manager\"},{\"go\":\"/dashboard\"},{\"click\":\"[data-act=create-task]\"",
+  "agent": {
+    "ran": false,
+    "fixed": 0,
+    "steps": 0,
+    "log": []
+  },
+  "fixErrors": [],
+  "review": {
+    "found": 4,
+    "fixed": 2
+  },
+  "screens": [
+    {
+      "id": "home",
+      "route": "/",
+      "roles": [
+        "employee",
+        "manager"
+      ],
+      "bytes": 9443
+    },
+    {
+      "id": "employeeTasks",
+      "route": "/my-tasks",
+      "roles": [
+        "employee"
+      ],
+      "bytes": 6161
+    },
+    {
+      "id": "managerDashboard",
+      "route": "/dashboard",
+      "roles": [
+        "manager"
+      ],
+      "bytes": 5247
+    },
+    {
+      "id": "taskDetails",
+      "route": "/task/:id",
+      "roles": [
+        "employee",
+        "manager"
+      ],
+      "bytes": 4724
+    }
+  ]
+}

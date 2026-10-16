@@ -1,0 +1,125 @@
+{
+  "status": "ready",
+  "error": "",
+  "name": "مكتبة بانِي",
+  "steps": [
+    "done · هوية «رفّ وورق» · الخطة: ٤ شاشات · ٣ مجموعات · ١٢ عنصر محتوى",
+    "done · المحتوى: ١٢ عنصر مكتوب كاملاً",
+    "done · الهيكل جاهز: التنقّل، البيانات، الدخول، التصميم",
+    "done · ٤ شاشات مكتوبة",
+    "done · الفحص: ٢ شاشات بها ملاحظات، راجعها في الاستوديو · رحلات المستخدم: ٠ من ١ تعمل كاملة · المراجعة: أُصلحت ١ من ١ · وكيل الإصلاح: لم يجد تحسيناً آمناً",
+    "done · جاهز للمعاينة والتحميل"
+  ],
+  "runtime": {
+    "home": [],
+    "borrowConfirm": [
+      "رحلة «استعارة كتاب» توقفت عند الخطوة ٣: لم يُعثر على [data-act=borrow][data-id=books-1] (الزر غير موجود أو اسمه مختلف) — الظاهر الآن: الشاشة borrowConfirm (#/borrow/books-1) بدور customer؛ الأزرار: cancel، confirm؛ الحقول: #return-date-input"
+    ],
+    "myBorrows": [
+      "رحلة «استعارة كتاب» توقفت عند الخطوة ٥: لم يُعثر على [data-act=confirm] (الزر غير موجود أو اسمه مختلف) — الظاهر الآن: الشاشة myBorrows (#/my-borrows) بدور customer؛ الأزرار: cancel؛ الحقول: لا شيء"
+    ],
+    "librarianDashboard": []
+  },
+  "flows": [
+    "استعارة كتاب (10 خطوات)"
+  ],
+  "flowSteps": [
+    {
+      "flow": "استعارة كتاب",
+      "steps": [
+        {
+          "role": "customer"
+        },
+        {
+          "go": "/"
+        },
+        {
+          "click": "[data-act=borrow][data-id=books-1]"
+        },
+        {
+          "fill": {
+            "#return-date-input": "2025-06-01"
+          }
+        },
+        {
+          "click": "[data-act=confirm]"
+        },
+        {
+          "expect": "استعاراتي"
+        },
+        {
+          "expectDb": {
+            "col": "borrows",
+            "min": 1
+          }
+        },
+        {
+          "role": "librarian"
+        },
+        {
+          "go": "/librarian"
+        },
+        {
+          "click": "[data-act=approve]"
+        }
+      ]
+    }
+  ],
+  "reviewIssues": {
+    "home": [],
+    "borrowConfirm": [],
+    "myBorrows": [
+      "مراجعة: يتم فرز الاستعارات باستخدام الحقل غير الموجود createdAt، والصحيح استخدام الحقل order الذي يتم حفظه عند إنشاء الطلب."
+    ],
+    "librarianDashboard": []
+  },
+  "flowErr": "",
+  "agent": {
+    "ran": true,
+    "fixed": 0,
+    "steps": 2,
+    "log": [
+      "read borrowConfirm — سأقرأ كود شاشة borrowConfirm لأفحص زر التأكيد وحقول الإدخال فيها. → 1| App.screen({\n2|   id: 'borrowConfirm',\n3|   route: '/borrow/:id',\n4|   title: 'طلب استعارة',\n5|   icon: 'file-text',\n6|   nav: false,\n7| \n8|   render(params)",
+      "done → "
+    ]
+  },
+  "fixErrors": [],
+  "review": {
+    "found": 1,
+    "fixed": 1
+  },
+  "screens": [
+    {
+      "id": "home",
+      "route": "/",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 4962
+    },
+    {
+      "id": "borrowConfirm",
+      "route": "/borrow/:id",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 4766
+    },
+    {
+      "id": "myBorrows",
+      "route": "/my-borrows",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 4120
+    },
+    {
+      "id": "librarianDashboard",
+      "route": "/librarian",
+      "roles": [
+        "librarian"
+      ],
+      "bytes": 5903
+    }
+  ]
+}

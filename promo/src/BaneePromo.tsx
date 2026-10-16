@@ -1,5 +1,5 @@
 import React from 'react';
-import {AbsoluteFill, Img, Sequence, interpolate, spring, staticFile, useCurrentFrame, useVideoConfig, Easing} from 'remotion';
+import {Audio, AbsoluteFill, Img, Sequence, interpolate, spring, staticFile, useCurrentFrame, useVideoConfig, Easing} from 'remotion';
 import {continueRender, delayRender} from 'remotion';
 const fontFamily = 'Cairo';
 const fontHandle = delayRender('font');
@@ -7,7 +7,7 @@ new FontFace(fontFamily, `url(${staticFile('cairo.woff2')}) format('woff2')`, {w
   .then((ff) => { document.fonts.add(ff); continueRender(fontHandle); });
 
 const C = {primary: '#2C64DD', accent: '#0BBF8A', ink: '#0E1525', bg: '#060A16', soft: '#EBF1FE'};
-export const DURATION = 900;
+export const DURATION = 1020;
 const clamp = {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'} as const;
 
 const useLayout = () => {
@@ -213,6 +213,29 @@ const Features: React.FC = () => {
   );
 };
 
+// 5b. Real app screens
+const RealApp: React.FC = () => {
+  const f = useCurrentFrame();
+  const {fps} = useVideoConfig();
+  const {portrait, u} = useLayout();
+  const sc = portrait ? 1.05 : 0.72;
+  return (
+    <AbsoluteFill style={{justifyContent: 'center', alignItems: 'center', opacity: fade(f, 0, 125, 12), padding: 40 * u}}>
+      <Words text="جرّبه بنفسك على هاتفك" size={84 * u}/>
+      <div style={{display: 'flex', flexDirection: 'row-reverse', marginTop: 40 * u, gap: portrait ? 0 : 40 * u}}>
+        {[1, 2, 3].map((n, i) => {
+          const s = spring({frame: f - 10 - i * 8, fps, config: {damping: 14}});
+          const rot = portrait ? (i - 1) * 8 : (i - 1) * 4;
+          return <Phone key={n} scale={sc} style={{opacity: s, margin: portrait ? `0 ${-50 * u}px` : 0, zIndex: i === 1 ? 2 : 1,
+            transform: `translateY(${(1 - s) * 400 + (i === 1 ? -30 : 20) * u}px) rotate(${rot * s}deg)`}}>
+            <Img src={staticFile(`real${n}.png`)} style={{width: '100%', height: '100%', objectFit: 'cover'}}/>
+          </Phone>;
+        })}
+      </div>
+    </AbsoluteFill>
+  );
+};
+
 // 6. Outro
 const Outro: React.FC = () => {
   const f = useCurrentFrame();
@@ -256,6 +279,8 @@ export const BaneePromo: React.FC = () => (
     <Sequence from={250} durationInFrames={170}><Agents/></Sequence>
     <Sequence from={415} durationInFrames={160}><Reveal/></Sequence>
     <Sequence from={570} durationInFrames={160}><Features/></Sequence>
-    <Sequence from={720} durationInFrames={180}><Outro/></Sequence>
+    <Sequence from={720} durationInFrames={125}><RealApp/></Sequence>
+    <Sequence from={840} durationInFrames={180}><Outro/></Sequence>
+    <Audio src={staticFile('music.wav')} volume={(f) => interpolate(f, [0, 15, DURATION - 40, DURATION], [0, 1, 1, 0], clamp)}/>
   </AbsoluteFill>
 );

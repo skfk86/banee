@@ -1,0 +1,210 @@
+{
+  "status": "ready",
+  "error": "",
+  "name": "مقرأة بانِي القرآنية",
+  "steps": [
+    "done · هوية «نور القرآن» · الخطة: ٦ شاشات · ٦ مجموعات · ٢٤ عنصر محتوى",
+    "done · المحتوى: ٢٤ عنصر مكتوب كاملاً",
+    "done · الهيكل جاهز: التنقّل، البيانات، الدخول، التصميم",
+    "done · ٦ شاشات مكتوبة",
+    "done · جُرّبت كل الشاشات وأُصلحت ٣، لا أخطاء · رحلات المستخدم: ٢ من ٢ تعمل كاملة · المراجعة: أُصلحت ٢ من ٢",
+    "done · جاهز للمعاينة والتحميل"
+  ],
+  "runtime": {
+    "home": [],
+    "course": [],
+    "lesson": [],
+    "recitation": [],
+    "teacherReview": [],
+    "me": []
+  },
+  "flows": [
+    "تسجيل الحفظ اليومي (10 خطوات)",
+    "إدارة الحلقات والمقررات (14 خطوات)"
+  ],
+  "flowSteps": [
+    {
+      "flow": "تسجيل الحفظ اليومي",
+      "steps": [
+        {
+          "role": "student"
+        },
+        {
+          "go": "/"
+        },
+        {
+          "click": "[data-act=open-course][data-id=courses-1]"
+        },
+        {
+          "click": "[data-act=open-lesson][data-id=lessons-1]"
+        },
+        {
+          "click": "text:تسجيل التسميع"
+        },
+        {
+          "fill": {
+            "#surahName": "سورة البقرة",
+            "#fromAyah": "1",
+            "#toAyah": "10",
+            "#audioNote": "حفظ جيد ولله الحمد"
+          }
+        },
+        {
+          "click": "text:إرسال للتسميع"
+        },
+        {
+          "expectDb": {
+            "col": "dailyRecitation",
+            "min": 1
+          }
+        },
+        {
+          "go": "/progress"
+        },
+        {
+          "expect": "إنجازاتك القرآنية"
+        }
+      ]
+    },
+    {
+      "flow": "إدارة الحلقات والمقررات",
+      "steps": [
+        {
+          "role": "teacher"
+        },
+        {
+          "go": "/"
+        },
+        {
+          "click": "[data-act=add-course]"
+        },
+        {
+          "fill": {
+            "[name=title]": "حلقة التبرعات الجديدة",
+            "[name=summary]": "وصف موجز للحلقة الجديدة في باني",
+            "[name=image]": "https://images.unsplash.com/photo-1609599006353-e629aaabfeae",
+            "[name=order]": "2"
+          }
+        },
+        {
+          "click": "text:حفظ الحلقة"
+        },
+        {
+          "expectDb": {
+            "col": "courses",
+            "min": 4
+          }
+        },
+        {
+          "go": "/course/courses-1"
+        },
+        {
+          "click": "[data-act=add-lesson]"
+        },
+        {
+          "fill": {
+            "[name=title]": "سورة البقرة: الآيات 51-75",
+            "[name=minutes]": "45",
+            "[name=order]": "2",
+            "[name=body]": "# شرح الدرس\nمحتوى تجويد وتدبر الآيات الجديدة."
+          }
+        },
+        {
+          "click": "text:حفظ الدرس"
+        },
+        {
+          "expectDb": {
+            "col": "lessons",
+            "min": 1
+          }
+        },
+        {
+          "role": "student"
+        },
+        {
+          "go": "/recitation"
+        },
+        {
+          "expect": "تسجيل التسميع اليومي"
+        }
+      ]
+    }
+  ],
+  "reviewIssues": {
+    "home": [],
+    "course": [],
+    "lesson": [],
+    "recitation": [
+      "مراجعة: حقل status يُخزن بقيمة 'pending'، ولكن الدالة المستعملة في المعلم للفلترة هي Data.dailyRecitation.byStatus(['pending', 'needsReview']) وقد لا تتطابق مع التسمية إن كانت الحالات غير موحدة، وتأكد من أن Data.dailyRecitation لديها طريقة byStatus أو يتم استخدام list مع الشروط."
+    ],
+    "teacherReview": [],
+    "me": [
+      "مراجعة: تم استدعاء Data.progress.list بـ where مع أن شاشة lesson تستخدم Data.progress.mine()، يجب التأكد من تطابق الدوال في كائن Data."
+    ]
+  },
+  "flowErr": "",
+  "agent": {
+    "ran": false,
+    "fixed": 0,
+    "steps": 0,
+    "log": []
+  },
+  "fixErrors": [],
+  "review": {
+    "found": 2,
+    "fixed": 2
+  },
+  "screens": [
+    {
+      "id": "home",
+      "route": "/",
+      "roles": [
+        "student",
+        "teacher"
+      ],
+      "bytes": 5464
+    },
+    {
+      "id": "course",
+      "route": "/course/:id",
+      "roles": [
+        "student",
+        "teacher"
+      ],
+      "bytes": 8925
+    },
+    {
+      "id": "lesson",
+      "route": "/lesson/:id",
+      "roles": [
+        "student",
+        "teacher"
+      ],
+      "bytes": 4984
+    },
+    {
+      "id": "recitation",
+      "route": "/recitation",
+      "roles": [
+        "student"
+      ],
+      "bytes": 4360
+    },
+    {
+      "id": "teacherReview",
+      "route": "/teacher-review",
+      "roles": [
+        "teacher"
+      ],
+      "bytes": 4380
+    },
+    {
+      "id": "me",
+      "route": "/progress",
+      "roles": [
+        "student"
+      ],
+      "bytes": 2680
+    }
+  ]
+}

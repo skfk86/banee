@@ -1,0 +1,206 @@
+{
+  "status": "ready",
+  "error": "",
+  "name": "فرصتي للوظائف",
+  "steps": [
+    "done · هوية «مسار مهني» · الخطة: ٨ شاشات · ٣ مجموعات · ١٢ عنصر محتوى",
+    "done · المحتوى: ١٢ عنصر مكتوب كاملاً",
+    "done · الهيكل جاهز: التنقّل، البيانات، الدخول، التصميم",
+    "done · ٨ شاشات مكتوبة",
+    "done · جُرّبت كل الشاشات وأُصلحت ٥، لا أخطاء · رحلات المستخدم: ٢ من ٢ تعمل كاملة · المراجعة: أُصلحت ٤ من ٥",
+    "done · جاهز للمعاينة والتحميل"
+  ],
+  "runtime": {
+    "home": [],
+    "jobDetails": [],
+    "apply": [],
+    "myApplications": [],
+    "employerDashboard": [],
+    "applicants": [],
+    "addJob": [],
+    "notifications": []
+  },
+  "flows": [
+    "تقديم على وظيفة (11 خطوات)",
+    "إدارة المتقدمين (7 خطوات)"
+  ],
+  "flowSteps": [
+    {
+      "flow": "تقديم على وظيفة",
+      "steps": [
+        {
+          "role": "jobseeker"
+        },
+        {
+          "go": "/"
+        },
+        {
+          "click": "[data-act=view-job]"
+        },
+        {
+          "click": "text:التقديم على الوظيفة الآن"
+        },
+        {
+          "fill": {
+            "[name=userName]": "محمد أحمد"
+          }
+        },
+        {
+          "fill": {
+            "[name=userEmail]": "mohammad@example.com"
+          }
+        },
+        {
+          "fill": {
+            "[name=cvUrl]": "https://example.com/cv.pdf"
+          }
+        },
+        {
+          "fill": {
+            "[name=coverNote]": "أنا مهتم جدا بهذه الوظيفة ولدي الخبرة المطلوبة."
+          }
+        },
+        {
+          "click": "text:إرسال الطلب"
+        },
+        {
+          "expect": "طلبات التوظيف"
+        },
+        {
+          "expectDb": {
+            "col": "applications",
+            "min": 1
+          }
+        }
+      ]
+    },
+    {
+      "flow": "إدارة المتقدمين",
+      "steps": [
+        {
+          "role": "employer"
+        },
+        {
+          "go": "/employer-dashboard"
+        },
+        {
+          "click": "[data-act=view-applicants]"
+        },
+        {
+          "expect": "قائمة المتقدمين"
+        },
+        {
+          "click": "text:قبول"
+        },
+        {
+          "expect": "مقبول"
+        },
+        {
+          "expectDb": {
+            "col": "applications",
+            "min": 1
+          }
+        }
+      ]
+    }
+  ],
+  "reviewIssues": {
+    "home": [],
+    "jobDetails": [],
+    "apply": [
+      "مراجعة: لا يوجد تحقق من وجود حقل cvUrl (رابط السيرة الذاتية) كصيغة رابط صحيحة قبل الحفظ، مما قد يؤدي لحفظ بيانات غير صالحة في قاعدة البيانات."
+    ],
+    "myApplications": [
+      "مراجعة: حقل createdAt غير موجود في مخطط مجموعة applications، مما سيؤدي إلى فشل الترتيب (orderBy: ['createdAt', 'desc']) أو عرض تاريخ فارغ. يجب استخدام حقل order بدلاً منه."
+    ],
+    "employerDashboard": [],
+    "applicants": [
+      "مراجعة: حقل createdAt غير موجود في مخطط مجموعة applications، مما سيؤدي إلى فشل الترتيب (orderBy: ['createdAt', 'desc']). يجب استخدام حقل order للترتيب."
+    ],
+    "addJob": [],
+    "notifications": [
+      "مراجعة: مجموعة notices غير معرفة في مخطط النظام (collections)، مما سيؤدي إلى انهيار الشاشة عند محاولة جلب البيانات منها.",
+      "مراجعة: حقل createdAt غير موجود في مخطط النظام لأي مجموعة، مما سيؤدي إلى فشل وظيفة UI.ago(n.createdAt) وعرض قيم غير معرفة."
+    ]
+  },
+  "flowErr": "",
+  "agent": {
+    "ran": false,
+    "fixed": 0,
+    "steps": 0,
+    "log": []
+  },
+  "fixErrors": [],
+  "review": {
+    "found": 5,
+    "fixed": 4
+  },
+  "screens": [
+    {
+      "id": "home",
+      "route": "/",
+      "roles": [
+        "jobseeker",
+        "employer"
+      ],
+      "bytes": 5640
+    },
+    {
+      "id": "jobDetails",
+      "route": "/job/:id",
+      "roles": [
+        "jobseeker"
+      ],
+      "bytes": 3764
+    },
+    {
+      "id": "apply",
+      "route": "/apply",
+      "roles": [
+        "jobseeker"
+      ],
+      "bytes": 4609
+    },
+    {
+      "id": "myApplications",
+      "route": "/my-applications",
+      "roles": [
+        "jobseeker"
+      ],
+      "bytes": 2296
+    },
+    {
+      "id": "employerDashboard",
+      "route": "/employer-dashboard",
+      "roles": [
+        "employer"
+      ],
+      "bytes": 4596
+    },
+    {
+      "id": "applicants",
+      "route": "/applicants/:jobId",
+      "roles": [
+        "employer"
+      ],
+      "bytes": 2946
+    },
+    {
+      "id": "addJob",
+      "route": "/add-job",
+      "roles": [
+        "employer"
+      ],
+      "bytes": 6631
+    },
+    {
+      "id": "notifications",
+      "route": "/notifications",
+      "roles": [
+        "jobseeker",
+        "employer"
+      ],
+      "bytes": 2554
+    }
+  ]
+}

@@ -24,6 +24,19 @@ firebase deploy --only firestore:rules
 
 ---
 
+## ١-أ. روابط المشاركة (مرة واحدة)
+
+زر «مشاركة» في الاستوديو يعطي كل تطبيق رابطاً مثل `https://bani-b28a0.web.app/a/xxxxxxxx` يفتحه أي شخص من المتصفح، وفي أسفله «صُنع ببانِي».
+فعّلها بنشر الصفحة والقواعد من Termux:
+
+```bash
+firebase deploy --only hosting,firestore:rules
+```
+
+وتأكد أن **Authentication ← Sign-in method ← Anonymous** مفعّل (تستخدمه نسخة الويب لقاعدة البيانات التجريبية).
+
+---
+
 ## ١-ب. خادم Gemini (مهم قبل البناء)
 
 بانِي لا تحتوي أي مفتاح. الذكاء الاصطناعي يمر عبر خادم مجاني على Google Apps Script يحمل مفتاحك ويحسب رصيد كل مستخدم.

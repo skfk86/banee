@@ -97,6 +97,19 @@ service cloud.firestore {
       }
     }
 
+    // روابط المشاركة: نسخة ويب من التطبيق يقرؤها الجميع، ويكتبها صاحبها فقط
+    match /pub/{slug} {
+      allow read: if true;
+      allow create: if signedIn() && request.resource.data.owner == request.auth.uid;
+      allow update: if signedIn() && resource.data.owner == request.auth.uid && request.resource.data.owner == resource.data.owner;
+      allow delete: if signedIn() && resource.data.owner == request.auth.uid;
+      match /parts/{part} {
+        allow read: if true;
+        allow write: if signedIn() && get(/databases/$(database)/documents/pub/$(slug)).data.owner == request.auth.uid
+          && (request.method == 'delete' || request.resource.data.d.size() <= 900000);
+      }
+    }
+
     // أي شيء آخر ممنوع
     match /{document=**} {
       allow read, write: if false;

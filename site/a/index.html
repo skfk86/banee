@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>تطبيق صُنع ببانِي</title>
+<meta name="description" content="تطبيق صُنع ببانِي: صِف فكرتك بالعربي ونبنيه لك.">
+<meta property="og:title" content="تطبيق صُنع ببانِي">
+<meta property="og:description" content="افتحه وجرّبه مباشرة من المتصفح، واصنع تطبيقك أنت أيضاً ببانِي.">
+<style>
+  html, body { margin: 0; height: 100%; background: #F6F7FB; font-family: system-ui, 'Segoe UI', Tahoma, sans-serif; }
+  #app { position: fixed; inset: 0 0 44px 0; width: 100%; height: calc(100% - 44px); border: 0; background: #fff; }
+  #badge { position: fixed; inset: auto 0 0 0; height: 44px; display: flex; align-items: center; justify-content: center; gap: 8px;
+    background: #0E1525; color: #fff; font-size: 13.5px; text-decoration: none; padding-bottom: env(safe-area-inset-bottom, 0px); }
+  #badge b { color: #0BBF8A; }
+  #msg { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; color: #0E1525; text-align: center; padding: 24px; }
+  .spin { width: 34px; height: 34px; border: 3px solid #E3E7EF; border-top-color: #2C64DD; border-radius: 50%; animation: s 0.8s linear infinite; }
+  @keyframes s { to { transform: rotate(360deg); } }
+  @media (min-width: 700px) { /* على الكمبيوتر: إطار جوال في المنتصف */
+    #app { inset: 24px auto 68px 50%; transform: translateX(-50%); width: 400px; height: calc(100% - 92px); border-radius: 28px; box-shadow: 0 20px 60px rgba(14,21,37,.18); }
+  }
+</style>
+</head>
+<body>
+<div id="msg"><div class="spin"></div><div>جارٍ فتح التطبيق…</div></div>
+<a id="badge" href="https://play.google.com/store/apps/details?id=com.alloush.banee&referrer=utm_source%3Dshare%26utm_medium%3Dbadge" target="_blank" rel="noopener">صُنع ببانِي · <b>اصنع تطبيقك مجاناً</b></a>
+<script>
+// يقرأ نسخة التطبيق المنشورة من Firestore (pub/{slug}) ويعرضها كاملة
+(function(){
+  var PROJECT = 'bani-b28a0';
+  var seg = (location.pathname.split('/a/')[1] || '').split('/')[0];
+  var slug = (seg && seg !== 'index.html' ? seg : location.hash.slice(1)).split(/[/?#]/)[0];
+  var base = 'https://firestore.googleapis.com/v1/projects/' + PROJECT + '/databases/(default)/documents/pub/';
+  var msg = document.getElementById('msg');
+  function fail(t){ msg.innerHTML = '<div style="font-size:40px">🔍</div><b>' + t + '</b><a href="/" style="color:#2C64DD">اصنع تطبيقك ببانِي</a>'; }
+  if (!/^[a-z0-9]{6,20}$/.test(slug)) return fail('الرابط غير صحيح');
+  fetch(base + slug).then(function(r){ if (!r.ok) throw 404; return r.json(); }).then(function(doc){
+    var f = doc.fields || {}, n = +((f.parts && (f.parts.integerValue || f.parts.doubleValue)) || 0), name = (f.name && f.name.stringValue) || '';
+    if (name) document.title = name + ' · صُنع ببانِي';
+    var jobs = []; for (var i = 0; i < n; i++) jobs.push(fetch(base + slug + '/parts/' + i).then(function(r){ return r.json(); }));
+    return Promise.all(jobs);
+  }).then(function(parts){
+    var html = parts.map(function(p){ return (p.fields && p.fields.d && p.fields.d.stringValue) || ''; }).join('');
+    if (!html) throw 404;
+    var fr = document.createElement('iframe'); fr.id = 'app'; fr.title = document.title;
+    fr.setAttribute('allow', 'geolocation; camera; clipboard-write');
+    fr.srcdoc = html; document.body.insertBefore(fr, msg); fr.onload = function(){ msg.remove(); };
+  }).catch(function(){ fail('لم نجد هذا التطبيق، ربما حذفه صاحبه'); });
+})();
+</script>
+</body>
+</html>

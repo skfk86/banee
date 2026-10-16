@@ -1,0 +1,127 @@
+{
+  "status": "ready",
+  "error": "",
+  "name": "مطعمي",
+  "steps": [
+    "done · هوية «نكهة ومرق» · الخطة: ٤ شاشات · ٣ مجموعات · ١٢ عنصر محتوى",
+    "done · المحتوى: ١٢ عنصر مكتوب كاملاً",
+    "done · الهيكل جاهز: التنقّل، البيانات، الدخول، التصميم",
+    "done · ٤ شاشات مكتوبة",
+    "done · الفحص: ٢ شاشات بها ملاحظات، راجعها في الاستوديو · رحلات المستخدم: ١ من ١ تعمل كاملة · المراجعة: أُصلحت ١ من ١",
+    "done · جاهز للمعاينة والتحميل"
+  ],
+  "runtime": {
+    "home": [
+      "تصميم: صورة لا تُحمَّل: https://images.unsplash.com/photo-1529007196873-afc15ae8a257?q=80&w=1000&auto=fo. استخدم صورة من بيانات التطبيق أو أيقونة بديلة."
+    ],
+    "cart": [],
+    "orders": [],
+    "kitchen-dashboard": []
+  },
+  "flows": [
+    "طلب طعام (13 خطوات)"
+  ],
+  "flowSteps": [
+    {
+      "flow": "طلب طعام",
+      "steps": [
+        {
+          "role": "customer"
+        },
+        {
+          "go": "/"
+        },
+        {
+          "click": "[data-act=add-to-cart][data-id=items-1]"
+        },
+        {
+          "click": "[data-act=add-to-cart][data-id=items-2]"
+        },
+        {
+          "click": "[data-act=go-cart]"
+        },
+        {
+          "click": "[data-act=set-type][data-val=استلام]"
+        },
+        {
+          "click": "[data-act=checkout]"
+        },
+        {
+          "expect": "سجل طلباتي"
+        },
+        {
+          "expectDb": {
+            "col": "orders",
+            "min": 1
+          }
+        },
+        {
+          "role": "kitchen"
+        },
+        {
+          "go": "/kitchen"
+        },
+        {
+          "click": "[data-act=status][data-next=preparing]"
+        },
+        {
+          "expect": "لا توجد طلبات في هذه الحالة"
+        }
+      ]
+    }
+  ],
+  "reviewIssues": {
+    "home": [],
+    "cart": [],
+    "orders": [],
+    "kitchen-dashboard": [
+      "مراجعة: شاشة المطبخ تعرض الأزرار للحالات new, preparing, ready ولكن زر الحالة ready يحولها إلى delivered والتي لا يمكن للمطبخ رؤيتها في تبويباته الحالية (new, preparing, ready) مما يجعل الطلبات تختفي تماماً ولا يتم عرضها في أي تبويب. الإصلاح: إضافة تبويب 'delivered' أو تعديل حالة الانتقال من ready."
+    ]
+  },
+  "flowErr": "",
+  "agent": {
+    "ran": false,
+    "fixed": 0,
+    "steps": 0,
+    "log": []
+  },
+  "fixErrors": [],
+  "review": {
+    "found": 1,
+    "fixed": 1
+  },
+  "screens": [
+    {
+      "id": "home",
+      "route": "/",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 4814
+    },
+    {
+      "id": "cart",
+      "route": "/cart",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 2671
+    },
+    {
+      "id": "orders",
+      "route": "/my-orders",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 3602
+    },
+    {
+      "id": "kitchen-dashboard",
+      "route": "/kitchen",
+      "roles": [
+        "kitchen"
+      ],
+      "bytes": 3006
+    }
+  ]
+}

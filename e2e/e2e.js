@@ -57,6 +57,13 @@ const log = (...a) => { const s = '[' + new Date().toISOString().slice(11, 19) +
   }
   const rep = await p.evaluate(() => { const a = S.apps[0], ck = a.ck || {}; return { status: a.status, error: a.error || '', name: a.name, steps: a.steps.map(s => s.state + ' · ' + s.label),
     runtime: ck.runtime || {}, flows: (ck.flowTests || []).map(f => f.flow + ' (' + f.steps.length + ' خطوات)'), flowSteps: ck.flowTests || [], reviewIssues: ck.reviewIssues || null, spec: !!ck.spec, specFallback: ck.specFallback || [], flowErr: ck.flowErr || '', agent: { ran: !!ck.agentRan, fixed: ck.agentFixed || 0, steps: ck.agentSteps || 0, log: ck.agentLog || [] }, fixErrors: ck.fixErrors || [], review: { found: ck.reviewCount || 0, fixed: ck.reviewFixed || 0 }, screens: (ck.plan ? ck.plan.screens : []).map(s => ({ id: s.id, route: s.route, roles: s.roles || [], bytes: (ck.screens[s.id] || '').length })) }; });
+  // مثال للتعلم: المخطط ومواصفات الشاشات (يختار منها tools/learn.js ما نجح كاملاً)
+  try {
+    const ex = await p.evaluate(() => { const a = S.apps[0], ck = a.ck || {}, pl = ck.plan; if (!pl) return null;
+      const specs = (pl.screens || []).map(s => { const sp = specOf(ck.screens[s.id] || ''); return sp ? { id: s.id, title: s.title, purpose: s.purpose || '', roles: s.roles || [], blocks: sp.blocks } : null; }).filter(Boolean);
+      return { idea: ck.req || a.desc || a.name, plan: { name: pl.name, summary: pl.summary, roles: pl.roles, collections: pl.collections, statuses: pl.statuses, visibility: pl.visibility, shared: pl.shared, flows: pl.flows, screens: (pl.screens || []).map(s => ({ id: s.id, route: s.route, title: s.title, nav: s.nav, roles: s.roles, purpose: s.purpose })) }, specs }; });
+    if (ex) fs.writeFileSync(path.join(OUT, 'example.json'), JSON.stringify(ex));
+  } catch (e) {}
   const mins = ((Date.now() - t0) / 60000).toFixed(1);
   fs.writeFileSync(path.join(OUT, 'report.json'), JSON.stringify(rep, null, 2));
   log('النتيجة:', rep.status, rep.error, '| الزمن:', mins, 'دقيقة');

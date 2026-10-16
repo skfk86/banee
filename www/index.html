@@ -2578,6 +2578,20 @@ function parseJSON(raw){
 }
 
 // فحص آلي لكل شاشة بدون ذكاء اصطناعي
+// ════ ما تعلّمه بانِي: يُولَّد آلياً من جولات القياس (tools/learn.js) — أمثلة تطبيقات نجحت كل رحلاتها + دروس من الأخطاء المتكررة ════
+// لا يدخلها نص من مستخدمين: فقط ما نجح في قياسنا، والدروس من قاموس ثابت، فلا يمكن تسميم تعليمات الوكلاء
+/*LEARNED*/var LEARNED = {"examples":[],"lessons":{"tester":["استخدم فقط الأزرار والحقول الظاهرة في خريطة الواجهة، واضغط زر فتح النموذج قبل تعبئة حقوله."],"planner":["في الأنظمة متعددة الأدوار حدّد visibility لكل مجموعة يشترك فيها دوران، وأضف حقل <role>Id للدور الذي يستلم المهام."],"specwriter":["قائمة الدور الذي يستلم المهام تستخدم show:\"visible\" مع إجراء take للعنصر الجديد ثم status للمراحل التالية.","كل نموذج إدخال يحفظ في المجموعة الصحيحة من العقد، وزر الإرسال type=submit، ولا تضع userId أو الحالة في الحقول."],"screen":["كل قائمة تعرض ما أنشأه دور آخر تستخدم await Data.X.visible() لا فلتراً خاصاً.","زر الحفظ يجب أن يستدعي Data.X.create فعلاً بعد التحقق، ويُظهر رسالة نجاح، ولا يتوقف بصمت إذا نقص حقل (أظهر UI.toast بالحقل الناقص).","لا تستدعِ دوال غير موجودة في عقد الهيكل، وتحقق من وجود العنصر قبل قراءة خصائصه (x && x.field)."]},"at":"2026-10-16"};/*/LEARNED*/
+function learnTokens(t){ return String(t || '').toLowerCase().replace(/[^؀-ۿa-z0-9\s]/g, ' ').split(/\s+/).filter(function(w){ return w.length > 2; }); }
+function similarExamples(idea, n){
+  var q = learnTokens(idea), set = {}; q.forEach(function(w){ set[w] = 1; });
+  return (LEARNED.examples || []).map(function(e){ var t = learnTokens(e.idea + ' ' + (e.plan && e.plan.name || '')), hit = 0; t.forEach(function(w){ if (set[w]) hit++; }); return { e: e, s: hit / Math.sqrt(t.length + 1) }; })
+    .filter(function(x){ return x.s > 0; }).sort(function(a, b){ return b.s - a.s; }).slice(0, n || 1).map(function(x){ return x.e; });
+}
+function lessonsFor(role){ var l = (LEARNED.lessons || {})[role] || []; return l.length ? '\n\nدروس من تطبيقات سابقة (أخطاء تكررت فتجنّبها):\n- ' + l.slice(0, 8).join('\n- ') : ''; }
+function exampleHint(app){
+  var ex = similarExamples((app.ck && app.ck.req) || app.desc || app.name, 1)[0]; if (!ex) return '';
+  return '\n\nمثال لمخطط تطبيق قريب نجح كاملاً في الاختبار الفعلي (استلهم بنيته: الأدوار، المجموعات، الحالات، الرؤية، الشاشات — ولا تنسخ محتواه):\n' + JSON.stringify(ex.plan).slice(0, 5000);
+}
 // ════ وضع المواصفات: النموذج يصف الشاشة بـ JSON صغير، والمحرك الثابت في القالب يبنيها ════
 var SPEC_BLOCKS = { hero: 1, list: 1, detail: 1, form: 1, stats: 1, text: 1, links: 1, custom: 1 };
 function specMode(app){ try { if (localStorage.getItem('bspec') === '1') return true; } catch(e){} return !!(app && app.ck && app.ck.spec); }
@@ -2617,8 +2631,13 @@ function validateSpec(sp, s, plan){
   });
   return errs;
 }
+function specExample(app, s){
+  var ex = similarExamples((app.ck && app.ck.req) || app.name, 2), best = null, bs = 0, want = learnTokens(s.title + ' ' + (s.purpose || '') + ' ' + (s.roles || []).join(' '));
+  ex.forEach(function(e){ (e.specs || []).forEach(function(x){ var t = learnTokens((x.title || '') + ' ' + (x.purpose || '') + ' ' + (x.roles || []).join(' ')), h = 0; t.forEach(function(w){ if (want.indexOf(w) > -1) h++; }); if (h > bs) { bs = h; best = x; } }); });
+  return best ? '\n\nمثال لمواصفات شاشة مشابهة نجحت في تطبيق آخر (للأسلوب فقط، استخدم مجموعات وحقول هذا التطبيق):\n' + JSON.stringify({ blocks: best.blocks }).slice(0, 2500) : '';
+}
 function specCtx(plan, s, app){
-  return screenCtx(plan, s, app.ck.content).replace(/\n\nاكتب الآن هذه الشاشة فقط:[\s\S]*$/, '') +
+  return screenCtx(plan, s, app.ck.content).replace(/\n\nاكتب الآن هذه الشاشة فقط:[\s\S]*$/, '') + specExample(app, s) + lessonsFor('specwriter') +
     '\n\nاكتب الآن مواصفات هذه الشاشة فقط: id=' + s.id + ' route=' + s.route + ' title=' + s.title + (s.roles && s.roles.length ? ' أدوار: ' + s.roles.join('/') : '') + '\nالغرض: ' + (s.purpose || '');
 }
 ROLES.specwriter =
@@ -2909,7 +2928,8 @@ function runBuild(app, key){
   // ١) الخطة
   var planStep = app.ck.plan ? Promise.resolve() : (function(){
     jstep(app,0,'cur');
-    return ask(key, 'planner', userReq + kitHint(app), true).then(function(raw){
+    try { app.ck.req = userReq; } catch(e){}
+    return ask(key, 'planner', userReq + kitHint(app) + exampleHint(app) + lessonsFor('planner'), true).then(function(raw){
       alive();
       var plan = parseJSON(raw);
       if (!plan || !plan.screens || !plan.screens.length) throw new Error('المخطِّط لم يُرجع خطة صالحة، اضغط متابعة');
@@ -2986,7 +3006,7 @@ function runBuild(app, key){
     var queue = todo.slice();
     // وضع المواصفات: وصف JSON يُفحص آلياً؛ إن فشل مرتين نعود لكتابة الكود لهذه الشاشة فقط
     function writeScreen(s){
-      if (!specMode(app)) return ask(key, 'screen', screenCtx(plan, s, app.ck.content)).then(function(r){ return grab(r, 'javascript'); });
+      if (!specMode(app)) return ask(key, 'screen', screenCtx(plan, s, app.ck.content) + lessonsFor('screen')).then(function(r){ return grab(r, 'javascript'); });
       app.ck.spec = true;
       function once(extra){ return ask(key, 'specwriter', specCtx(plan, s, app) + (extra || ''), true).then(function(raw){ var sp = parseJSON(raw); var errs = validateSpec(sp, s, plan); return { sp: sp, errs: errs }; }); }
       return once().then(function(r){
@@ -3705,6 +3725,7 @@ function writeFlowTests(app, key, again){
     '\n\nكود الشاشات:\n' + plan.screens.map(function(s){ return '### ' + s.route + ' (' + s.title + ')\n' + String(app.ck.screens[s.id] || '').slice(0, 40000); }).join('\n\n');
   if (again) ctx += '\n\nمهم: أعد JSON صالحاً قصيراً فقط، بحد أقصى ٣ رحلات و١٠ خطوات لكل رحلة.';
   if (app.ck.flowPrev) ctx += '\n\nالنسخة السابقة من السيناريوهات فشلت هكذا (مع وصف ما كان ظاهراً فعلاً على الشاشة). صحّح السيناريو: أضف الخطوات الناقصة (فتح عنصر، فتح نافذة، تبديل دور) واستخدم الأزرار والحقول الظاهرة فعلاً:\n' + app.ck.flowPrev;
+  ctx += lessonsFor('tester');
   return ask(key, 'tester', ctx, true).then(function(raw){
     var r = parseJSON(raw) || {}, tests = (r.tests || (Array.isArray(r) ? r : [])).filter(function(x){ return x && Array.isArray(x.steps) && x.steps.length; }).slice(0, 5);
     tests.forEach(function(x){ x.steps = x.steps.slice(0, 14); });

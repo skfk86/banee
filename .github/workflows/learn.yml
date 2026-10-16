@@ -1,0 +1,27 @@
+name: تعلّم بانِي من القياس
+on:
+  workflow_dispatch:
+  workflow_run:
+    workflows: ["قياس بانِي (عدة أفكار بالتوازي)"]
+    types: [completed]
+permissions:
+  contents: write
+concurrency: learn
+jobs:
+  learn:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - name: جمع الأمثلة والدروس
+        run: |
+          git fetch -q origin e2e-bench:refs/remotes/origin/e2e-bench || exit 0
+          node tools/learn.js
+      - name: حفظ ما تعلّمه
+        run: |
+          git config user.name banee-learn && git config user.email e2e@banee.app
+          git diff --quiet www/index.html && exit 0
+          git commit -qam "تعلّم من القياس: تحديث الأمثلة والدروس"
+          git pull -q --rebase origin main && git push -q origin HEAD:main

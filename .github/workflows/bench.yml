@@ -59,7 +59,7 @@ jobs:
           git fetch -q origin e2e-bench || true
           for t in 1 2 3 4 5 6; do
             rm -rf /tmp/w && git worktree add -q /tmp/w origin/e2e-bench 2>/dev/null || { git worktree add -q --orphan -b tmpb /tmp/w 2>/dev/null || git worktree add -q /tmp/w --detach; }
-            mkdir -p /tmp/w/$D && cp out/report.json out/report.md out/log.txt /tmp/w/$D/ 2>/dev/null
+            mkdir -p /tmp/w/$D && cp out/report.json out/report.md out/log.txt out/example.json /tmp/w/$D/ 2>/dev/null
             cd /tmp/w && git add -A && git commit -qm "bench ${{ github.run_id }} ${{ matrix.it.i }}" && git push -q https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }} HEAD:e2e-bench && exit 0
             cd - >/dev/null; git worktree remove --force /tmp/w; git branch -D tmpb 2>/dev/null; sleep $((RANDOM % 20 + 5)); git fetch -q origin e2e-bench || true
           done

@@ -3743,15 +3743,16 @@ function runFlows(app, w, d, note, setCur){
         else if (st.click) p = findRole(st.click).then(function(el){
           if (!el) fail('لم يُعثر على ' + st.click + ' (الزر غير موجود أو اسمه مختلف)' + (seenBefore || seen()));
           else {
-            var form = el.closest && el.closest('form');
-            if (form && (el.type === 'submit' || el.tagName === 'BUTTON')) {
+            // زر إرسال داخل نموذج أو نافذة: نعبّئ كل حقل فارغ ظاهر (المستخدم الحقيقي يملأ النموذج كاملاً)، دون لمس ما عبّأه السيناريو
+            var form = el.closest && (el.closest('form') || el.closest('#sheet'));
+            if (form && (el.type === 'submit' || el.tagName === 'BUTTON') && form.querySelector('input, textarea, select')) {
               var names = {};
               form.querySelectorAll('input[type=radio]').forEach(function(r){ if (!names[r.name]) { names[r.name] = 1; if (!form.querySelector('input[type=radio][name="' + r.name + '"]:checked')) r.click(); } });
-              form.querySelectorAll('input[required], textarea[required], select[required]').forEach(function(f){
-                if (f.type === 'radio' || f.value) return;
-                if (f.type === 'checkbox') { if (!f.checked) f.click(); return; }
+              form.querySelectorAll('input, textarea, select').forEach(function(f){
+                if (f.type === 'radio' || f.type === 'hidden' || f.type === 'file' || f.type === 'search' || f.disabled || f.readOnly || f.value || f.offsetParent === null) return;
+                if (f.type === 'checkbox') { if (f.required && !f.checked) f.click(); return; }
                 if (f.tagName === 'SELECT') { if (f.options.length > 1) f.selectedIndex = 1; }
-                else f.value = f.type === 'number' ? '1' : f.type === 'email' ? 'test@banee.app' : f.type === 'tel' ? '0912345678' : f.type === 'date' ? new Date(Date.now() + 864e5).toISOString().slice(0, 10) : 'تجربة';
+                else f.value = f.type === 'number' ? '1' : f.type === 'email' ? 'test@banee.app' : f.type === 'tel' ? '0912345678' : f.type === 'date' ? new Date(Date.now() + 864e5).toISOString().slice(0, 10) : f.type === 'time' ? '10:00' : f.type === 'url' ? 'https://example.com' : 'تجربة';
                 f.dispatchEvent(new w.Event('input', { bubbles: true })); f.dispatchEvent(new w.Event('change', { bubbles: true }));
               });
             }
@@ -3839,7 +3840,7 @@ function issuesText(app, res){
   return out.length ? out.slice(0, 25).join('\n') : 'لا أخطاء وظيفية';
 }
 function agentFix(app, key, res, onStep){
-  var plan = app.ck.plan, start = {}, MAX = 14, n = 0, hist = [], cur = res, best = appScore(app, res), bestScreens = null;
+  var plan = app.ck.plan, start = {}, MAX = 20, n = 0, hist = [], cur = res, best = appScore(app, res), bestScreens = null;
   plan.screens.forEach(function(s){ start[s.id] = app.ck.screens[s.id]; });
   var startSeed = JSON.stringify(plan.seed || {}), seedChanged = false, flowBackup = null;
   function numbered(js){ return String(js || '').split('\n').map(function(l, i){ return (i + 1) + '| ' + l; }).join('\n'); }

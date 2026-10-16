@@ -1,0 +1,190 @@
+{
+  "status": "ready",
+  "error": "",
+  "name": "إدارة المزارع",
+  "steps": [
+    "done · هوية «حصاد الريف» · الخطة: ٤ شاشات · ٣ مجموعات",
+    "done · لا يحتاج التطبيق محتوى جاهزاً",
+    "done · الهيكل جاهز: التنقّل، البيانات، الدخول، التصميم",
+    "done · ٤ شاشات مكتوبة",
+    "done · الفحص: ١ شاشات بها ملاحظات، راجعها في الاستوديو · رحلات المستخدم: ٢ من ٢ تعمل كاملة · المراجعة: أُصلحت ٣ من ٥",
+    "done · جاهز للمعاينة والتحميل"
+  ],
+  "runtime": {
+    "home": [],
+    "production_entry": [],
+    "reports": [
+      "تصميم: النص \"٠\" غير مقروء: تباين 2.6:1 — لونه #c49a45 والخلفية #ffffff من العنصر <div class=\"stat card\">. الخلفية فاتحة: استخدم var(--text) للنص، أو أزل خلفية ذلك العنصر إن كان داخل hero."
+    ],
+    "alerts_management": []
+  },
+  "flows": [
+    "تسجيل الإنتاج اليومي (12 خطوات)",
+    "إرسال تنبيه من المالك (11 خطوات)"
+  ],
+  "flowSteps": [
+    {
+      "flow": "تسجيل الإنتاج اليومي",
+      "steps": [
+        {
+          "role": "worker"
+        },
+        {
+          "go": "/"
+        },
+        {
+          "click": "text:تسجيل إنتاج جديد"
+        },
+        {
+          "go": "/production"
+        },
+        {
+          "fill": {
+            "[name=date]": "2023-10-25"
+          }
+        },
+        {
+          "fill": {
+            "[name=eggCount]": "1500"
+          }
+        },
+        {
+          "fill": {
+            "[name=feedConsumption]": "160.5"
+          }
+        },
+        {
+          "fill": {
+            "[name=mortalityCount]": "1"
+          }
+        },
+        {
+          "fill": {
+            "[name=notes]": "الإنتاج جيد والحالة الصحية ممتازة"
+          }
+        },
+        {
+          "click": "text:حفظ بيانات الإنتاج"
+        },
+        {
+          "expectDb": {
+            "col": "production",
+            "min": 1
+          }
+        },
+        {
+          "expect": "مرحباً،"
+        }
+      ]
+    },
+    {
+      "flow": "إرسال تنبيه من المالك",
+      "steps": [
+        {
+          "role": "owner"
+        },
+        {
+          "go": "/"
+        },
+        {
+          "click": "text:التقارير والتحليلات"
+        },
+        {
+          "go": "/reports"
+        },
+        {
+          "go": "/alerts"
+        },
+        {
+          "fill": {
+            "[name=title]": "تنبيه هام للجميع"
+          }
+        },
+        {
+          "fill": {
+            "[name=body]": "يرجى الالتزام بمواعيد توزيع العلف بدقة."
+          }
+        },
+        {
+          "fill": {
+            "[name=priority]": "هامة"
+          }
+        },
+        {
+          "click": "text:إرسال التنبيه الآن"
+        },
+        {
+          "expectDb": {
+            "col": "alerts",
+            "min": 1
+          }
+        },
+        {
+          "expect": "التنبيهات الواردة"
+        }
+      ]
+    }
+  ],
+  "reviewIssues": {
+    "home": [
+      "مراجعة: حقل createdAt غير موجود في مجموعة production، يجب استخدام حقل order للترتيب.",
+      "مراجعة: استعلام قائمة الإنتاج لا يستخدم فلتر userId، مما يسمح للعاملين برؤية بيانات الإنتاج الخاصة بغيرهم."
+    ],
+    "production_entry": [
+      "مراجعة: حقل createdAt غير موجود في مجموعة production، يجب استخدام حقل order للترتيب.",
+      "مراجعة: استعلام قائمة الإنتاج لا يستخدم فلتر userId، مما يسمح للعاملين برؤية بيانات الإنتاج الخاصة بغيرهم."
+    ],
+    "reports": [],
+    "alerts_management": [
+      "مراجعة: حقل userId مفقود في عملية Data.alerts.create، وهو حقل مطلوب في مخطط مجموعة alerts."
+    ]
+  },
+  "flowErr": "",
+  "agent": {
+    "ran": false,
+    "fixed": 0,
+    "steps": 0,
+    "log": []
+  },
+  "fixErrors": [],
+  "review": {
+    "found": 5,
+    "fixed": 3
+  },
+  "screens": [
+    {
+      "id": "home",
+      "route": "/",
+      "roles": [
+        "worker",
+        "owner"
+      ],
+      "bytes": 4918
+    },
+    {
+      "id": "production_entry",
+      "route": "/production",
+      "roles": [
+        "worker"
+      ],
+      "bytes": 5311
+    },
+    {
+      "id": "reports",
+      "route": "/reports",
+      "roles": [
+        "owner"
+      ],
+      "bytes": 6730
+    },
+    {
+      "id": "alerts_management",
+      "route": "/alerts",
+      "roles": [
+        "worker",
+        "owner"
+      ],
+      "bytes": 6153
+    }
+  ]
+}

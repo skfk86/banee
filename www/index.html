@@ -1560,7 +1560,7 @@ function openHelp(){
     if (CLOUD) {
       FB.a.onAuthStateChanged(FB.auth, function(u){
         if (!u) { document.getElementById('boot').hidden = true; S.user = null; S.apps = []; showAuth(); return; }
-        loadCloud(u).then(function(){ document.getElementById('boot').hidden = true; enterApp(S.user); Billing.init(); checkKey(); refreshCredits(); })
+        loadCloud(u).then(function(){ document.getElementById('boot').hidden = true; enterApp(S.user); Billing.init(); checkKey(); if (S.OFFLINE) { toast('أنت غير متصل: تطبيقاتك المحفوظة متاحة، والبناء يحتاج اتصالاً بالإنترنت'); goTo('apps'); } else refreshCredits(); })
           .catch(function(e){ console.error(e); document.getElementById('boot').hidden = true; BAD_LOAD = true; var cd = (e && e.code) || ''; toast(cd === 'permission-denied' ? 'تعذّر تحميل مشاريعك: صلاحيات قاعدة البيانات (permission-denied). أبلغ الدعم' : 'تعذّر تحميل مشاريعك' + (cd ? ' (' + cd + ')' : '') + '. تحقق من الاتصال ثم أعد فتح التطبيق','err'); enterApp(S.user); try { Billing.init(); } catch(_){} checkKey(); refreshCredits(); });
       });
     } else if (PROXY_URL) {
@@ -1578,6 +1578,7 @@ function openHelp(){
     checkKey(); updateBuildBadge();
   });
 })();
+window.addEventListener('online', function(){ if (S.OFFLINE && !(S.apps || []).some(function(a){ return a.status === 'building'; })) location.reload(); });
 function fixInterrupted(){
   S.apps.forEach(function(a){ if (a.status==='building') { a.status='failed'; a.error='توقف البناء لأن التطبيق أُغلق، اضغط متابعة لإكماله من حيث توقف'; (a.steps||[]).forEach(function(s){ if(s.state==='cur') s.state='err'; }); } });
 }
@@ -1588,8 +1589,16 @@ function loadCloud(u){
   BAD_LOAD = false;
   S.user = { uid: u.uid, name: u.displayName || (u.email||'').split('@')[0], email: u.email };
   var ref = fdoc('users', u.uid);
-  return FB.f.getDoc(ref).then(function(snap){
-    if (snap.exists()) { S.profile = snap.data(); return; }
+  var pkey = 'bprofile_c_' + u.uid;
+  return FB.f.getDoc(ref).catch(function(e){
+    // بدون اتصال: نكمل بآخر ملف شخصي محفوظ على الجهاز حتى تُفتح التطبيقات المحفوظة، ولا نُنشئ ملفاً جديداً فوق الموجود
+    var c = e && e.code, cached = null;
+    if (c !== 'unavailable' && !(e && /offline/i.test(e.message || ''))) throw e;
+    try { cached = JSON.parse(localStorage.getItem(pkey) || 'null'); } catch(_){}
+    S.OFFLINE = true;
+    return { exists: function(){ return true; }, data: function(){ return cached || { name: S.user.name, email: u.email, plan: 'free', appsLocal: true }; } };
+  }).then(function(snap){
+    if (snap.exists()) { S.profile = snap.data(); if (!S.OFFLINE) { try { localStorage.setItem(pkey, JSON.stringify(S.profile)); } catch(_){} } return; }
     S.profile = { name: S.user.name, email: u.email, plan: 'free', createdAt: Date.now(), builds: { month: '', count: 0, total: 0 } };
     return FB.f.setDoc(ref, S.profile);
   }).then(function(){
@@ -1831,6 +1840,13 @@ function updatePlan() {
     document.getElementById('plan-apps').textContent = 'رصيدك: ' + toAr(c.remaining) + ' نقطة' + (c.bonus ? ' (منها ' + toAr(c.bonus) + ' إضافية)' : '');
     document.getElementById('plan-bar').style.width = Math.min(100, c.used / Math.max(1, c.allowance) * 100) + '%';
     document.getElementById('plan-cnt').textContent = c.plan === 'key' ? 'بمفتاحك الخاص · بلا حد يومي' : toAr(c.used) + ' من ' + toAr(c.allowance) + (c.plan === 'free' ? (c.founder ? ' · رصيد المؤسسين' : ' نقطة · تتجدد ' + refillTxt()) : ' نقطة هذا الشهر');
+    return;
+  }
+  if (PROXY_URL && CLOUD) { // الرصيد لم يصل من الخادم بعد: لا نعرض نظام «تطبيق تجريبي» القديم
+    document.getElementById('plan-nm').textContent = (PLANS[(S.profile && S.profile.plan) || 'free'] || PLANS.free).name;
+    document.getElementById('plan-apps').textContent = S.OFFLINE ? 'يظهر رصيدك عند الاتصال بالإنترنت' : 'جارٍ تحميل رصيدك…';
+    document.getElementById('plan-bar').style.width = '0%';
+    document.getElementById('plan-cnt').textContent = '';
     return;
   }
   var plan = curPlan(), P = PLANS[plan], used = buildsUsed();

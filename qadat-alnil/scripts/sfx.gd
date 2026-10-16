@@ -193,7 +193,7 @@ func _fade_out(s: PackedFloat32Array, sec: float) -> void:
 
 # ===================== واجهة المستخدم =====================
 
-func _click() -> PackedFloat32Array:
+func _click() -> AudioStreamWAV:
 	var s := _buf(0.06)
 	var lp := 0.0
 	for i in s.size():
@@ -270,8 +270,8 @@ func _horn(fs: Array, step: float, long := false) -> AudioStreamWAV:
 				break
 			var t := float(j) / RATE
 			var vib := 1.0 + 0.006 * sin(TAU * 5.5 * t) * minf(1.0, t * 3.0)
-			ph += fs[k] * vib / RATE
-			var saw := 2.0 * (ph - floor(ph)) - 1.0
+			ph += float(fs[k]) * vib / RATE
+			var saw: float = 2.0 * (ph - floor(ph)) - 1.0
 			var bright := 0.08 + 0.25 * minf(1.0, t * 12.0)
 			lp += (saw - lp) * bright
 			var env := minf(1.0, t * 25.0) * (1.0 if t < ln else exp(-(t - ln) * 14.0))

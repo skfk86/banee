@@ -1,0 +1,176 @@
+{
+  "status": "ready",
+  "error": "",
+  "name": "منصة باني التعليمية",
+  "steps": [
+    "done · هوية «منار المعرفة» · الخطة: ٦ شاشات · ٦ مجموعات · ٢٠ عنصر محتوى",
+    "done · المحتوى: ٢٠ عنصر مكتوب كاملاً",
+    "done · الهيكل جاهز: التنقّل، البيانات، الدخول، التصميم",
+    "done · ٦ شاشات مكتوبة",
+    "done · جُرّبت كل الشاشات وأُصلحت ٥، لا أخطاء · رحلات المستخدم: ٢ من ٢ تعمل كاملة · المراجعة: أُصلحت ٢ من ٢ · وكيل الإصلاح: أصلح ١ في ٧ خطوة",
+    "done · جاهز للمعاينة والتحميل"
+  ],
+  "runtime": {
+    "home": [],
+    "course": [],
+    "lesson": [],
+    "quiz": [],
+    "me": [],
+    "results": []
+  },
+  "flows": [
+    "إكمال درس واختبار (14 خطوات)",
+    "المعلم يتابع (3 خطوات)"
+  ],
+  "flowSteps": [
+    {
+      "flow": "إكمال درس واختبار",
+      "steps": [
+        {
+          "role": "driver"
+        },
+        {
+          "go": "/"
+        },
+        {
+          "click": "[data-act=open-course][data-id=courses-1]"
+        },
+        {
+          "click": "[data-act=open-lesson][data-id=lessons-1]"
+        },
+        {
+          "click": "[data-act=complete-lesson]"
+        },
+        {
+          "expectDb": {
+            "col": "progress",
+            "min": 1
+          }
+        },
+        {
+          "go": "/course/courses-1"
+        },
+        {
+          "click": "[data-act=open-quiz][data-id=quizzes-1]"
+        },
+        {
+          "click": "[name=q_0]"
+        },
+        {
+          "click": "[name=q_1]"
+        },
+        {
+          "click": "[name=q_2]"
+        },
+        {
+          "click": "[name=q_3]"
+        },
+        {
+          "click": "[data-act=submit-quiz]"
+        },
+        {
+          "expectDb": {
+            "col": "results",
+            "min": 1
+          }
+        }
+      ]
+    },
+    {
+      "flow": "المعلم يتابع",
+      "steps": [
+        {
+          "role": "teacher"
+        },
+        {
+          "go": "/results"
+        },
+        {
+          "expect": "لوحة نتائج الطلاب"
+        }
+      ]
+    }
+  ],
+  "reviewIssues": {
+    "home": [],
+    "course": [],
+    "lesson": [],
+    "quiz": [],
+    "me": [
+      "مراجعة: حقل quizId يُعرض في واجهة المستخدم بدلاً من اسم الاختبار، يجب جلب بيانات الاختبارات ومطابقة المعرف بالاسم."
+    ],
+    "results": [
+      "مراجعة: حقل createdAt يُستخدم في العرض ولكنه غير موجود في مخطط مجموعة results، مما سيؤدي إلى عرض فارغ أو خطأ في التاريخ."
+    ]
+  },
+  "flowErr": "",
+  "agent": {
+    "ran": true,
+    "fixed": 1,
+    "steps": 7,
+    "log": [
+      "read quiz — أريد قراءة شاشة الاختبار quiz لفحص مشكلة حفظ النتائج في results → 1| App.screen({\n2|   id: 'quiz',\n3|   route: '/quiz/:id',\n4|   title: 'الاختبار',\n5|   icon: 'circle',\n6|   nav: false,\n7|   render(params) {\n8|     return `\n9|",
+      "edit quiz — لقد وجدت أن شاشة الاختبار تستخدم DB.add بدلاً من طبقة Data الموصى بها في التعليمات. سأقوم بتعديل الكود لاستخدام Data.results.create لضمان حفظ النتائ → تم التعديل",
+      "run — لقد قمت بتعديل شاشة الاختبار لاستخدام Data.results.create بدلاً من DB.add، وهو ما يتماشى مع طبقة البيانات المحددة في التعليمات. الآن يجب أن أقوم بتشغيل ال → نتيجة التشغيل (درجة الأخطاء 30، الأفضل حتى الآن 30):\n[quiz] رحلة «إكمال درس واختبار» توقفت عند الخطوة ١٤: لم يُحفظ شيء في results بعد العملية (الحفظ لا يعمل)",
+      "search «results» — في الخطوة ١٤ من السيناريو، ينقر الاختبار على [data-act=submit-quiz] ثم يتوقع وجود عنصر في النتائج، ولكن اختبار الآلي يستخدم Data ولكن الشاشة  → quiz:101| await Data.results.create(resultData);\nquiz:109| App.go('/results');\nme:27| <div id=\"results-list\" class=\"list\"></div>\nme:35| const results = await Da",
+      "edit quiz — تأكيد إرسال الاختبار يتوقف أحياناً بسبب نافذة التأكيد (UI.confirm) أو عدم التقاط الحدث بدقة عند نقر الاختبار الآلي على عناصر الإدخال. سنقوم بتحديث د → تم التعديل",
+      "run — بعد تعديل شاشة الاختبار، سأقوم بتشغيل التطبيق والرحلات للتحقق من حفظ النتائج في results عبر Data.results.create → نتيجة التشغيل (درجة الأخطاء 0، الأفضل حتى الآن 0):\nلا أخطاء وظيفية",
+      "done → تم إصلاح شاشة الاختبار لاستخدام Data.results.create، والتأكد من توافقها مع رحلات المستخدم، مما أدى إلى نجاح الاختبارات الآلية بالكامل."
+    ]
+  },
+  "fixErrors": [],
+  "review": {
+    "found": 2,
+    "fixed": 2
+  },
+  "screens": [
+    {
+      "id": "home",
+      "route": "/",
+      "roles": [
+        "student"
+      ],
+      "bytes": 2967
+    },
+    {
+      "id": "course",
+      "route": "/course/:id",
+      "roles": [
+        "student"
+      ],
+      "bytes": 4593
+    },
+    {
+      "id": "lesson",
+      "route": "/lesson/:id",
+      "roles": [
+        "student"
+      ],
+      "bytes": 3272
+    },
+    {
+      "id": "quiz",
+      "route": "/quiz/:id",
+      "roles": [
+        "student"
+      ],
+      "bytes": 4382
+    },
+    {
+      "id": "me",
+      "route": "/progress",
+      "roles": [
+        "student"
+      ],
+      "bytes": 2498
+    },
+    {
+      "id": "results",
+      "route": "/results",
+      "roles": [
+        "teacher"
+      ],
+      "bytes": 3167
+    }
+  ]
+}

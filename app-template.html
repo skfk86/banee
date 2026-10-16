@@ -792,6 +792,158 @@ _e(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&
       App.screen({ id: 'register', route: '/register', title: 'إنشاء حساب', public: true, render: () => authForm(true), mount: authMount(true) });
     }
 
+    // ═════════════ محرّك المواصفات: شاشات كاملة تُبنى من وصف قصير (Spec.screen) بلا كود، مجرَّبة ومتسقة ═════════════
+    const Spec = (() => {
+      const hasData = () => { try { return typeof Data !== 'undefined' && Data; } catch (e) { return null; } };
+      const D = c => { const dd = hasData(); if (dd) return dd[c]; return { list: o => DB.list(c, o || {}), visible: o => DB.list(c, o || {}), mine: o => DB.list(c, o || {}), get: id => DB.get(c, id), create: o => DB.add(c, o), update: (id, p) => DB.update(c, id, p), remove: id => DB.remove(c, id), setStatus: (id, s) => DB.update(c, id, { status: s }), take: (id, s) => DB.update(c, id, s ? { status: s } : {}) }; };
+      const lbl = s => { const dd = hasData(); return dd && dd.label ? dd.label(s) : s; };
+      const val = (x, k) => k ? String(k).split('.').reduce((o, q) => o == null ? o : o[q], x) : undefined;
+      const fmt = (v, kind) => { if (v == null || v === '') return ''; if (kind === 'money') return UI.money(v, (META.pay && META.pay.currency) || 'ج.س'); if (kind === 'date') return UI.date(v); if (kind === 'ago') return UI.ago(v); if (kind === 'num') return UI.num(v); if (kind === 'status') return lbl(v); if (Array.isArray(v)) return v.length + ''; if (typeof v === 'object') return ''; return String(v); };
+      const tpl = (s, x, p) => String(s || '').replace(/:id\b/g, encodeURIComponent((x && x.id) || (p && p.id) || '')).replace(/\{(\w+(?:\.\w+)*)\}/g, (_, k) => encodeURIComponent(val(x, k) ?? val(p, k) ?? ''));
+      const when = (w, x) => !w || Object.keys(w).every(k => [].concat(w[k]).map(String).includes(String(val(x, k) ?? '')));
+      const badgeCls = v => /done|deliver|complet|paid|approv|accept|confirm|graded|active|ok/.test(String(v)) ? 'badge-success' : /cancel|reject|expir|absent|fail/.test(String(v)) ? 'badge-error' : 'badge-warning';
+      const ACT = a => a.act || ('do-' + String(a.do || 'x').replace(/^status:/, '').replace(/^go:.*/, 'open').replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, ''));
+      async function rows(b, p) {
+        const api = D(b.collection); if (!api) return [];
+        let xs = b.show === 'all' ? await api.list({}) : b.show === 'mine' && api.mine ? await api.mine({}) : await (api.visible ? api.visible({}) : api.list({}));
+        xs = (xs || []).slice();
+        if (b.filter) xs = xs.filter(x => when(b.filter, x));
+        if (b.byParam) xs = xs.filter(x => String(val(x, b.byParam)) === String(p && p.id));
+        const sk = String(b.sort || '-createdAt'), dir = sk[0] === '-' ? -1 : 1, key = sk.replace(/^-/, '');
+        xs.sort((a, c) => { const A = val(a, key), C = val(c, key); return (A > C ? 1 : A < C ? -1 : 0) * dir; });
+        return b.limit ? xs.slice(0, b.limit) : xs;
+      }
+      const actBtns = (acts, x, small) => (acts || []).map((a, i) => when(a.when, x) ? `<button class="btn ${a.style === 'danger' ? 'btn-danger' : a.style === 'ghost' ? 'btn-ghost' : i ? 'btn-outline' : 'btn-primary'}${small ? ' btn-sm' : ''}" data-act="${UI.esc(ACT(a))}" data-id="${UI.esc(x.id || '')}" data-i="${i}">${a.icon ? `<i data-lucide="${UI.esc(a.icon)}"></i>` : ''}${UI.esc(a.label || 'تنفيذ')}</button>` : '').join('');
+      async function run(a, col, x, p, redraw) {
+        const api = D(col), d = String(a.do || '');
+        if (a.confirm && !(await UI.confirm(a.confirm))) return;
+        try {
+          if (d.startsWith('go:')) return App.go(tpl(d.slice(3), x, p));
+          if (d === 'take') await api.take(x.id, a.status);
+          else if (d.startsWith('status:')) await api.setStatus(x.id, d.slice(7));
+          else if (d === 'remove') await api.remove(x.id);
+          else if (d.startsWith('set:')) { const kv = d.slice(4).split('='); await api.update(x.id, { [kv[0]]: kv[1] }); }
+          UI.toast(a.done || 'تم', 'success');
+          if (a.then) return App.go(tpl(String(a.then).replace(/^go:/, ''), x, p));
+          if (redraw) redraw();
+        } catch (e) { console.error(e); UI.toast((e && e.message) || 'تعذّر التنفيذ', 'error'); }
+      }
+      const blocks = {
+        hero: {
+          html: b => `<div class="hero">${b.icon ? `<i data-lucide="${UI.esc(b.icon)}"></i>` : ''}<h2>${UI.esc(b.title || META.name)}</h2>${b.sub ? `<p>${UI.esc(b.sub)}</p>` : ''}${b.button ? `<button class="btn" data-act="${UI.esc(b.button.act || 'hero-go')}" style="margin-top:12px;position:relative">${UI.esc(b.button.label || 'ابدأ')}</button>` : ''}</div>`,
+          mount(b, el) { if (b.button) App.on(el, 'click', '[data-act]', () => App.go(b.button.go || '/')); }
+        },
+        list: {
+          html: b => `${b.title ? `<div class="section-head"><span class="section-title">${UI.esc(b.title)}</span>${b.add ? `<button class="btn btn-sm btn-primary" data-act="${UI.esc(b.add.act || 'add')}">${UI.esc(b.add.label || 'إضافة')}</button>` : ''}</div>` : ''}${b.search ? `<div class="field"><input class="input" data-q type="search" placeholder="${UI.esc(b.search === true ? 'بحث…' : b.search)}"></div>` : ''}${b.tabs ? `<div class="seg" data-tabs style="margin-bottom:10px">${[''].concat(b.tabs.values || []).map((v, k) => `<button class="${k ? '' : 'active'}" data-act="tab" data-v="${UI.esc(v)}">${UI.esc(k ? lbl(v) : 'الكل')}</button>`).join('')}</div>` : ''}<div data-rows>${UI.skeleton(3)}</div>`,
+          async mount(b, el, p) {
+            let tab = '', q = '';
+            const box = el.querySelector('[data-rows]');
+            const draw = async () => {
+              let xs = await rows(b, p);
+              if (tab) xs = xs.filter(x => String(val(x, (b.tabs && b.tabs.field) || 'status')) === tab);
+              if (q) xs = xs.filter(x => JSON.stringify(x).toLowerCase().includes(q.toLowerCase()));
+              const c = b.card || {};
+              box._xs = xs;
+              if (!xs.length) { box.innerHTML = UI.empty(b.emptyIcon || 'inbox', b.empty || 'لا توجد عناصر بعد', b.emptySub || ''); UI.icons(); return; }
+              box.innerHTML = `<div class="list">` + xs.map(x => {
+                const img = val(x, c.image), t = fmt(val(x, c.title || 'title') ?? val(x, 'name'), c.titleKind), sub = fmt(val(x, c.sub), c.subKind), meta = fmt(val(x, c.meta), c.metaKind), bd = c.badge ? val(x, c.badge) : '';
+                return `<div class="item" ${b.link ? `data-act="open" data-id="${UI.esc(x.id)}" style="cursor:pointer"` : ''}>${img ? `<img class="item-thumb" src="${UI.esc(img)}" alt="" loading="lazy">` : c.icon ? `<span class="item-icon"><i data-lucide="${UI.esc(c.icon)}"></i></span>` : ''}<span class="item-body"><span class="item-title">${UI.esc(t)}</span>${sub || meta ? `<span class="item-sub">${UI.esc([sub, meta].filter(Boolean).join(' · '))}</span>` : ''}${(b.actions || []).length ? `<span class="row" style="gap:6px;margin-top:8px;flex-wrap:wrap">${actBtns(b.actions, x, true)}</span>` : ''}</span>${bd ? `<span class="badge ${badgeCls(bd)}">${UI.esc(lbl(bd))}</span>` : ''}</div>`;
+              }).join('') + '</div>';
+              UI.icons();
+            };
+            await draw();
+            App.on(box, 'click', '[data-act=open]', (e, t) => { if (e.target.closest('button')) return; const x = (box._xs || []).find(y => String(y.id) === t.dataset.id); App.go(tpl(b.link, x, p)); });
+            App.on(box, 'click', 'button[data-i]', (e, t) => { e.stopPropagation(); const x = (box._xs || []).find(y => String(y.id) === t.dataset.id); if (x) run(b.actions[+t.dataset.i], b.collection, x, p, draw); });
+            if (b.add) App.on(el, 'click', '[data-act="' + (b.add.act || 'add') + '"]', () => App.go(tpl(b.add.go, null, p)));
+            const tb = el.querySelector('[data-tabs]'); if (tb) App.on(tb, 'click', '[data-act=tab]', (e, t) => { tab = t.dataset.v; tb.querySelectorAll('button').forEach(x => x.classList.toggle('active', x === t)); draw(); });
+            const qi = el.querySelector('[data-q]'); if (qi) qi.addEventListener('input', () => { q = qi.value.trim(); draw(); });
+          }
+        },
+        detail: {
+          html: () => `<div data-detail>${UI.skeleton(2)}</div>`,
+          async mount(b, el, p) {
+            const api = D(b.collection), box = el.querySelector('[data-detail]');
+            const draw = async () => {
+              const x = api ? await api.get(p[b.param || 'id']) : null;
+              box._x = x;
+              if (!x) { box.innerHTML = UI.empty('search-x', 'العنصر غير موجود'); UI.icons(); return; }
+              const img = val(x, b.image), title = val(x, b.title || 'title') ?? val(x, 'name');
+              box.innerHTML = `${img ? `<img src="${UI.esc(img)}" alt="" style="width:100%;max-width:100%;border-radius:var(--r-lg);aspect-ratio:16/9;object-fit:cover;margin-bottom:12px">` : ''}<div class="card"><div class="row" style="justify-content:space-between;align-items:flex-start;gap:10px"><h2 class="title">${UI.esc(title)}</h2>${b.badge && val(x, b.badge) ? `<span class="badge ${badgeCls(val(x, b.badge))}">${UI.esc(lbl(val(x, b.badge)))}</span>` : ''}</div>` +
+                (b.fields || []).filter(f => val(x, f.key) != null && val(x, f.key) !== '').map(f => f.kind === 'rich' ? `<div style="margin-top:12px">${UI.rich(val(x, f.key))}</div>` : `<div class="row" style="justify-content:space-between;margin-top:10px;gap:12px"><span class="muted">${UI.esc(f.label || f.key)}</span><b${f.kind === 'money' ? ' class="price"' : ''}>${UI.esc(fmt(val(x, f.key), f.kind))}</b></div>`).join('') +
+                `${(b.actions || []).length ? `<div class="stack" style="margin-top:16px;gap:8px">${actBtns(b.actions, x)}</div>` : ''}</div>`;
+              UI.icons();
+            };
+            await draw();
+            App.on(box, 'click', 'button[data-i]', (e, t) => { if (box._x) run(b.actions[+t.dataset.i], b.collection, box._x, p, draw); });
+          }
+        },
+        form: {
+          html: b => `<form class="card" data-form novalidate>${b.title ? `<h3 style="margin-bottom:12px">${UI.esc(b.title)}</h3>` : ''}${(b.fields || []).map(f => {
+              const id = 'f-' + f.key, req = f.required !== false ? ' required' : '', lab = `<label class="label" for="${id}">${UI.esc(f.label || f.key)}</label>`;
+              if (f.kind === 'textarea') return `<div class="field">${lab}<textarea class="input" id="${id}" name="${UI.esc(f.key)}" rows="3"${req} placeholder="${UI.esc(f.placeholder || '')}"></textarea></div>`;
+              if (f.kind === 'select') return `<div class="field">${lab}<select class="input" id="${id}" name="${UI.esc(f.key)}"${req}>${(f.options || []).map(o => `<option value="${UI.esc(o && o.value != null ? o.value : o)}">${UI.esc(o && o.label != null ? o.label : lbl(o))}</option>`).join('')}</select></div>`;
+              const type = { number: 'number', money: 'number', date: 'date', time: 'time', tel: 'tel', email: 'email' }[f.kind] || 'text';
+              return `<div class="field">${lab}<input class="input" id="${id}" name="${UI.esc(f.key)}" type="${type}"${req}${/tel|email|number/.test(type) ? ' dir="ltr"' : ''} placeholder="${UI.esc(f.placeholder || '')}"></div>`;
+            }).join('')}<button class="btn btn-primary" type="submit" data-act="${UI.esc(b.act || 'submit')}" style="width:100%;margin-top:6px">${UI.esc(b.submit || 'حفظ')}</button></form>`,
+          async mount(b, el, p) {
+            const form = el.querySelector('[data-form]'), api = D(b.collection);
+            let cur = null;
+            if (b.mode === 'edit' && api) { cur = await api.get(p[b.param || 'id']); if (cur) (b.fields || []).forEach(f => { const i = form.elements[f.key]; if (i && cur[f.key] != null) i.value = cur[f.key]; }); }
+            form.addEventListener('submit', async e => {
+              e.preventDefault();
+              const o = {}; let bad = null;
+              (b.fields || []).forEach(f => { const i = form.elements[f.key]; if (!i) return; let v = String(i.value || '').trim(); if ((f.kind === 'number' || f.kind === 'money') && v !== '') v = Number(v); if (f.required !== false && v === '') bad = bad || f; o[f.key] = v; });
+              if (bad) { UI.toast('أكمل حقل «' + (bad.label || bad.key) + '»', 'error'); return; }
+              Object.keys(b.set || {}).forEach(k => { const v = b.set[k]; o[k] = typeof v === 'string' && v.indexOf('param:') === 0 ? p[v.slice(6)] : v; });
+              const btn = form.querySelector('button[type=submit]'); UI.busy(btn, true);
+              try {
+                if (cur) await api.update(cur.id, o); else await api.create(o);
+                UI.toast(b.done || 'تم الحفظ', 'success'); form.reset();
+                if (b.after) App.go(tpl(b.after, cur || o, p));
+              } catch (er) { console.error(er); UI.toast((er && er.message) || 'تعذّر الحفظ', 'error'); }
+              finally { UI.busy(btn, false); }
+            });
+          }
+        },
+        stats: {
+          html: b => `<div class="grid2" data-stats>${(b.items || []).map(() => '<div class="stat card"><span class="muted">…</span></div>').join('')}</div>`,
+          async mount(b, el) {
+            const box = el.querySelector('[data-stats]'), out = [];
+            for (const it of (b.items || [])) {
+              const api = D(it.collection); let xs = api ? await (api.visible ? api.visible({}) : api.list({})) : [];
+              if (it.where) xs = xs.filter(x => when(it.where, x));
+              const v = it.sum ? xs.reduce((s, x) => s + Number(val(x, it.sum) || 0), 0) : xs.length;
+              out.push(`<div class="stat card"><span class="muted">${UI.esc(it.label || '')}</span><b style="font-size:22px">${UI.esc(it.kind === 'money' ? UI.money(v) : UI.num(v))}</b></div>`);
+            }
+            box.innerHTML = out.join('');
+          }
+        },
+        text: { html: b => `<div class="card">${UI.rich(b.text || '')}</div>` },
+        links: {
+          html: b => `<div class="list">${(b.items || []).map((x, i) => `<button class="item" data-act="${UI.esc(x.act || 'link')}" data-i="${i}">${x.icon ? `<span class="item-icon"><i data-lucide="${UI.esc(x.icon)}"></i></span>` : ''}<span class="item-body"><span class="item-title">${UI.esc(x.label)}</span>${x.sub ? `<span class="item-sub">${UI.esc(x.sub)}</span>` : ''}</span></button>`).join('')}</div>`,
+          mount(b, el) { App.on(el, 'click', 'button[data-i]', (e, t) => App.go((b.items[+t.dataset.i] || {}).go || '/')); }
+        },
+        custom: {
+          html: b => b.html || '',
+          mount(b, el, p) { if (b.js) { try { return new Function('el', 'params', 'App', 'DB', 'Data', 'UI', 'Auth', 'Store', b.js)(el, p, App, DB, hasData(), UI, Auth, Store); } catch (e) { console.error(e); } } }
+        }
+      };
+      return {
+        blocks,
+        screen(def) {
+          const bs = (def.blocks || []).map(b => Object.assign({}, b));
+          App.screen(Object.assign({}, def, {
+            render(p) { return bs.map((b, i) => { const k = blocks[b.type]; return `<div class="section" data-block="${i}">${k ? k.html(b, i, p) : ''}</div>`; }).join(''); },
+            async mount(el, p) {
+              const outs = [];
+              for (let i = 0; i < bs.length; i++) { const k = blocks[bs[i].type]; if (!k || !k.mount) continue; const box = el.querySelector('[data-block="' + i + '"]'); try { const r = await k.mount(bs[i], box, p); if (typeof r === 'function') outs.push(r); } catch (e) { console.error(e); } }
+              return () => outs.forEach(f => { try { f(); } catch (e) {} });
+            }
+          }));
+        }
+      };
+    })();
+
     // ═════════════ الشاشات ═════════════
 {{SCREENS}}
     // ═════════════ لوحة إدارة صاحب التطبيق ═════════════

@@ -3178,7 +3178,7 @@ function runBuild(app, key){
     if (app.fb && !app.fbRulesShown) { app.fbRulesShown = true; saveApps(); setTimeout(function(){ showOwnRules(app); }, 900); }
     else toast('تطبيق "'+app.name+'" جاهز','suc');
     var firstWin = false; try { firstWin = !localStorage.getItem('bfirstwin'); localStorage.setItem('bfirstwin', '1'); } catch(_){}
-    if (firstWin) FIRST_WIN = true; else setTimeout(function(){ Ads.inter(); }, 1500); // لا إعلان بعد أول نجاح: لحظة احتفال
+    if (firstWin) FIRST_WIN = true; else if (!askReview()) setTimeout(function(){ Ads.inter(); }, 1500); // لا إعلان بعد أول نجاح: لحظة احتفال
     updatePlan();
   }).catch(function(e){
     if (e && (e.message === '__stale' || e.message === '__review')) return;
@@ -5039,6 +5039,15 @@ function openStudio(id){
   stPreview();
 }
 // بعد أول تطبيق ناجح، عند الخروج من الاستوديو: تهنئة + عرض الاشتراك للمجاني
+// طلب تقييم Google Play بعد النجاح الثاني والخامس (Google تقرر عرضه أو لا، ولا يُسأل المستخدم قبله حسب سياستها)
+function askReview(){
+  var R = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.InAppReview;
+  if (!R || !(window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform())) return false;
+  var n = 0; try { n = +(localStorage.getItem('bwins') || 0) + 1; localStorage.setItem('bwins', n); } catch(_){ return false; }
+  if (n !== 1 && n !== 4) return false; // يُعدّ من النجاح الثاني (الأول له التهنئة)
+  setTimeout(function(){ R.requestReview().catch(function(){}); }, 2500);
+  return true;
+}
 var FIRST_WIN = false;
 function firstWinOffer(){
   if (!FIRST_WIN) return; FIRST_WIN = false;

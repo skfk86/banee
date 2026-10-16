@@ -1,0 +1,262 @@
+{
+  "status": "ready",
+  "error": "",
+  "name": "شفاء - الصيدلية الإلكترونية",
+  "steps": [
+    "done · هوية «عناية الصيدلي» · الخطة: ٨ شاشات · ٥ مجموعات · ١٦ عنصر محتوى",
+    "done · المحتوى: ١٦ عنصر مكتوب كاملاً",
+    "done · الهيكل جاهز: التنقّل، البيانات، الدخول، التصميم",
+    "done · ٨ شاشات مكتوبة",
+    "done · الفحص: ٧ شاشات بها ملاحظات، راجعها في الاستوديو · رحلات المستخدم: ٣ من ٣ تعمل كاملة · المراجعة: أُصلحت ٠ من ٢",
+    "done · جاهز للمعاينة والتحميل"
+  ],
+  "runtime": {
+    "home": [
+      "تصميم: صورة لا تُحمَّل: https://images.unsplash.com/photo-1608248597359-54d1933089d8?auto=format&fit=cro. استخدم صورة من بيانات التطبيق أو أيقونة بديلة.",
+      "تصميم: صورة لا تُحمَّل: https://images.unsplash.com/photo-1559591937-e1032b4f6e43?w=500. استخدم صورة من بيانات التطبيق أو أيقونة بديلة.",
+      "تصميم: النص \"نقداً للمندوب\" غير مقروء: تباين 4.2:1 — لونه #687086 والخلفية #e2f0ef من العنصر <div class=\"choice picked\">. الخلفية فاتحة: استخدم var(--text) للنص، أو أزل خلفية ذلك العنصر إن كان داخل hero.",
+      "رحلة «شراء أدوية مباشرة من المتجر» توقفت عند الخطوة ٣: ظهرت رسالة خطأ: الرجاء إدخال عنوان التوصيل",
+      "رحلة «رفع وصفة طبية ومراجعتها» توقفت عند الخطوة ٣: الحقل #notes غير موجود في الشاشة — الظاهر الآن: الشاشة home (#/) بدور customer؛ الأزرار: upload-prescription، select-cat، open-product، add-to-cart؛ الحقول: #search-input"
+    ],
+    "product": [
+      "تصميم: صورة لا تُحمَّل: https://images.unsplash.com/photo-1608248597359-54d1933089d8?auto=format&fit=cro. استخدم صورة من بيانات التطبيق أو أيقونة بديلة.",
+      "تصميم: صورة لا تُحمَّل: https://images.unsplash.com/photo-1559591937-e1032b4f6e43?w=500. استخدم صورة من بيانات التطبيق أو أيقونة بديلة.",
+      "تصميم: النص \"نقداً للمندوب\" غير مقروء: تباين 4.2:1 — لونه #687086 والخلفية #e2f0ef من العنصر <div class=\"choice picked\">. الخلفية فاتحة: استخدم var(--text) للنص، أو أزل خلفية ذلك العنصر إن كان داخل hero."
+    ],
+    "cart": [
+      "تصميم: النص \"نقداً للمندوب\" غير مقروء: تباين 4.2:1 — لونه #687086 والخلفية #e2f0ef من العنصر <div class=\"choice picked\">. الخلفية فاتحة: استخدم var(--text) للنص، أو أزل خلفية ذلك العنصر إن كان داخل hero.",
+      "تصميم: صورة لا تُحمَّل: https://images.unsplash.com/photo-1608248597359-54d1933089d8?auto=format&fit=cro. استخدم صورة من بيانات التطبيق أو أيقونة بديلة.",
+      "تصميم: صورة لا تُحمَّل: https://images.unsplash.com/photo-1559591937-e1032b4f6e43?w=500. استخدم صورة من بيانات التطبيق أو أيقونة بديلة."
+    ],
+    "upload-prescription": [
+      "تصميم: صورة لا تُحمَّل: https://images.unsplash.com/photo-1608248597359-54d1933089d8?auto=format&fit=cro. استخدم صورة من بيانات التطبيق أو أيقونة بديلة.",
+      "تصميم: صورة لا تُحمَّل: https://images.unsplash.com/photo-1559591937-e1032b4f6e43?w=500. استخدم صورة من بيانات التطبيق أو أيقونة بديلة.",
+      "تصميم: النص \"نقداً للمندوب\" غير مقروء: تباين 4.2:1 — لونه #687086 والخلفية #e2f0ef من العنصر <div class=\"choice picked\">. الخلفية فاتحة: استخدم var(--text) للنص، أو أزل خلفية ذلك العنصر إن كان داخل hero."
+    ],
+    "my-orders": [
+      "تصميم: صورة لا تُحمَّل: https://images.unsplash.com/photo-1608248597359-54d1933089d8?auto=format&fit=cro. استخدم صورة من بيانات التطبيق أو أيقونة بديلة."
+    ],
+    "pharmacist-dashboard": [
+      "تصميم: النص \"نقداً للمندوب\" غير مقروء: تباين 4.2:1 — لونه #687086 والخلفية #e2f0ef من العنصر <div class=\"choice picked\">. الخلفية فاتحة: استخدم var(--text) للنص، أو أزل خلفية ذلك العنصر إن كان داخل hero.",
+      "تصميم: صورة لا تُحمَّل: data:image/svg+xml;utf8,<svg xmlns=. استخدم صورة من بيانات التطبيق أو أيقونة بديلة."
+    ],
+    "driver-orders": [],
+    "order-details": [
+      "تصميم: النص \"نقداً للمندوب\" غير مقروء: تباين 4.2:1 — لونه #687086 والخلفية #e2f0ef من العنصر <div class=\"choice picked\">. الخلفية فاتحة: استخدم var(--text) للنص، أو أزل خلفية ذلك العنصر إن كان داخل hero."
+    ]
+  },
+  "flows": [
+    "شراء أدوية مباشرة من المتجر (8 خطوات)",
+    "رفع وصفة طبية ومراجعتها (13 خطوات)",
+    "توصيل الطلب من المندوب (5 خطوات)"
+  ],
+  "flowSteps": [
+    {
+      "flow": "شراء أدوية مباشرة من المتجر",
+      "steps": [
+        {
+          "role": "customer"
+        },
+        {
+          "go": "/product/products-1"
+        },
+        {
+          "click": "[data-act=add-to-cart]"
+        },
+        {
+          "go": "/cart"
+        },
+        {
+          "fill": {
+            "[name=address]": "الخرطوم، شارع الستين"
+          }
+        },
+        {
+          "fill": {
+            "#input-phone": "0912345678"
+          }
+        },
+        {
+          "click": "[data-act=submit-order]"
+        },
+        {
+          "expectDb": {
+            "col": "orders",
+            "min": 1
+          }
+        }
+      ]
+    },
+    {
+      "flow": "رفع وصفة طبية ومراجعتها",
+      "steps": [
+        {
+          "role": "customer"
+        },
+        {
+          "go": "/upload-prescription"
+        },
+        {
+          "fill": {
+            "#notes": "بنادول وأسبرين"
+          }
+        },
+        {
+          "fill": {
+            "#address": "الخرطوم، الديم"
+          }
+        },
+        {
+          "fill": {
+            "#phone": "0911111111"
+          }
+        },
+        {
+          "click": "[data-act=submit-order]"
+        },
+        {
+          "role": "pharmacist"
+        },
+        {
+          "go": "/pharmacist/prescriptions"
+        },
+        {
+          "click": "[data-act=review-presc]"
+        },
+        {
+          "fill": {
+            "#rev-price": "2000"
+          }
+        },
+        {
+          "fill": {
+            "#rev-notes": "متوفر"
+          }
+        },
+        {
+          "click": "[data-act=save-review]"
+        },
+        {
+          "expectDb": {
+            "col": "prescriptions",
+            "min": 1
+          }
+        }
+      ]
+    },
+    {
+      "flow": "توصيل الطلب من المندوب",
+      "steps": [
+        {
+          "role": "driver"
+        },
+        {
+          "go": "/driver/deliveries"
+        },
+        {
+          "click": "[data-act=accept]"
+        },
+        {
+          "click": "[data-act=status]"
+        },
+        {
+          "click": "[data-act=status]"
+        }
+      ]
+    }
+  ],
+  "reviewIssues": {
+    "home": [],
+    "product": [],
+    "cart": [
+      "مراجعة: في شاشة سلة الشراء، طريقة الدفع عند الاستلام تُخزن بقيمة 'cash' بينما في شاشة تفاصيل الطلب (order-details) يتم فحص order.method === 'receipt' لعرض 'الدفع عند الاستلام'، مما يسبب اختلافاً في القيمة وعرض طريقة دفع خاطئة، والإصلاح هو توحيد القيمة لتصبح 'cash' أو مطابقتها في الشاشتين."
+    ],
+    "upload-prescription": [],
+    "my-orders": [
+      "مراجعة: في شاشة طلبات العميل، عندما يتم قبول الوصفة الطبية وتحويلها إلى طلب عبر Data.orders.create يتم تمرير items بـ productId: rx.id، لكن rx هو كائن الوصفة (prescription) وليس منتجاً من جدول products فيفتقد اسم المنتج وسعره الحقيقي، والإصلاح هو استخدام items: [{ productId: rx.id, title: 'وصفة طبية معتمدة', price: rx.totalPrice || 0, qty: 1 }] أو جلب تفاصيل الأدوية من الوصفة بدلاً من استخدام rx.id كـ pro"
+    ],
+    "pharmacist-dashboard": [],
+    "driver-orders": [],
+    "order-details": []
+  },
+  "flowErr": "رد غير صالح: {\"tests\":[{\"flow\":\"شراء أدوية مباشرة من المتجر\",\"steps\":[{\"role\":\"customer\"},{\"go\":\"/\"},{\"click\":\"[data-act=open-product",
+  "agent": {
+    "ran": false,
+    "fixed": 0,
+    "steps": 0,
+    "log": []
+  },
+  "fixErrors": [],
+  "review": {
+    "found": 2,
+    "fixed": 0
+  },
+  "screens": [
+    {
+      "id": "home",
+      "route": "/",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 10488
+    },
+    {
+      "id": "product",
+      "route": "/product/:id",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 8332
+    },
+    {
+      "id": "cart",
+      "route": "/cart",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 11798
+    },
+    {
+      "id": "upload-prescription",
+      "route": "/upload-prescription",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 5318
+    },
+    {
+      "id": "my-orders",
+      "route": "/orders",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 6290
+    },
+    {
+      "id": "pharmacist-dashboard",
+      "route": "/pharmacist/prescriptions",
+      "roles": [
+        "pharmacist"
+      ],
+      "bytes": 11081
+    },
+    {
+      "id": "driver-orders",
+      "route": "/driver/deliveries",
+      "roles": [
+        "driver"
+      ],
+      "bytes": 3961
+    },
+    {
+      "id": "order-details",
+      "route": "/orders/:id",
+      "roles": [
+        "customer",
+        "pharmacist",
+        "driver"
+      ],
+      "bytes": 7608
+    }
+  ]
+}

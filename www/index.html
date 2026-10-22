@@ -3799,6 +3799,8 @@ function runtimeTest(app, onProgress){
         if (i >= plan.screens.length) {
           if (!(app.ck.flowTests || []).length) return sleep(300).then(done);
           if (onProgress) onProgress({ title: 'رحلات المستخدم' }, plan.screens.length, plan.screens.length);
+          // الرحلات تبدأ من نفس بيانات ما قبل تجربة الأزرار (ضغطات الاستكشاف كانت تنشئ حجوزاً أو انضماماً فتختفي أزرار السيناريو)
+          try { var pre = 'st_' + testId + '_db_'; Object.keys(w.localStorage).forEach(function(k){ if (k.indexOf(pre) === 0) w.localStorage.removeItem(k); }); Object.keys(snapDb || {}).forEach(function(k){ w.localStorage.setItem(k, snapDb[k]); }); } catch(e){}
           return runFlows(app, w, d, note, function(id){ curScreen = id; }).then(function(){ return sleep(300); }).then(done, done);
         }
         var s = plan.screens[i++]; curScreen = s.id;
@@ -3807,7 +3809,8 @@ function runtimeTest(app, onProgress){
         var route = s.route.replace(/:\w+/g, function(){ return encodeURIComponent(seedIdFor({ seed: mergedSeed(app) }, app.ck.screens[s.id])); });
         return visit(route).then(function(){ inspect(s); mapScreen(s); return clickActions(s, route); }).then(function(){ inspect(s); }).then(next, function(e){ note(s.id, e.message); return next(); });
       }
-      sleep(700).then(next);
+      var snapDb = null;
+      sleep(700).then(function(){ try { var pre = 'st_' + testId + '_db_'; snapDb = {}; Object.keys(w.localStorage).forEach(function(k){ if (k.indexOf(pre) === 0) snapDb[k] = w.localStorage.getItem(k); }); } catch(e){} }).then(next);
     };
     fr.srcdoc = html;
     document.body.appendChild(fr);

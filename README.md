@@ -26,14 +26,12 @@ firebase deploy --only firestore:rules
 
 ## ١-أ. روابط المشاركة (مرة واحدة)
 
-زر «مشاركة» في الاستوديو يعطي كل تطبيق رابطاً مثل `https://bani-b28a0.web.app/a/xxxxxxxx` يفتحه أي شخص من المتصفح، وفي أسفله «صُنع ببانِي».
-فعّلها بنشر الصفحة والقواعد من Termux:
+زر «مشاركة» في الاستوديو يعطي كل تطبيق رابطاً مثل `https://skfk86.github.io/banee/a/#xxxxxxxx` يفتحه أي شخص من المتصفح، وفي أسفله «صُنع ببانِي».
+صفحة العرض (`site/`) تُنشر تلقائياً على GitHub Pages عبر `.github/workflows/pages.yml`.
 
-```bash
-firebase deploy --only hosting,firestore:rules
-```
-
-وتأكد أن **Authentication ← Sign-in method ← Anonymous** مفعّل (تستخدمه نسخة الويب لقاعدة البيانات التجريبية).
+1. GitHub ← المستودع ← Settings ← Pages ← Source: **GitHub Actions**.
+2. Firestore ← Rules: الصق `firestore.rules` كاملاً ← Publish.
+3. Authentication ← Sign-in method ← **Anonymous** مفعّل (تستخدمه نسخة الويب لقاعدة البيانات التجريبية).
 
 ---
 

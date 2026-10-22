@@ -5074,8 +5074,8 @@ function closeStudio(){
   document.getElementById('studio').hidden = true; document.body.classList.remove('in-studio');
   ST.id = null; renderApps(); firstWinOffer();
 }
-// ════ رابط مشاركة: نسخة ويب من التطبيق يفتحها أي شخص (Firebase Hosting: /a/{slug}) ════
-var SHARE_BASE = 'https://' + FB_CONFIG.projectId + '.web.app/a/';
+// ════ رابط مشاركة: نسخة ويب من التطبيق يفتحها أي شخص (GitHub Pages: /a/#slug) ════
+var SHARE_BASE = 'https://skfk86.github.io/banee/a/#'; // site/ على GitHub Pages (pages.yml)
 function shareApp(){
   var app = stApp();
   if (!app || !app.ck || !app.ck.plan) { toast('شارك التطبيق بعد اكتمال بنائه', 'err'); return; }

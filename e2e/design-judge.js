@@ -7,25 +7,28 @@ const RUBRIC = `أنت مدير تصميم في شركة تطبيقات عالم
 لا تجامل. حالة فارغة مصممة جيداً لا تُعاقب، لكن الشاشة الفارغة بلا قصد تُعاقب.
 أعد JSON فقط: {"score": رقم, "strengths": ["..."], "issues": ["عيب محدد وكيف يُصلح"]} بحد أقصى ٣ نقاط لكل قائمة.`;
 
-async function ask(key, model, b64) {
+// الحصة المجانية تنفد عند تشغيل ٨ تطبيقات معاً: ندوّر على كل المفاتيح ثم نماذج بديلة
+async function ask(keys, models, b64) {
   const body = { contents: [{ role: 'user', parts: [{ text: RUBRIC }, { inline_data: { mime_type: 'image/png', data: b64 } }] }],
     generationConfig: { responseMimeType: 'application/json', temperature: 0.2 } };
-  for (let t = 0; t < 4; t++) {
+  for (let t = 0; t < keys.length * models.length * 2; t++) {
+    const key = keys[t % keys.length], model = models[Math.floor(t / keys.length) % models.length];
     try {
       const r = await fetch('https://generativelanguage.googleapis.com/v1beta/models/' + model + ':generateContent', { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key }, body: JSON.stringify(body) });
       const d = await r.json();
       if (r.ok) { const txt = ((d.candidates || [])[0] || {}).content.parts.map(p => p.text || '').join(''); const j = JSON.parse(txt.replace(/^```(json)?|```$/g, '').trim()); if (typeof j.score === 'number') return j; }
     } catch (e) {}
-    await new Promise(s => setTimeout(s, 8000 * (t + 1)));
+    await new Promise(s => setTimeout(s, (t + 1) % keys.length ? 1500 : 15000));
   }
   return null;
 }
 
-module.exports = async function judge(dir, key, model) {
+module.exports = async function judge(dir, keys, model) {
+  keys = [].concat(keys).filter(Boolean); const models = [model, 'gemini-flash-latest', 'gemini-2.5-flash-lite'].filter((m, i, a) => a.indexOf(m) === i);
   const files = fs.readdirSync(dir).filter(f => /^\d\d-.+\.png$/.test(f) && !/^0[01]-/.test(f)).sort();
   const screens = {};
   for (const f of files) {
-    const j = await ask(key, model, fs.readFileSync(path.join(dir, f)).toString('base64'));
+    const j = await ask(keys, models, fs.readFileSync(path.join(dir, f)).toString('base64'));
     if (j) screens[f.replace(/^\d\d-|\.png$/g, '')] = { score: Math.max(1, Math.min(10, j.score)), strengths: (j.strengths || []).slice(0, 3), issues: (j.issues || []).slice(0, 3) };
   }
   const sc = Object.values(screens).map(x => x.score);

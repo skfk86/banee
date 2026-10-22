@@ -38,7 +38,7 @@ jobs:
       - run: |
           npm i --no-save playwright@1.48.2
           npx playwright install --with-deps chromium
-      - run: sed "s#^var PROXY_URL = '[^']*';#var PROXY_URL = '';#" www/index.html > e2e.html
+      - run: sed "s#^var PROXY_URL = '[^']*';#var PROXY_URL = '';#" www/index.html > e2e.html && mkdir -p vendor && cp www/vendor/html2canvas.min.js vendor/
       - name: بناء واختبار
         continue-on-error: true
         env:

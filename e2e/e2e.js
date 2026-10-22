@@ -92,7 +92,7 @@ const log = (...a) => { const s = '[' + new Date().toISOString().slice(11, 19) +
     // حكم التصميم: لقطة كل شاشة تُقيَّم من ١٠ بمعايير التطبيقات العالمية (JUDGE=0 لتعطيله)
     if (KEY && process.env.JUDGE !== '0') {
       try {
-        rep.design = await require('./design-judge.js')(OUT, KEY, process.env.JUDGE_MODEL || 'gemini-2.5-flash');
+        rep.design = await require('./design-judge.js')(OUT, [KEY].concat(KEYS.filter(k => k !== KEY)), process.env.JUDGE_MODEL || 'gemini-2.5-flash');
         fs.writeFileSync(path.join(OUT, 'report.json'), JSON.stringify(rep, null, 2));
         log('التصميم:', rep.design.score, '/ 10 (أضعف شاشة', rep.design.min + ')', JSON.stringify(Object.fromEntries(Object.entries(rep.design.screens).map(([k, v]) => [k, v.score]))));
       } catch (e) { log('تعذّر حكم التصميم:', e.message); }

@@ -162,9 +162,109 @@ static func capsule(parent: Node3D, rad: float, height: float, pos: Vector3, m: 
 	return _mi(parent, _meshes[k], pos, m)
 
 
+# ===================== المجسمات الحقيقية (glb) =====================
+## لكل نوع: الملف، الطول المطلوب بالمتر، زاوية تصحيح الاتجاه، ونسبة صبغة لون الفريق
+## tint = 0 يحافظ على ألوان المجسم، و camo = true يستبدل خاماته بتمويه بلون الفريق
+const REAL := {
+}
+
+static var _scenes := {}
+static var _tinted := {}
+
+
+static func _scene(path: String) -> PackedScene:
+	if not _scenes.has(path):
+		_scenes[path] = load(path) if ResourceLoader.exists(path) else null
+	return _scenes[path]
+
+
+## يحاول بناء المجسم الحقيقي؛ يرجع false إن لم يوجد ليُستخدم المجسم الإجرائي
+static func real(e: Entity, tc: Color) -> bool:
+	if not REAL.has(e.type):
+		return false
+	var c: Dictionary = REAL[e.type]
+	var ps := _scene(c["path"])
+	if ps == null:
+		return false
+	var body := Node3D.new()
+	e.add_child(body)
+	e.body = body
+	var inst: Node3D = ps.instantiate()
+	body.add_child(inst)
+	var meshes: Array = []
+	_collect(inst, meshes)
+	# قياس الحجم وتوسيط المجسم على الأرض
+	var ab := AABB()
+	var first := true
+	for mi in meshes:
+		var bb: AABB = _local_aabb(inst, mi)
+		ab = bb if first else ab.merge(bb)
+		first = false
+	var longest := maxf(ab.size.x, ab.size.z)
+	var k: float = float(c["len"]) / maxf(longest, 0.001)
+	inst.scale = Vector3.ONE * k
+	inst.rotation_degrees.y = float(c.get("yaw", 0.0))
+	var ctr := ab.get_center() * k
+	var off := Vector3(-ctr.x, -ab.position.y * k, -ctr.z).rotated(Vector3.UP, inst.rotation.y)
+	inst.position = off
+	# لون الفريق
+	var tint: float = float(c.get("tint", 0.35))
+	for mi in meshes:
+		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
+		if c.get("camo", false):
+			mi.material_override = camo(tc)
+		elif tint > 0.0:
+			_tint(mi, tc, tint)
+	e.h = ab.size.y * k
+	if c.has("flag"):
+		# راية صغيرة بلون الفريق لتمييز المباني
+		var fh: float = e.h + 1.2
+		cyl(body, 0.05, fh, Vector3(c["flag"].x, fh / 2.0, c["flag"].y), mat(Color(0.5, 0.5, 0.5), 0.4, 0.7))
+		box(body, Vector3(1.1, 0.7, 0.04), Vector3(c["flag"].x + 0.58, fh - 0.4, c["flag"].y), mat(tc, 0.6, 0.0, 0.3))
+	if e.type == "factory":
+		e.smoke = Fx.chimney_smoke(body, Vector3(0, e.h + 0.5, 0))
+	overlays(e)
+	return true
+
+
+static func _collect(n: Node, out: Array) -> void:
+	if n is MeshInstance3D:
+		out.append(n)
+	for ch in n.get_children():
+		_collect(ch, out)
+
+
+## حدود المجسم بالنسبة لجذره (قبل دخول الشجرة)
+static func _local_aabb(root: Node3D, mi: MeshInstance3D) -> AABB:
+	var t := Transform3D.IDENTITY
+	var n: Node = mi
+	while n != root and n is Node3D:
+		t = (n as Node3D).transform * t
+		n = n.get_parent()
+	return t * mi.get_aabb()
+
+
+static func _tint(mi: MeshInstance3D, tc: Color, amt: float) -> void:
+	var m := mi.mesh
+	if m == null:
+		return
+	for i in m.get_surface_count():
+		var src: Material = mi.get_active_material(i)
+		if not (src is BaseMaterial3D):
+			continue
+		var key := "%d|%s|%.2f" % [src.get_instance_id(), tc.to_html(), amt]
+		if not _tinted.has(key):
+			var d: BaseMaterial3D = src.duplicate()
+			d.albedo_color = d.albedo_color * Color.WHITE.lerp(tc.lightened(0.25), amt)
+			_tinted[key] = d
+		mi.set_surface_override_material(i, _tinted[key])
+
+
 # ===================== الوحدات =====================
 
 static func build_unit(e: Entity, tc: Color) -> void:
+	if real(e, tc):
+		return
 	var body := Node3D.new()
 	e.add_child(body)
 	e.body = body
@@ -319,6 +419,8 @@ static func _tracks(body: Node3D, length: float, z: float, wheels: int) -> void:
 # ===================== المباني =====================
 
 static func build_bld(e: Entity, tc: Color) -> void:
+	if real(e, tc):
+		return
 	var b := Node3D.new()
 	e.add_child(b)
 	e.body = b

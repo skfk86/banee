@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+<defs>
+ <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff1b8"/><stop offset=".45" stop-color="#e8b44a"/><stop offset="1" stop-color="#8a5a12"/></linearGradient>
+ <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1b2a44"/><stop offset=".6" stop-color="#b8582a"/><stop offset="1" stop-color="#f2a64a"/></linearGradient>
+ <linearGradient id="nile" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#1c6fa0"/><stop offset=".5" stop-color="#52c0e8"/><stop offset="1" stop-color="#1c6fa0"/></linearGradient>
+ <radialGradient id="sun" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#fff6d0"/><stop offset=".5" stop-color="#ffd36b"/><stop offset="1" stop-color="#ffb030" stop-opacity="0"/></radialGradient>
+ <clipPath id="c"><path d="M512 70 L900 230 L900 560 C900 760 720 890 512 960 C304 890 124 760 124 560 L124 230 Z"/></clipPath>
+</defs>
+<path d="M512 40 L930 210 L930 560 C930 790 740 920 512 1000 C284 920 94 790 94 560 L94 210 Z" fill="url(#gold)"/>
+<path d="M512 70 L900 230 L900 560 C900 760 720 890 512 960 C304 890 124 760 124 560 L124 230 Z" fill="#1a140c"/>
+<g clip-path="url(#c)">
+ <rect x="100" y="60" width="830" height="620" fill="url(#sky)"/>
+ <circle cx="512" cy="470" r="190" fill="url(#sun)"/>
+ <path d="M240 640 L420 400 L600 640 Z" fill="#c98a3a"/><path d="M420 400 L600 640 L480 640 Z" fill="#8f5c22"/>
+ <path d="M560 640 L700 450 L840 640 Z" fill="#b97a30"/><path d="M700 450 L840 640 L740 640 Z" fill="#7c4c1b"/>
+ <rect x="100" y="630" width="830" height="340" fill="#d6a45c"/>
+ <path d="M100 700 C300 660 420 760 620 720 C760 690 860 720 930 700 L930 790 C840 810 760 780 620 810 C420 850 300 750 100 790 Z" fill="url(#nile)"/>
+ <g fill="#14100a">
+  <rect x="300" y="575" width="330" height="70" rx="14"/>
+  <rect x="380" y="525" width="170" height="60" rx="16"/>
+  <rect x="540" y="540" width="250" height="20" rx="10"/>
+  <rect x="280" y="640" width="370" height="40" rx="20"/>
+ </g>
+ <g fill="#2f9e5b"><circle cx="320" cy="660" r="14"/><circle cx="380" cy="660" r="14"/><circle cx="440" cy="660" r="14"/><circle cx="500" cy="660" r="14"/><circle cx="560" cy="660" r="14"/><circle cx="620" cy="660" r="14"/></g>
+</g>
+<path d="M512 70 L900 230 L900 560 C900 760 720 890 512 960 C304 890 124 760 124 560 L124 230 Z" fill="none" stroke="url(#gold)" stroke-width="14"/>
+<g fill="url(#gold)"><path d="M512 120 l22 46 50 6 -37 34 10 50 -45 -25 -45 25 10 -50 -37 -34 50 -6z"/></g>
+<path d="M200 860 L330 820 L512 900 L694 820 L824 860 L512 990 Z" fill="url(#gold)"/>
+</svg>

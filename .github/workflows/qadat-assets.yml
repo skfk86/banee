@@ -11,18 +11,37 @@ jobs:
       - uses: actions/checkout@v4
       - name: Discover
         run: |
-          mkdir -p qadat-alnil/assets_src
-          out=qadat-alnil/assets_src/discovery.txt; : > $out
-          for s in impact-sounds sci-fi-sounds interface-sounds ui-audio music-jingles car-kit city-kit-industrial city-kit-commercial city-kit-roads nature-kit tower-defense-kit survival-kit space-kit blaster-kit factory-kit castle-kit mini-arena toy-car-kit retro-urban-kit modular-buildings; do
-            l=$(curl -sL https://kenney.nl/assets/$s | grep -oE 'https?://[^"]+\.zip' | head -1)
-            echo "kenney $s $l" >> $out
+          d=qadat-alnil/assets_src; mkdir -p $d
+          k=$d/kenney_lists.txt; : > $k
+          for u in \
+            https://kenney.nl/media/pages/assets/impact-sounds/87b4ddecda-1677589768/kenney_impact-sounds.zip \
+            https://kenney.nl/media/pages/assets/sci-fi-sounds/6b296f9ecf-1677589334/kenney_sci-fi-sounds.zip \
+            https://kenney.nl/media/pages/assets/interface-sounds/fa43c1dd4d-1677589452/kenney_interface-sounds.zip \
+            https://kenney.nl/media/pages/assets/car-kit/1a312ec241-1775131960/kenney_car-kit.zip \
+            https://kenney.nl/media/pages/assets/tower-defense-kit/a402493eaa-1726471567/kenney_tower-defense-kit.zip \
+            https://kenney.nl/media/pages/assets/city-kit-industrial/0ec35b139d-1788171848/kenney_city-kit-industrial_2.0.zip \
+            https://kenney.nl/media/pages/assets/factory-kit/edaac9d4f6-1777639602/kenney_factory-kit_3.0.zip \
+            https://kenney.nl/media/pages/assets/survival-kit/4065a8185b-1712149243/kenney_survival-kit.zip \
+            https://kenney.nl/media/pages/assets/nature-kit/37ac38a37b-1677698939/kenney_nature-kit.zip \
+            https://kenney.nl/media/pages/assets/blaster-kit/261d80a716-1753959510/kenney_blaster-kit_2.1.zip; do
+            curl -sL -o z.zip "$u"; echo "### $u" >> $k
+            unzip -l z.zip | awk '{print $4}' | grep -iE '\.(glb|ogg|wav|png)$' | grep -viE 'preview|sample|/fbx/|/obj/' | grep -iE 'glb|ogg|wav' | head -400 >> $k
           done
-          for q in "tank" "military" "explosion" "gunshot" "arabic music" "middle eastern" "battle music" "desert"; do
-            echo "== OGA $q" >> $out
-            curl -sL "https://opengameart.org/art-search-advanced?keys=$(echo $q|sed 's/ /+/g')&field_art_license_tid%5B%5D=4&items_per_page=24" | grep -oE 'href="/content/[^"]+"' | sort -u | head -24 >> $out
+          o=$d/oga_pages.txt; : > $o
+          for p in military-jeep military-van soviet-military-off-road-vehicle modern-tank modern-tank-pack-1 tank tank-0 tank-1 tank-3 green-tank 3d-desert military-base-pack \
+                   9-explosion-sounds big-explosion bomb-explosion explosion-somewhere-far rumbleexplosion muffled-distant-explosion gunshots gunshots-0 gunshot-sounds light-machine-gun shots \
+                   arabesque shalibah curse-of-the-djinn mirage nomads something-arabic snake-charmer battle-march-epic-orchestral-music-loop desert-calmness-and-fighting-orchestral-141 military-march military-soundtrack orchestral-battle-music fantasy-music-the-eternal-sands shifting-sands-of-ma-kali; do
+            html=$(curl -sL https://opengameart.org/content/$p)
+            lic=$(echo "$html" | grep -oE 'licenses/[a-z0-9-]+/[0-9.]*|publicdomain/zero[^"]*|CC0|CC-BY [0-9.]+|CC-BY-SA [0-9.]+|GPL [0-9.]+|OGA-BY [0-9.]+' | sort -u | tr '\n' ' ')
+            echo "### $p | $lic" >> $o
+            echo "$html" | grep -oE 'https://opengameart.org/sites/default/files/[^"]+' | grep -viE '\.(png|jpg|jpeg|gif)$' | sort -u >> $o
           done
-          cat $out
+          s=$d/oga_3d.txt; : > $s
+          for q in tank military soldier helicopter jet artillery truck howitzer bunker barracks; do
+            echo "== $q" >> $s
+            curl -sL "https://opengameart.org/art-search-advanced?keys=$q&field_art_type_tid%5B%5D=10&field_art_license_tid%5B%5D=4&items_per_page=48" | grep -oE 'href="/content/[^"]+"' | sort -u | grep -v faq >> $s
+          done
       - name: Commit
         run: |
           git config user.name "github-actions"; git config user.email "actions@github.com"
-          git add qadat-alnil/assets_src && git commit -m "asset discovery" && git push
+          git add qadat-alnil/assets_src && git commit -m "asset discovery 2" && git push

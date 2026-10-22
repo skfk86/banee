@@ -20,7 +20,7 @@ var CFG = {
     PRICE: { in: 2.00, out: 10.00, cacheWrite: 2.50, cacheRead: 0.20 }, // دولار لكل مليون رمز
     ROLES: ['screen', 'fixer', 'agent', 'reviewer'],      // أدوار كتابة الكود ومراجعته
     PLANS: ['starter', 'pro', 'business'],                 // أضف 'free' أو 'key' لتجربته على الجميع
-    TESTERS: [],                                           // بريد حسابات تجرّب Claude دائماً مهما كانت خطتها، مثل ['you@gmail.com']
+    TESTERS: [],                                           // بريد حسابات تجرّب Claude دائماً؛ الأفضل وضعها في Script Property باسم CLAUDE_TESTERS (المستودع عام)
     DAILY_USD: 20,                                         // سقف إنفاق Claude اليومي، بعده يعود كل شيء لـ Gemini
     EFFORT: { screen: 'high', fixer: 'medium', agent: 'medium', reviewer: 'medium' },
     MAX_TOKENS: 32000
@@ -323,7 +323,8 @@ function chargeAndReturn(user, req, data, model, inT, outT, usd, t0, isClaude) {
 // ═════════════ Claude (Anthropic Messages API عبر HTTP مباشرة، فلا توجد مكتبة رسمية لـ Apps Script) ═════════════
 function useClaude(s, req, user) {
   if (!prop('CLAUDE_KEY')) return false;
-  var tester = user && CFG.CLAUDE.TESTERS.indexOf(String(user.email || '').toLowerCase()) > -1;
+  var testers = CFG.CLAUDE.TESTERS.concat(String(prop('CLAUDE_TESTERS') || '').split(/[\s,]+/)).map(function(x){ return String(x).trim().toLowerCase(); }).filter(Boolean);
+  var tester = user && testers.indexOf(String(user.email || '').toLowerCase()) > -1;
   if (CFG.CLAUDE.ROLES.indexOf(req.role) < 0 || (!tester && CFG.CLAUDE.PLANS.indexOf(s.plan) < 0)) return false;
   var day = Utilities.formatDate(new Date(), 'UTC', 'yyyy-MM-dd');
   return Number(prop('claudeday:' + day) || 0) < CFG.CLAUDE.DAILY_USD;

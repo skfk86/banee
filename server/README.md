@@ -102,7 +102,7 @@ var PROXY_URL = 'https://script.google.com/macros/s/....../exec';
 
 1. أنشئ مفتاحاً من console.anthropic.com واشحن رصيداً.
 2. Apps Script ← Project Settings ← Script Properties: أضف `CLAUDE_KEY`.
-3. للتجربة على حسابك فقط: ضع بريدك في `CFG.CLAUDE.TESTERS` في `Code.gs`.
+3. للتجربة على حسابك فقط: أضف Script Property باسم `CLAUDE_TESTERS` وقيمته بريدك (أو عدة عناوين بفاصلة). لا تكتبه في `Code.gs` لأن المستودع عام.
 4. انشر نسخة جديدة.
 
 الإعدادات في `CFG.CLAUDE`: الخطط (`PLANS`)، الأدوار (`ROLES`)، سقف الإنفاق اليومي بالدولار (`DAILY_USD`، الافتراضي ٢٠)، وجهد التفكير لكل دور (`EFFORT`). كل طلب يُسجَّل بتكلفته في ورقة `log` باسم الموديل `claude-sonnet-5-5`.

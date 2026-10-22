@@ -206,6 +206,20 @@ func _build_terrain() -> void:
 			3: pos = Vector3(M + 8, 0, k * M)
 		var s := randf_range(8, 16)
 		Models.sph(world, 1.0, pos, hill, Vector3(s, s * 0.35, s), 10)
+	# زينة حقيقية (نخيل، صبار، صخور، حواجز) إن وُجدت ملفات المجسمات
+	if ResourceLoader.exists("res://models/tree_palmTall.glb"):
+		for i in 120:
+			var dp := Vector3(randf() * M, 0, randf() * M)
+			if Vector2(dp.x, dp.z).distance_to(Vector2(30, 210)) < 30 or Vector2(dp.x, dp.z).distance_to(Vector2(210, 30)) < 30:
+				continue
+			var it: Array = Models.DECOR[randi() % Models.DECOR.size()]
+			# واحات نخيل متجمعة
+			if String(it[0]).contains("palm"):
+				for j in 3:
+					Models.decor(world, it[0], it[1], dp + Vector3(randf_range(-4, 4), 0, randf_range(-4, 4)))
+			else:
+				Models.decor(world, it[0], it[1], dp)
+		return
 	# صخور ونباتات
 	var rock := Models.mat(Color(0.5, 0.46, 0.4), 0.95)
 	var rock2 := Models.mat(Color(0.42, 0.38, 0.33), 0.95)

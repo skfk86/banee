@@ -166,7 +166,42 @@ static func capsule(parent: Node3D, rad: float, height: float, pos: Vector3, m: 
 ## لكل نوع: الملف، الطول المطلوب بالمتر، زاوية تصحيح الاتجاه، ونسبة صبغة لون الفريق
 ## tint = 0 يحافظ على ألوان المجسم، و camo = true يستبدل خاماته بتمويه بلون الفريق
 const REAL := {
+	"tank": {"path": "res://models/tank.glb", "len": 4.4, "yaw": -90.0, "tint": 0.45},
+	"worker": {"path": "res://models/truck.glb", "len": 3.6, "yaw": 90.0, "tint": 0.0},
+	"hq": {"path": "res://models/building-d.glb", "len": 10.0, "tint": 0.2, "flag": Vector2(-4.2, 4.2)},
+	"barracks": {"path": "res://models/building-k.glb", "len": 7.4, "tint": 0.2, "flag": Vector2(3.2, 2.4)},
+	"factory": {"path": "res://models/building-m.glb", "len": 9.4, "tint": 0.2, "flag": Vector2(-4.0, 3.4)},
+	"depot": {"path": "res://models/detail-tank-large.glb", "len": 5.6, "tint": 0.25, "flag": Vector2(2.4, 2.4)},
+	"tower": {"path": "res://models/weapon-turret.glb", "len": 4.0, "tint": 0.3},
 }
+
+## زينة الخريطة الحقيقية: [الملف، الارتفاع التقريبي]
+const DECOR := [
+	["res://models/tree_palmTall.glb", 7.0], ["res://models/tree_palmBend.glb", 6.5], ["res://models/tree_palmDetailedTall.glb", 7.5],
+	["res://models/cactus_tall.glb", 2.6], ["res://models/cactus_short.glb", 1.6],
+	["res://models/rock-sand-a.glb", 2.2], ["res://models/rock-sand-b.glb", 1.6], ["res://models/rock-sand-c.glb", 2.8],
+	["res://models/barrel.glb", 1.1], ["res://models/sandbags.glb", 0.9], ["res://models/tank_trap.glb", 1.2],
+]
+
+
+## يضع مجسم زينة على الأرض بارتفاع معيّن؛ يرجع false إن لم يوجد الملف
+static func decor(parent: Node3D, path: String, height: float, pos: Vector3) -> bool:
+	var ps := _scene(path)
+	if ps == null:
+		return false
+	var inst: Node3D = ps.instantiate()
+	parent.add_child(inst)
+	var meshes: Array = []
+	_collect(inst, meshes)
+	var ab := AABB()
+	for i in meshes.size():
+		var bb := _local_aabb(inst, meshes[i])
+		ab = bb if i == 0 else ab.merge(bb)
+	var k := height / maxf(ab.size.y, 0.001) * randf_range(0.8, 1.2)
+	inst.scale = Vector3.ONE * k
+	inst.position = pos - Vector3(ab.get_center().x, ab.position.y, ab.get_center().z) * k
+	inst.rotation.y = randf() * TAU
+	return true
 
 static var _scenes := {}
 static var _tinted := {}
@@ -669,6 +704,13 @@ static func mine(parent: Node3D, p: Vector2) -> Dictionary:
 static func jet(parent: Node3D, tc: Color) -> Node3D:
 	var j := Node3D.new()
 	parent.add_child(j)
+	var ps := _scene("res://models/mig.glb")
+	if ps:
+		var m: Node3D = ps.instantiate()
+		j.add_child(m)
+		m.rotation_degrees.y = 90.0
+		m.scale = Vector3.ONE * 2.6
+		return j
 	var grey := mat(Color(0.5, 0.53, 0.56), 0.4, 0.5)
 	cyl(j, 0.42, 6.0, Vector3.ZERO, grey, Vector3(0, 0, 90), 0.25)
 	cyl(j, 0.25, 1.4, Vector3(3.7, 0, 0), grey, Vector3(0, 0, -90), 0.0)

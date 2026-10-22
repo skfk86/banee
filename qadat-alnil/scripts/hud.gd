@@ -256,6 +256,13 @@ func _build_menu() -> void:
 	help_lbl.custom_minimum_size = Vector2(560, 0)
 	help_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	help_lbl.visible = false
+	var cr := _lbl(v, "", 15, Color(0.85, 0.82, 0.75))
+	cr.text = "المجسمات: Kenney (CC0)، و 32kda و rgsdev و Sketlux و pixelmannen و JamesWhite من OpenGameArt (CC0)\nالأصوات: Kenney (CC0)، KuraiWolf (CC-BY 4.0)، NenadSimic (CC0)\nالموسيقى: Dizzy Crow — Desert Calmness and Fighting (CC0)"
+	cr.custom_minimum_size = Vector2(560, 0)
+	cr.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	cr.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	cr.visible = false
+	_btn(v, "الحقوق والمصادر", func(): cr.visible = not cr.visible, Vector2(340, 46), 18)
 
 
 func _build_pause() -> void:

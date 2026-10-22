@@ -1,0 +1,191 @@
+{
+  "status": "ready",
+  "error": "",
+  "name": "سنابل الخير",
+  "steps": [
+    "done · هوية «عطاء إنساني» · الخطة: ٨ شاشات · ٥ مجموعات · ١٢ عنصر محتوى",
+    "done · المحتوى: ١٢ عنصر مكتوب كاملاً",
+    "done · الهيكل جاهز: التنقّل، البيانات، الدخول، التصميم",
+    "done · ٨ شاشات مكتوبة",
+    "done · الفحص: ١ شاشات بها ملاحظات، راجعها في الاستوديو · رحلات المستخدم: ١ من ٢ تعمل كاملة · المراجعة: أُصلحت ٢ من ٢ · وكيل الإصلاح: لم يجد تحسيناً آمناً",
+    "done · جاهز للمعاينة والتحميل"
+  ],
+  "runtime": {
+    "home": [],
+    "tasksList": [
+      "رحلة «التسجيل في مهمة تطوعية» توقفت عند الخطوة ٢: لم يُعثر على [data-act=details][data-id=tasks-1] (الزر غير موجود أو اسمه مختلف) — الظاهر الآن: الشاشة tasksList (#/tasks) بدور volunteer؛ الأزرار: لا شيء؛ الحقول: لا شيء"
+    ],
+    "myDonations": [],
+    "adminDashboard": [],
+    "campaignDetails": [],
+    "donate": [],
+    "taskDetails": [],
+    "notifications": []
+  },
+  "flows": [
+    "التبرع لحملة (6 خطوات)",
+    "التسجيل في مهمة تطوعية (6 خطوات)"
+  ],
+  "flowSteps": [
+    {
+      "flow": "التبرع لحملة",
+      "steps": [
+        {
+          "go": "/"
+        },
+        {
+          "click": "[data-act=donate][data-id=campaigns-1]"
+        },
+        {
+          "fill": {
+            "#amount": "5000",
+            "#method": "بنكك"
+          }
+        },
+        {
+          "click": "#submit-btn"
+        },
+        {
+          "expect": "سجل تبرعاتي"
+        },
+        {
+          "expectDb": {
+            "col": "donations",
+            "min": 1
+          }
+        }
+      ]
+    },
+    {
+      "flow": "التسجيل في مهمة تطوعية",
+      "steps": [
+        {
+          "go": "/tasks"
+        },
+        {
+          "click": "[data-act=details][data-id=tasks-1]"
+        },
+        {
+          "fill": {
+            "#report-input": "تم تنفيذ المهمة الميدانية بنجاح وتوزيع السلال الغذائية"
+          }
+        },
+        {
+          "click": "#submit-report-btn"
+        },
+        {
+          "expect": "تفاصيل المهمة التطوعية"
+        },
+        {
+          "expectDb": {
+            "col": "volunteerSubmissions",
+            "min": 1
+          }
+        }
+      ]
+    }
+  ],
+  "reviewIssues": {
+    "home": [],
+    "tasksList": [],
+    "myDonations": [],
+    "adminDashboard": [],
+    "campaignDetails": [],
+    "donate": [
+      "مراجعة: استخدام DB.get و DB.add و DB.update بدلاً من واجهة Data المعرفة في باقي النظام، الإصلاح استبدالها بـ Data.campaigns و Data.donations."
+    ],
+    "taskDetails": [],
+    "notifications": [
+      "مراجعة: استعلام مجموعة غير موجودة في المخطط (notices) عبر DB.list، الإصلاح استخدام مجموعة مسجلة في المخطط مثل campaigns أو إزالة الاستعلام."
+    ]
+  },
+  "spec": false,
+  "specFallback": [],
+  "flowErr": "",
+  "agent": {
+    "ran": true,
+    "fixed": 0,
+    "steps": 5,
+    "log": [
+      "read tasksList — قراءة شاشة tasksList لمعرفة سبب عدم ظهور أزرار تفاصيل المهام أو العناصر المطلوبة للاختبار → 1| App.screen({\n2|   id: 'tasksList',\n3|   route: '/tasks',\n4|   title: 'المهام التطوعية',\n5|   icon: 'list-checks',\n6|   nav: true,\n7|   render(params) {\n8|   ",
+      "seed → أُضيفت 2 عناصر إلى tasks (ids: tasks-1، tasks-2). شغّل run للتحقق.",
+      "edit tasksList — إضافة زر التفاصيل data-act=details بجانب زر الانضمام للمهام المتاحة لكي يتمكن اختبار التسجيل في مهمة تطوعية من النقر عليه مباشرة كما يطلب السين → تم التعديل",
+      "run → نتيجة التشغيل (درجة الأخطاء 30، الأفضل حتى الآن 30):\n[tasksList] رحلة «التسجيل في مهمة تطوعية» توقفت عند الخطوة ٢: لم يُعثر على [data-act=details][data-id=tasks"
+    ]
+  },
+  "fixErrors": [],
+  "review": {
+    "found": 2,
+    "fixed": 2
+  },
+  "screens": [
+    {
+      "id": "home",
+      "route": "/",
+      "roles": [
+        "donor",
+        "volunteer"
+      ],
+      "bytes": 5633
+    },
+    {
+      "id": "tasksList",
+      "route": "/tasks",
+      "roles": [
+        "volunteer"
+      ],
+      "bytes": 5841
+    },
+    {
+      "id": "myDonations",
+      "route": "/my-donations",
+      "roles": [
+        "donor"
+      ],
+      "bytes": 5550
+    },
+    {
+      "id": "adminDashboard",
+      "route": "/admin",
+      "roles": [
+        "admin"
+      ],
+      "bytes": 20347
+    },
+    {
+      "id": "campaignDetails",
+      "route": "/campaign/:id",
+      "roles": [
+        "donor",
+        "admin"
+      ],
+      "bytes": 4540
+    },
+    {
+      "id": "donate",
+      "route": "/donate/:id",
+      "roles": [
+        "donor"
+      ],
+      "bytes": 5299
+    },
+    {
+      "id": "taskDetails",
+      "route": "/task/:id",
+      "roles": [
+        "volunteer",
+        "admin"
+      ],
+      "bytes": 6993
+    },
+    {
+      "id": "notifications",
+      "route": "/notifications",
+      "roles": [
+        "donor",
+        "volunteer"
+      ],
+      "bytes": 3617
+    }
+  ]
+}

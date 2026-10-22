@@ -1,0 +1,28 @@
+name: Qadat assets discovery
+on:
+  push:
+    paths: [".github/workflows/qadat-assets.yml"]
+permissions:
+  contents: write
+jobs:
+  discover:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Discover
+        run: |
+          mkdir -p qadat-alnil/assets_src
+          out=qadat-alnil/assets_src/discovery.txt; : > $out
+          for s in impact-sounds sci-fi-sounds interface-sounds ui-audio music-jingles car-kit city-kit-industrial city-kit-commercial city-kit-roads nature-kit tower-defense-kit survival-kit space-kit blaster-kit factory-kit castle-kit mini-arena toy-car-kit retro-urban-kit modular-buildings; do
+            l=$(curl -sL https://kenney.nl/assets/$s | grep -oE 'https?://[^"]+\.zip' | head -1)
+            echo "kenney $s $l" >> $out
+          done
+          for q in "tank" "military" "explosion" "gunshot" "arabic music" "middle eastern" "battle music" "desert"; do
+            echo "== OGA $q" >> $out
+            curl -sL "https://opengameart.org/art-search-advanced?keys=$(echo $q|sed 's/ /+/g')&field_art_license_tid%5B%5D=4&items_per_page=24" | grep -oE 'href="/content/[^"]+"' | sort -u | head -24 >> $out
+          done
+          cat $out
+      - name: Commit
+        run: |
+          git config user.name "github-actions"; git config user.email "actions@github.com"
+          git add qadat-alnil/assets_src && git commit -m "asset discovery" && git push

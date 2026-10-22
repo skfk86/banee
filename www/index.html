@@ -2580,7 +2580,7 @@ function ask(key, role, input, json){
     if (json) cfg.responseMimeType = 'application/json';
     return fetch('https://generativelanguage.googleapis.com/v1beta/models/'+MODELS[mi]+':generateContent?key='+encodeURIComponent(key), {
       method: 'POST', headers: { 'Content-Type': 'application/json' }, signal: ctrl.signal,
-      body: JSON.stringify({ systemInstruction:{parts:[{text:ROLES[role]}]}, contents:[{role:'user',parts:[{text:input}]}], generationConfig: cfg })
+      body: JSON.stringify({ systemInstruction:{parts:[{text:ROLES[role]}]}, contents:[{role:'user',parts:partsOf(input)}], generationConfig: cfg })
     }).then(function(r){
       clearTimeout(timer);
       if (r.ok) return r.json().then(function(d){
@@ -2616,13 +2616,18 @@ function ask(key, role, input, json){
   return once();
 }
 
+// مدخل نصي، أو { text, images: [jpeg base64] } لطلبات الرؤية (حكم التصميم)
+function partsOf(input){
+  if (typeof input === 'string') return [{ text: input }];
+  return [{ text: input.text || '' }].concat((input.images || []).map(function(b){ return { inline_data: { mime_type: 'image/jpeg', data: b } }; }));
+}
 function askProxy(role, input, json){
   var attempt = 0, mi = 0;
   function once(){
     var cfg = thinkCfg(role, MODELS[mi], { temperature: json ? 0.4 : 0.5, maxOutputTokens: 12000 });
     if (json) cfg.responseMimeType = 'application/json';
     return proxyCall({ op: 'ask', role: role, model: MODELS[mi], systemInstruction: { parts: [{ text: ROLES[role] }] },
-      contents: [{ role: 'user', parts: [{ text: input }] }], generationConfig: cfg })
+      contents: [{ role: 'user', parts: partsOf(input) }], generationConfig: cfg })
     .then(function(r){
       if (r.credits) setCredits(r.credits);
       if (!r.ok) {
@@ -3188,7 +3193,9 @@ function runBuild(app, key){
         return writeFlowTests(app, key).then(function(){ alive(); round = 2; return liveRound(); }).then(regen);
       });
     }
-    return fillEmpty(app, key).then(function(){ alive(); return liveRound(); }).then(deep).then(function(res){ return { nFixed: nFixed + fixedLive, res: res }; });
+    return fillEmpty(app, key).then(function(){ alive(); return liveRound(); }).then(deep)
+      .then(function(res){ return designPass(app, key, res, function(t){ alive(); jstep(app,4,'cur',t); }); })
+      .then(function(res){ return { nFixed: nFixed + fixedLive, res: res }; });
   }).then(function(out){
     alive();
     var plan = app.ck.plan, nFixed = out.nFixed;
@@ -3200,6 +3207,7 @@ function runBuild(app, key){
       app.steps[4].label += ' · رحلات المستخدم: ' + toAr(okF) + ' من ' + toAr(ft.length) + ' تعمل كاملة';
     }
     if (app.ck.reviewCount) app.steps[4].label += ' · المراجعة: أُصلحت ' + toAr(app.ck.reviewFixed || 0) + ' من ' + toAr(app.ck.reviewCount);
+    if (app.ck.look && app.ck.look.score) app.steps[4].label += ' · التصميم: ' + toAr(app.ck.look.score) + ' من ١٠' + (app.ck.look.improved ? ' (حُسّنت ' + toAr(app.ck.look.improved) + ' شاشات)' : '');
     else if (app.ck.reviewed) app.steps[4].label += ' · المراجعة الشاملة: لا مشاكل';
     if (app.ck.agentRan) app.steps[4].label += ' · وكيل الإصلاح: ' + (app.ck.agentFixed > 0 ? 'أصلح ' + toAr(app.ck.agentFixed) + ' في ' + toAr(app.ck.agentSteps || 0) + ' خطوة' : 'لم يجد تحسيناً آمناً');
     jstep(app,5,'cur');
@@ -4203,6 +4211,102 @@ function flowSpec(app, msgs){
   var ft = app.ck.flowTests || [], txt = (msgs || []).join('\n'), out = '';
   ft.forEach(function(f){ if (txt.indexOf('«' + f.flow + '»') < 0) return; var j = ''; try { j = JSON.stringify(f.steps || f).slice(0, 2500); } catch(e){} out += '\n\nخطوات اختبار رحلة «' + f.flow + '» كما ستُنفَّذ حرفياً (اجعل الشاشة تنجح فيها كمستخدم حقيقي: العناصر بنفس data-act/name، والحفظ في نفس المجموعة):\n' + j; });
   return out;
+}
+ROLES.judge = 'أنت مدير تصميم في شركة تطبيقات عالمية (مستوى Airbnb وRevolut وApple)، وتقيّم لقطة شاشة من تطبيق جوال عربي RTL بصرامة.\n' +
+'قيّم من ١ إلى ١٠: ١٠ = يُنشر بجانب أفضل التطبيقات العالمية، ٧ = احترافي بعيوب صغيرة، ٥ = عادي، ٣ = يبدو قالباً أو هاوياً.\n' +
+'المعايير: التسلسل البصري ووضوح الأهم، المسافات والمحاذاة، الطباعة وأحجامها، اللون والتباين وتناسق الهوية، جودة البطاقات والأزرار والحقول والأيقونات، اكتمال المحتوى (لا نص مكسور أو صناديق فارغة بلا سبب)، صحة اتجاه RTL.\n' +
+'لا تجامل، ولا تعاقب حالة فارغة مصممة جيداً. كل عيب اكتبه كتعليمة إصلاح محددة يفهمها مطوّر يكتب الشاشة بكلاسات القالب (hero, card, list, item, stat, grid2, chip, badge, btn, section...)، بلا ألوان ثابتة.\n' +
+'أعد JSON فقط: {"score": رقم, "issues": ["تعليمة إصلاح محددة"]} بحد أقصى ٤ عيوب.';
+
+// ٧) حلقة التصميم البصرية: تصوير كل شاشة كما تظهر فعلاً ← حكم رؤية من ١٠ ← إصلاح الشاشات الضعيفة بعيوبها المحددة ← تأكد أن الإصلاح لم يكسر شيئاً
+var DESIGN_MIN = 7, DESIGN_FIX_MAX = 3;
+// html2canvas لا يفهم color(srgb ...) وoklab الناتجة من color-mix، فتُحوَّل إلى rgba في النسخة المصوّرة
+var FLAT_PROPS = ['color', 'background-color', 'background-image', 'border-top-color', 'border-right-color', 'border-bottom-color', 'border-left-color', 'box-shadow', 'outline-color', 'text-decoration-color', 'fill', 'stroke'];
+function flatColors(doc){
+  var win = doc.defaultView, px = doc.createElement('canvas').getContext('2d', { willReadFrequently: true }), fix = function(v){
+    return v.replace(/(?:color|oklab|oklch|lab|lch)\([^()]*\)/g, function(m){
+      px.clearRect(0, 0, 1, 1); px.fillStyle = m; px.fillRect(0, 0, 1, 1); var d = px.getImageData(0, 0, 1, 1).data;
+      return 'rgba(' + d[0] + ',' + d[1] + ',' + d[2] + ',' + (d[3] / 255).toFixed(3) + ')';
+    });
+  };
+  // وأيضاً: الظلال تُرسم صناديق مصمتة فوق المحتوى، وقص الأسطر (line-clamp) يقطع النص، وتباعد الحروف يفكّ اتصال الحروف العربية، والأيقونات تفقد currentColor
+  [].forEach.call(doc.querySelectorAll('*'), function(el){
+    var st = win.getComputedStyle(el);
+    FLAT_PROPS.forEach(function(p){ var v = st.getPropertyValue(p); if (/(color|oklab|oklch|lab|lch)\(/.test(v)) el.style.setProperty(p, fix(v), 'important'); });
+    if (st.boxShadow !== 'none') el.style.setProperty('box-shadow', 'none', 'important');
+    if (st.display === '-webkit-box') { el.style.setProperty('display', 'block', 'important'); el.style.setProperty('max-height', (parseFloat(st.lineHeight) || 22) * 3 + 'px', 'important'); }
+    if (st.overflow !== 'visible' && !el.children.length && el.textContent.trim()) el.style.setProperty('overflow', 'visible', 'important');
+    if (st.letterSpacing !== 'normal' && st.letterSpacing !== '0px') el.style.setProperty('letter-spacing', '0', 'important');
+    if (el.tagName.toLowerCase() === 'svg') {
+      var c = fix(st.color), r = el.getBoundingClientRect(), x = el.cloneNode(true), im = doc.createElement('img');
+      x.setAttribute('xmlns', 'http://www.w3.org/2000/svg'); x.setAttribute('width', r.width); x.setAttribute('height', r.height);
+      im.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(new win.XMLSerializer().serializeToString(x).replace(/currentColor/g, c));
+      im.setAttribute('style', 'width:' + r.width + 'px;height:' + r.height + 'px;vertical-align:middle;flex-shrink:0');
+      el.parentNode.replaceChild(im, el);
+    }
+  });
+}
+function shootScreens(app){
+  return new Promise(function(resolve){
+    var id = 'dz' + Date.now(), fr = document.createElement('iframe'), shots = {}, plan = app.ck.plan;
+    fr.setAttribute('style', 'position:fixed;left:-2000px;top:0;width:390px;height:844px;border:0;opacity:0;pointer-events:none');
+    var finish = function(){ try { var w = fr.contentWindow; Object.keys(w.localStorage).forEach(function(k){ if (k.indexOf('st_' + id) === 0) w.localStorage.removeItem(k); }); } catch(e){} fr.remove(); resolve(shots); };
+    var guard = setTimeout(finish, 180000);
+    fr.onload = function(){
+      var w = fr.contentWindow, d = fr.contentDocument;
+      var sc = d.createElement('script'); sc.src = new URL('vendor/html2canvas.min.js', location.href).href;
+      sc.onerror = function(){ clearTimeout(guard); finish(); };
+      sc.onload = function(){
+        var list = plan.screens.slice(0, 10), i = 0;
+        (function next(){
+          if (i >= list.length) { clearTimeout(guard); return finish(); }
+          var s = list[i++];
+          try { w.__banee.setRole((plan.roles || []).length > 1 && s.roles && s.roles.length ? s.roles[0] : null); } catch(e){}
+          w.location.hash = s.route.replace(/:\w+/g, function(){ return encodeURIComponent(seedIdFor({ seed: mergedSeed(app) }, app.ck.screens[s.id])); });
+          sleep(1400).then(function(){
+            try { w.lucide.createIcons(); } catch(e){} // rAF متوقف في الإطار المخفي فلا تُرسم الأيقونات تلقائياً
+            return w.html2canvas(d.body, { width: 390, height: 844, windowWidth: 390, windowHeight: 844, scale: 1, useCORS: true, logging: false, backgroundColor: null, onclone: flatColors });
+          }).then(function(cv){ shots[s.id] = cv.toDataURL('image/jpeg', 0.72).split(',')[1]; }, function(){}).then(next);
+        })();
+      };
+      d.head.appendChild(sc);
+    };
+    fr.srcdoc = assemble(app, { test: true, id: id });
+    document.body.appendChild(fr);
+  });
+}
+function designPass(app, key, res, onStep){
+  if (app.ck.lookDone) return Promise.resolve(res);
+  var plan = app.ck.plan, before = {};
+  if (onStep) onStep('تصوير الشاشات وتقييم تصميمها كمدير تصميم');
+  return shootScreens(app).then(function(shots){
+    var ids = Object.keys(shots); if (!ids.length) return res;
+    return Promise.all(ids.map(function(id){
+      var s = plan.screens.filter(function(x){ return x.id === id; })[0] || {};
+      return ask(key, 'judge', { text: 'الشاشة: ' + (s.title || id) + ' — ' + String(s.purpose || '').slice(0, 300), images: [shots[id]] }, true)
+        .then(function(raw){ var j = parseJSON(raw) || {}; return { id: id, score: Math.max(1, Math.min(10, Number(j.score) || 0)), issues: (j.issues || []).slice(0, 4) }; }, function(){ return null; });
+    })).then(function(rs){
+      rs = rs.filter(function(r){ return r && r.score; });
+      var weak = rs.filter(function(r){ return r.score < DESIGN_MIN && r.issues.length; }).sort(function(a, b){ return a.score - b.score; }).slice(0, DESIGN_FIX_MAX);
+      app.ck.look = { score: rs.length ? Math.round(rs.reduce(function(t, r){ return t + r.score; }, 0) / rs.length * 10) / 10 : null, screens: rs.reduce(function(o, r){ o[r.id] = r.score; return o; }, {}) };
+      app.ck.lookDone = true; saveApps();
+      if (!weak.length) return res;
+      if (onStep) onStep('تحسين تصميم ' + toAr(weak.length) + ' شاشات حسب ملاحظات مدير التصميم');
+      var map = {}; weak.forEach(function(r){ before[r.id] = app.ck.screens[r.id]; map[r.id] = r.issues.map(function(x){ return 'تصميم (حكم بصري ' + r.score + '/10): ' + x; }); });
+      return fixRuntime(app, key, map, null, true).then(function(){
+        // التحسين لا يُقبل إذا كسر شيئاً كان يعمل: نجرّب التطبيق كاملاً، والشاشة التي ظهرت فيها أخطاء تشغيل جديدة تعود كما كانت
+        return runtimeTest(app).then(function(after){
+          var reverted = 0;
+          weak.forEach(function(r){
+            var was = (res[r.id] || []).filter(function(m){ return !/^تصميم/.test(m); }).length, now = (after[r.id] || []).filter(function(m){ return !/^تصميم/.test(m); }).length;
+            if (now > was && before[r.id]) { app.ck.screens[r.id] = before[r.id]; reverted++; }
+          });
+          app.ck.look.improved = weak.length - reverted; saveApps();
+          return reverted ? runtimeTest(app) : after;
+        });
+      });
+    });
+  }).catch(function(e){ console.warn('designPass', e); return res; });
 }
 function fixRuntime(app, key, res, onStage, review, attempt){
   attempt = attempt || 1;

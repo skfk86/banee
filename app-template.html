@@ -328,6 +328,10 @@
     .screen .card, .screen .stat, .screen .item { animation: rise .35s var(--ease) both; }
     .screen .list > :nth-child(2) { animation-delay: .04s; } .screen .list > :nth-child(3) { animation-delay: .08s; } .screen .list > :nth-child(4) { animation-delay: .12s; } .screen .list > :nth-child(n+5) { animation-delay: .16s; }
     @keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+    /* اتجاه النص تلقائياً حسب أول حرف: جمل إنجليزية داخل خيارات أو فقاعات أو حقول لا تنقلب علامات ترقيمها */
+    .choice, .bubble, .item-title, .item-sub, .input, .rich p, .rich li { unicode-bidi: plaintext; }
+    .choice { text-align: start; }
+    @media (prefers-color-scheme: dark) { .seg button.active { background: var(--surface2); box-shadow: 0 0 0 1px var(--hair), var(--shadow-sm); } }
     @media (prefers-reduced-motion: reduce) { .screen, .screen .card, .screen .stat, .screen .item { animation: none; } }
   </style>
 </head>

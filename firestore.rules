@@ -68,6 +68,13 @@ service cloud.firestore {
           || (d.get('status', '') == 'ok' && !(d.get('role', '') in appDoc().get('roleApprove', [])));
       }
 
+      // عدّادات عامة (Tally): عدد العناصر القائمة لكل قيمة ربط، يقرؤها الجميع ويغيّرها المسجّل بمقدار عنصر واحد في كل مرة
+      match /_tally/{id} {
+        allow read: if appOwner() || alive();
+        allow create: if appOwner() || (signedIn() && alive() && request.resource.data.keys().hasOnly(['n', 'amount']) && request.resource.data.n in [-1, 0, 1]);
+        allow update: if appOwner() || (signedIn() && alive() && request.resource.data.keys().hasOnly(['n', 'amount']) && request.resource.data.n - resource.data.get('n', 0) in [-1, 0, 1]);
+      }
+
       match /{col}/{id} {
         allow read: if appOwner() || (alive() && (mode(col) == 'content'
           || (mode(col) == 'shared' && signedIn())

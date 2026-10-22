@@ -498,6 +498,44 @@ _e(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&
       remove: (c, id) => (LIVE ? CloudDB : LocalDB).remove(c, id)
     };
 
+    // ═════════════ عدّادات عامة (Tally) ═════════════
+    // عدد العناصر القائمة ومجموع amount لكل قيمة ربط (classId، bookId، campaignId…) يقرؤها الجميع دون كشف البيانات الخاصة:
+    // «٣ مقاعد متبقية» تحتاج عدّ حجوزات الآخرين، وقواعد الخصوصية تمنع قراءتها. محلياً تُحسب مباشرة، وفي السحابة تُحدَّث
+    // بـ increment مع كل إنشاء وتغيير وحذف، ويعيد صاحب التطبيق حسابها من البيانات الفعلية عند فتح لوحة الإدارة.
+    const Tally = {
+      FREE: /^(cancelled|canceled|rejected|returned|expired|refunded|failed)$/,
+      keys: o => Object.keys(o || {}).filter(k => /Id$/.test(k) && k !== 'userId' && typeof o[k] === 'string' && o[k]),
+      live: o => !!o && !Tally.FREE.test(String(o.status || '')),
+      id: (c, k, v) => (c + '__' + k + '__' + v).replace(/[\/\s]/g, '_').slice(0, 400),
+      async bump(c, before, after) {
+        if (!LIVE || c === '_tally') return;
+        const d = {};
+        const put = (o, sg) => { if (!Tally.live(o)) return; Tally.keys(o).forEach(k => { const id = Tally.id(c, k, o[k]); d[id] = d[id] || { n: 0, amount: 0 }; d[id].n += sg; d[id].amount += sg * (Number(o.amount) || 0); }); };
+        put(before, -1); put(after, 1);
+        const { doc, setDoc, increment } = FS.m;
+        await Promise.all(Object.keys(d).filter(id => d[id].n || d[id].amount).map(id =>
+          setDoc(doc(FS.db, ...ROOT, '_tally', id), { n: increment(d[id].n), amount: increment(d[id].amount) }, { merge: true }).catch(e => console.warn('tally', e && e.message))));
+      },
+      async get(c, field, value) {
+        if (!LIVE) { const a = await LocalDB.list(c, {}); const m = a.filter(o => o[field] === value && Tally.live(o)); return { n: m.length, amount: m.reduce((t, o) => t + (Number(o.amount) || 0), 0) }; }
+        try { const x = await CloudDB.get('_tally', Tally.id(c, field, value)); return { n: Math.max(0, (x && x.n) || 0), amount: (x && x.amount) || 0 }; } catch (e) { return { n: 0, amount: 0 }; }
+      },
+      async rebuild(cols) {
+        if (!LIVE) return;
+        const out = {};
+        for (const c of cols) (await CloudDB.list(c).catch(() => [])).filter(Tally.live).forEach(o => Tally.keys(o).forEach(k => { const id = Tally.id(c, k, o[k]); out[id] = out[id] || { n: 0, amount: 0 }; out[id].n++; out[id].amount += Number(o.amount) || 0; }));
+        (await CloudDB.list('_tally').catch(() => [])).forEach(t => { if (!out[t.id] && (t.n || t.amount)) out[t.id] = { n: 0, amount: 0 }; });
+        await Promise.all(Object.keys(out).map(id => FS.m.setDoc(FS.m.doc(FS.db, ...ROOT, '_tally', id), out[id]).catch(() => {})));
+      }
+    };
+    { // كل كتابة في السحابة تحدّث العدّادات (حتى DB المباشر من الشاشات)
+      const A = DB.add, U = DB.update, R = DB.remove, S = DB.set;
+      DB.add = async (c, d) => { const id = await A(c, d); if (LIVE) Tally.bump(c, null, d); return id; };
+      DB.update = async (c, id, p) => { const b = LIVE ? await CloudDB.get(c, id).catch(() => null) : null; await U(c, id, p); if (b) Tally.bump(c, b, { ...b, ...p }); };
+      DB.set = async (c, id, d) => { const b = LIVE ? await CloudDB.get(c, id).catch(() => null) : null; await S(c, id, d); if (LIVE) Tally.bump(c, b, { ...(b || {}), ...d }); };
+      DB.remove = async (c, id) => { const b = LIVE ? await CloudDB.get(c, id).catch(() => null) : null; await R(c, id); if (b) Tally.bump(c, b, null); };
+    }
+
     // ═════════════ تحديثات حيّة (دردشة، طلبات، إشعارات داخلية) ═════════════
     const Bus = { subs: {}, emit(c) { (this.subs[c] || []).forEach(fn => { try { fn(); } catch (e) { console.error(e); } }); } };
     window.addEventListener('storage', e => { if (e.key && e.key.startsWith(NS + 'db_')) Bus.emit(e.key.slice((NS + 'db_').length)); });
@@ -1103,6 +1141,7 @@ _e(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&
         async mount(el) {
           if (!guard(el)) return;
           const cols = META.admin.collections.filter(c => c.name !== 'members');
+          Tally.rebuild(cols.map(c => c.name)).catch(() => {}); // تصحيح العدّادات العامة من البيانات الفعلية
           const counts = await Promise.all(cols.map(c => DB.list(c.name).then(a => a.length).catch(() => 0)));
           el.querySelector('#ad-list').innerHTML = cols.map((c, i) => `<button class="item tap" data-act="ad-col" data-id="${UI.esc(c.name)}" style="width:100%;text-align:right"><span class="item-icon"><i data-lucide="${c.name === 'orders' ? 'receipt' : 'folder'}"></i></span><span class="item-body"><span class="item-title">${UI.esc(colLabel(c.name))}</span><span class="item-sub">${UI.num(counts[i])} عنصر</span></span><i data-lucide="chevron-left"></i></button>`).join('');
           if (Roles.multi) { const ms = await DB.list('members').catch(() => []), pn = ms.filter(m => m.status === 'pending').length;

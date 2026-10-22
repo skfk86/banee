@@ -1,0 +1,101 @@
+{
+  "status": "failed",
+  "error": "(plan.shared || []).map is not a function",
+  "name": "عيادتي",
+  "steps": [
+    "done · هوية «عناية مستدامة» · الخطة: ٨ شاشات · ٥ مجموعات",
+    "done · لا يحتاج التطبيق محتوى جاهزاً",
+    "done · الهيكل جاهز: التنقّل، البيانات، الدخول، التصميم",
+    "done · ٨ شاشات مكتوبة",
+    "err · فحص الكود آلياً",
+    " · التجميع النهائي"
+  ],
+  "runtime": {},
+  "flows": [],
+  "flowSteps": [],
+  "reviewIssues": null,
+  "spec": false,
+  "specFallback": [],
+  "flowErr": "",
+  "agent": {
+    "ran": false,
+    "fixed": 0,
+    "steps": 0,
+    "log": []
+  },
+  "fixErrors": [],
+  "review": {
+    "found": 0,
+    "fixed": 0
+  },
+  "screens": [
+    {
+      "id": "home",
+      "route": "/",
+      "roles": [
+        "patient",
+        "doctor",
+        "receptionist"
+      ],
+      "bytes": 4626
+    },
+    {
+      "id": "providersList",
+      "route": "/providers",
+      "roles": [
+        "patient"
+      ],
+      "bytes": 3915
+    },
+    {
+      "id": "book",
+      "route": "/book/:id",
+      "roles": [
+        "patient"
+      ],
+      "bytes": 9148
+    },
+    {
+      "id": "myBookings",
+      "route": "/my-bookings",
+      "roles": [
+        "patient"
+      ],
+      "bytes": 2632
+    },
+    {
+      "id": "medicalHistory",
+      "route": "/medical-history",
+      "roles": [
+        "patient"
+      ],
+      "bytes": 3342
+    },
+    {
+      "id": "doctorSchedule",
+      "route": "/doctor/schedule",
+      "roles": [
+        "doctor"
+      ],
+      "bytes": 8694
+    },
+    {
+      "id": "receptionDashboard",
+      "route": "/reception",
+      "roles": [
+        "receptionist"
+      ],
+      "bytes": 6825
+    },
+    {
+      "id": "notifications",
+      "route": "/notifications",
+      "roles": [
+        "patient",
+        "doctor",
+        "receptionist"
+      ],
+      "bytes": 5519
+    }
+  ]
+}

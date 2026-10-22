@@ -8,6 +8,9 @@ on:
       spec:
         description: 'وضع المواصفات (المحرك): 1 للتفعيل'
         default: ''
+      provider:
+        description: 'المزوّد: فارغ = Gemini، deepseek = DeepSeek (يحتاج سر DEEPSEEK_KEY)'
+        default: ''
 permissions:
   contents: write
 jobs:
@@ -49,6 +52,8 @@ jobs:
           OUT: out
           MAX_MIN: 75
           SPEC: ${{ github.event.inputs.spec }}
+          ALT_KEY: ${{ secrets.DEEPSEEK_KEY }}
+          FAKE: ${{ github.event.inputs.provider == 'deepseek' && 'e2e/openai-bridge.js' || '' }}
         run: node e2e/e2e.js
       - name: حفظ النتيجة
         if: always()

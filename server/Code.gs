@@ -25,6 +25,13 @@ var CFG = {
     EFFORT: { screen: 'high', fixer: 'medium', agent: 'medium', reviewer: 'medium' },
     MAX_TOKENS: 32000
   },
+  // ── مزوّد متوافق مع OpenAI (DeepSeek افتراضياً): يعمل بإضافة Script Property باسم ALT_KEY. Claude له الأولوية إن كان مفعّلاً
+  // راجع اسم الموديل وأسعاره من موقع المزوّد قبل التفعيل؛ القيم هنا افتراضية
+  ALT: {
+    URL: 'https://api.deepseek.com/chat/completions', MODEL: 'deepseek-chat',
+    PRICE: { in: 0.30, out: 1.20 },                        // دولار لكل مليون رمز (عدّلها حسب أسعار المزوّد الحالية)
+    ROLES: ['screen', 'fixer', 'agent', 'reviewer'], PLANS: [], DAILY_USD: 5, MAX_TOKENS: 8192
+  },
   BUILD_REPO: 'skfk86/banee',  // مستودع عام فيه سير العمل cloud-apk.yml (روابط الـ APK من إصداراته)
   APK_PER_DAY: 3,               // بناء APK سحابي لكل مستخدم يومياً
 
@@ -255,6 +262,8 @@ function askGemini(user, req, t0) {
   // Claude لأدوار الكود في الخطط المحددة؛ عند أي فشل أو رفض أو تجاوز السقف نكمل بـ Gemini كالمعتاد
   var cl = useClaude(s, req, user) ? claudeAsk(req) : null;
   if (cl) return chargeAndReturn(user, req, cl.data, CFG.CLAUDE.MODEL, cl.inT, cl.outT, cl.usd, t0, true);
+  var alt = !cl && useProvider(CFG.ALT, 'ALT_KEY', 'ALT_TESTERS', 'altday:', s, req, user) ? altAsk(req) : null;
+  if (alt) return chargeAndReturn(user, req, alt.data, CFG.ALT.MODEL, alt.inT, alt.outT, alt.usd, t0, true);
 
   // الموديل: المجانية على موديل اقتصادي، والباقي من القائمة المسموحة فقط
   var model = s.plan === 'free' || s.plan === 'key' ? CFG.FREE_MODEL : (PRICES[req.model] ? req.model : 'gemini-3.7-flash');
@@ -328,6 +337,34 @@ function useClaude(s, req, user) {
   if (CFG.CLAUDE.ROLES.indexOf(req.role) < 0 || (!tester && CFG.CLAUDE.PLANS.indexOf(s.plan) < 0)) return false;
   var day = Utilities.formatDate(new Date(), 'UTC', 'yyyy-MM-dd');
   return Number(prop('claudeday:' + day) || 0) < CFG.CLAUDE.DAILY_USD;
+}
+function useProvider(C, keyProp, testersProp, dayPrefix, s, req, user) {
+  if (!prop(keyProp)) return false;
+  var testers = String(prop(testersProp) || '').split(/[\s,]+/).map(function(x){ return x.trim().toLowerCase(); }).filter(Boolean);
+  var tester = user && testers.indexOf(String(user.email || '').toLowerCase()) > -1;
+  if (C.ROLES.indexOf(req.role) < 0 || (!tester && C.PLANS.indexOf(s.plan) < 0)) return false;
+  return Number(prop(dayPrefix + Utilities.formatDate(new Date(), 'UTC', 'yyyy-MM-dd')) || 0) < C.DAILY_USD;
+}
+// مزوّد متوافق مع OpenAI (chat/completions): نفس التحويل من صيغة Gemini وإليها
+function altAsk(req) {
+  var C = CFG.ALT, txt = function(c){ return ((c && c.parts) || []).map(function(p){ return p.text || ''; }).join(''); };
+  var json = req.generationConfig && req.generationConfig.responseMimeType === 'application/json';
+  var messages = [{ role: 'system', content: txt(req.systemInstruction) + (json ? '\n\nأعد JSON صالحاً فقط.' : '') }]
+    .concat((req.contents || []).map(function(c){ return { role: c.role === 'model' ? 'assistant' : 'user', content: txt(c) }; }));
+  var body = { model: C.MODEL, messages: messages, max_tokens: C.MAX_TOKENS };
+  if (json) body.response_format = { type: 'json_object' };
+  var r;
+  try { r = UrlFetchApp.fetch(C.URL, { method: 'post', contentType: 'application/json', payload: JSON.stringify(body), muteHttpExceptions: true, headers: { Authorization: 'Bearer ' + prop('ALT_KEY') } }); }
+  catch (e) { console.warn('alt fetch', e); return null; }
+  var d; try { d = JSON.parse(r.getContentText()); } catch (e) { return null; }
+  if (r.getResponseCode() !== 200) { console.warn('alt', r.getResponseCode(), (d.error && d.error.message) || ''); return null; }
+  var ch = (d.choices || [])[0] || {}, text = (ch.message && ch.message.content) || '';
+  if (!text) return null;
+  var u = d.usage || {}, inT = u.prompt_tokens || 0, outT = u.completion_tokens || 0, usd = (inT * C.PRICE.in + outT * C.PRICE.out) / 1e6;
+  var ck = 'altday:' + Utilities.formatDate(new Date(), 'UTC', 'yyyy-MM-dd');
+  PropertiesService.getScriptProperties().setProperty(ck, String(Number(prop(ck) || 0) + usd));
+  return { inT: inT, outT: outT, usd: usd, data: { candidates: [{ content: { role: 'model', parts: [{ text: text }] }, finishReason: ch.finish_reason === 'length' ? 'MAX_TOKENS' : 'STOP' }],
+    usageMetadata: { promptTokenCount: inT, candidatesTokenCount: outT } } };
 }
 // يحوّل طلب بصيغة Gemini (systemInstruction/contents) إلى Claude، ويعيد الرد بصيغة Gemini حتى لا يتغير التطبيق
 function claudeAsk(req) {

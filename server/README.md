@@ -106,3 +106,13 @@ var PROXY_URL = 'https://script.google.com/macros/s/....../exec';
 4. انشر نسخة جديدة.
 
 الإعدادات في `CFG.CLAUDE`: الخطط (`PLANS`)، الأدوار (`ROLES`)، سقف الإنفاق اليومي بالدولار (`DAILY_USD`، الافتراضي ٢٠)، وجهد التفكير لكل دور (`EFFORT`). كل طلب يُسجَّل بتكلفته في ورقة `log` باسم الموديل `claude-sonnet-5-5`.
+
+## DeepSeek (أو أي مزوّد متوافق مع OpenAI)
+
+بديل أرخص لكتابة الكود. Claude له الأولوية إن كان مفعّلاً، وGemini يكمل عند أي فشل.
+
+1. أنشئ مفتاحاً من platform.deepseek.com.
+2. Script Properties: أضف `ALT_KEY`، و`ALT_TESTERS` ببريدك للتجربة على حسابك فقط.
+3. راجع `CFG.ALT` في `Code.gs`: اسم الموديل (`MODEL`) والأسعار (`PRICE`) حسب موقع المزوّد الحالي، وسقف الإنفاق اليومي (`DAILY_USD`).
+
+**قياس DeepSeek على أفكار القياس:** أضف سر المستودع `DEEPSEEK_KEY` (Settings ← Secrets ← Actions)، ثم شغّل «قياس بانِي» من Actions مع `provider = deepseek`.

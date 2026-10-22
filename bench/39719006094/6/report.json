@@ -1,0 +1,207 @@
+{
+  "status": "ready",
+  "error": "",
+  "name": "مكتبتي الرقمية",
+  "steps": [
+    "done · هوية «رف الكتب» · الخطة: ٧ شاشات · ٤ مجموعات · ١٦ عنصر محتوى",
+    "done · المحتوى: ١٦ عنصر مكتوب كاملاً",
+    "done · الهيكل جاهز: التنقّل، البيانات، الدخول، التصميم",
+    "done · ٧ شاشات مكتوبة",
+    "done · جُرّبت كل الشاشات وأُصلحت ٤، لا أخطاء · رحلات المستخدم: ٣ من ٣ تعمل كاملة · المراجعة: أُصلحت ٢ من ٢",
+    "done · جاهز للمعاينة والتحميل"
+  ],
+  "runtime": {
+    "catalog": [],
+    "book_detail": [],
+    "confirm_borrow": [],
+    "my_borrowings": [],
+    "librarian_dashboard": [],
+    "manage_borrowings": [],
+    "add_edit_book": []
+  },
+  "flows": [
+    "طلب استعارة كتاب (8 خطوات)",
+    "موافقة أمين المكتبة وتسليم الكتاب (9 خطوات)",
+    "إرجاع الكتاب وتحديث المخزون (5 خطوات)"
+  ],
+  "flowSteps": [
+    {
+      "flow": "طلب استعارة كتاب",
+      "steps": [
+        {
+          "role": "reader"
+        },
+        {
+          "go": "/"
+        },
+        {
+          "click": "[data-act=view-book][data-id=books-1]"
+        },
+        {
+          "click": "[data-act=request-borrow]"
+        },
+        {
+          "click": "text:أسبوعان (14 يوماً)"
+        },
+        {
+          "click": "[data-act=submit-borrow]"
+        },
+        {
+          "expect": "استعاراتي المكتبية"
+        },
+        {
+          "expectDb": {
+            "col": "borrowings",
+            "min": 1
+          }
+        }
+      ]
+    },
+    {
+      "flow": "موافقة أمين المكتبة وتسليم الكتاب",
+      "steps": [
+        {
+          "role": "librarian"
+        },
+        {
+          "go": "/librarian"
+        },
+        {
+          "click": "[data-act=view-requests]"
+        },
+        {
+          "click": "[data-act=approve]"
+        },
+        {
+          "fill": {
+            "#due-date-input": "2025-12-31"
+          }
+        },
+        {
+          "click": "text:تأكيد الموافقة"
+        },
+        {
+          "click": "[data-act=deliver]"
+        },
+        {
+          "expect": "المُعارة حالياً"
+        },
+        {
+          "expectDb": {
+            "col": "borrowings",
+            "min": 1
+          }
+        }
+      ]
+    },
+    {
+      "flow": "إرجاع الكتاب وتحديث المخزون",
+      "steps": [
+        {
+          "role": "librarian"
+        },
+        {
+          "go": "/librarian/requests"
+        },
+        {
+          "click": "[data-act=return]"
+        },
+        {
+          "expect": "المُرجعة"
+        },
+        {
+          "expectDb": {
+            "col": "borrowings",
+            "min": 1
+          }
+        }
+      ]
+    }
+  ],
+  "reviewIssues": {
+    "catalog": [],
+    "book_detail": [],
+    "confirm_borrow": [
+      "مراجعة: حقل totalCopies أو availableCopies يحفظ كنص أو أرقام غير مؤكدة عند التحديث، ويجب التأكد من حفظ الأرقام كنوع number بدون فقدان."
+    ],
+    "my_borrowings": [],
+    "librarian_dashboard": [],
+    "manage_borrowings": [],
+    "add_edit_book": [
+      "مراجعة: في شاشة إضافة/تعديل كتاب، حقل pages, totalCopies, availableCopies تُحفظ كقيم عددية ولكن الإدخال في HTML قد يُقرأ كنص إن لم يُحول بـ parseInt بحذر في جميع الحالات، وقد أُصلح جزئياً لكن تم إغفال حفظ 'order' بشكل صحيح كرقم في بعض الحالات القديمة."
+    ]
+  },
+  "spec": false,
+  "specFallback": [],
+  "flowErr": "",
+  "agent": {
+    "ran": false,
+    "fixed": 0,
+    "steps": 0,
+    "log": []
+  },
+  "fixErrors": [],
+  "review": {
+    "found": 2,
+    "fixed": 2
+  },
+  "screens": [
+    {
+      "id": "catalog",
+      "route": "/",
+      "roles": [
+        "reader"
+      ],
+      "bytes": 4664
+    },
+    {
+      "id": "book_detail",
+      "route": "/book/:id",
+      "roles": [
+        "reader",
+        "librarian"
+      ],
+      "bytes": 6971
+    },
+    {
+      "id": "confirm_borrow",
+      "route": "/borrow/confirm",
+      "roles": [
+        "reader"
+      ],
+      "bytes": 5330
+    },
+    {
+      "id": "my_borrowings",
+      "route": "/my-borrowings",
+      "roles": [
+        "reader"
+      ],
+      "bytes": 4442
+    },
+    {
+      "id": "librarian_dashboard",
+      "route": "/librarian",
+      "roles": [
+        "librarian"
+      ],
+      "bytes": 4675
+    },
+    {
+      "id": "manage_borrowings",
+      "route": "/librarian/requests",
+      "roles": [
+        "librarian"
+      ],
+      "bytes": 8602
+    },
+    {
+      "id": "add_edit_book",
+      "route": "/librarian/book-form",
+      "roles": [
+        "librarian"
+      ],
+      "bytes": 8992
+    }
+  ]
+}

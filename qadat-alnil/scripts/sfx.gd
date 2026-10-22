@@ -16,27 +16,29 @@ var _music: AudioStreamPlayer
 var _amb: AudioStreamPlayer
 var _thread: Thread
 var _music_want := false
+var _menu_music: AudioStream
+var _battle_music: AudioStream
 var _rng := RandomNumberGenerator.new()
 
 
 func _ready() -> void:
 	_rng.randomize()
 	_setup_buses()
-	_add("click", [_click()])
-	_add("select", [_radio(0.16, 1250.0, 1600.0), _radio(0.16, 1100.0, 1450.0)])
-	_add("ack", [_radio(0.2, 900.0, 1350.0), _radio(0.2, 1000.0, 760.0), _radio(0.18, 820.0, 1200.0)])
-	_add("error", [_buzz()])
-	_add("done", [_bells([293.7, 370.0, 440.0, 587.3], 0.11)])
-	_add("ready", [_horn([440.0, 587.3], 0.16)])
-	_add("bullet", [_gun(0), _gun(1), _gun(2)])
-	_add("shell", [_cannon(0.7, 95.0), _cannon(0.75, 85.0)])
-	_add("art", [_cannon(1.1, 60.0, true), _cannon(1.2, 52.0, true)])
-	_add("boom", [_explosion(1.7, 0), _explosion(1.9, 1), _explosion(1.6, 2)])
-	_add("rocket", [_rocket(0.75), _rocket(0.85)])
-	_add("strike", [_jet(2.6)])
-	_add("alert", [_siren(1.6)])
-	_add("victory", [_horn([293.7, 370.0, 440.0, 587.3], 0.22, true)])
-	_add("defeat", [_horn([293.7, 277.2, 233.1, 220.0], 0.3, true)])
+	_add("click", func(): return [_click()])
+	_add("select", func(): return [_radio(0.16, 1250.0, 1600.0), _radio(0.16, 1100.0, 1450.0)])
+	_add("ack", func(): return [_radio(0.2, 900.0, 1350.0), _radio(0.2, 1000.0, 760.0), _radio(0.18, 820.0, 1200.0)])
+	_add("error", func(): return [_buzz()])
+	_add("done", func(): return [_bells([293.7, 370.0, 440.0, 587.3], 0.11)])
+	_add("ready", func(): return [_horn([440.0, 587.3], 0.16)])
+	_add("bullet", func(): return [_gun(0), _gun(1), _gun(2)])
+	_add("shell", func(): return [_cannon(0.7, 95.0), _cannon(0.75, 85.0)])
+	_add("art", func(): return [_cannon(1.1, 60.0, true), _cannon(1.2, 52.0, true)])
+	_add("boom", func(): return [_explosion(1.7, 0), _explosion(1.9, 1), _explosion(1.6, 2)])
+	_add("rocket", func(): return [_rocket(0.75), _rocket(0.85)])
+	_add("strike", func(): return [_jet(2.6)])
+	_add("alert", func(): return [_siren(1.6)])
+	_add("victory", func(): return [_horn([293.7, 370.0, 440.0, 587.3], 0.22, true)])
+	_add("defeat", func(): return [_horn([293.7, 277.2, 233.1, 220.0], 0.3, true)])
 	_load_overrides()
 	for i in 14:
 		var p := AudioStreamPlayer.new()
@@ -52,9 +54,24 @@ func _ready() -> void:
 	_amb.volume_db = -20.0
 	_amb.stream = _wind(8.0)
 	add_child(_amb)
-	# توليد الموسيقى في خيط منفصل حتى لا يتجمد الإقلاع
-	_thread = Thread.new()
-	_thread.start(_make_music)
+	_battle_music = _ogg_loop("res://sounds/music_battle.ogg")
+	var menu_m := _ogg_loop("res://sounds/music.ogg")
+	if menu_m:
+		_music.stream = menu_m
+		_menu_music = menu_m
+	else:
+		# توليد الموسيقى في خيط منفصل حتى لا يتجمد الإقلاع
+		_thread = Thread.new()
+		_thread.start(_make_music)
+
+
+func _ogg_loop(path: String) -> AudioStream:
+	if not ResourceLoader.exists(path):
+		return null
+	var o: AudioStream = load(path)
+	if o is AudioStreamOggVorbis:
+		o.loop = true
+	return o
 
 
 func _exit_tree() -> void:
@@ -84,6 +101,11 @@ func play(n: String, vol := 0.0, gap := 0.06) -> void:
 func music(on: bool, battle := false) -> void:
 	_music_want = on and not muted
 	if _music_want:
+		# موسيقى المعركة منفصلة عن موسيقى القائمة إن وُجدت
+		var want: AudioStream = _battle_music if (battle and _battle_music) else _menu_music
+		if want and _music.stream != want:
+			_music.stream = want
+			_music.play()
 		if _music.stream and not _music.playing:
 			_music.play()
 		if battle and not _amb.playing:
@@ -131,15 +153,21 @@ func _setup_buses() -> void:
 	AudioServer.add_bus_effect(sfx, cmp)
 
 
-func _add(n: String, list: Array) -> void:
-	streams[n] = list
+## يحمّل ملفات حقيقية sounds/<الاسم>.ogg أو <الاسم>_1.ogg ... وإلا يولّد الصوت بالكود
+func _add(n: String, gen: Callable) -> void:
+	var list := []
+	var single := "res://sounds/%s.ogg" % n
+	if ResourceLoader.exists(single):
+		list.append(load(single))
+	for i in range(1, 9):
+		var pth := "res://sounds/%s_%d.ogg" % [n, i]
+		if ResourceLoader.exists(pth):
+			list.append(load(pth))
+	streams[n] = list if not list.is_empty() else gen.call()
 
 
 func _load_overrides() -> void:
-	for n in streams.keys():
-		var path := "res://sounds/%s.ogg" % n
-		if ResourceLoader.exists(path):
-			streams[n] = [load(path)]
+	pass
 
 
 # ===================== أدوات DSP =====================
@@ -505,6 +533,7 @@ func _music_ready(w: AudioStreamWAV) -> void:
 		_music.stream = o
 	else:
 		_music.stream = w
+	_menu_music = _music.stream
 	if _music_want:
 		_music.play()
 

@@ -65,6 +65,7 @@ func _ready() -> void:
 	_build_menu()
 	_build_pause()
 	_build_end()
+	_build_splash()
 
 
 func _sb(bg: Color, border: Color, rad := 12) -> StyleBoxFlat:
@@ -228,6 +229,12 @@ func _center_box(ov: Control) -> VBoxContainer:
 func _build_menu() -> void:
 	menu = _overlay(0.35)
 	var v := _center_box(menu)
+	var lg := TextureRect.new()
+	lg.texture = load("res://art/logo.png")
+	lg.custom_minimum_size = Vector2(150, 150)
+	lg.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	lg.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	v.add_child(lg)
 	var t := _lbl(v, "قادة النيل", 88, ACCENT)
 	t.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	t.add_theme_color_override("font_outline_color", Color(0.15, 0.08, 0.0, 0.9))
@@ -271,6 +278,52 @@ func _build_end() -> void:
 	_btn(v, "العب مرة أخرى", func(): game.start_game(game.diff), Vector2(320, 60), 24)
 	_btn(v, "القائمة الرئيسية", func(): game.quit_to_menu(), Vector2(320, 56), 22)
 	end_ov.visible = false
+
+
+## شاشة البداية: الشعار يكبر ويتوهج ثم يظهر الاسم، وتختفي بعد ثوانٍ أو باللمس
+func _build_splash() -> void:
+	var sp := ColorRect.new()
+	sp.color = Color(0.05, 0.04, 0.03)
+	sp.set_anchors_preset(Control.PRESET_FULL_RECT)
+	sp.mouse_filter = Control.MOUSE_FILTER_STOP
+	root.add_child(sp)
+	var v := VBoxContainer.new()
+	v.set_anchors_preset(Control.PRESET_FULL_RECT)
+	v.alignment = BoxContainer.ALIGNMENT_CENTER
+	v.add_theme_constant_override("separation", 10)
+	sp.add_child(v)
+	var lg := TextureRect.new()
+	lg.texture = load("res://art/logo.png")
+	lg.custom_minimum_size = Vector2(300, 300)
+	lg.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	lg.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	lg.pivot_offset = Vector2(150, 150)
+	v.add_child(lg)
+	var t := _lbl(v, "قادة النيل", 76, ACCENT)
+	t.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	t.add_theme_color_override("font_outline_color", Color(0.2, 0.1, 0.0))
+	t.add_theme_constant_override("outline_size", 12)
+	var s := _lbl(v, "حرب الصحراء الاستراتيجية", 22, Color(0.85, 0.8, 0.7))
+	s.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	lg.modulate.a = 0.0
+	lg.scale = Vector2(0.6, 0.6)
+	t.modulate.a = 0.0
+	s.modulate.a = 0.0
+	var tw := sp.create_tween()
+	tw.set_parallel(true)
+	tw.tween_property(lg, "modulate:a", 1.0, 0.8)
+	tw.tween_property(lg, "scale", Vector2.ONE, 1.0).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tw.chain().tween_property(t, "modulate:a", 1.0, 0.6)
+	tw.chain().tween_property(s, "modulate:a", 1.0, 0.5)
+	tw.chain().tween_interval(1.4)
+	tw.chain().tween_property(sp, "modulate:a", 0.0, 0.6)
+	tw.chain().tween_callback(sp.queue_free)
+	sp.gui_input.connect(func(e: InputEvent):
+		if e is InputEventScreenTouch or e is InputEventMouseButton:
+			if is_instance_valid(sp) and sp.modulate.a > 0.99:
+				tw.kill()
+				sp.queue_free())
+	Sfx.play("ready", -2.0, 0.0)
 
 
 # ===================== الحالات =====================

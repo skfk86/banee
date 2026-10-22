@@ -1,0 +1,295 @@
+{
+  "status": "ready",
+  "error": "",
+  "name": "ملعبك والأكاديمية",
+  "steps": [
+    "done · هوية «ميدان حازم» · الخطة: ٧ شاشات · ٦ مجموعات",
+    "done · لا يحتاج التطبيق محتوى جاهزاً",
+    "done · الهيكل جاهز: التنقّل، البيانات، الدخول، التصميم",
+    "done · ٧ شاشات مكتوبة",
+    "done · جُرّبت كل الشاشات وأُصلحت ٥، لا أخطاء · رحلات المستخدم: ٣ من ٣ تعمل كاملة · المراجعة: أُصلحت ٣ من ٣ · المراجعة الشاملة: لا مشاكل · وكيل الإصلاح: أصلح ١ في ٩ خطوة",
+    "done · جاهز للمعاينة والتحميل"
+  ],
+  "runtime": {
+    "home": [],
+    "book": [],
+    "myBookings": [],
+    "ownerDashboard": [],
+    "academyClasses": [],
+    "attendanceView": [],
+    "notifications": []
+  },
+  "flows": [
+    "حجز ملعب وتقسيم التكلفة (10 خطوات)",
+    "إدارة الملعب (11 خطوات)",
+    "تسجيل حضور الأكاديمية (12 خطوات)"
+  ],
+  "flowSteps": [
+    {
+      "flow": "حجز ملعب وتقسيم التكلفة",
+      "steps": [
+        {
+          "role": "customer"
+        },
+        {
+          "go": "/book/s1"
+        },
+        {
+          "fill": {
+            "#user-name": "محمد علي"
+          }
+        },
+        {
+          "fill": {
+            "#user-phone": "0912345678"
+          }
+        },
+        {
+          "fill": {
+            "#booking-date": "2023-12-25"
+          }
+        },
+        {
+          "fill": {
+            "#booking-time": "18:00"
+          }
+        },
+        {
+          "fill": {
+            "#friends-phones": "0999999999"
+          }
+        },
+        {
+          "click": "text:تأكيد الحجز والدفع"
+        },
+        {
+          "expect": "تم تأكيد الحجز بنجاح!"
+        },
+        {
+          "expectDb": {
+            "col": "bookings",
+            "min": 1
+          }
+        }
+      ]
+    },
+    {
+      "flow": "إدارة الملعب",
+      "steps": [
+        {
+          "role": "owner"
+        },
+        {
+          "go": "/owner/dashboard"
+        },
+        {
+          "click": "[data-act=add-stadium]"
+        },
+        {
+          "fill": {
+            "#new-name": "ملعب النجوم"
+          }
+        },
+        {
+          "fill": {
+            "#new-location": "الرياض"
+          }
+        },
+        {
+          "fill": {
+            "#new-price": "200"
+          }
+        },
+        {
+          "fill": {
+            "#new-open": "08:00"
+          }
+        },
+        {
+          "fill": {
+            "#new-close": "23:00"
+          }
+        },
+        {
+          "click": "#save-new-stadium"
+        },
+        {
+          "expect": "تمت إضافة الملعب بنجاح"
+        },
+        {
+          "expectDb": {
+            "col": "stadiums",
+            "min": 1
+          }
+        }
+      ]
+    },
+    {
+      "flow": "تسجيل حضور الأكاديمية",
+      "steps": [
+        {
+          "role": "trainer"
+        },
+        {
+          "go": "/academy"
+        },
+        {
+          "click": "[data-act=addClass]"
+        },
+        {
+          "fill": {
+            "#classTitle": "تدريب كرة قدم"
+          }
+        },
+        {
+          "fill": {
+            "#classSport": "كرة قدم"
+          }
+        },
+        {
+          "fill": {
+            "#classDate": "2023-12-30"
+          }
+        },
+        {
+          "fill": {
+            "#classTime": "16:00"
+          }
+        },
+        {
+          "fill": {
+            "#classPrice": "5000"
+          }
+        },
+        {
+          "fill": {
+            "#classCapacity": "20"
+          }
+        },
+        {
+          "click": "#saveClassBtn"
+        },
+        {
+          "expect": "تم نشر الحصة بنجاح"
+        },
+        {
+          "expectDb": {
+            "col": "academyClasses",
+            "min": 1
+          }
+        }
+      ]
+    }
+  ],
+  "reviewIssues": {
+    "home": [],
+    "book": [],
+    "myBookings": [
+      "مراجعة: استخدام الدوال غير الموجودة Data.bookings.label و Data.splitBills.label، والصحيح استخدام Data.label('bookings', status) و Data.label('splitBills', status)."
+    ],
+    "ownerDashboard": [
+      "مراجعة: استخدام Data.stadiums.visible() و Data.bookings.visible() يعرض ملاعب وحجوزات كل المستخدمين ولا يفلترها حسب ownerId الخاص بصاحب الملعب الحالي."
+    ],
+    "academyClasses": [],
+    "attendanceView": [],
+    "notifications": [
+      "مراجعة: خطأ في شرط الفلترة a.parentId === Auth.user.uid || Auth.user.uid حيث يجعل الشرط محققاً دائماً، واستخدام دوال .label غير الموجودة مباشرة على كائنات البيانات."
+    ]
+  },
+  "spec": false,
+  "specFallback": [],
+  "flowErr": "",
+  "agent": {
+    "ran": true,
+    "fixed": 1,
+    "steps": 9,
+    "log": [
+      "read attendanceView — أريد قراءة شاشة attendanceView لمعرفة سبب بقائها في حالة التحميل وإصلاح المشكلة. → 1| App.screen({\n2|   id: 'attendanceView',\n3|   route: '/attendance/:classId',\n4|   title: 'متابعة الحضور',\n5|   icon: 'users',\n6|   nav: false,\n7| \n8|   render",
+      "edit attendanceView — لقد لاحظت أن دالة Data.label تستقبل وسيطاً واحداً فقط وهو الحالة (status)، بينما الكود يستخدم Data.label('attendances', att.status) مما قد → find موجود 2 مرات، اجعله أطول وأكثر تميزاً",
+      "edit attendanceView — تعديل استدعاء Data.label('attendances', att.status) إلى Data.label(att.status) لأن الدالة تأخذ وسيطاً واحداً فقط كما هو محدد في العقد. → تم التعديل",
+      "run — بعد تعديل Data.label(att.status) في شاشة attendanceView، سأقوم بتشغيل التطبيق للتأكد من زوال المشكلة واختبار تدفقات العمل. → نتيجة التشغيل (درجة الأخطاء 100، الأفضل حتى الآن 100):\n[attendanceView] الشاشة بقيت عالقة في حالة التحميل (skeleton لم يُستبدل بعد mount)",
+      "edit attendanceView — سأقوم بإضافة console.log لتتبع نتيجة استدعاء Data.attendances.visible() ومعرفة ما إذا كانت تعيد بيانات أم أنها تتسبب في خطأ صامت، حيث أن ا → تم التعديل",
+      "run → نتيجة التشغيل (درجة الأخطاء 100، الأفضل حتى الآن 100):\n[attendanceView] الشاشة بقيت عالقة في حالة التحميل (skeleton لم يُستبدل بعد mount)",
+      "edit attendanceView — إذا لم يتم العثور على الحصة التدريبية (classItem)، تقوم الشاشة بإرجاع (return) مبكر دون تحديث عنصر الحضور (#attendance-list)، مما يترك الت → تم التعديل",
+      "run → نتيجة التشغيل (درجة الأخطاء 0، الأفضل حتى الآن 0):\nلا أخطاء وظيفية",
+      "done → تم إصلاح شاشة حضور الأكاديمية والتأكد من عمل جميع الرحلات والسيناريوهات بددون أخطاء."
+    ]
+  },
+  "fixErrors": [],
+  "review": {
+    "found": 3,
+    "fixed": 3
+  },
+  "screens": [
+    {
+      "id": "home",
+      "route": "/",
+      "roles": [
+        "customer",
+        "owner",
+        "trainer",
+        "parent"
+      ],
+      "bytes": 6214
+    },
+    {
+      "id": "book",
+      "route": "/book/:id",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 7565
+    },
+    {
+      "id": "myBookings",
+      "route": "/my-bookings",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 5542
+    },
+    {
+      "id": "ownerDashboard",
+      "route": "/owner/dashboard",
+      "roles": [
+        "owner"
+      ],
+      "bytes": 11741
+    },
+    {
+      "id": "academyClasses",
+      "route": "/academy",
+      "roles": [
+        "trainer",
+        "parent"
+      ],
+      "bytes": 11911
+    },
+    {
+      "id": "attendanceView",
+      "route": "/attendance/:classId",
+      "roles": [
+        "trainer",
+        "parent"
+      ],
+      "bytes": 6567
+    },
+    {
+      "id": "notifications",
+      "route": "/notifications",
+      "roles": [
+        "customer",
+        "owner",
+        "trainer",
+        "parent"
+      ],
+      "bytes": 4655
+    }
+  ],
+  "design": {
+    "model": "gemini-2.5-flash",
+    "score": null,
+    "min": null,
+    "screens": {}
+  }
+}

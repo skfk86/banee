@@ -89,6 +89,14 @@ const log = (...a) => { const s = '[' + new Date().toISOString().slice(11, 19) +
     }
     fs.writeFileSync(path.join(OUT, 'app-errors.json'), JSON.stringify(aerr, null, 2));
     log('أخطاء أثناء تصفح التطبيق:', aerr.length);
+    // حكم التصميم: لقطة كل شاشة تُقيَّم من ١٠ بمعايير التطبيقات العالمية (JUDGE=0 لتعطيله)
+    if (KEY && process.env.JUDGE !== '0') {
+      try {
+        rep.design = await require('./design-judge.js')(OUT, KEY, process.env.JUDGE_MODEL || 'gemini-2.5-flash');
+        fs.writeFileSync(path.join(OUT, 'report.json'), JSON.stringify(rep, null, 2));
+        log('التصميم:', rep.design.score, '/ 10 (أضعف شاشة', rep.design.min + ')', JSON.stringify(Object.fromEntries(Object.entries(rep.design.screens).map(([k, v]) => [k, v.score]))));
+      } catch (e) { log('تعذّر حكم التصميم:', e.message); }
+    }
   }
   // اختبار الوكيل المستقل: نزرع خطأً حقيقياً بين شاشتين (اسم حقل مختلف عند الإنشاء) ونرى هل يتتبّعه ويصلحه
   if (process.env.SABOTAGE && rep.status === 'ready') {
@@ -118,7 +126,7 @@ const log = (...a) => { const s = '[' + new Date().toISOString().slice(11, 19) +
     log('اختبار الوكيل:', JSON.stringify(sb).slice(0, 3000));
   }
   const md = ['# تقرير الاختبار الحقيقي لبانِي', '', '- التطبيق: **' + rep.name + '**', '- النتيجة: **' + rep.status + '** ' + rep.error, '- الزمن: ' + mins + ' دقيقة', '- رحلات مختبرة: ' + rep.flows.join('، '),
-    '- المراجعة الشاملة: وُجدت ' + rep.review.found + ' وأُصلحت ' + rep.review.fixed, '', '## المراحل', ...rep.steps.map(s => '- ' + s), '', '## ملاحظات التشغيل المتبقية',
+    '- المراجعة الشاملة: وُجدت ' + rep.review.found + ' وأُصلحت ' + rep.review.fixed, ...(rep.design ? ['- **التصميم: ' + rep.design.score + ' / 10** (أضعف شاشة ' + rep.design.min + ')', ...Object.entries(rep.design.screens).map(([k, v]) => '  - ' + k + ': ' + v.score + (v.issues[0] ? ' — ' + v.issues[0] : ''))] : []), '', '## المراحل', ...rep.steps.map(s => '- ' + s), '', '## ملاحظات التشغيل المتبقية',
     ...Object.entries(rep.runtime).filter(([k, v]) => v.length).map(([k, v]) => '- **' + k + '**: ' + v.join(' / ')), '', '## أخطاء صفحة بانِي', ...perr.slice(0, 20).map(e => '- ' + e)].join('\n');
   fs.writeFileSync(path.join(OUT, 'report.md'), md);
   if (process.env.GITHUB_STEP_SUMMARY) fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, md + '\n');

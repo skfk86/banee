@@ -24,7 +24,9 @@ for (const k of Object.keys(runs).sort()) {
   msgs.forEach(m => DICT.forEach((d, i) => { if (d.re.test(m)) counts[i] = (counts[i] || 0) + 1; }));
   const lab = (rep.steps || [])[4] || '', fm = lab.match(/رحلات المستخدم: (\S+) من (\S+)/);
   const allFlows = fm && fm[1] === fm[2];
-  if (rep.status === 'ready' && allFlows && !msgs.length && r.example) { const ex = read(r.example); if (ex && ex.plan) examples.push(ex); }
+  // مثال للتعلم فقط إذا عملت كل رحلاته وكان تصميمه بمستوى عالٍ (إن قيس): المخطِّط يستلهم من الأفضل فقط
+  const designOk = !rep.design || rep.design.score == null || (rep.design.score >= 7.5 && rep.design.min >= 6);
+  if (rep.status === 'ready' && allFlows && designOk && !msgs.length && r.example) { const ex = read(r.example); if (ex && ex.plan) examples.push(ex); }
 }
 // أحدث مثال لكل فكرة، والأفضّل ما فيه مواصفات شاشات
 const byIdea = {}; examples.forEach(e => { const key = String(e.idea || e.plan.name).slice(0, 60); if (!byIdea[key] || (e.specs || []).length >= (byIdea[key].specs || []).length) byIdea[key] = e; });

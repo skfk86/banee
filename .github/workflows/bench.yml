@@ -3,8 +3,8 @@ on:
   workflow_dispatch:
     inputs:
       set:
-        description: 'مجموعة الأفكار: a | b | c'
-        default: 'a'
+        description: 'مجموعة الأفكار: pro (تطبيقات طموحة بمستوى المتاجر العالمية، الافتراضي) | a | b | c'
+        default: 'pro'
       spec:
         description: 'وضع المواصفات (المحرك): 1 للتفعيل'
         default: ''

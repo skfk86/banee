@@ -1,0 +1,264 @@
+{
+  "status": "ready",
+  "error": "",
+  "name": "إدارة العقارات والإيجارات",
+  "steps": [
+    "done · هوية «إدارة عقارات» · الخطة: ٦ شاشات · ٦ مجموعات",
+    "done · لا يحتاج التطبيق محتوى جاهزاً",
+    "done · الهيكل جاهز: التنقّل، البيانات، الدخول، التصميم",
+    "done · ٦ شاشات مكتوبة",
+    "done · جُرّبت كل الشاشات وأُصلحت ٤، لا أخطاء · رحلات المستخدم: ٣ من ٣ تعمل كاملة · المراجعة: أُصلحت ٣ من ٥",
+    "done · جاهز للمعاينة والتحميل"
+  ],
+  "runtime": {
+    "home": [],
+    "propertiesList": [],
+    "tenantPayments": [],
+    "maintenanceList": [],
+    "contractsList": [],
+    "notifications": []
+  },
+  "flows": [
+    "دفع الإيجار للمستأجر (6 خطوات)",
+    "طلب صيانة (14 خطوات)",
+    "إدارة العقارات للمالك (14 خطوات)"
+  ],
+  "flowSteps": [
+    {
+      "flow": "دفع الإيجار للمستأجر",
+      "steps": [
+        {
+          "role": "tenant"
+        },
+        {
+          "go": "/"
+        },
+        {
+          "click": "[data-act=go-payments]"
+        },
+        {
+          "go": "/payments"
+        },
+        {
+          "click": "[data-act=pay]"
+        },
+        {
+          "expectDb": {
+            "col": "payments",
+            "min": 1
+          }
+        }
+      ]
+    },
+    {
+      "flow": "طلب صيانة",
+      "steps": [
+        {
+          "role": "tenant"
+        },
+        {
+          "go": "/"
+        },
+        {
+          "click": "[data-act=go-maintenance]"
+        },
+        {
+          "go": "/maintenance"
+        },
+        {
+          "click": "[data-act=new-maintenance]"
+        },
+        {
+          "fill": {
+            "#m-title": "تسرب مياه"
+          }
+        },
+        {
+          "fill": {
+            "#m-unit": "101"
+          }
+        },
+        {
+          "fill": {
+            "#m-desc": "يوجد تسرب في الحمام الرئيسي"
+          }
+        },
+        {
+          "click": "text:إرسال الطلب"
+        },
+        {
+          "expectDb": {
+            "col": "maintenance",
+            "min": 1
+          }
+        },
+        {
+          "role": "technician"
+        },
+        {
+          "go": "/"
+        },
+        {
+          "click": "[data-act=go-maintenance]"
+        },
+        {
+          "go": "/maintenance"
+        }
+      ]
+    },
+    {
+      "flow": "إدارة العقارات للمالك",
+      "steps": [
+        {
+          "role": "landlord"
+        },
+        {
+          "go": "/"
+        },
+        {
+          "click": "[data-act=go-props]"
+        },
+        {
+          "go": "/properties"
+        },
+        {
+          "click": "[data-act=add-property]"
+        },
+        {
+          "fill": {
+            "[name=title]": "برج الروابي"
+          }
+        },
+        {
+          "fill": {
+            "[name=address]": "شارع الملك فهد"
+          }
+        },
+        {
+          "fill": {
+            "[name=type]": "سكني"
+          }
+        },
+        {
+          "fill": {
+            "[name=unitsCount]": "10"
+          }
+        },
+        {
+          "click": "text:حفظ العقار"
+        },
+        {
+          "expectDb": {
+            "col": "properties",
+            "min": 1
+          }
+        },
+        {
+          "go": "/contracts"
+        },
+        {
+          "click": "[data-act=add-contract]"
+        },
+        {
+          "fill": {
+            "#contract-tenant-name": "محمد أحمد"
+          }
+        }
+      ]
+    }
+  ],
+  "reviewIssues": {
+    "home": [],
+    "propertiesList": [
+      "مراجعة: في دالة إضافة وحدة (add-unit)، يتم حفظ tenantId كقيمة فارغة '' بدلاً من null أو تركها غير معرفة، مما قد يسبب تعارضاً في الفلترة لاحقاً.",
+      "مراجعة: في دالة تعديل الوحدة (edit-unit)، لا يتم التحقق من وجود عقد نشط قبل تغيير حالة الوحدة إلى 'available' أو 'maintenance'، مما قد يترك عقوداً نشطة مرتبطة بوحدات غير متاحة."
+    ],
+    "tenantPayments": [
+      "مراجعة: في دالة الدفع (pay)، يتم تحديث حالة الدفع إلى 'paid' مباشرة دون التحقق من وجود إيصال (receipt) فعلي، حيث يتم تمرير رابط ثابت (Hardcoded URL) مما يفسد منطق مراجعة المالك."
+    ],
+    "maintenanceList": [
+      "مراجعة: في دالة إنشاء طلب صيانة (new-maintenance)، يتم حفظ unitId كقيمة فارغة '' بينما يتم الاعتماد على unitNumber فقط، مما يكسر الربط المنطقي مع مجموعة الوحدات (units) ويمنع المالك من تتبع الطلبات حسب العقار."
+    ],
+    "contractsList": [
+      "مراجعة: في دالة إنهاء العقد (terminate)، يتم تغيير حالة الوحدة إلى 'available' وتصفير بيانات المستأجر، لكن لا يتم تحديث حالة الفواتير المعلقة (pending) المرتبطة بهذا العقد، مما يترك فواتير للمستأجر القديم عالقة في النظام."
+    ],
+    "notifications": []
+  },
+  "spec": false,
+  "specFallback": [],
+  "flowErr": "",
+  "agent": {
+    "ran": false,
+    "fixed": 0,
+    "steps": 0,
+    "log": []
+  },
+  "fixErrors": [],
+  "review": {
+    "found": 5,
+    "fixed": 3
+  },
+  "screens": [
+    {
+      "id": "home",
+      "route": "/",
+      "roles": [
+        "tenant",
+        "landlord",
+        "technician"
+      ],
+      "bytes": 10912
+    },
+    {
+      "id": "propertiesList",
+      "route": "/properties",
+      "roles": [
+        "landlord"
+      ],
+      "bytes": 18931
+    },
+    {
+      "id": "tenantPayments",
+      "route": "/payments",
+      "roles": [
+        "tenant",
+        "landlord"
+      ],
+      "bytes": 7391
+    },
+    {
+      "id": "maintenanceList",
+      "route": "/maintenance",
+      "roles": [
+        "tenant",
+        "technician",
+        "landlord"
+      ],
+      "bytes": 10095
+    },
+    {
+      "id": "contractsList",
+      "route": "/contracts",
+      "roles": [
+        "landlord"
+      ],
+      "bytes": 10553
+    },
+    {
+      "id": "notifications",
+      "route": "/notifications",
+      "roles": [
+        "tenant",
+        "landlord",
+        "technician"
+      ],
+      "bytes": 4527
+    }
+  ],
+  "design": {
+    "model": "gemini-2.5-flash",
+    "score": null,
+    "min": null,
+    "screens": {}
+  }
+}

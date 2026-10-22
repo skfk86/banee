@@ -1,0 +1,211 @@
+{
+  "status": "ready",
+  "error": "",
+  "name": "لنغوو",
+  "steps": [
+    "done · هوية «إنجليزي ممتع» · الخطة: ٧ شاشات · ٧ مجموعات · ٣٦ عنصر محتوى",
+    "done · المحتوى: ٣٦ عنصر مكتوب كاملاً",
+    "done · الهيكل جاهز: التنقّل، البيانات، الدخول، التصميم",
+    "done · ٧ شاشات مكتوبة",
+    "done · الفحص: ١ شاشات بها ملاحظات، راجعها في الاستوديو · رحلات المستخدم: ١ من ٢ تعمل كاملة · المراجعة: أُصلحت ١ من ١ · المراجعة الشاملة: لا مشاكل · وكيل الإصلاح: لم يجد تحسيناً آمناً",
+    "done · جاهز للمعاينة والتحميل"
+  ],
+  "runtime": {
+    "home": [],
+    "course": [],
+    "lesson": [],
+    "quiz": [
+      "رحلة «رحلة التعلم اليومية» توقفت عند الخطوة ٨: لم يُحفظ شيء في results بعد العملية (الحفظ لا يعمل) — عمليات الحفظ التي حدثت فعلاً: add(progress) (لا شيء في results)"
+    ],
+    "me": [],
+    "challenges": [],
+    "teacherDashboard": []
+  },
+  "flows": [
+    "رحلة التعلم اليومية (10 خطوات)",
+    "متابعة المعلم وتحدياته (9 خطوات)"
+  ],
+  "flowSteps": [
+    {
+      "flow": "رحلة التعلم اليومية",
+      "steps": [
+        {
+          "role": "student"
+        },
+        {
+          "go": "/"
+        },
+        {
+          "click": "[data-act=open-course][data-id=courses-1]"
+        },
+        {
+          "click": "[data-act=open-lesson][data-id=lessons-1]"
+        },
+        {
+          "click": "text:أكملت الدرس والانتقال للاختبار"
+        },
+        {
+          "click": "[data-act=select-opt]"
+        },
+        {
+          "click": "[data-act=next]"
+        },
+        {
+          "expectDb": {
+            "col": "results",
+            "min": 1
+          }
+        },
+        {
+          "go": "/progress"
+        },
+        {
+          "expect": "لوحة إنجازاتك"
+        }
+      ]
+    },
+    {
+      "flow": "متابعة المعلم وتحدياته",
+      "steps": [
+        {
+          "role": "teacher"
+        },
+        {
+          "go": "/teacher"
+        },
+        {
+          "click": "[data-act=open-challenge-sheet]"
+        },
+        {
+          "fill": {
+            "#ch-student-id": "student-1",
+            "#ch-title": "تحدي جديد",
+            "#ch-desc": "قم بحل التحدي",
+            "#ch-xp": "50"
+          }
+        },
+        {
+          "click": "text:إرسال التحدي الآن"
+        },
+        {
+          "expectDb": {
+            "col": "challenges",
+            "min": 1
+          }
+        },
+        {
+          "role": "student"
+        },
+        {
+          "go": "/challenges"
+        },
+        {
+          "expect": "تحديات المعلمين"
+        }
+      ]
+    }
+  ],
+  "reviewIssues": {
+    "home": [],
+    "course": [],
+    "lesson": [],
+    "quiz": [],
+    "me": [],
+    "challenges": [],
+    "teacherDashboard": [
+      "مراجعة: في استخراج أسماء الطلاب لإرسال التحديات، تم الاعتماد على حقل userName من مجموعة progress وهو غير موجود في مخطط مجموعة progress، والصحيح استخدام مجموعة members أو results."
+    ]
+  },
+  "spec": false,
+  "specFallback": [],
+  "flowErr": "",
+  "agent": {
+    "ran": true,
+    "fixed": 0,
+    "steps": 14,
+    "log": [
+      "read quiz — نقرأ شاشة الاختبار quiz لاكتشاف سبب عدم حفظ النتائج في results عند إنهاء الاختبار. → 1| App.screen({\n2|   id: 'quiz', route: '/quiz/:id', title: 'الاختبار التفاعلي', icon: 'book-open', nav: false,\n3|   render(params) {\n4|     return `\n5|       <",
+      "flow → حُدّث سيناريو «رحلة التعلم اليومية». شغّل run للتحقق.",
+      "run — لقد قمت بمراجعة شاشة الاختبار (quiz). الكود يبدو صحيحاً في استدعاء Data.results.create، ولكن الاختبار الآلي يشير إلى أن الحفظ لا يعمل. سأقوم بتشغيل التطبي → نتيجة التشغيل (درجة الأخطاء 30، الأفضل حتى الآن 30):\n[quiz] رحلة «رحلة التعلم اليومية» توقفت عند الخطوة ١٠: لم يُحفظ شيء في results بعد العملية (الحفظ لا يعمل) ",
+      "search «Data.progress.create» — لقد راجعت شاشة الاختبار (quiz) ووجدت أن استدعاء Data.results.create صحيح. ومع ذلك، يشير سجل الأخطاء إلى أن عملية الحفظ في result → lesson:100| await Data.progress.create({",
+      "edit quiz — لقد راجعت شاشة الاختبار (quiz) ولاحظت أن عملية الحفظ في results تتم داخل دالة معالجة زر 'التالي'. سأضيف console.log لتتبع القيم المدخلة لـ Data.resu → تم التعديل",
+      "run — لقد أضفت سجلات تتبع (console.log) في شاشة quiz للتأكد من القيم التي يتم إرسالها إلى Data.results.create عند انتهاء الاختبار. الآن سأقوم بتشغيل التطبيق (ru → نتيجة التشغيل (درجة الأخطاء 30، الأفضل حتى الآن 30):\n[quiz] رحلة «رحلة التعلم اليومية» توقفت عند الخطوة ١٠: لم يُحفظ شيء في results بعد العملية (الحفظ لا يعمل) ",
+      "read lesson — سأقوم بقراءة شاشة الدرس (lesson) لأرى كيف يتم الانتقال إلى الاختبار، ربما هناك خطأ في تمرير الـ quizId أو أن الاختبار لا يُحفظ لأن الترتيب المنطقي → 1| App.screen({\n2|   id: 'lesson',\n3|   route: '/lesson/:id',\n4|   title: 'الدرس',\n5|   icon: 'book-open',\n6|   nav: false,\n7|   render(params) {\n8|     return ",
+      "read quiz — لقد راجعت شاشة lesson وتأكدت أن الانتقال للاختبار يعمل، ولكن المشكلة في شاشة quiz التي لا تحفظ النتائج في مجموعة results. سأقوم الآن بقراءة شاشة qui → 1| App.screen({\n2|   id: 'quiz', route: '/quiz/:id', title: 'الاختبار التفاعلي', icon: 'book-open', nav: false,\n3|   render(params) {\n4|     return `\n5|       <",
+      "search «questions» — أريد معرفة عدد الأسئلة في الاختبار المرتبط بالدرس أو الدورة للتأكد مما إذا كان سيناريو الاختبار الآلي يضغط على زر 'التالي' بالعدد الكافي من → quiz:31| if (!quiz || !quiz.questions || quiz.questions.length === 0) {\nquiz:44| const q = quiz.questions[currentIdx];\nquiz:45| const progressPercent = Math.rou",
+      "flow — السيناريو الحالي يضغط على زر التالي مرتين فقط، بينما يبدو أن الاختبار يحتوي على أكثر من سؤالين (مثل 3 أسئلة). سأقوم بتحديث سيناريو الاختبار الآلي عبر أدا → حُدّث سيناريو «رحلة التعلم اليومية». شغّل run للتحقق.",
+      "run → نتيجة التشغيل (درجة الأخطاء 30، الأفضل حتى الآن 30):\n[quiz] رحلة «رحلة التعلم اليومية» توقفت عند الخطوة ١٢: لم يُحفظ شيء في results بعد العملية (الحفظ لا يعمل) ",
+      "edit quiz — سأقوم بتعديل شاشة quiz لإزالة try/catch الصامت حول Data.results.create أو طباعة الخطأ بوضوح في console.log لكي نعرف السبب الجذري لعدم حفظ النتائج في → تم التعديل",
+      "run — تشغيل التطبيق لرؤية سبب فشل حفظ النتائج في results بعد تعديل طباعة الخطأ. → نتيجة التشغيل (درجة الأخطاء 30، الأفضل حتى الآن 30):\n[quiz] رحلة «رحلة التعلم اليومية» توقفت عند الخطوة ١٢: لم يُحفظ شيء في results بعد العملية (الحفظ لا يعمل) "
+    ]
+  },
+  "fixErrors": [],
+  "review": {
+    "found": 1,
+    "fixed": 1
+  },
+  "screens": [
+    {
+      "id": "home",
+      "route": "/",
+      "roles": [
+        "student"
+      ],
+      "bytes": 3122
+    },
+    {
+      "id": "course",
+      "route": "/course/:id",
+      "roles": [
+        "student"
+      ],
+      "bytes": 5496
+    },
+    {
+      "id": "lesson",
+      "route": "/lesson/:id",
+      "roles": [
+        "student"
+      ],
+      "bytes": 4213
+    },
+    {
+      "id": "quiz",
+      "route": "/quiz/:id",
+      "roles": [
+        "student"
+      ],
+      "bytes": 7395
+    },
+    {
+      "id": "me",
+      "route": "/progress",
+      "roles": [
+        "student"
+      ],
+      "bytes": 5632
+    },
+    {
+      "id": "challenges",
+      "route": "/challenges",
+      "roles": [
+        "student"
+      ],
+      "bytes": 4545
+    },
+    {
+      "id": "teacherDashboard",
+      "route": "/teacher",
+      "roles": [
+        "teacher"
+      ],
+      "bytes": 9979
+    }
+  ],
+  "design": {
+    "model": "gemini-2.5-flash",
+    "score": null,
+    "min": null,
+    "screens": {}
+  }
+}

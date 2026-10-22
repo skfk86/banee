@@ -13,6 +13,18 @@ var CFG = {
   PROJECT_ID: 'bani-b28a0',
   FIREBASE_API_KEY: 'AIzaSyADAJ2MGzx58Bh-8gudT_JUBmBExYLrn6Q', // مفتاح Firebase العام (ليس سراً)
   PACKAGE_NAME: 'com.alloush.banee',
+  // ── Claude: يكتب الكود (الشاشات، الإصلاح، الوكيل، المراجعة) لخطط محددة، وGemini يكمل الباقي ويحلّ محله عند أي عطل
+  // يعمل فقط إذا أضفت Script Property باسم CLAUDE_KEY (مفتاح من console.anthropic.com)
+  CLAUDE: {
+    MODEL: 'claude-sonnet-5-5',
+    PRICE: { in: 2.00, out: 10.00, cacheWrite: 2.50, cacheRead: 0.20 }, // دولار لكل مليون رمز
+    ROLES: ['screen', 'fixer', 'agent', 'reviewer'],      // أدوار كتابة الكود ومراجعته
+    PLANS: ['starter', 'pro', 'business'],                 // أضف 'free' أو 'key' لتجربته على الجميع
+    TESTERS: [],                                           // بريد حسابات تجرّب Claude دائماً مهما كانت خطتها، مثل ['you@gmail.com']
+    DAILY_USD: 20,                                         // سقف إنفاق Claude اليومي، بعده يعود كل شيء لـ Gemini
+    EFFORT: { screen: 'high', fixer: 'medium', agent: 'medium', reviewer: 'medium' },
+    MAX_TOKENS: 32000
+  },
   BUILD_REPO: 'skfk86/banee',  // مستودع عام فيه سير العمل cloud-apk.yml (روابط الـ APK من إصداراته)
   APK_PER_DAY: 3,               // بناء APK سحابي لكل مستخدم يومياً
 
@@ -240,6 +252,10 @@ function askGemini(user, req, t0) {
     saveState(user, s);
   } finally { lock.releaseLock(); }
 
+  // Claude لأدوار الكود في الخطط المحددة؛ عند أي فشل أو رفض أو تجاوز السقف نكمل بـ Gemini كالمعتاد
+  var cl = useClaude(s, req, user) ? claudeAsk(req) : null;
+  if (cl) return chargeAndReturn(user, req, cl.data, CFG.CLAUDE.MODEL, cl.inT, cl.outT, cl.usd, t0, true);
+
   // الموديل: المجانية على موديل اقتصادي، والباقي من القائمة المسموحة فقط
   var model = s.plan === 'free' || s.plan === 'key' ? CFG.FREE_MODEL : (PRICES[req.model] ? req.model : 'gemini-3.7-flash');
   var reqSize = JSON.stringify(req.contents || []).length + JSON.stringify(req.systemInstruction || '').length;
@@ -280,7 +296,10 @@ function askGemini(user, req, t0) {
   // الخصم حسب الاستهلاك الفعلي (رموز التفكير تُحسب كمخرجات)
   var u = data.usageMetadata || {}, p = PRICES[model];
   var inT = u.promptTokenCount || 0, outT = (u.candidatesTokenCount || 0) + (u.thoughtsTokenCount || 0);
-  var usd = (inT * p.in + outT * p.out) / 1e6, pts = usd / CFG.POINT_USD;
+  return chargeAndReturn(user, req, data, model, inT, outT, (inT * p.in + outT * p.out) / 1e6, t0, false);
+}
+function chargeAndReturn(user, req, data, model, inT, outT, usd, t0, isClaude) {
+  var pts = usd / CFG.POINT_USD, s;
   var lock2 = LockService.getScriptLock(); lock2.waitLock(10000);
   try {
     var s2 = loadState(user);
@@ -299,6 +318,53 @@ function askGemini(user, req, t0) {
   } finally { lock2.releaseLock(); }
   logRow(user, model, req.role || '', inT, outT, usd);
   return { ok: true, data: data, model: model, cost: { points: Math.round(pts), ms: Date.now() - t0 }, credits: creditsView(user, s) };
+}
+
+// ═════════════ Claude (Anthropic Messages API عبر HTTP مباشرة، فلا توجد مكتبة رسمية لـ Apps Script) ═════════════
+function useClaude(s, req, user) {
+  if (!prop('CLAUDE_KEY')) return false;
+  var tester = user && CFG.CLAUDE.TESTERS.indexOf(String(user.email || '').toLowerCase()) > -1;
+  if (CFG.CLAUDE.ROLES.indexOf(req.role) < 0 || (!tester && CFG.CLAUDE.PLANS.indexOf(s.plan) < 0)) return false;
+  var day = Utilities.formatDate(new Date(), 'UTC', 'yyyy-MM-dd');
+  return Number(prop('claudeday:' + day) || 0) < CFG.CLAUDE.DAILY_USD;
+}
+// يحوّل طلب بصيغة Gemini (systemInstruction/contents) إلى Claude، ويعيد الرد بصيغة Gemini حتى لا يتغير التطبيق
+function claudeAsk(req) {
+  var txt = function(c){ return ((c && c.parts) || []).map(function(p){ return p.text || ''; }).join(''); };
+  var messages = (req.contents || []).map(function(c){ return { role: c.role === 'model' ? 'assistant' : 'user', content: txt(c) }; })
+    .filter(function(m){ return m.content; });
+  if (!messages.length || messages[0].role !== 'user') return null;
+  var json = req.generationConfig && req.generationConfig.responseMimeType === 'application/json';
+  var system = txt(req.systemInstruction) + (json ? '\n\nأعد JSON صالحاً فقط، بلا أي نص قبله أو بعده وبلا ```.' : '');
+  var body = {
+    model: CFG.CLAUDE.MODEL, max_tokens: CFG.CLAUDE.MAX_TOKENS,
+    system: system, messages: messages,
+    cache_control: { type: 'ephemeral' },                       // تعليمات الأدوار الطويلة تتكرر بين الشاشات: تُقرأ من الذاكرة بسعر أقل
+    output_config: { effort: CFG.CLAUDE.EFFORT[req.role] || 'medium' },
+    fallbacks: 'default'                                        // إن رفض النموذج طلباً لأسباب السلامة يكمله نموذج بديل تلقائياً
+  };
+  var r;
+  try {
+    r = UrlFetchApp.fetch('https://api.anthropic.com/v1/messages', {
+      method: 'post', contentType: 'application/json', payload: JSON.stringify(body), muteHttpExceptions: true,
+      headers: { 'x-api-key': prop('CLAUDE_KEY'), 'anthropic-version': '2023-06-01', 'anthropic-beta': 'server-side-fallback-2026-07-01' }
+    });
+  } catch (e) { console.warn('claude fetch', e); return null; }
+  var code = r.getResponseCode(), d;
+  try { d = JSON.parse(r.getContentText()); } catch (e) { return null; }
+  if (code !== 200) { console.warn('claude', code, (d.error && d.error.message) || ''); return null; }
+  if (d.stop_reason === 'refusal') { console.warn('claude refusal', JSON.stringify(d.stop_details || {})); return null; }
+  var text = (d.content || []).filter(function(b){ return b.type === 'text'; }).map(function(b){ return b.text; }).join('');
+  if (!text) return null;
+  var u = d.usage || {}, P = CFG.CLAUDE.PRICE;
+  var inT = (u.input_tokens || 0) + (u.cache_creation_input_tokens || 0) + (u.cache_read_input_tokens || 0), outT = u.output_tokens || 0;
+  var usd = ((u.input_tokens || 0) * P.in + (u.cache_creation_input_tokens || 0) * P.cacheWrite + (u.cache_read_input_tokens || 0) * P.cacheRead + outT * P.out) / 1e6;
+  var day = Utilities.formatDate(new Date(), 'UTC', 'yyyy-MM-dd'), ck = 'claudeday:' + day;
+  PropertiesService.getScriptProperties().setProperty(ck, String(Number(prop(ck) || 0) + usd));
+  return { inT: inT, outT: outT, usd: usd, data: {
+    candidates: [{ content: { role: 'model', parts: [{ text: text }] }, finishReason: d.stop_reason === 'max_tokens' ? 'MAX_TOKENS' : 'STOP' }],
+    usageMetadata: { promptTokenCount: inT, candidatesTokenCount: outT }
+  } };
 }
 
 // ═════════════ قدرات التطبيقات المبنية ═════════════

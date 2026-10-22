@@ -2161,11 +2161,30 @@ var KITS = {
         { id: 'lesson', route: '/lesson/:id', title: 'الدرس', roles: ['student'] }, { id: 'quiz', route: '/quiz/:id', title: 'الاختبار', roles: ['student'] },
         { id: 'me', route: '/progress', title: 'تقدّمي', icon: 'trophy', nav: true, roles: ['student'] }, { id: 'results', route: '/results', title: 'نتائج الطلاب', icon: 'bar-chart', nav: true, roles: ['teacher'] }] } }
 };
+// اختيار المرجع بالنقاط لا بأول تطابق: كلمات قوية تحسم المجال وكلمات عامة تُرجّح فقط،
+// ووصف صاحب التطبيق يُحسب ضعف ملخص المحلل، ولا مرجع إلا إذا تفوّق مجال بوضوح (عيادة ≠ «موعد تسليم» في مدرسة)
+var KIT_WORDS = {
+  store:    { strong: /متجر|سوق|بائع|تاجر|منتجات|سلة|shop|store|مستعمل|إعلان(?:ات)? بيع/gi, weak: /بيع|شراء|يشتري|سعر|أسعار|طلب منتج/gi },
+  booking:  { strong: /حجز|يحجز|عيادة|صالون|طبيب|أطباء|حلاق|booking|جلسة علاج|مريض/gi, weak: /مواعيد|موعد(?! (?:ال)?تسليم)|وقت متاح/gi },
+  delivery: { strong: /توصيل|مندوب|ديليفري|delivery|مشاوير|سائق|شحنة|تتبع الطلب/gi, weak: /طلبات المطعم|استلام|عنوان التسليم/gi },
+  edu:      { strong: /تعليم|مدرسة|مدرس|معلم|طالب|طلاب|دروس|درس|دورة|دورات|كورس|واجب|واجبات|درجات|اختبار|امتحان|منهج|فصل دراسي|حصة/gi, weak: /تعلّم|تعلم|شرح|صف|ولي الأمر/gi }
+};
+function kitScores(app){
+  var desc = String(app.desc || ''), brief = String(app.brief || ''), out = {};
+  Object.keys(KITS).forEach(function(k){
+    var w = KIT_WORDS[k]; if (!w) { out[k] = KITS[k].match.test(desc) ? 3 : 0; return; }
+    var n = function(re, t){ return (t.match(re) || []).length; };
+    out[k] = (n(w.strong, desc) * 3 + n(w.weak, desc)) * 2 + n(w.strong, brief) * 3 + n(w.weak, brief);
+  });
+  return out;
+}
 function kitFor(app){
   if (app.kit && KITS[app.kit]) return app.kit;
-  var t = (app.desc || '') + ' ' + (app.brief || '');
-  for (var k in KITS) if (KITS[k].match.test(t)) return k;
-  return null;
+  var sc = kitScores(app), ks = Object.keys(sc).sort(function(a, b){ return sc[b] - sc[a]; });
+  var top = ks[0], second = ks[1];
+  if (!top || sc[top] < 6) return null;               // لا دليل كافٍ: بلا مرجع أفضل من مرجع خاطئ
+  if (second && sc[top] < sc[second] * 1.5) return null; // مجالان متقاربان: لا نفرض أحدهما
+  return top;
 }
 function kitHint(app){
   var k = kitFor(app); if (!k) return '';

@@ -242,7 +242,7 @@
     .role-pill { background: var(--surface); border-color: var(--hair); box-shadow: var(--shadow-sm); }
 
     /* hero: تدرج متعدد الطبقات مع نقش خفيف، أقصر وأكثر أناقة */
-    .hero { padding: 22px 20px; border-radius: calc(var(--r-lg) + 4px); box-shadow: var(--shadow-lg); isolation: isolate;
+    .hero { padding: 22px 20px; border-radius: calc(var(--r-lg) + 4px); box-shadow: var(--shadow-lg); isolation: isolate; background-color: var(--primary-dark);
       background: radial-gradient(90% 120% at 0% 0%, rgba(255,255,255,.18), transparent 55%), radial-gradient(70% 90% at 100% 100%, rgba(0,0,0,.18), transparent 60%), {{HERO_BG}}; }
     .hero::after { width: 220px; height: 220px; top: -90px; left: -70px; background: radial-gradient(circle, rgba(255,255,255,.22), rgba(255,255,255,0) 70%); z-index: -1; }
     .hero::before { content: ''; position: absolute; inset: 0; z-index: -1; opacity: .12; pointer-events: none;
@@ -1203,7 +1203,7 @@ _e(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&
     // ═════════════ التشغيل ═════════════
     function buildNav() {
       const nav = document.getElementById('nav');
-      nav.innerHTML = META.nav.filter(n => Roles.can(n.route)).map(n => `<button class="nav-item" data-route="${UI.esc(n.route)}"><i data-lucide="${UI.esc(n.icon || 'circle')}"></i><span>${UI.esc(n.title)}</span></button>`).join('');
+      nav.innerHTML = META.nav.filter(n => Roles.can(n.route)).map(n => `<button class="nav-item${((location.hash.slice(1) || '/').split('?')[0] === n.route) ? ' active' : ''}" data-route="${UI.esc(n.route)}"><i data-lucide="${UI.esc(n.icon || 'circle')}"></i><span>${UI.esc(n.title)}</span></button>`).join('');
       if (!nav._wired) { nav._wired = true; App.on(nav, 'click', '.nav-item', (e, b) => App.go(b.dataset.route)); }
       document.body.classList.toggle('few-nav', nav.children.length < 2);
       UI.icons();

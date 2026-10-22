@@ -1,0 +1,135 @@
+{
+  "status": "ready",
+  "error": "",
+  "name": "مذاق فاخر",
+  "steps": [
+    "done · هوية «مذاق فاخر» · الخطة: ٥ شاشات · ٥ مجموعات · ٢٠ عنصر محتوى",
+    "done · المحتوى: ٢٠ عنصر مكتوب كاملاً",
+    "done · الهيكل جاهز: التنقّل، البيانات، الدخول، التصميم",
+    "done · ٥ شاشات مكتوبة",
+    "done · جُرّبت كل الشاشات وأُصلحت ٣، لا أخطاء · رحلات المستخدم: ١ من ١ تعمل كاملة · المراجعة: أُصلحت ١ من ١",
+    "done · جاهز للمعاينة والتحميل"
+  ],
+  "runtime": {
+    "home": [],
+    "book": [],
+    "myBookings": [],
+    "hostDashboard": [],
+    "kitchenDashboard": []
+  },
+  "flows": [
+    "حجز وطلب مسبق (8 خطوات)"
+  ],
+  "flowSteps": [
+    {
+      "flow": "حجز وطلب مسبق",
+      "steps": [
+        {
+          "role": "customer"
+        },
+        {
+          "go": "/"
+        },
+        {
+          "click": "[data-act=add-to-cart][data-id=menu-1]"
+        },
+        {
+          "click": "[data-act=go-cart]"
+        },
+        {
+          "fill": {
+            "[name=userName]": "محمد أحمد",
+            "[name=phone]": "0555555555",
+            "[name=date]": "2026-06-01",
+            "[name=time]": "20:00",
+            "[name=guests]": "2",
+            "[name=occasion]": "عشاء"
+          }
+        },
+        {
+          "click": "text:تأكيد الحجز والطلب"
+        },
+        {
+          "expectDb": {
+            "col": "bookings",
+            "min": 1
+          }
+        },
+        {
+          "expect": "سجل الحجوزات والطلبات"
+        }
+      ]
+    }
+  ],
+  "reviewIssues": {
+    "home": [],
+    "book": [
+      "مراجعة: دور العميل (customer) غير مضاف إلى حقل roleAccess للجدول bookings في المخطط، مما يمنع العملاء من إنشاء الحجوزات. يجب إضافة 'customer' إلى مصفوفة الصلاحيات الخاصة بـ bookings في المخطط."
+    ],
+    "myBookings": [],
+    "hostDashboard": [],
+    "kitchenDashboard": []
+  },
+  "spec": false,
+  "specFallback": [],
+  "flowErr": "",
+  "agent": {
+    "ran": false,
+    "fixed": 0,
+    "steps": 0,
+    "log": []
+  },
+  "fixErrors": [],
+  "review": {
+    "found": 1,
+    "fixed": 1
+  },
+  "screens": [
+    {
+      "id": "home",
+      "route": "/",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 7019
+    },
+    {
+      "id": "book",
+      "route": "/book",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 5082
+    },
+    {
+      "id": "myBookings",
+      "route": "/my-bookings",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 5546
+    },
+    {
+      "id": "hostDashboard",
+      "route": "/host",
+      "roles": [
+        "host"
+      ],
+      "bytes": 14857
+    },
+    {
+      "id": "kitchenDashboard",
+      "route": "/kitchen",
+      "roles": [
+        "kitchen"
+      ],
+      "bytes": 6491
+    }
+  ],
+  "design": {
+    "model": "gemini-2.5-flash",
+    "score": null,
+    "min": null,
+    "screens": {}
+  }
+}

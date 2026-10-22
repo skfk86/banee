@@ -1,0 +1,248 @@
+{
+  "status": "ready",
+  "error": "",
+  "name": "إدارة العقارات والإيجارات",
+  "steps": [
+    "done · هوية «عقارات مطمئنة» · الخطة: ٦ شاشات · ٦ مجموعات · ١٥ عنصر محتوى",
+    "done · المحتوى: ١٥ عنصر مكتوب كاملاً",
+    "done · الهيكل جاهز: التنقّل، البيانات، الدخول، التصميم",
+    "done · ٦ شاشات مكتوبة",
+    "done · جُرّبت كل الشاشات وأُصلحت ٥، لا أخطاء · رحلات المستخدم: ٣ من ٣ تعمل كاملة · المراجعة: أُصلحت ٣ من ٣ · المراجعة الشاملة: لا مشاكل",
+    "done · جاهز للمعاينة والتحميل"
+  ],
+  "runtime": {
+    "home": [],
+    "propertiesList": [],
+    "tenantPayments": [],
+    "maintenanceList": [],
+    "contractsList": [],
+    "notifications": []
+  },
+  "flows": [
+    "دفع الإيجار للمستأجر (7 خطوات)",
+    "طلب صيانة (11 خطوات)",
+    "إدارة العقارات للمالك (10 خطوات)"
+  ],
+  "flowSteps": [
+    {
+      "flow": "دفع الإيجار للمستأجر",
+      "steps": [
+        {
+          "role": "tenant"
+        },
+        {
+          "go": "/"
+        },
+        {
+          "click": "[data-act=go-payments]"
+        },
+        {
+          "click": "[data-act=new-payment]"
+        },
+        {
+          "fill": {
+            "#pay-title": "إيجار شهر يونيو",
+            "#pay-unit": "101",
+            "#pay-amount": "500",
+            "#pay-date": "2023-06-01"
+          }
+        },
+        {
+          "click": "text:حفظ وإرسال"
+        },
+        {
+          "expectDb": {
+            "col": "payments",
+            "min": 1
+          }
+        }
+      ]
+    },
+    {
+      "flow": "طلب صيانة",
+      "steps": [
+        {
+          "role": "tenant"
+        },
+        {
+          "go": "/"
+        },
+        {
+          "click": "[data-act=go-maintenance]"
+        },
+        {
+          "click": "[data-act=open-add]"
+        },
+        {
+          "fill": {
+            "#m-title": "تسرب مياه",
+            "#m-desc": "يوجد تسرب مياه في المطبخ"
+          }
+        },
+        {
+          "click": "text:إرسال الطلب"
+        },
+        {
+          "expectDb": {
+            "col": "maintenance",
+            "min": 1
+          }
+        },
+        {
+          "role": "technician"
+        },
+        {
+          "go": "/"
+        },
+        {
+          "click": "[data-act=go-maintenance]"
+        },
+        {
+          "click": "text:استلام الطلب"
+        }
+      ]
+    },
+    {
+      "flow": "إدارة العقارات للمالك",
+      "steps": [
+        {
+          "role": "landlord"
+        },
+        {
+          "go": "/properties"
+        },
+        {
+          "click": "[data-act=add-property]"
+        },
+        {
+          "fill": {
+            "#prop-title": "برج الأمل",
+            "#prop-address": "شارع الرئيسية",
+            "#prop-type": "سكني",
+            "#prop-unitsCount": "5"
+          }
+        },
+        {
+          "click": "text:حفظ العقار"
+        },
+        {
+          "expectDb": {
+            "col": "properties",
+            "min": 1
+          }
+        },
+        {
+          "click": "[data-act=add-unit][data-property-id=properties-1]"
+        },
+        {
+          "fill": {
+            "#unit-number": "102",
+            "#unit-floor": "2",
+            "#unit-rent": "600",
+            "#unit-tenantName": "أحمد"
+          }
+        },
+        {
+          "click": "text:حفظ الوحدة"
+        },
+        {
+          "expectDb": {
+            "col": "units",
+            "min": 1
+          }
+        }
+      ]
+    }
+  ],
+  "reviewIssues": {
+    "home": [
+      "مراجعة: استخدام Data.label غير المعرفة بدلاً من Data.payments.label لعرض حالة الدفع."
+    ],
+    "propertiesList": [
+      "مراجعة: استخدام Data.units.label غير المعرفة لعرض حالة الوحدة في قائمة العقارات."
+    ],
+    "tenantPayments": [],
+    "maintenanceList": [],
+    "contractsList": [],
+    "notifications": [
+      "مراجعة: استخدام Data.label('payments', ...) بالخطأ بدلاً من استخدام دوال التسمية المخصصة لكل مجموعة مثل Data.payments.label و Data.maintenance.label و Data.contracts.label."
+    ]
+  },
+  "spec": false,
+  "specFallback": [],
+  "flowErr": "",
+  "agent": {
+    "ran": false,
+    "fixed": 0,
+    "steps": 0,
+    "log": []
+  },
+  "fixErrors": [],
+  "review": {
+    "found": 3,
+    "fixed": 3
+  },
+  "screens": [
+    {
+      "id": "home",
+      "route": "/",
+      "roles": [
+        "tenant",
+        "landlord",
+        "technician"
+      ],
+      "bytes": 10921
+    },
+    {
+      "id": "propertiesList",
+      "route": "/properties",
+      "roles": [
+        "landlord"
+      ],
+      "bytes": 19871
+    },
+    {
+      "id": "tenantPayments",
+      "route": "/payments",
+      "roles": [
+        "tenant",
+        "landlord"
+      ],
+      "bytes": 9200
+    },
+    {
+      "id": "maintenanceList",
+      "route": "/maintenance",
+      "roles": [
+        "tenant",
+        "technician",
+        "landlord"
+      ],
+      "bytes": 10682
+    },
+    {
+      "id": "contractsList",
+      "route": "/contracts",
+      "roles": [
+        "landlord"
+      ],
+      "bytes": 8570
+    },
+    {
+      "id": "notifications",
+      "route": "/notifications",
+      "roles": [
+        "tenant",
+        "landlord",
+        "technician"
+      ],
+      "bytes": 5387
+    }
+  ],
+  "design": {
+    "model": "gemini-2.5-flash",
+    "score": null,
+    "min": null,
+    "screens": {}
+  }
+}

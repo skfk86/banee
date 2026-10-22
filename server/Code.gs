@@ -13,6 +13,9 @@ var CFG = {
   PROJECT_ID: 'bani-b28a0',
   FIREBASE_API_KEY: 'AIzaSyADAJ2MGzx58Bh-8gudT_JUBmBExYLrn6Q', // مفتاح Firebase العام (ليس سراً)
   PACKAGE_NAME: 'com.alloush.banee',
+  BUILD_REPO: 'skfk86/banee',  // مستودع عام فيه سير العمل cloud-apk.yml (روابط الـ APK من إصداراته)
+  APK_PER_DAY: 3,               // بناء APK سحابي لكل مستخدم يومياً
+
   POINT_USD: 0.00075,            // قيمة النقطة الواحدة بالدولار
   DAILY_CAP_USD: 1e9,            // المفتاح على خطة Google المجانية: لا تكلفة، والحد هو حصة Google نفسها
   MAX_OUTPUT_TOKENS: 12000,
@@ -104,6 +107,8 @@ function doPost(e) {
     if (req.op === 'regApp') return out(regApp(user, req));
     if (req.op === 'newApp') return out(newApp(user, req));
     if (req.op === 'deleteAccount') { PropertiesService.getScriptProperties().deleteProperty('u:' + user.uid); logRow(user, 'DELETE_ACCOUNT', '', 0, 0, 0); return out({ ok: true }); }
+    if (req.op === 'apkBuild') return out(apkBuild(user, req));
+    if (req.op === 'apkStatus') return out(apkStatus(user, req));
     if (req.op === 'clientErr') { // أخطاء المستخدمين الفعلية (محدودة لكل مستخدم) لتعرفها قبل أن يشتكي أحد
       if (!hit('err:' + user.uid, 20, 3600)) return out({ ok: true });
       try { sheet('errors').appendRow([new Date(), user.uid, user.email, String(req.where || '').slice(0, 80), String(req.msg || '').slice(0, 500), String(req.stack || '').slice(0, 1500), String(req.ua || '').slice(0, 200)]); } catch (e) {}
@@ -297,6 +302,38 @@ function askGemini(user, req, t0) {
 }
 
 // ═════════════ قدرات التطبيقات المبنية ═════════════
+// ═════════════ APK سحابي: GitHub Actions يبني ملف المستخدم وينشره كإصدار ═════════════
+// يتطلب Script Property باسم GH_TOKEN: رمز GitHub (fine-grained) لمستودع BUILD_REPO بصلاحية Contents: Read & write
+function gh(path, method, body) {
+  var r = UrlFetchApp.fetch('https://api.github.com/repos/' + CFG.BUILD_REPO + path, {
+    method: method || 'get', contentType: 'application/json', payload: body ? JSON.stringify(body) : undefined, muteHttpExceptions: true,
+    headers: { Authorization: 'Bearer ' + prop('GH_TOKEN'), Accept: 'application/vnd.github+json' }
+  });
+  return { code: r.getResponseCode(), json: (function(){ try { return JSON.parse(r.getContentText() || 'null'); } catch (e) { return null; } })() };
+}
+function apkBuild(user, req) {
+  var id = String(req.id || '');
+  if (!/^[a-zA-Z0-9]{20}$/.test(id)) return { ok: false, error: { code: 'bad_request', message: 'طلب غير صالح' } };
+  if (!prop('GH_TOKEN')) return { ok: false, error: { code: 'off', message: 'البناء السحابي غير مفعّل بعد، حمّل المشروع وابنه من GitHub' } };
+  var d = fsDoc('apk/' + id); // مستند عام القراءة: نتأكد أن صاحبه هو الطالب
+  if (!d || fsVal(d.fields && d.fields.owner) !== user.uid) return { ok: false, error: { code: 'bad_request', message: 'لم نجد ملفات التطبيق، أعد المحاولة' } };
+  if (!hit('apk:' + user.uid + ':' + Utilities.formatDate(new Date(), 'UTC', 'yyyyMMdd'), CFG.APK_PER_DAY, 86400))
+    return { ok: false, error: { code: 'apk_day', message: 'وصلت حد البناء السحابي اليوم (' + CFG.APK_PER_DAY + ')، جرّب غداً' } };
+  var r = gh('/dispatches', 'post', { event_type: 'apk', client_payload: { id: id } });
+  if (r.code !== 204) { console.warn('dispatch', r.code, JSON.stringify(r.json)); return { ok: false, error: { code: 'server', message: 'تعذّر بدء البناء، حاول بعد قليل' } }; }
+  logRow(user, 'APK', id, 0, 0, 0);
+  return { ok: true };
+}
+function apkStatus(user, req) {
+  var id = String(req.id || '');
+  if (!/^[a-zA-Z0-9]{20}$/.test(id)) return { ok: false, error: { code: 'bad_request', message: 'طلب غير صالح' } };
+  var rel = gh('/releases/tags/apk-' + id);
+  if (rel.code === 200 && rel.json && rel.json.assets && rel.json.assets.length) return { ok: true, state: 'ready', url: rel.json.assets[0].browser_download_url };
+  var runs = gh('/actions/runs?event=repository_dispatch&per_page=30');
+  var run = ((runs.json && runs.json.workflow_runs) || []).filter(function(x){ return x.display_title === 'apk ' + id; })[0];
+  if (run && run.status === 'completed' && run.conclusion !== 'success') return { ok: true, state: 'failed' };
+  return { ok: true, state: run ? 'building' : 'queued' };
+}
 function hit(key, limit, ttl) {
   var c = CacheService.getScriptCache(), n = Number(c.get(key) || 0) + 1;
   c.put(key, String(n), ttl); return n <= limit;

@@ -715,6 +715,11 @@
       .opt-row { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
     }
 
+    .apk-st { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 10px; padding: 12px 14px; border-radius: 12px; background: var(--primary-soft); font-size: 13.5px; line-height: 1.7; }
+    .apk-st.ok { background: var(--accent-soft); } .apk-st.err { background: var(--error-soft, #FDECEC); color: var(--error, #C42D33); }
+    .apk-st small { flex-basis: 100%; color: var(--text2, inherit); }
+    .spin-s { width: 14px; height: 14px; border: 2px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin-s .8s linear infinite; display: inline-block; }
+    @keyframes spin-s { to { transform: rotate(360deg); } }
     .cmp { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 13px; margin-bottom: 12px; border: 1px solid var(--border); border-radius: 14px; overflow: hidden; }
     .cmp th, .cmp td { padding: 9px 10px; text-align: center; border-bottom: 1px solid var(--border); }
     .cmp tr:last-child td { border-bottom: 0; }
@@ -4503,13 +4508,15 @@ function stAndroid(){
       return app.ownApi ? '<div class="an-cloud"><span><b>خادم تطبيقك مربوط ✓</b><small>' + what + ' يعمل بمفتاحك من خادمك الخاص. <button class="link-btn" onclick="openOwnSrv()">تعديل</button></small></span></div>'
         : '<div class="an-cloud warn"><span><b>' + what + ' يحتاج خادم تطبيقك</b><small>اربطه في دقيقتين ليعمل في النسخة المنشورة بمفتاحك، وإلا ستظهر للمستخدم رسالة أن الميزة غير مفعّلة. <button class="link-btn" onclick="openOwnSrv()">ربط الآن</button></small></span></div>'; })() +
     '<div class="err-box" id="an-err"></div>' +
-    '<button class="btn btn-accent btn-lg" id="an-go" onclick="stAndroidZip()">'+ic('download')+'تحميل المشروع (zip)</button>' +
+    '<button class="btn btn-primary btn-lg" id="an-apk" onclick="stAndroidZip(true)">'+ic('phone')+'ابنِ APK وثبّته على جوالك</button>' +
+    '<div class="apk-st" id="apk-st" hidden></div>' +
+    '<button class="btn btn-ghost btn-lg" id="an-go" style="margin-top:8px" onclick="stAndroidZip()">'+ic('download')+'تحميل المشروع (zip) للبناء بنفسك</button>' +
     '<button class="btn btn-ghost" style="margin-top:8px" onclick="closeModal(\'android-modal\')">إغلاق</button>';
   var ib = drawIcon(app, 256); ib.className = 'an-cv'; document.getElementById('an-icon').appendChild(ib);
   var sb = drawSplash(app, 400); sb.className = 'an-cv'; document.getElementById('an-splash').appendChild(sb);
   openModal('android-modal');
 }
-function stAndroidZip(){
+function stAndroidZip(cloud){
   var app = stApp(); if (!app) return;
   var cfg = {
     appName: document.getElementById('an-name').value.trim() || app.name,
@@ -4555,6 +4562,7 @@ function stAndroidZip(){
                { path: 'assets/splash.png', data: img[3] }, { path: 'assets/splash-dark.png', data: img[4] });
     var blob = makeZip(files);
     window._lastZip = blob;
+    if (cloud) { btn.disabled = false; btn.innerHTML = ic('download') + 'تحميل المشروع (zip) للبناء بنفسك'; return cloudApk(app, blob, cfg); }
     saveFile(cfg.slug + '-android.zip', blob);
     app.chat.push({ role: 'ai', text: 'جهّزت مشروع أندرويد "' + cfg.slug + '-android.zip" (' + toAr(Math.round(blob.size/1024)) + ' ك.ب). الخطوات في ملف README: ارفعه لمستودع جديد على GitHub، وبعد ٥–١٠ دقائق تجد ملف APK في Releases.' });
     saveApps(); stChat();
@@ -5094,6 +5102,47 @@ function shareApp(){
     return navigator.clipboard.writeText(url).then(function(){ toast('نُسخ الرابط: ' + url, 'suc'); }, function(){ prompt('رابط تطبيقك', url); });
   }).catch(function(e){ console.warn('share', e); toast((e && e.message) || 'تعذّر إنشاء الرابط، حاول مرة أخرى', 'err'); })
     .then(function(){ if (btn) btn.disabled = false; });
+}
+// ════ APK سحابي: يُرفع المشروع لـ Firestore، والخادم يشغّل GitHub Actions، ونتابع حتى يجهز رابط التحميل ════
+function apkSt(html, cls){ var el = document.getElementById('apk-st'); if (!el) return; el.hidden = false; el.className = 'apk-st ' + (cls || ''); el.innerHTML = html; }
+function cloudApk(app, blob, cfg){
+  if (!proxyMode()) { toast('سجّل دخولك واتصل بالإنترنت للبناء السحابي', 'err'); return; }
+  var b = document.getElementById('an-apk'); if (b) b.disabled = true;
+  var id = ''; var c = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789'; for (var i = 0; i < 20; i++) id += c[Math.floor(Math.random() * c.length)];
+  var uid = FB.auth.currentUser.uid, f = FB.f;
+  apkSt('<span class="spin-s"></span>يرفع ملفات تطبيقك…');
+  return new Promise(function(res, rej){ var r = new FileReader(); r.onload = function(){ res(String(r.result).split(',')[1]); }; r.onerror = rej; r.readAsDataURL(blob); })
+  .then(function(b64){
+    var CH = 700000, n = Math.ceil(b64.length / CH);
+    if (n > 60) throw new Error('المشروع أكبر من حد البناء السحابي، حمّله وابنه من GitHub');
+    return f.setDoc(fdoc('apk', id), { owner: uid, parts: n, appId: cfg.appId, admob: cfg.admobAppId || '', createdAt: Date.now() }).then(function(){
+      var w = []; for (var i = 0; i < n; i++) w.push(f.setDoc(fdoc('apk', id, 'parts', String(i)), { d: b64.slice(i * CH, (i + 1) * CH) }));
+      return Promise.all(w);
+    });
+  })
+  .then(function(){ apkSt('<span class="spin-s"></span>يبدأ البناء…'); return proxyCall({ op: 'apkBuild', id: id }); })
+  .then(function(r){
+    if (!r || !r.ok) throw new Error((r && r.error && r.error.message) || 'تعذّر بدء البناء');
+    app.apkBuild = { id: id, at: Date.now() }; saveApps();
+    apkPoll(app, id, 0);
+  })
+  .catch(function(e){ apkSt(esc(e.message || 'تعذّر البناء'), 'err'); if (b) b.disabled = false; });
+}
+function apkPoll(app, id, n){
+  var mins = Math.max(1, 6 - Math.floor(n / 4));
+  apkSt('<span class="spin-s"></span>يبني تطبيقك في السحابة… ' + (n < 24 ? '(حوالي ' + toAr(mins) + ' دقائق)' : 'يأخذ وقتاً أطول من المعتاد'));
+  setTimeout(function(){
+    proxyCall({ op: 'apkStatus', id: id }).then(function(r){
+      var b = document.getElementById('an-apk');
+      if (r && r.state === 'ready') {
+        app.apkBuild = { id: id, url: r.url, at: Date.now() }; saveApps(); if (b) b.disabled = false;
+        apkSt(ic('check') + '<b>تطبيقك جاهز!</b> <a class="btn btn-accent btn-sm" href="' + esc(r.url) + '" target="_blank" rel="noopener">تحميل APK</a><small>افتح الملف على جوالك واسمح بالتثبيت من هذا المصدر.</small>', 'ok');
+        toast('تطبيقك جاهز للتثبيت', 'suc');
+      } else if (r && r.state === 'failed') { if (b) b.disabled = false; apkSt('تعذّر البناء هذه المرة. حمّل المشروع وابنه من GitHub، أو أعد المحاولة.', 'err'); }
+      else if (n > 60) { if (b) b.disabled = false; apkSt('البناء تأخر كثيراً. سنحفظ الطلب، افتح هذه النافذة لاحقاً.', 'err'); }
+      else apkPoll(app, id, n + 1);
+    }, function(){ apkPoll(app, id, n + 1); });
+  }, n ? 15000 : 30000);
 }
 function stApp(){ return findApp(ST.id); }
 

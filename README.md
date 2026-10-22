@@ -37,6 +37,19 @@ firebase deploy --only hosting,firestore:rules
 
 ---
 
+## ١-ب٠. البناء السحابي للـ APK (مرة واحدة)
+
+زر «ابنِ APK وثبّته على جوالك» يبني تطبيق المستخدم على GitHub Actions (`.github/workflows/cloud-apk.yml`) وينشره كإصدار في هذا المستودع العام.
+
+1. GitHub ← Settings ← Developer settings ← **Fine-grained token**: المستودع `skfk86/banee` فقط، صلاحية **Contents: Read and write**.
+2. Apps Script ← Project Settings ← Script Properties: أضف `GH_TOKEN` بقيمة الرمز، ثم انشر نسخة جديدة من الخادم.
+3. سير العمل يعمل من الفرع الافتراضي `main` فقط: ادمج التغييرات فيه.
+4. انشر القواعد الجديدة: `firebase deploy --only firestore:rules`.
+
+الحد الافتراضي ٣ بناءات لكل مستخدم يومياً (`APK_PER_DAY` في `server/Code.gs`).
+
+---
+
 ## ١-ب. خادم Gemini (مهم قبل البناء)
 
 بانِي لا تحتوي أي مفتاح. الذكاء الاصطناعي يمر عبر خادم مجاني على Google Apps Script يحمل مفتاحك ويحسب رصيد كل مستخدم.

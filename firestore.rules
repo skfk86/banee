@@ -110,6 +110,18 @@ service cloud.firestore {
       }
     }
 
+    // ملفات البناء السحابي (APK): معرّف عشوائي طويل، يقرؤها سير عمل GitHub، ويكتبها صاحبها فقط
+    match /apk/{id} {
+      allow read: if true;
+      allow create: if signedIn() && request.resource.data.owner == request.auth.uid && id.size() == 20;
+      allow update, delete: if signedIn() && resource.data.owner == request.auth.uid;
+      match /parts/{part} {
+        allow read: if true;
+        allow write: if signedIn() && get(/databases/$(database)/documents/apk/$(id)).data.owner == request.auth.uid
+          && (request.method == 'delete' || request.resource.data.d.size() <= 900000);
+      }
+    }
+
     // أي شيء آخر ممنوع
     match /{document=**} {
       allow read, write: if false;

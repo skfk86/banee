@@ -1,0 +1,118 @@
+name: APK سحابي
+
+# يُشغَّل من خادم بانِي (repository_dispatch) لكل طلب «ابنِ APK» من المستخدم.
+# الأمان: لا نشغّل أي سكربت من ملف المستخدم. نأخذ منه فقط www/index.html والصور، ومعرّف التطبيق واسمه بعد التحقق،
+# ونبني بـ package.json ثابت هنا. مهمة البناء بلا صلاحية كتابة؛ النشر في مهمة منفصلة لا ترى ملفات المستخدم إلا الـ APK.
+on:
+  repository_dispatch:
+    types: [apk]
+
+run-name: apk ${{ github.event.client_payload.id }}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: apk-${{ github.event.client_payload.id }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: جلب ملفات التطبيق
+        env:
+          ID: ${{ github.event.client_payload.id }}
+        run: |
+          echo "$ID" | grep -Eq '^[a-zA-Z0-9]{20}$' || { echo "bad id"; exit 1; }
+          mkdir -p in && cd in
+          BASE="https://firestore.googleapis.com/v1/projects/bani-b28a0/databases/(default)/documents/apk/$ID"
+          curl -sf "$BASE" -o meta.json
+          N=$(jq -r '.fields.parts.integerValue // "0"' meta.json)
+          [ "$N" -ge 1 ] && [ "$N" -le 60 ] || { echo "bad parts"; exit 1; }
+          : > b64
+          for i in $(seq 0 $((N-1))); do curl -sf "$BASE/parts/$i" | jq -jr '.fields.d.stringValue' >> b64; done
+          base64 -d b64 > app.zip
+          ls -la app.zip
+          AD=$(jq -r '.fields.admob.stringValue // ""' meta.json)
+          echo "$AD" | grep -Eq '^ca-app-pub-[0-9]+~[0-9]+$' || AD=ca-app-pub-3940256099942544~3347511713
+          echo "ADMOB=$AD" >> "$GITHUB_ENV"
+
+      - name: تجهيز المشروع (ملفات مسموحة فقط)
+        run: |
+          python3 -I - <<'PY'
+          import zipfile, json, re, os, shutil
+          z = zipfile.ZipFile('in/app.zip')
+          names = set(z.namelist())
+          def take(src, dst):
+              if src in names:
+                  os.makedirs(os.path.dirname(dst), exist_ok=True)
+                  with z.open(src) as r, open(dst, 'wb') as w: shutil.copyfileobj(r, w)
+                  return True
+              return False
+          os.makedirs('p', exist_ok=True)
+          assert take('www/index.html', 'p/www/index.html'), 'no index.html'
+          for f in ['icon-only.png', 'icon-foreground.png', 'icon-background.png', 'splash.png', 'splash-dark.png']:
+              take('assets/' + f, 'p/assets/' + f)
+          cap = json.loads(z.read('capacitor.config.json')) if 'capacitor.config.json' in names else {}
+          app_id = cap.get('appId', '')
+          if not re.fullmatch(r'[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)+', app_id) or len(app_id) > 100: app_id = 'app.banee.build'
+          name = str(cap.get('appName') or 'تطبيقي')[:40]
+          plugins = cap.get('plugins') if isinstance(cap.get('plugins'), dict) else {}
+          safe = {'appId': app_id, 'appName': name, 'webDir': 'www', 'server': {'androidScheme': 'https'},
+                  'plugins': {k: plugins[k] for k in ('SplashScreen', 'StatusBar') if isinstance(plugins.get(k), dict)}}
+          json.dump(safe, open('p/capacitor.config.json', 'w'), ensure_ascii=False)
+          bg = str((safe['plugins'].get('SplashScreen') or {}).get('backgroundColor') or '#FFFFFF')
+          if not re.fullmatch(r'#[0-9a-fA-F]{6}', bg): bg = '#FFFFFF'
+          open(os.environ['GITHUB_ENV'], 'a').write('BG=' + bg + '\n')
+          pkg = {'name': 'app', 'version': '1.0.0', 'private': True,
+                 'dependencies': {'@capacitor/android': '^7.0.0', '@capacitor/app': '^7.0.0', '@capacitor/core': '^7.0.0',
+                   '@capacitor/splash-screen': '^7.0.0', '@capacitor/status-bar': '^7.0.0', '@capacitor-community/admob': '^7.0.0',
+                   '@capacitor/share': '^7.0.0', '@capacitor/haptics': '^7.0.0', '@capacitor/local-notifications': '^7.0.0'},
+                 'devDependencies': {'@capacitor/cli': '^7.0.0', '@capacitor/assets': '^3.0.5'}}
+          json.dump(pkg, open('p/package.json', 'w'))
+          PY
+
+      - name: بناء APK
+        working-directory: p
+        run: |
+          npm install --no-audit --no-fund
+          npx cap add android
+          sed -i 's/compileSdkVersion = [0-9]*/compileSdkVersion = 36/; s/targetSdkVersion = [0-9]*/targetSdkVersion = 36/; s/minSdkVersion = [0-9]*/minSdkVersion = 24/' android/variables.gradle
+          echo "android.suppressUnsupportedCompileSdk=36" >> android/gradle.properties
+          sed -i "s|</application>|<meta-data android:name=\"com.google.android.gms.ads.APPLICATION_ID\" android:value=\"${ADMOB}\"/></application>|" android/app/src/main/AndroidManifest.xml
+          if [ -f assets/icon-only.png ]; then npx @capacitor/assets generate --android --iconBackgroundColor "$BG" --splashBackgroundColor "$BG" --splashBackgroundColorDark "$BG" || true; fi
+          npx cap sync android
+          cd android && chmod +x gradlew && ./gradlew assembleDebug --no-daemon
+          cp app/build/outputs/apk/debug/app-debug.apk "$GITHUB_WORKSPACE/app.apk"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: apk
+          path: app.apk
+          retention-days: 1
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: apk
+      - name: نشر الرابط
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ID: ${{ github.event.client_payload.id }}
+        run: |
+          echo "$ID" | grep -Eq '^[a-zA-Z0-9]{20}$' || exit 1
+          gh release create "apk-$ID" app.apk --repo "$GITHUB_REPOSITORY" --title "apk $ID" --notes "بناء سحابي من بانِي" --prerelease

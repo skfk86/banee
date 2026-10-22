@@ -1,0 +1,180 @@
+{
+  "status": "ready",
+  "error": "",
+  "name": "حراج المستعمل",
+  "steps": [
+    "done · هوية «سوق حيوي» · الخطة: ٦ شاشات · ٥ مجموعات · ١٢ عنصر محتوى",
+    "done · المحتوى: ١٢ عنصر مكتوب كاملاً",
+    "done · الهيكل جاهز: التنقّل، البيانات، الدخول، التصميم",
+    "done · ٦ شاشات مكتوبة",
+    "done · جُرّبت كل الشاشات وأُصلحت ٨، لا أخطاء · رحلات المستخدم: ٢ من ٢ تعمل كاملة · المراجعة: أُصلحت ١ من ١",
+    "done · جاهز للمعاينة والتحميل"
+  ],
+  "runtime": {
+    "home": [],
+    "listingDetails": [],
+    "addListing": [],
+    "myOffers": [],
+    "sellerDashboard": [],
+    "favoritesScreen": []
+  },
+  "flows": [
+    "تقديم ومتابعة عرض سعر (9 خطوات)",
+    "نشر سلعة وإدارة العروض (7 خطوات)"
+  ],
+  "flowSteps": [
+    {
+      "flow": "تقديم ومتابعة عرض سعر",
+      "steps": [
+        {
+          "role": "buyer"
+        },
+        {
+          "go": "/"
+        },
+        {
+          "click": "[data-act=open-listing][data-id=listings-1]"
+        },
+        {
+          "expect": "تفاصيل الإعلان"
+        },
+        {
+          "click": "[data-act=open-offer-modal]"
+        },
+        {
+          "fill": {
+            "#input-offer-price": "150000",
+            "#input-buyer-phone": "+249912345678",
+            "#input-offer-message": "جاهز للشراء فوراً والدفع كاش"
+          }
+        },
+        {
+          "click": "#btn-submit-offer"
+        },
+        {
+          "expectDb": {
+            "col": "offers",
+            "min": 1
+          }
+        },
+        {
+          "expect": "عروضي المرسلة"
+        }
+      ]
+    },
+    {
+      "flow": "نشر سلعة وإدارة العروض",
+      "steps": [
+        {
+          "role": "seller"
+        },
+        {
+          "go": "/add-listing"
+        },
+        {
+          "click": "[data-act=pick-photo]"
+        },
+        {
+          "fill": {
+            "#listingTitle": "شاشة سامسونج 55 بوصة سمارت",
+            "#listingCategory": "إلكترونيات وموبايلات",
+            "#listingPrice": "250000",
+            "#listingCondition": "شبه جديد",
+            "#listingCity": "بورتسودان",
+            "#listingDesc": "شاشة مستعملة بحالة ممتازة جداً مع الحامل والريموت الأصلي",
+            "#sellerName": "أحمد علي",
+            "#sellerPhone": "+249987654321"
+          }
+        },
+        {
+          "click": "[data-act=submit]"
+        },
+        {
+          "expectDb": {
+            "col": "listings",
+            "min": 1
+          }
+        },
+        {
+          "expect": "لوحة تحكم البائع"
+        }
+      ]
+    }
+  ],
+  "reviewIssues": {
+    "home": [],
+    "listingDetails": [],
+    "addListing": [
+      "مراجعة: في شاشة إضافة الإعلان، يتم حفظ حقل 'order' كنص أو Date.now() مباشرة بينما مخطط مجموعة 'listings' يحدد أن الحقل 'order' هو نوع 'number'. الإصلاح: ضمان تخزين Date.now() أو رقم صحيح صريح عبر Number(Date.now())."
+    ],
+    "myOffers": [],
+    "sellerDashboard": [],
+    "favoritesScreen": []
+  },
+  "spec": false,
+  "specFallback": [],
+  "flowErr": "",
+  "agent": {
+    "ran": false,
+    "fixed": 0,
+    "steps": 0,
+    "log": []
+  },
+  "fixErrors": [],
+  "review": {
+    "found": 1,
+    "fixed": 1
+  },
+  "screens": [
+    {
+      "id": "home",
+      "route": "/",
+      "roles": [
+        "buyer",
+        "seller"
+      ],
+      "bytes": 11414
+    },
+    {
+      "id": "listingDetails",
+      "route": "/listing/:id",
+      "roles": [
+        "buyer",
+        "seller"
+      ],
+      "bytes": 17456
+    },
+    {
+      "id": "addListing",
+      "route": "/add-listing",
+      "roles": [
+        "seller"
+      ],
+      "bytes": 10609
+    },
+    {
+      "id": "myOffers",
+      "route": "/my-offers",
+      "roles": [
+        "buyer"
+      ],
+      "bytes": 9796
+    },
+    {
+      "id": "sellerDashboard",
+      "route": "/seller-dashboard",
+      "roles": [
+        "seller"
+      ],
+      "bytes": 19155
+    },
+    {
+      "id": "favoritesScreen",
+      "route": "/favorites",
+      "roles": [
+        "buyer"
+      ],
+      "bytes": 6752
+    }
+  ]
+}

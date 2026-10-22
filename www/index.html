@@ -3232,6 +3232,10 @@ function runBuild(app, key){
 
 // شبكة أمان: إذا لم يحدد المخطِّط مجموعة لبيانات المستخدم، نضيف مجموعة عامة تتفق عليها كل الشاشات
 function ensureUserState(plan){
+  // المخطِّط يُرجع أحياناً shared أو flows كائناً بدل قائمة
+  if (plan.shared && !Array.isArray(plan.shared)) plan.shared = Object.keys(plan.shared).map(function(k){ var v = plan.shared[k]; return v && typeof v === 'object' ? Object.assign({ key: k }, v) : { key: k, shape: String(v) }; });
+  if (plan.shared) plan.shared = plan.shared.filter(function(x){ return x && x.key; });
+  if (plan.flows && !Array.isArray(plan.flows)) plan.flows = Object.keys(plan.flows).map(function(k){ var v = plan.flows[k]; return Array.isArray(v) ? { name: k, steps: v } : Object.assign({ name: k }, v); });
   plan.collections = plan.collections || [];
   if ((plan.roles || []).length > 1 && !plan.collections.some(function(c){ return c && c.name === 'members'; }))
     plan.collections.push({ name: 'members', fields: { userId: 'string', name: 'string', email: 'string', role: 'string — id الدور', status: 'string — ok | pending', requestedAt: 'number' } });

@@ -1,0 +1,42 @@
+fail work/low-poly-tank-assets-0/x_low_poly_tanks/low poly tanks/tank battle bg.3ds
+AttributeError: Calling operator "bpy.ops.import_scene.max3ds" error, could not be found
+
+Error: script failed, file: 'tools/qadat/convert.py', exiting.
+
+Blender quit
+fail work/simple-helicopter/x_Helicopter/Helicopter.fbx
+
+Error: script failed, file: 'tools/qadat/convert.py', exiting.
+Error: ASCII FBX files are not supported 'work/simple-helicopter/x_Helicopter/Helicopter.fbx'
+
+Blender quit
+fail work/hesco-box/x_hesco/hesco_stones.FBX
+
+Error: script failed, file: 'tools/qadat/convert.py', exiting.
+Error: Version 6100 unsupported, must be 7100 or later
+
+Blender quit
+fail work/hesco-box/x_hesco/hesco_scraps.FBX
+
+Error: script failed, file: 'tools/qadat/convert.py', exiting.
+Error: Version 6100 unsupported, must be 7100 or later
+
+Blender quit
+fail work/hesco-box/x_hesco/hesco_sand.FBX
+
+Error: script failed, file: 'tools/qadat/convert.py', exiting.
+Error: Version 6100 unsupported, must be 7100 or later
+
+Blender quit
+fail work/hesco-box/x_hesco/hesco_empty.FBX
+
+Error: script failed, file: 'tools/qadat/convert.py', exiting.
+Error: Version 6100 unsupported, must be 7100 or later
+
+Blender quit
+fail work/hesco-box/x_hesco/hesco_custom.FBX
+
+Error: script failed, file: 'tools/qadat/convert.py', exiting.
+Error: Version 6100 unsupported, must be 7100 or later
+
+Blender quit

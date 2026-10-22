@@ -27,3 +27,32 @@ recon-tank | CC-BY 4.0,CC0, | MNDV.ecb
 uaz-truck | CC-BY 4.0, | brylie
 turret-gun | CC-BY 3.0, | mcco0055
 containers-pack | CC0, | loafbrr_1
+rts-modern-vehicles-tank-truck-harvester | CC-BY 3.0, | Lamoot
+heavy-tankextra-low-poly-rts | CC0, | 32kda
+low-poly-tank-assets | CC0, | pixelmannen
+low-poly-tank-assets-0 | CC0, | danitorres567
+missile-launcher-tank | CC0, | mutantleg
+low-poly-modern-soldier-rigged | CC0, | 
+low-poly-soldier-with-weapons | CC0, | Casti_131
+rigged-lowpoly-ww2-soldier | CC0, | nisu
+attack-chopper | CC-BY 4.0, | Geibu3D
+simple-helicopter | CC0, | whitaker
+f-15 | OGA-BY 3.0, | MNDV.ecb
+mig | CC0, | Sketlux
+military-base-3d-model | CC0, | the_jay
+lightapc | CC-BY-SA 3.0,GPL 2.0, | MikeeUSA
+free-low-poly-vehicles-pack | CC0, | rgsdev
+abrams-tank | CC0, | Sketlux
+american-tank | CC-BY-SA 3.0,GPL 2.0,GPL 3.0, | Saypen
+lowpoly-soviet-jeep | CC0, | artie31
+hesco-box | CC0, | Yughues
+simple-tank-trap | CC0, | JamesWhite
+harvester-truck-in-cc-tiberian-sun-style | CC0, | 32kda
+futuristic-artillery-turret | CC0, | DREAM_SEARCH_REPEAT
+old-canon | CC0, | tbbk
+cannons-tank-pack | CC0, | mess110
+t-12-soviet-light-tank-lowpoly | CC0, | artie31
+recon-tank | CC-BY 4.0,CC0, | MNDV.ecb
+uaz-truck | CC-BY 4.0, | brylie
+turret-gun | CC-BY 3.0, | mcco0055
+containers-pack | CC0, | loafbrr_1

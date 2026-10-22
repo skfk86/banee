@@ -1,47 +1,56 @@
-name: Qadat assets discovery
+name: Qadat assets fetch
 on:
   push:
-    paths: [".github/workflows/qadat-assets.yml"]
+    paths: [".github/workflows/qadat-assets.yml", "tools/qadat/**"]
 permissions:
   contents: write
 jobs:
-  discover:
+  fetch:
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
-      - name: Discover
+      - name: Blender
         run: |
-          d=qadat-alnil/assets_src; mkdir -p $d
-          k=$d/kenney_lists.txt; : > $k
+          sudo apt-get update -qq && sudo apt-get install -y -qq blender p7zip-full >/dev/null
+          blender --version | head -1
+      - name: Kenney listing (full names)
+        run: |
+          d=qadat-alnil/assets_src; k=$d/kenney_glb.txt; : > $k
           for u in \
-            https://kenney.nl/media/pages/assets/impact-sounds/87b4ddecda-1677589768/kenney_impact-sounds.zip \
-            https://kenney.nl/media/pages/assets/sci-fi-sounds/6b296f9ecf-1677589334/kenney_sci-fi-sounds.zip \
-            https://kenney.nl/media/pages/assets/interface-sounds/fa43c1dd4d-1677589452/kenney_interface-sounds.zip \
             https://kenney.nl/media/pages/assets/car-kit/1a312ec241-1775131960/kenney_car-kit.zip \
             https://kenney.nl/media/pages/assets/tower-defense-kit/a402493eaa-1726471567/kenney_tower-defense-kit.zip \
             https://kenney.nl/media/pages/assets/city-kit-industrial/0ec35b139d-1788171848/kenney_city-kit-industrial_2.0.zip \
             https://kenney.nl/media/pages/assets/factory-kit/edaac9d4f6-1777639602/kenney_factory-kit_3.0.zip \
             https://kenney.nl/media/pages/assets/survival-kit/4065a8185b-1712149243/kenney_survival-kit.zip \
-            https://kenney.nl/media/pages/assets/nature-kit/37ac38a37b-1677698939/kenney_nature-kit.zip \
-            https://kenney.nl/media/pages/assets/blaster-kit/261d80a716-1753959510/kenney_blaster-kit_2.1.zip; do
+            https://kenney.nl/media/pages/assets/nature-kit/37ac38a37b-1677698939/kenney_nature-kit.zip; do
             curl -sL -o z.zip "$u"; echo "### $u" >> $k
-            unzip -l z.zip | awk '{print $4}' | grep -iE '\.(glb|ogg|wav|png)$' | grep -viE 'preview|sample|/fbx/|/obj/' | grep -iE 'glb|ogg|wav' | head -400 >> $k
+            zipinfo -1 z.zip | grep -iE '\.glb$' >> $k
           done
-          o=$d/oga_pages.txt; : > $o
-          for p in military-jeep military-van soviet-military-off-road-vehicle modern-tank modern-tank-pack-1 tank tank-0 tank-1 tank-3 green-tank 3d-desert military-base-pack \
-                   9-explosion-sounds big-explosion bomb-explosion explosion-somewhere-far rumbleexplosion muffled-distant-explosion gunshots gunshots-0 gunshot-sounds light-machine-gun shots \
-                   arabesque shalibah curse-of-the-djinn mirage nomads something-arabic snake-charmer battle-march-epic-orchestral-music-loop desert-calmness-and-fighting-orchestral-141 military-march military-soundtrack orchestral-battle-music fantasy-music-the-eternal-sands shifting-sands-of-ma-kali; do
+      - name: OGA models
+        run: |
+          d=qadat-alnil/assets_src/models; mkdir -p $d
+          for p in rts-modern-vehicles-tank-truck-harvester heavy-tankextra-low-poly-rts low-poly-tank-assets low-poly-tank-assets-0 missile-launcher-tank low-poly-modern-soldier-rigged low-poly-soldier-with-weapons rigged-lowpoly-ww2-soldier attack-chopper simple-helicopter f-15 mig military-base-3d-model lightapc free-low-poly-vehicles-pack abrams-tank american-tank lowpoly-soviet-jeep hesco-box simple-tank-trap harvester-truck-in-cc-tiberian-sun-style futuristic-artillery-turret old-canon cannons-tank-pack t-12-soviet-light-tank-lowpoly recon-tank uaz-truck turret-gun containers-pack; do
             html=$(curl -sL https://opengameart.org/content/$p)
-            lic=$(echo "$html" | grep -oE 'licenses/[a-z0-9-]+/[0-9.]*|publicdomain/zero[^"]*|CC0|CC-BY [0-9.]+|CC-BY-SA [0-9.]+|GPL [0-9.]+|OGA-BY [0-9.]+' | sort -u | tr '\n' ' ')
-            echo "### $p | $lic" >> $o
-            echo "$html" | grep -oE 'https://opengameart.org/sites/default/files/[^"]+' | grep -viE '\.(png|jpg|jpeg|gif)$' | sort -u >> $o
+            lic=$(echo "$html" | grep -oE "license-name'>[^<]+" | sed "s/.*>//" | sort -u | tr '\n' ',')
+            auth=$(echo "$html" | grep -oE 'Author:.{0,400}' | grep -oE 'href="/users/[^"]+">[^<]+' | head -1 | sed 's/.*>//')
+            echo "$p | $lic | $auth" >> $d/_pages.txt
+            mkdir -p work/$p; cd work/$p
+            for f in $(echo "$html" | grep -oE 'https://opengameart.org/sites/default/files/[^"'"'"' ]+\.(zip|7z|rar|blend|fbx|obj|dae|glb|gltf|3ds)' | sort -u | head -6); do
+              curl -sL -O "$f"
+            done
+            for z in *.zip *.7z *.rar; do [ -f "$z" ] && 7z x -y -o"x_${z%.*}" "$z" >/dev/null; done
+            cd ../..
+            n=0
+            find work/$p -type f \( -iname '*.blend' -o -iname '*.fbx' -o -iname '*.obj' -o -iname '*.dae' -o -iname '*.glb' -o -iname '*.gltf' -o -iname '*.3ds' \) | head -12 | while read -r m; do
+              n=$((n+1)); b=$(basename "$m"); b=${b%.*}; b=$(echo "$b" | tr -c 'A-Za-z0-9_-' '_')
+              mkdir -p $d/$p
+              timeout 240 blender -b -P tools/qadat/convert.py -- "$m" "$d/$p/$b.glb" "$d/$p/$b.png" >/dev/null 2>&1 || echo "fail $m" >> $d/_fail.txt
+            done
           done
-          s=$d/oga_3d.txt; : > $s
-          for q in tank military soldier helicopter jet artillery truck howitzer bunker barracks; do
-            echo "== $q" >> $s
-            curl -sL "https://opengameart.org/art-search-advanced?keys=$q&field_art_type_tid%5B%5D=10&field_art_license_tid%5B%5D=4&items_per_page=48" | grep -oE 'href="/content/[^"]+"' | sort -u | grep -v faq >> $s
-          done
+          du -sh $d; ls -R $d | head -200
       - name: Commit
         run: |
           git config user.name "github-actions"; git config user.email "actions@github.com"
-          git add qadat-alnil/assets_src && git commit -m "asset discovery 2" && git push
+          find qadat-alnil/assets_src/models -name '*.glb' -size +8M -delete
+          git add qadat-alnil/assets_src && git commit -m "asset fetch: models + previews" && git pull --rebase -q && git push

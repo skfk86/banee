@@ -1,0 +1,141 @@
+{
+  "status": "ready",
+  "error": "",
+  "name": "بيتي",
+  "steps": [
+    "done · هوية «بيتك الذكي» · الخطة: ٥ شاشات · ٥ مجموعات · ٥ عنصر محتوى",
+    "done · المحتوى: ٥ عنصر مكتوب كاملاً",
+    "done · الهيكل جاهز: التنقّل، البيانات، الدخول، التصميم",
+    "done · ٥ شاشات مكتوبة",
+    "done · جُرّبت كل الشاشات وأُصلحت ٢، لا أخطاء · رحلات المستخدم: ١ من ١ تعمل كاملة · المراجعة: أُصلحت ١ من ١ · المراجعة الشاملة: لا مشاكل",
+    "done · جاهز للمعاينة والتحميل"
+  ],
+  "runtime": {
+    "home": [],
+    "newOrder": [],
+    "myOrders": [],
+    "providerDashboard": [],
+    "orderDetail": []
+  },
+  "flows": [
+    "طلب خدمة (10 خطوات)"
+  ],
+  "flowSteps": [
+    {
+      "flow": "طلب خدمة",
+      "steps": [
+        {
+          "role": "customer"
+        },
+        {
+          "go": "/"
+        },
+        {
+          "click": "[data-act=select-category][data-name=تنظيف المنازل]"
+        },
+        {
+          "fill": {
+            "#cat-select": "تنظيف المنازل"
+          }
+        },
+        {
+          "fill": {
+            "[name=description]": "حاجة إلى تنظيف شامل للمنزل"
+          }
+        },
+        {
+          "fill": {
+            "[name=date]": "2023-12-01T10:00"
+          }
+        },
+        {
+          "click": "text:إرسال الطلب الآن"
+        },
+        {
+          "expectDb": {
+            "col": "orders",
+            "min": 1
+          }
+        },
+        {
+          "go": "/orders"
+        },
+        {
+          "click": "[data-act=open-order]"
+        }
+      ]
+    }
+  ],
+  "reviewIssues": {
+    "home": [],
+    "newOrder": [],
+    "myOrders": [
+      "مراجعة: في شاشة طلباتي (myOrders)، يتم جلب البيانات باستخدام Data.orders.visible() ثم فلترتها يدوياً بـ o.userId === Auth.user.uid بينما المخطط يدعم فلترة الطلبات، والأفضل استخدام Data.orders.list({ where: ['userId', '==', Auth.user.uid] }) لتجنب جلب بيانات غير مخصصة للمستخدم."
+    ],
+    "providerDashboard": [],
+    "orderDetail": []
+  },
+  "spec": false,
+  "specFallback": [],
+  "flowErr": "رد غير صالح: {\"tests\":[{\"flow\":\"طلب خدمة\",\"steps\":[{\"role\":\"customer\"},{\"go\":\"/\"},{\"click\":\"[data-act=select-category][data-name=تنظي",
+  "agent": {
+    "ran": false,
+    "fixed": 0,
+    "steps": 0,
+    "log": []
+  },
+  "fixErrors": [],
+  "review": {
+    "found": 1,
+    "fixed": 1
+  },
+  "screens": [
+    {
+      "id": "home",
+      "route": "/",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 5103
+    },
+    {
+      "id": "newOrder",
+      "route": "/new-order",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 6225
+    },
+    {
+      "id": "myOrders",
+      "route": "/orders",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 4402
+    },
+    {
+      "id": "providerDashboard",
+      "route": "/dashboard",
+      "roles": [
+        "provider"
+      ],
+      "bytes": 11540
+    },
+    {
+      "id": "orderDetail",
+      "route": "/order/:id",
+      "roles": [
+        "customer",
+        "provider"
+      ],
+      "bytes": 14408
+    }
+  ],
+  "design": {
+    "model": "gemini-2.5-flash",
+    "score": null,
+    "min": null,
+    "screens": {}
+  }
+}

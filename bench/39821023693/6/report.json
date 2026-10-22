@@ -1,0 +1,151 @@
+{
+  "status": "ready",
+  "error": "",
+  "name": "مذاق فاخر",
+  "steps": [
+    "done · هوية «مائدة فاخرة» · الخطة: ٥ شاشات · ٥ مجموعات · ٢٦ عنصر محتوى",
+    "done · المحتوى: ٢٦ عنصر مكتوب كاملاً",
+    "done · الهيكل جاهز: التنقّل، البيانات، الدخول، التصميم",
+    "done · ٥ شاشات مكتوبة",
+    "done · جُرّبت كل الشاشات وأُصلحت ٢، لا أخطاء · رحلات المستخدم: ١ من ١ تعمل كاملة · المراجعة الشاملة: لا مشاكل",
+    "done · جاهز للمعاينة والتحميل"
+  ],
+  "runtime": {
+    "home": [],
+    "book": [],
+    "myBookings": [],
+    "hostDashboard": [],
+    "kitchenDashboard": []
+  },
+  "flows": [
+    "حجز وطلب مسبق (13 خطوات)"
+  ],
+  "flowSteps": [
+    {
+      "flow": "حجز وطلب مسبق",
+      "steps": [
+        {
+          "role": "customer"
+        },
+        {
+          "go": "/"
+        },
+        {
+          "click": "[data-act=add-to-cart][data-id=menu-1]"
+        },
+        {
+          "click": "[data-act=view-cart]"
+        },
+        {
+          "go": "/book"
+        },
+        {
+          "fill": {
+            "#date": "2023-12-31"
+          }
+        },
+        {
+          "fill": {
+            "#time": "20:00"
+          }
+        },
+        {
+          "fill": {
+            "#guests": "2"
+          }
+        },
+        {
+          "fill": {
+            "#occasion": "عشاء عمل"
+          }
+        },
+        {
+          "fill": {
+            "#phone": "0512345678"
+          }
+        },
+        {
+          "click": "text:تأكيد الحجز"
+        },
+        {
+          "expectDb": {
+            "col": "bookings",
+            "min": 1
+          }
+        },
+        {
+          "expect": "حجوزاتي والطلبات المسبقة"
+        }
+      ]
+    }
+  ],
+  "reviewIssues": {
+    "home": [],
+    "book": [],
+    "myBookings": [],
+    "hostDashboard": [],
+    "kitchenDashboard": []
+  },
+  "spec": false,
+  "specFallback": [],
+  "flowErr": "",
+  "agent": {
+    "ran": false,
+    "fixed": 0,
+    "steps": 0,
+    "log": []
+  },
+  "fixErrors": [],
+  "review": {
+    "found": 0,
+    "fixed": 0
+  },
+  "screens": [
+    {
+      "id": "home",
+      "route": "/",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 11169
+    },
+    {
+      "id": "book",
+      "route": "/book",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 3332
+    },
+    {
+      "id": "myBookings",
+      "route": "/my-bookings",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 5244
+    },
+    {
+      "id": "hostDashboard",
+      "route": "/host",
+      "roles": [
+        "host"
+      ],
+      "bytes": 6724
+    },
+    {
+      "id": "kitchenDashboard",
+      "route": "/kitchen",
+      "roles": [
+        "kitchen"
+      ],
+      "bytes": 6989
+    }
+  ],
+  "design": {
+    "model": "gemini-2.5-flash",
+    "score": null,
+    "min": null,
+    "screens": {}
+  }
+}

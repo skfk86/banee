@@ -2764,6 +2764,9 @@ function checkScreen(js, s, plan){
   while ((sm = sre.exec(js))) {
     var arg = sm[1].trim(), keyTxt = arg, vm2 = /^[A-Za-z_$][\w$]*$/.test(arg) && js.match(new RegExp('(?:const|let|var)\\s+' + arg + '\\s*=\\s*([^;\\n]+)'));
     if (vm2) keyTxt = vm2[1];
+    // مفاتيح عرّفها المخطط في shared (سلة، حجز قيد الإنشاء) مسموحة: هي حالة مؤقتة بين الشاشات بالتصميم
+    var sharedKeys = (plan.shared || []).map(function(x){ return x && x.key; }).filter(Boolean);
+    if (sharedKeys.some(function(k){ return new RegExp('^[\'"`]' + k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '[\'"`]$').test(keyTxt.trim()); })) continue;
     if (/progress|complet|done|fav|history|record|score|result|cart|booking|achiev|stat|log|workout|lesson|order|tracker|streak/i.test(keyTxt) && !/setting|theme|lang|pref|config|sound|onboard|seen|filter|sort|tab/i.test(keyTxt)) {
       errs.push('لا تحفظ بيانات المستخدم في Store (' + keyTxt.replace(/\s+/g, ' ').slice(0, 40) + '): الشاشات الأخرى لن تراها. احفظها في مجموعة DB من الخطة بحقل userId، واقرأها بـ DB.list(col, {where:[\'userId\',\'==\',Auth.user.uid]})'); break;
     }

@@ -1,0 +1,222 @@
+{
+  "status": "ready",
+  "error": "",
+  "name": "سنابل العطاء",
+  "steps": [
+    "done · هوية «أيادي الخير» · الخطة: ٦ شاشات · ٥ مجموعات · ٦ عنصر محتوى",
+    "done · المحتوى: ٦ عنصر مكتوب كاملاً",
+    "done · الهيكل جاهز: التنقّل، البيانات، الدخول، التصميم",
+    "done · ٦ شاشات مكتوبة",
+    "done · جُرّبت كل الشاشات، لا أخطاء · رحلات المستخدم: ٣ من ٣ تعمل كاملة · المراجعة الشاملة: لا مشاكل",
+    "done · جاهز للمعاينة والتحميل"
+  ],
+  "runtime": {
+    "home": [],
+    "campaign": [],
+    "gifts": [],
+    "tasks": [],
+    "myTasks": [],
+    "manage": []
+  },
+  "flows": [
+    "التبرع لحملة (8 خطوات)",
+    "التطوع في مهمة (8 خطوات)",
+    "نشر حملة ومهمة (12 خطوات)"
+  ],
+  "flowSteps": [
+    {
+      "flow": "التبرع لحملة",
+      "steps": [
+        {
+          "role": "donor"
+        },
+        {
+          "go": "/"
+        },
+        {
+          "click": "[data-act=open][data-id=campaigns-1]"
+        },
+        {
+          "click": "[data-act=amt][data-id=25000]"
+        },
+        {
+          "fill": {
+            "#note": "صدقة جارية"
+          }
+        },
+        {
+          "click": "[data-act=donate]"
+        },
+        {
+          "expectDb": {
+            "col": "donations",
+            "min": 1
+          }
+        },
+        {
+          "expect": "سلة رمضان للأسر المتعففة"
+        }
+      ]
+    },
+    {
+      "flow": "التطوع في مهمة",
+      "steps": [
+        {
+          "role": "volunteer"
+        },
+        {
+          "go": "/tasks"
+        },
+        {
+          "click": "[data-act=join][data-id=tasks-1]"
+        },
+        {
+          "expectDb": {
+            "col": "signups",
+            "min": 1
+          }
+        },
+        {
+          "expect": "منضم"
+        },
+        {
+          "go": "/my-tasks"
+        },
+        {
+          "click": "[data-act=done]"
+        },
+        {
+          "expect": "١ مهمة منجزة"
+        }
+      ]
+    },
+    {
+      "flow": "نشر حملة ومهمة",
+      "steps": [
+        {
+          "role": "manager"
+        },
+        {
+          "go": "/manage"
+        },
+        {
+          "click": "[data-act=tab][data-id=camp]"
+        },
+        {
+          "fill": {
+            "#cTitle": "كسوة الشتاء",
+            "#cGoal": "2000000",
+            "#cDesc": "بطانيات وملابس شتوية للأسر النازحة"
+          }
+        },
+        {
+          "click": "[data-act=add-campaign]"
+        },
+        {
+          "expectDb": {
+            "col": "campaigns",
+            "min": 4
+          }
+        },
+        {
+          "click": "[data-act=tab][data-id=task]"
+        },
+        {
+          "fill": {
+            "#tTitle": "فرز الملابس",
+            "#tDate": "2026-11-10",
+            "#tSlots": "8",
+            "#tLocation": "مقر الجمعية"
+          }
+        },
+        {
+          "click": "[data-act=add-task]"
+        },
+        {
+          "expectDb": {
+            "col": "tasks",
+            "min": 4
+          }
+        },
+        {
+          "click": "[data-act=confirm]"
+        },
+        {
+          "expect": "تبرعات مؤكدة"
+        }
+      ]
+    }
+  ],
+  "reviewIssues": {
+    "home": [],
+    "campaign": [],
+    "gifts": [],
+    "tasks": [],
+    "myTasks": [],
+    "manage": []
+  },
+  "spec": false,
+  "specFallback": [],
+  "flowErr": "",
+  "agent": {
+    "ran": false,
+    "fixed": 0,
+    "steps": 0,
+    "log": []
+  },
+  "fixErrors": [],
+  "review": {
+    "found": 0,
+    "fixed": 0
+  },
+  "screens": [
+    {
+      "id": "home",
+      "route": "/",
+      "roles": [
+        "donor"
+      ],
+      "bytes": 1640
+    },
+    {
+      "id": "campaign",
+      "route": "/campaign/:id",
+      "roles": [
+        "donor"
+      ],
+      "bytes": 3047
+    },
+    {
+      "id": "gifts",
+      "route": "/gifts",
+      "roles": [
+        "donor"
+      ],
+      "bytes": 1512
+    },
+    {
+      "id": "tasks",
+      "route": "/tasks",
+      "roles": [
+        "volunteer"
+      ],
+      "bytes": 2930
+    },
+    {
+      "id": "myTasks",
+      "route": "/my-tasks",
+      "roles": [
+        "volunteer"
+      ],
+      "bytes": 2452
+    },
+    {
+      "id": "manage",
+      "route": "/manage",
+      "roles": [
+        "manager"
+      ],
+      "bytes": 5230
+    }
+  ]
+}

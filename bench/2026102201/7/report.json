@@ -1,0 +1,167 @@
+{
+  "status": "ready",
+  "error": "",
+  "name": "مطعم الطيب",
+  "steps": [
+    "done · هوية «نار وطيب» · الخطة: ٤ شاشات · ٣ مجموعات · ٨ عنصر محتوى",
+    "done · المحتوى: ٨ عنصر مكتوب كاملاً",
+    "done · الهيكل جاهز: التنقّل، البيانات، الدخول، التصميم",
+    "done · ٤ شاشات مكتوبة",
+    "done · جُرّبت كل الشاشات، لا أخطاء · رحلات المستخدم: ٣ من ٣ تعمل كاملة · المراجعة الشاملة: لا مشاكل",
+    "done · جاهز للمعاينة والتحميل"
+  ],
+  "runtime": {
+    "home": [],
+    "cart": [],
+    "orders": [],
+    "kitchen": []
+  },
+  "flows": [
+    "طلب من المنيو (10 خطوات)",
+    "تحضير الطلب (9 خطوات)",
+    "متابعة الطلب (3 خطوات)"
+  ],
+  "flowSteps": [
+    {
+      "flow": "طلب من المنيو",
+      "steps": [
+        {
+          "role": "customer"
+        },
+        {
+          "go": "/"
+        },
+        {
+          "click": "[data-act=add][data-id=menu-1]"
+        },
+        {
+          "click": "[data-act=add][data-id=menu-7]"
+        },
+        {
+          "click": "[data-act=cart]"
+        },
+        {
+          "click": "[data-act=mode][data-id=delivery]"
+        },
+        {
+          "fill": {
+            "#phone": "0912345678",
+            "#address": "الخرطوم، المنشية، شارع ٦١"
+          }
+        },
+        {
+          "click": "[data-act=place]"
+        },
+        {
+          "expectDb": {
+            "col": "orders",
+            "min": 1
+          }
+        },
+        {
+          "expect": "شية لحم ضأن"
+        }
+      ]
+    },
+    {
+      "flow": "تحضير الطلب",
+      "steps": [
+        {
+          "role": "kitchen"
+        },
+        {
+          "go": "/kitchen"
+        },
+        {
+          "click": "[data-act=next]"
+        },
+        {
+          "click": "[data-act=tab][data-id=prep]"
+        },
+        {
+          "click": "[data-act=next]"
+        },
+        {
+          "click": "[data-act=tab][data-id=ready]"
+        },
+        {
+          "click": "[data-act=next]"
+        },
+        {
+          "click": "[data-act=next]"
+        },
+        {
+          "expect": "لا طلبات هنا"
+        }
+      ]
+    },
+    {
+      "flow": "متابعة الطلب",
+      "steps": [
+        {
+          "role": "customer"
+        },
+        {
+          "go": "/orders"
+        },
+        {
+          "expect": "تم التسليم"
+        }
+      ]
+    }
+  ],
+  "reviewIssues": {
+    "home": [],
+    "cart": [],
+    "orders": [],
+    "kitchen": []
+  },
+  "spec": false,
+  "specFallback": [],
+  "flowErr": "",
+  "agent": {
+    "ran": false,
+    "fixed": 0,
+    "steps": 0,
+    "log": []
+  },
+  "fixErrors": [],
+  "review": {
+    "found": 0,
+    "fixed": 0
+  },
+  "screens": [
+    {
+      "id": "home",
+      "route": "/",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 3027
+    },
+    {
+      "id": "cart",
+      "route": "/cart",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 4513
+    },
+    {
+      "id": "orders",
+      "route": "/orders",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 2563
+    },
+    {
+      "id": "kitchen",
+      "route": "/kitchen",
+      "roles": [
+        "kitchen"
+      ],
+      "bytes": 3561
+    }
+  ]
+}

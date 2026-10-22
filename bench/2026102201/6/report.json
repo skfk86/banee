@@ -1,0 +1,164 @@
+{
+  "status": "ready",
+  "error": "",
+  "name": "مكتبتي",
+  "steps": [
+    "done · هوية «رفوف هادئة» · الخطة: ٤ شاشات · ٣ مجموعات · ٦ عنصر محتوى",
+    "done · المحتوى: ٦ عنصر مكتوب كاملاً",
+    "done · الهيكل جاهز: التنقّل، البيانات، الدخول، التصميم",
+    "done · ٤ شاشات مكتوبة",
+    "done · جُرّبت كل الشاشات، لا أخطاء · رحلات المستخدم: ٣ من ٣ تعمل كاملة · المراجعة الشاملة: لا مشاكل",
+    "done · جاهز للمعاينة والتحميل"
+  ],
+  "runtime": {
+    "home": [],
+    "book": [],
+    "loans": [],
+    "desk": []
+  },
+  "flows": [
+    "طلب استعارة (6 خطوات)",
+    "الموافقة على الاستعارة (8 خطوات)",
+    "تسجيل الإرجاع (8 خطوات)"
+  ],
+  "flowSteps": [
+    {
+      "flow": "طلب استعارة",
+      "steps": [
+        {
+          "role": "reader"
+        },
+        {
+          "go": "/"
+        },
+        {
+          "click": "[data-act=open][data-id=books-1]"
+        },
+        {
+          "click": "[data-act=borrow]"
+        },
+        {
+          "expectDb": {
+            "col": "loans",
+            "min": 1
+          }
+        },
+        {
+          "expect": "موسم الهجرة إلى الشمال"
+        }
+      ]
+    },
+    {
+      "flow": "الموافقة على الاستعارة",
+      "steps": [
+        {
+          "role": "librarian"
+        },
+        {
+          "go": "/desk"
+        },
+        {
+          "click": "[data-act=approve]"
+        },
+        {
+          "click": "[data-act=tab][data-id=out]"
+        },
+        {
+          "expect": "موسم الهجرة إلى الشمال"
+        },
+        {
+          "role": "reader"
+        },
+        {
+          "go": "/loans"
+        },
+        {
+          "expect": "الإرجاع"
+        }
+      ]
+    },
+    {
+      "flow": "تسجيل الإرجاع",
+      "steps": [
+        {
+          "role": "librarian"
+        },
+        {
+          "go": "/desk"
+        },
+        {
+          "click": "[data-act=tab][data-id=out]"
+        },
+        {
+          "click": "[data-act=return]"
+        },
+        {
+          "expect": "لا استعارات جارية"
+        },
+        {
+          "role": "reader"
+        },
+        {
+          "go": "/"
+        },
+        {
+          "expect": "متاح ٣"
+        }
+      ]
+    }
+  ],
+  "reviewIssues": {
+    "home": [],
+    "book": [],
+    "loans": [],
+    "desk": []
+  },
+  "spec": false,
+  "specFallback": [],
+  "flowErr": "",
+  "agent": {
+    "ran": false,
+    "fixed": 0,
+    "steps": 0,
+    "log": []
+  },
+  "fixErrors": [],
+  "review": {
+    "found": 0,
+    "fixed": 0
+  },
+  "screens": [
+    {
+      "id": "home",
+      "route": "/",
+      "roles": [
+        "reader"
+      ],
+      "bytes": 2334
+    },
+    {
+      "id": "book",
+      "route": "/book/:id",
+      "roles": [
+        "reader"
+      ],
+      "bytes": 2512
+    },
+    {
+      "id": "loans",
+      "route": "/loans",
+      "roles": [
+        "reader"
+      ],
+      "bytes": 2337
+    },
+    {
+      "id": "desk",
+      "route": "/desk",
+      "roles": [
+        "librarian"
+      ],
+      "bytes": 3829
+    }
+  ]
+}

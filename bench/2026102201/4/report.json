@@ -1,0 +1,194 @@
+{
+  "status": "ready",
+  "error": "",
+  "name": "نادي الأبطال",
+  "steps": [
+    "done · هوية «طاقة الأبطال» · الخطة: ٦ شاشات · ٥ مجموعات · ٧ عنصر محتوى",
+    "done · المحتوى: ٧ عنصر مكتوب كاملاً",
+    "done · الهيكل جاهز: التنقّل، البيانات، الدخول، التصميم",
+    "done · ٦ شاشات مكتوبة",
+    "done · جُرّبت كل الشاشات، لا أخطاء · رحلات المستخدم: ٣ من ٣ تعمل كاملة · المراجعة الشاملة: لا مشاكل",
+    "done · جاهز للمعاينة والتحميل"
+  ],
+  "runtime": {
+    "home": [],
+    "schedule": [],
+    "mine": [],
+    "classes": [],
+    "addClass": [],
+    "attend": []
+  },
+  "flows": [
+    "الاشتراك في باقة (6 خطوات)",
+    "حجز حصة (7 خطوات)",
+    "إضافة حصة وتسجيل الحضور (9 خطوات)"
+  ],
+  "flowSteps": [
+    {
+      "flow": "الاشتراك في باقة",
+      "steps": [
+        {
+          "role": "member"
+        },
+        {
+          "go": "/"
+        },
+        {
+          "click": "[data-act=subscribe][data-id=packages-1]"
+        },
+        {
+          "click": "text:اشترك"
+        },
+        {
+          "expectDb": {
+            "col": "subscriptions",
+            "min": 1
+          }
+        },
+        {
+          "expect": "حصص هذا الشهر"
+        }
+      ]
+    },
+    {
+      "flow": "حجز حصة",
+      "steps": [
+        {
+          "role": "member"
+        },
+        {
+          "go": "/schedule"
+        },
+        {
+          "click": "[data-act=book][data-id=classes-1]"
+        },
+        {
+          "expectDb": {
+            "col": "bookings",
+            "min": 1
+          }
+        },
+        {
+          "expect": "محجوزة"
+        },
+        {
+          "go": "/mine"
+        },
+        {
+          "expect": "كروس فت للمبتدئين"
+        }
+      ]
+    },
+    {
+      "flow": "إضافة حصة وتسجيل الحضور",
+      "steps": [
+        {
+          "role": "coach"
+        },
+        {
+          "go": "/classes"
+        },
+        {
+          "click": "[data-act=new]"
+        },
+        {
+          "fill": {
+            "#title": "زومبا مسائية",
+            "#capacity": "10",
+            "#description": "حصة رقص لياقة لكل المستويات"
+          }
+        },
+        {
+          "click": "[data-act=save]"
+        },
+        {
+          "expectDb": {
+            "col": "classes",
+            "min": 5
+          }
+        },
+        {
+          "go": "/attend/classes-1"
+        },
+        {
+          "click": "[data-act=present]"
+        },
+        {
+          "expect": "حضر ١ من"
+        }
+      ]
+    }
+  ],
+  "reviewIssues": {
+    "home": [],
+    "schedule": [],
+    "mine": [],
+    "classes": [],
+    "addClass": [],
+    "attend": []
+  },
+  "spec": false,
+  "specFallback": [],
+  "flowErr": "",
+  "agent": {
+    "ran": false,
+    "fixed": 0,
+    "steps": 0,
+    "log": []
+  },
+  "fixErrors": [],
+  "review": {
+    "found": 0,
+    "fixed": 0
+  },
+  "screens": [
+    {
+      "id": "home",
+      "route": "/",
+      "roles": [
+        "member"
+      ],
+      "bytes": 3610
+    },
+    {
+      "id": "schedule",
+      "route": "/schedule",
+      "roles": [
+        "member"
+      ],
+      "bytes": 4000
+    },
+    {
+      "id": "mine",
+      "route": "/mine",
+      "roles": [
+        "member"
+      ],
+      "bytes": 1935
+    },
+    {
+      "id": "classes",
+      "route": "/classes",
+      "roles": [
+        "coach"
+      ],
+      "bytes": 2302
+    },
+    {
+      "id": "addClass",
+      "route": "/add-class",
+      "roles": [
+        "coach"
+      ],
+      "bytes": 2354
+    },
+    {
+      "id": "attend",
+      "route": "/attend/:id",
+      "roles": [
+        "coach"
+      ],
+      "bytes": 2320
+    }
+  ]
+}

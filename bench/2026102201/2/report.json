@@ -1,0 +1,202 @@
+{
+  "status": "ready",
+  "error": "",
+  "name": "لُقطة",
+  "steps": [
+    "done · هوية «سوق دافئ» · الخطة: ٦ شاشات · ٣ مجموعات · ٦ عنصر محتوى",
+    "done · المحتوى: ٦ عنصر مكتوب كاملاً",
+    "done · الهيكل جاهز: التنقّل، البيانات، الدخول، التصميم",
+    "done · ٦ شاشات مكتوبة",
+    "done · جُرّبت كل الشاشات، لا أخطاء · رحلات المستخدم: ٣ من ٣ تعمل كاملة · المراجعة الشاملة: لا مشاكل",
+    "done · جاهز للمعاينة والتحميل"
+  ],
+  "runtime": {
+    "home": [],
+    "item": [],
+    "offers": [],
+    "sell": [],
+    "post": [],
+    "incoming": []
+  },
+  "flows": [
+    "نشر إعلان (7 خطوات)",
+    "عرض سعر (8 خطوات)",
+    "الرد على العرض (8 خطوات)"
+  ],
+  "flowSteps": [
+    {
+      "flow": "نشر إعلان",
+      "steps": [
+        {
+          "role": "seller"
+        },
+        {
+          "go": "/sell"
+        },
+        {
+          "click": "[data-act=new]"
+        },
+        {
+          "fill": {
+            "#title": "سامسونج جالكسي A54 بحالة الجديد",
+            "#price": "320000",
+            "#description": "استعمال ٤ أشهر مع الكرتونة",
+            "#city": "الخرطوم",
+            "#sellerPhone": "0912345678"
+          }
+        },
+        {
+          "click": "[data-act=publish]"
+        },
+        {
+          "expectDb": {
+            "col": "listings",
+            "min": 7
+          }
+        },
+        {
+          "expect": "سامسونج جالكسي A54 بحالة الجديد"
+        }
+      ]
+    },
+    {
+      "flow": "عرض سعر",
+      "steps": [
+        {
+          "role": "buyer"
+        },
+        {
+          "go": "/"
+        },
+        {
+          "fill": {
+            "#q": "سامسونج"
+          }
+        },
+        {
+          "click": "[data-act=open]"
+        },
+        {
+          "fill": {
+            "#amount": "290000",
+            "#message": "أستطيع الاستلام اليوم",
+            "#buyerPhone": "0998877665"
+          }
+        },
+        {
+          "click": "[data-act=offer]"
+        },
+        {
+          "expectDb": {
+            "col": "offers",
+            "min": 1
+          }
+        },
+        {
+          "expect": "سامسونج جالكسي A54"
+        }
+      ]
+    },
+    {
+      "flow": "الرد على العرض",
+      "steps": [
+        {
+          "role": "seller"
+        },
+        {
+          "go": "/incoming"
+        },
+        {
+          "click": "[data-act=accept]"
+        },
+        {
+          "click": "[data-act=tab][data-id=done]"
+        },
+        {
+          "expect": "سامسونج جالكسي A54"
+        },
+        {
+          "role": "buyer"
+        },
+        {
+          "go": "/offers"
+        },
+        {
+          "expect": "تواصل مع البائع"
+        }
+      ]
+    }
+  ],
+  "reviewIssues": {
+    "home": [],
+    "item": [],
+    "offers": [],
+    "sell": [],
+    "post": [],
+    "incoming": []
+  },
+  "spec": false,
+  "specFallback": [],
+  "flowErr": "",
+  "agent": {
+    "ran": false,
+    "fixed": 0,
+    "steps": 0,
+    "log": []
+  },
+  "fixErrors": [],
+  "review": {
+    "found": 0,
+    "fixed": 0
+  },
+  "screens": [
+    {
+      "id": "home",
+      "route": "/",
+      "roles": [
+        "buyer"
+      ],
+      "bytes": 2109
+    },
+    {
+      "id": "item",
+      "route": "/item/:id",
+      "roles": [
+        "buyer"
+      ],
+      "bytes": 3787
+    },
+    {
+      "id": "offers",
+      "route": "/offers",
+      "roles": [
+        "buyer"
+      ],
+      "bytes": 2071
+    },
+    {
+      "id": "sell",
+      "route": "/sell",
+      "roles": [
+        "seller"
+      ],
+      "bytes": 2801
+    },
+    {
+      "id": "post",
+      "route": "/post",
+      "roles": [
+        "seller"
+      ],
+      "bytes": 3076
+    },
+    {
+      "id": "incoming",
+      "route": "/incoming",
+      "roles": [
+        "seller"
+      ],
+      "bytes": 2914
+    }
+  ]
+}

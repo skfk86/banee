@@ -1,0 +1,212 @@
+{
+  "status": "ready",
+  "error": "",
+  "name": "عيادتي",
+  "steps": [
+    "done · هوية «طمأنينة طبية» · الخطة: ٥ شاشات · ٣ مجموعات · ٦ عنصر محتوى",
+    "done · المحتوى: ٦ عنصر مكتوب كاملاً",
+    "done · الهيكل جاهز: التنقّل، البيانات، الدخول، التصميم",
+    "done · ٥ شاشات مكتوبة",
+    "done · جُرّبت كل الشاشات، لا أخطاء · رحلات المستخدم: ٣ من ٣ تعمل كاملة · المراجعة الشاملة: لا مشاكل",
+    "done · جاهز للمعاينة والتحميل"
+  ],
+  "runtime": {
+    "home": [],
+    "doctor": [],
+    "appointments": [],
+    "today": [],
+    "visit": []
+  },
+  "flows": [
+    "حجز موعد (9 خطوات)",
+    "إلغاء موعد (11 خطوات)",
+    "إنهاء موعد (11 خطوات)"
+  ],
+  "flowSteps": [
+    {
+      "flow": "حجز موعد",
+      "steps": [
+        {
+          "role": "patient"
+        },
+        {
+          "go": "/"
+        },
+        {
+          "click": "[data-act=open][data-id=providers-1]"
+        },
+        {
+          "expect": "اختر الوقت"
+        },
+        {
+          "click": "[data-act=time][data-id=09:00]"
+        },
+        {
+          "fill": {
+            "#reason": "متابعة ضغط الدم",
+            "#phone": "0912345678"
+          }
+        },
+        {
+          "click": "[data-act=book]"
+        },
+        {
+          "expectDb": {
+            "col": "bookings",
+            "min": 1
+          }
+        },
+        {
+          "expect": "د. أحمد عبدالله"
+        }
+      ]
+    },
+    {
+      "flow": "إلغاء موعد",
+      "steps": [
+        {
+          "role": "patient"
+        },
+        {
+          "go": "/doctor/providers-1"
+        },
+        {
+          "click": "[data-act=time][data-id=09:30]"
+        },
+        {
+          "fill": {
+            "#reason": "صداع متكرر",
+            "#phone": "0912345678"
+          }
+        },
+        {
+          "click": "[data-act=book]"
+        },
+        {
+          "expectDb": {
+            "col": "bookings",
+            "min": 2
+          }
+        },
+        {
+          "go": "/appointments"
+        },
+        {
+          "click": "[data-act=cancel]"
+        },
+        {
+          "click": "text:إلغاء الموعد"
+        },
+        {
+          "click": "[data-act=tab][data-id=past]"
+        },
+        {
+          "expect": "ملغي"
+        }
+      ]
+    },
+    {
+      "flow": "إنهاء موعد",
+      "steps": [
+        {
+          "role": "doctor"
+        },
+        {
+          "go": "/today"
+        },
+        {
+          "expect": "مواعيد اليوم"
+        },
+        {
+          "click": "[data-act=open]"
+        },
+        {
+          "fill": {
+            "#note": "ضغط الدم ١٣٠/٨٥، الاستمرار على العلاج ومراجعة بعد شهر"
+          }
+        },
+        {
+          "click": "[data-act=finish]"
+        },
+        {
+          "expect": "مكتملة اليوم"
+        },
+        {
+          "role": "patient"
+        },
+        {
+          "go": "/appointments"
+        },
+        {
+          "click": "[data-act=tab][data-id=past]"
+        },
+        {
+          "expect": "ملاحظة الطبيب"
+        }
+      ]
+    }
+  ],
+  "reviewIssues": {
+    "home": [],
+    "doctor": [],
+    "appointments": [],
+    "today": [],
+    "visit": []
+  },
+  "spec": false,
+  "specFallback": [],
+  "flowErr": "",
+  "agent": {
+    "ran": false,
+    "fixed": 0,
+    "steps": 0,
+    "log": []
+  },
+  "fixErrors": [],
+  "review": {
+    "found": 0,
+    "fixed": 0
+  },
+  "screens": [
+    {
+      "id": "home",
+      "route": "/",
+      "roles": [
+        "patient"
+      ],
+      "bytes": 2650
+    },
+    {
+      "id": "doctor",
+      "route": "/doctor/:id",
+      "roles": [
+        "patient"
+      ],
+      "bytes": 4688
+    },
+    {
+      "id": "appointments",
+      "route": "/appointments",
+      "roles": [
+        "patient"
+      ],
+      "bytes": 3203
+    },
+    {
+      "id": "today",
+      "route": "/today",
+      "roles": [
+        "doctor"
+      ],
+      "bytes": 3643
+    },
+    {
+      "id": "visit",
+      "route": "/visit/:id",
+      "roles": [
+        "doctor"
+      ],
+      "bytes": 2839
+    }
+  ]
+}

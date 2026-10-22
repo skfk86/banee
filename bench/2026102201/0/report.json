@@ -1,0 +1,241 @@
+{
+  "status": "ready",
+  "error": "",
+  "name": "فصلي",
+  "steps": [
+    "done · هوية «فصل مضيء» · الخطة: ٧ شاشات · ٤ مجموعات · ٤ عنصر محتوى",
+    "done · المحتوى: ٤ عنصر مكتوب كاملاً",
+    "done · الهيكل جاهز: التنقّل، البيانات، الدخول، التصميم",
+    "done · ٧ شاشات مكتوبة",
+    "done · جُرّبت كل الشاشات، لا أخطاء · رحلات المستخدم: ٤ من ٤ تعمل كاملة · المراجعة الشاملة: لا مشاكل",
+    "done · جاهز للمعاينة والتحميل"
+  ],
+  "runtime": {
+    "home": [],
+    "assignment": [],
+    "grades": [],
+    "teach": [],
+    "new": [],
+    "grade": [],
+    "child": []
+  },
+  "flows": [
+    "نشر واجب (9 خطوات)",
+    "تسليم واجب (7 خطوات)",
+    "تصحيح واجب (8 خطوات)",
+    "متابعة ولي الأمر (6 خطوات)"
+  ],
+  "flowSteps": [
+    {
+      "flow": "نشر واجب",
+      "steps": [
+        {
+          "role": "teacher"
+        },
+        {
+          "go": "/teach"
+        },
+        {
+          "click": "[data-act=new]"
+        },
+        {
+          "fill": {
+            "#title": "تمارين الكسور العشرية",
+            "#description": "حل التمارين من ١ إلى ١٠ في صفحة ٤٥ مع كتابة خطوات الحل",
+            "#maxScore": "10"
+          }
+        },
+        {
+          "click": "[data-act=publish]"
+        },
+        {
+          "expectDb": {
+            "col": "assignments",
+            "min": 5
+          }
+        },
+        {
+          "role": "student"
+        },
+        {
+          "go": "/"
+        },
+        {
+          "expect": "تمارين الكسور العشرية"
+        }
+      ]
+    },
+    {
+      "flow": "تسليم واجب",
+      "steps": [
+        {
+          "role": "student"
+        },
+        {
+          "go": "/"
+        },
+        {
+          "click": "[data-act=open][data-id=assignments-1]"
+        },
+        {
+          "fill": {
+            "#answer": "2س + 5 = 17 إذن 2س = 12 إذن س = 6"
+          }
+        },
+        {
+          "click": "[data-act=submit]"
+        },
+        {
+          "expectDb": {
+            "col": "submissions",
+            "min": 1
+          }
+        },
+        {
+          "expect": "إجابتك"
+        }
+      ]
+    },
+    {
+      "flow": "تصحيح واجب",
+      "steps": [
+        {
+          "role": "teacher"
+        },
+        {
+          "go": "/grade/assignments-1"
+        },
+        {
+          "expect": "الدرجة من"
+        },
+        {
+          "fill": {
+            "[name=score]": "9",
+            "[name=feedback]": "أحسنت، انتبه لكتابة خطوة التحقق"
+          }
+        },
+        {
+          "click": "[data-act=grade]"
+        },
+        {
+          "role": "student"
+        },
+        {
+          "go": "/grades"
+        },
+        {
+          "expect": "ملاحظة المعلم"
+        }
+      ]
+    },
+    {
+      "flow": "متابعة ولي الأمر",
+      "steps": [
+        {
+          "role": "parent"
+        },
+        {
+          "go": "/child"
+        },
+        {
+          "fill": {
+            "#childEmail": "e2e@banee.app"
+          }
+        },
+        {
+          "click": "[data-act=link]"
+        },
+        {
+          "expectDb": {
+            "col": "links",
+            "min": 1
+          }
+        },
+        {
+          "expect": "المعدل"
+        }
+      ]
+    }
+  ],
+  "reviewIssues": {
+    "home": [],
+    "assignment": [],
+    "grades": [],
+    "teach": [],
+    "new": [],
+    "grade": [],
+    "child": []
+  },
+  "spec": false,
+  "specFallback": [],
+  "flowErr": "",
+  "agent": {
+    "ran": false,
+    "fixed": 0,
+    "steps": 0,
+    "log": []
+  },
+  "fixErrors": [],
+  "review": {
+    "found": 0,
+    "fixed": 0
+  },
+  "screens": [
+    {
+      "id": "home",
+      "route": "/",
+      "roles": [
+        "student"
+      ],
+      "bytes": 3051
+    },
+    {
+      "id": "assignment",
+      "route": "/assignment/:id",
+      "roles": [
+        "student"
+      ],
+      "bytes": 3105
+    },
+    {
+      "id": "grades",
+      "route": "/grades",
+      "roles": [
+        "student"
+      ],
+      "bytes": 1674
+    },
+    {
+      "id": "teach",
+      "route": "/teach",
+      "roles": [
+        "teacher"
+      ],
+      "bytes": 2317
+    },
+    {
+      "id": "new",
+      "route": "/new",
+      "roles": [
+        "teacher"
+      ],
+      "bytes": 2792
+    },
+    {
+      "id": "grade",
+      "route": "/grade/:id",
+      "roles": [
+        "teacher"
+      ],
+      "bytes": 3142
+    },
+    {
+      "id": "child",
+      "route": "/child",
+      "roles": [
+        "parent"
+      ],
+      "bytes": 3636
+    }
+  ]
+}

@@ -1,0 +1,207 @@
+{
+  "status": "ready",
+  "error": "",
+  "name": "فنّي",
+  "steps": [
+    "done · هوية «ورشة موثوقة» · الخطة: ٦ شاشات · ٣ مجموعات",
+    "done · لا يحتاج التطبيق محتوى جاهزاً",
+    "done · الهيكل جاهز: التنقّل، البيانات، الدخول، التصميم",
+    "done · ٦ شاشات مكتوبة",
+    "done · جُرّبت كل الشاشات وأُصلحت ٢، لا أخطاء · رحلات المستخدم: ٣ من ٣ تعمل كاملة · المراجعة الشاملة: لا مشاكل",
+    "done · جاهز للمعاينة والتحميل"
+  ],
+  "runtime": {
+    "home": [],
+    "new": [],
+    "my": [],
+    "request": [],
+    "jobs": [],
+    "job": []
+  },
+  "flows": [
+    "طلب فني (7 خطوات)",
+    "تنفيذ الطلب (11 خطوات)",
+    "تقييم الفني (8 خطوات)"
+  ],
+  "flowSteps": [
+    {
+      "flow": "طلب فني",
+      "steps": [
+        {
+          "role": "customer"
+        },
+        {
+          "go": "/"
+        },
+        {
+          "click": "[data-act=pick][data-id=كهرباء]"
+        },
+        {
+          "fill": {
+            "#description": "انقطاع الكهرباء عن غرفة النوم والمقبس يسخن",
+            "#address": "الخرطوم، الرياض، شارع المشتل",
+            "#phone": "0912345678"
+          }
+        },
+        {
+          "click": "[data-act=send]"
+        },
+        {
+          "expectDb": {
+            "col": "requests",
+            "min": 1
+          }
+        },
+        {
+          "expect": "انقطاع الكهرباء عن غرفة النوم"
+        }
+      ]
+    },
+    {
+      "flow": "تنفيذ الطلب",
+      "steps": [
+        {
+          "role": "tech"
+        },
+        {
+          "go": "/jobs"
+        },
+        {
+          "click": "[data-act=spec][data-id=كهرباء]"
+        },
+        {
+          "fill": {
+            "#techPhone": "0998765432"
+          }
+        },
+        {
+          "click": "[data-act=save-profile]"
+        },
+        {
+          "expectDb": {
+            "col": "technicians",
+            "min": 1
+          }
+        },
+        {
+          "click": "[data-act=accept]"
+        },
+        {
+          "click": "[data-act=open]"
+        },
+        {
+          "click": "[data-act=start]"
+        },
+        {
+          "click": "[data-act=finish]"
+        },
+        {
+          "expect": "الطلب منجز"
+        }
+      ]
+    },
+    {
+      "flow": "تقييم الفني",
+      "steps": [
+        {
+          "role": "customer"
+        },
+        {
+          "go": "/my"
+        },
+        {
+          "click": "[data-act=tab][data-id=past]"
+        },
+        {
+          "click": "[data-act=open]"
+        },
+        {
+          "click": "[data-act=star][data-id=5]"
+        },
+        {
+          "fill": {
+            "#review": "فني ممتاز وسريع"
+          }
+        },
+        {
+          "click": "[data-act=rate]"
+        },
+        {
+          "expect": "تقييمك"
+        }
+      ]
+    }
+  ],
+  "reviewIssues": {
+    "home": [],
+    "new": [],
+    "my": [],
+    "request": [],
+    "jobs": [],
+    "job": []
+  },
+  "spec": false,
+  "specFallback": [],
+  "flowErr": "",
+  "agent": {
+    "ran": false,
+    "fixed": 0,
+    "steps": 0,
+    "log": []
+  },
+  "fixErrors": [],
+  "review": {
+    "found": 0,
+    "fixed": 0
+  },
+  "screens": [
+    {
+      "id": "home",
+      "route": "/",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 2469
+    },
+    {
+      "id": "new",
+      "route": "/new",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 2837
+    },
+    {
+      "id": "my",
+      "route": "/my",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 2340
+    },
+    {
+      "id": "request",
+      "route": "/request/:id",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 4084
+    },
+    {
+      "id": "jobs",
+      "route": "/jobs",
+      "roles": [
+        "tech"
+      ],
+      "bytes": 4564
+    },
+    {
+      "id": "job",
+      "route": "/job/:id",
+      "roles": [
+        "tech"
+      ],
+      "bytes": 2624
+    }
+  ]
+}

@@ -1,0 +1,202 @@
+{
+  "status": "ready",
+  "error": "",
+  "name": "إدارة العقارات والإيجارات",
+  "steps": [
+    "done · هوية «إدارة العقارات» · الخطة: ٦ شاشات · ٦ مجموعات",
+    "done · لا يحتاج التطبيق محتوى جاهزاً",
+    "done · الهيكل جاهز: التنقّل، البيانات، الدخول، التصميم",
+    "done · ٦ شاشات مكتوبة",
+    "done · جُرّبت كل الشاشات وأُصلحت ٧، لا أخطاء · رحلات المستخدم: ٣ من ٣ تعمل كاملة · المراجعة: أُصلحت ٣ من ٤ · التصميم: ٦.٨ من ١٠ (حُسّنت ١ شاشات)",
+    "done · جاهز للمعاينة والتحميل"
+  ],
+  "runtime": {
+    "home": [],
+    "propertiesList": [],
+    "tenantPayments": [],
+    "maintenanceList": [],
+    "contractsList": [],
+    "notifications": []
+  },
+  "flows": [
+    "إدارة العقارات للمالك (7 خطوات)",
+    "طلب صيانة (7 خطوات)",
+    "دفع الإيجار للمستأجر (4 خطوات)"
+  ],
+  "flowSteps": [
+    {
+      "flow": "إدارة العقارات للمالك",
+      "steps": [
+        {
+          "role": "landlord"
+        },
+        {
+          "go": "/properties"
+        },
+        {
+          "click": "[data-act=add-property]"
+        },
+        {
+          "fill": {
+            "#prop-title": "برج الروضة السكني",
+            "#prop-address": "الرياض - حي الملك فهد",
+            "#prop-type": "سكني"
+          }
+        },
+        {
+          "click": "text:حفظ العقار"
+        },
+        {
+          "expect": "برج الروضة السكني"
+        },
+        {
+          "expectDb": {
+            "col": "properties",
+            "min": 1
+          }
+        }
+      ]
+    },
+    {
+      "flow": "طلب صيانة",
+      "steps": [
+        {
+          "role": "tenant"
+        },
+        {
+          "go": "/maintenance"
+        },
+        {
+          "click": "[data-act=open-new]"
+        },
+        {
+          "fill": {
+            "#m-title": "تسرب مياه",
+            "#m-desc": "تسرب مياه في دورة المياه بالدور الأول"
+          }
+        },
+        {
+          "click": "[data-act=submit-maintenance]"
+        },
+        {
+          "expect": "تسرب مياه"
+        },
+        {
+          "expectDb": {
+            "col": "maintenance",
+            "min": 1
+          }
+        }
+      ]
+    },
+    {
+      "flow": "دفع الإيجار للمستأجر",
+      "steps": [
+        {
+          "role": "tenant"
+        },
+        {
+          "go": "/"
+        },
+        {
+          "click": "[data-act=go-payments]"
+        },
+        {
+          "expect": "قائمة الفواتير والمدفوعات"
+        }
+      ]
+    }
+  ],
+  "reviewIssues": {
+    "home": [],
+    "propertiesList": [],
+    "tenantPayments": [
+      "مراجعة: تفتقر شاشة المدفوعات لفلتر userId للمستأجر مما يتيح له رؤية مدفوعات المستخدمين الآخرين، والإصلاح هو فلترة النتائج بـ p.userId === Auth.user.uid.",
+      "مراجعة: استدعاء الدالة loadPayments() بدون await ضمن معالجات الأزرار (approve و reject)."
+    ],
+    "maintenanceList": [
+      "مراجعة: تفتقر شاشة الصيانة لفلتر userId للمستأجر مما يتيح له رؤية طلبات الصيانة الخاصة بالمستأجرين الآخرين."
+    ],
+    "contractsList": [],
+    "notifications": [
+      "مراجعة: استعلام مجموعة غير معرفة في المخطط عبر DB.list('notices', ...)."
+    ]
+  },
+  "spec": false,
+  "specFallback": [],
+  "flowErr": "",
+  "agent": {
+    "ran": false,
+    "fixed": 0,
+    "steps": 0,
+    "log": []
+  },
+  "fixErrors": [],
+  "review": {
+    "found": 4,
+    "fixed": 3
+  },
+  "screens": [
+    {
+      "id": "home",
+      "route": "/",
+      "roles": [
+        "tenant",
+        "landlord",
+        "technician"
+      ],
+      "bytes": 11312
+    },
+    {
+      "id": "propertiesList",
+      "route": "/properties",
+      "roles": [
+        "landlord"
+      ],
+      "bytes": 16738
+    },
+    {
+      "id": "tenantPayments",
+      "route": "/payments",
+      "roles": [
+        "tenant",
+        "landlord"
+      ],
+      "bytes": 10909
+    },
+    {
+      "id": "maintenanceList",
+      "route": "/maintenance",
+      "roles": [
+        "tenant",
+        "technician",
+        "landlord"
+      ],
+      "bytes": 11533
+    },
+    {
+      "id": "contractsList",
+      "route": "/contracts",
+      "roles": [
+        "landlord"
+      ],
+      "bytes": 10504
+    },
+    {
+      "id": "notifications",
+      "route": "/notifications",
+      "roles": [
+        "tenant",
+        "landlord",
+        "technician"
+      ],
+      "bytes": 6645
+    }
+  ],
+  "design": {
+    "model": "gemini-2.5-flash",
+    "score": null,
+    "min": null,
+    "screens": {}
+  }
+}

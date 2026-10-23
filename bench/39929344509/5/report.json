@@ -1,0 +1,153 @@
+{
+  "status": "ready",
+  "error": "",
+  "name": "بيتي",
+  "steps": [
+    "done · هوية «بيتي الموثوق» · الخطة: ٦ شاشات · ٥ مجموعات · ٦ عنصر محتوى",
+    "done · المحتوى: ٦ عنصر مكتوب كاملاً",
+    "done · الهيكل جاهز: التنقّل، البيانات، الدخول، التصميم",
+    "done · ٦ شاشات مكتوبة",
+    "done · الفحص: ١ شاشات بها ملاحظات، راجعها في الاستوديو · رحلات المستخدم: ١ من ١ تعمل كاملة · المراجعة: أُصلحت ١ من ٢ · التصميم: ٦ من ١٠ (حُسّنت ٣ شاشات)",
+    "done · جاهز للمعاينة والتحميل"
+  ],
+  "runtime": {
+    "home": [],
+    "newOrder": [],
+    "orders": [],
+    "providerDashboard": [
+      "تصميم: النص \"٠\" غير مقروء: تباين 2.1:1 — لونه #f59e0b والخلفية #ffffff من العنصر <div class=\"card stat\">. الخلفية فاتحة: استخدم var(--text) للنص، أو أزل خلفية ذلك العنصر إن كان داخل hero."
+    ],
+    "providerPortfolioScreen": [],
+    "orderDetail": []
+  },
+  "flows": [
+    "طلب خدمة منزلية ومتابعتها (9 خطوات)"
+  ],
+  "flowSteps": [
+    {
+      "flow": "طلب خدمة منزلية ومتابعتها",
+      "steps": [
+        {
+          "role": "customer"
+        },
+        {
+          "go": "/"
+        },
+        {
+          "click": "[data-act=new-order]"
+        },
+        {
+          "fill": {
+            "#title": "صيانة مكيفات سبليت"
+          }
+        },
+        {
+          "fill": {
+            "#category": "تنظيف المنازل"
+          }
+        },
+        {
+          "fill": {
+            "#description": "يوجد تسريب مياه في المكيف وتحتاج صيانة عاجلة"
+          }
+        },
+        {
+          "fill": {
+            "#date": "2023-12-01"
+          }
+        },
+        {
+          "click": "text:إرسال الطلب الآن"
+        },
+        {
+          "expectDb": {
+            "col": "orders",
+            "min": 1
+          }
+        }
+      ]
+    }
+  ],
+  "reviewIssues": {
+    "home": [],
+    "newOrder": [],
+    "orders": [],
+    "providerDashboard": [],
+    "providerPortfolioScreen": [],
+    "orderDetail": [
+      "مراجعة: زر استلام الطلب والبدء لا يظهر لمقدم الخدمة لأن شرط isProvider يعتمد على مطابقة providerId الفارغ، والإصلاح هو التحقق من دور المستخدم userRole === 'provider' بدلاً من isProvider.",
+      "مراجعة: استخدام Data.orders.setStatus لتحديث بيانات مقدم الخدمة (providerId و providerName) غير مدعوم، والإصلاح هو استخدام Data.orders.update لتحديث الحالة مع بيانات مقدم الخدمة."
+    ]
+  },
+  "spec": false,
+  "specFallback": [],
+  "flowErr": "",
+  "agent": {
+    "ran": false,
+    "fixed": 0,
+    "steps": 0,
+    "log": []
+  },
+  "fixErrors": [],
+  "review": {
+    "found": 2,
+    "fixed": 1
+  },
+  "screens": [
+    {
+      "id": "home",
+      "route": "/",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 6048
+    },
+    {
+      "id": "newOrder",
+      "route": "/new-order",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 6486
+    },
+    {
+      "id": "orders",
+      "route": "/orders",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 4570
+    },
+    {
+      "id": "providerDashboard",
+      "route": "/dashboard",
+      "roles": [
+        "provider"
+      ],
+      "bytes": 5460
+    },
+    {
+      "id": "providerPortfolioScreen",
+      "route": "/portfolio",
+      "roles": [
+        "provider"
+      ],
+      "bytes": 5797
+    },
+    {
+      "id": "orderDetail",
+      "route": "/order/:id",
+      "roles": [
+        "customer",
+        "provider"
+      ],
+      "bytes": 11559
+    }
+  ],
+  "design": {
+    "model": "gemini-2.5-flash",
+    "score": null,
+    "min": null,
+    "screens": {}
+  }
+}

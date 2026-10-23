@@ -91,12 +91,12 @@ async function chat() {
   const root = process.cwd();
   log('🧱 بانِي ' + VERSION + ' — ' + path.basename(root) + '  (' + MODEL + ')');
   log('اكتب طلبك بالعربي، أو /help للأوامر، أو /exit للخروج.');
-  const { createSession, checkJs } = require('../lib/agent');
+  const { createSession, checkJs, colors: col } = require('../lib/agent');
   const s = createSession({ key: KEY, model: MODEL, root, ask, log, maxSteps: +flags.steps || 40 });
   let t2 = null;
   if (fs.existsSync(path.join(root, 'BANEE.md'))) log('📘 يقرأ تعليمات المشروع من BANEE.md');
   for (;;) {
-    const t = await ask('\n❯ ');
+    const t = await ask('\n' + col.cyan('❯') + ' ');
     if (!t) continue;
     if (t === '/exit' || t === 'خروج') return bye();
     if (t === '/help') { log(CHAT_HELP); continue; }
@@ -117,9 +117,8 @@ async function chat() {
       continue;
     }
     try {
-      log('  ⏳ ...');
       const r = await s.send(t2 || t); t2 = null;
-      if (r.summary) log('\n✅ ' + r.summary);
+      if (r.summary) log('\n' + col.green('✓') + ' ' + r.summary);
     } catch (e) { log('❌ ' + e.message); }
   }
 }

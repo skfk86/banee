@@ -5,7 +5,7 @@
 ## التثبيت (أمر واحد)
 
 ```bash
-curl -fsSL https://skfk86.github.io/banee/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/skfk86/banee/main/site/install.sh | bash
 ```
 
 ثم داخل أي مشروع:

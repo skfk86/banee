@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # مثبّت بانِي CLI — أمر واحد:
-#   curl -fsSL https://skfk86.github.io/banee/install.sh | bash
+#   curl -fsSL https://raw.githubusercontent.com/skfk86/banee/main/site/install.sh | bash
 # يعمل على Linux وmacOS وTermux. يحمّل الملفات اللازمة فقط (أقل من ١ ميغا) بدل المستودع كاملاً.
 set -e
 

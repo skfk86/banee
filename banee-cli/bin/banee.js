@@ -22,7 +22,7 @@ const readCfg = () => { try { return JSON.parse(fs.readFileSync(CFG_FILE, 'utf8'
 const saveCfg = (c) => { fs.mkdirSync(path.dirname(CFG_FILE), { recursive: true }); fs.writeFileSync(CFG_FILE, JSON.stringify(c, null, 2), { mode: 0o600 }); };
 let KEY = flags.key || process.env.GEMINI_API_KEY || process.env.GEMINI_KEY || readCfg().key;
 const VERSION = require('../package.json').version;
-const MODEL = flags.model || process.env.BANEE_MODEL || 'gemini-2.5-flash';
+const MODEL = flags.model || process.env.BANEE_MODEL || readCfg().model || 'gemini-2.5-flash';
 const log = (s) => console.log(s);
 const ask = (q) => new Promise((r) => { const rl = readline.createInterface({ input: process.stdin, output: process.stdout }); rl.question(q, (a) => { rl.close(); r(a.trim()); }); });
 // أول تشغيل: يطلب المفتاح مرة واحدة ويتحقق منه ثم يحفظه في ~/.banee/config.json
@@ -71,6 +71,7 @@ const CHAT_HELP = `أوامر المحادثة:
   /init              يدرس المشروع ويكتب له BANEE.md (تعليمات خاصة به)
   /clear             محادثة جديدة (ينسى ما سبق)
   /key               تغيير مفتاح Gemini
+  /model [اسم]        عرض النموذج الحالي أو تغييره
   /exit              خروج
 وأي شيء آخر تكتبه يذهب للوكيل مباشرة.`;
 
@@ -104,6 +105,11 @@ async function chat() {
     if (t === '/init') {
       if (fs.existsSync(path.join(root, 'BANEE.md')) && (await ask('BANEE.md موجود. أحدّثه؟ (y/n) ')).toLowerCase() !== 'y') continue;
       t2 = 'ادرس هذا المشروع (البنية، الملفات الرئيسية، الستاك، الإعدادات، أسلوب الكود، الأوامر المهمة) ثم أنشئ أو حدّث ملف BANEE.md في جذره: تعليمات مختصرة بالعربية (أقل من ٨٠ سطراً) لوكيل يعمل على المشروع لاحقاً: ما هو التطبيق، أين كل شيء، الأنماط المتبعة، أوامر البناء والفحص، وما يجب تجنبه. لا تخترع ما لم تره في الملفات.';
+    }
+    if (t.startsWith('/model')) {
+      const m = t.slice(6).trim();
+      if (!m) { log('النموذج الحالي: ' + s.model() + '\nللتغيير: /model gemini-2.5-flash-lite  (يُحفظ للمرات القادمة)'); continue; }
+      s.setModel(m); saveCfg({ ...readCfg(), model: m }); log('✓ النموذج: ' + m); continue;
     }
     if (t === '/clear') { s.reset(); log('🧹 محادثة جديدة.'); continue; }
     if (t.startsWith('/check')) { try { log(checkJs(path.resolve(root, t.slice(6).trim() || 'www/index.html'))); } catch (e) { log('❌ ' + e.message); } continue; }

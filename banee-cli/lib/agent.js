@@ -124,16 +124,35 @@ function createSession({ key, model, root, ask, log, maxSteps = 40 }) {
     }
   }
 
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
+  // سلسلة نماذج: لكل نموذج حصة يومية منفصلة في الخطة المجانية، فإذا نفدت حصة نموذج انتقلنا للتالي تلقائياً
   let contents = [];
+  const FALLBACK = ['gemini-2.5-flash', 'gemini-2.5-flash-lite', 'gemini-flash-latest', 'gemini-flash-lite-latest', 'gemini-2.0-flash'];
+  let chain = [model, ...FALLBACK.filter((m) => m !== model)], cur = 0;
+  const exhausted = new Set();
 
   async function call() {
-    for (let tries = 0; ; tries++) {
-      const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ systemInstruction: { parts: [{ text: systemPrompt(root) }] }, contents, tools }) });
-      const data = await res.json();
+    for (let tries = 0; ; ) {
+      const m = chain[cur];
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${key}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ systemInstruction: { parts: [{ text: systemPrompt(root) }] }, contents, tools }) });
+      const data = await res.json().catch(() => ({}));
       if (res.ok) return data;
-      if ((res.status === 429 || res.status >= 500) && tries < 3) { log(dim('  ⏳ Gemini مشغول، إعادة المحاولة...')); await new Promise((r) => setTimeout(r, 15000 * (tries + 1))); continue; }
-      throw new Error('Gemini: ' + (data.error?.message || res.status));
+      const msg = (data.error && data.error.message) || String(res.status);
+      const daily = res.status === 429 && /per ?day|PerDay|daily/i.test(msg);
+      const gone = res.status === 404 || (res.status === 400 && /not found|not supported/i.test(msg));
+      if (daily || gone) {
+        exhausted.add(m);
+        const next = chain.findIndex((x, i) => i > cur && !exhausted.has(x));
+        if (next > -1) { log(dim('  ↪ ' + (daily ? 'انتهت حصة اليوم لـ ' : 'النموذج غير متاح: ') + m + '، أكمل بـ ' + chain[next])); cur = next; continue; }
+        const wait = (msg.match(/retry in ([\dhms.]+)/i) || [])[1];
+        throw new Error('انتهت الحصة المجانية لكل النماذج اليوم' + (wait ? ' (تتجدد بعد ' + wait.replace(/\.\d+s$/, 's') + ')' : '') + '. الحلول: انتظر التجدد، أو /key بمفتاح من حساب Google آخر، أو فعّل الفوترة في Google AI Studio.');
+      }
+      if ((res.status === 429 || res.status >= 500) && tries < 3) {
+        tries++;
+        const sec = Math.min(60, +((msg.match(/retry in ([\d.]+)s/i) || [])[1] || 10 * tries));
+        log(dim('  ⏳ Gemini مشغول، إعادة المحاولة بعد ' + Math.ceil(sec) + ' ثانية...'));
+        await new Promise((r) => setTimeout(r, Math.ceil(sec) * 1000)); continue;
+      }
+      throw new Error('Gemini: ' + msg.split('\n')[0]);
     }
   }
 
@@ -162,7 +181,8 @@ function createSession({ key, model, root, ask, log, maxSteps = 40 }) {
     } catch (e) { contents = contents.slice(0, mark); throw e; } // لا نترك المحادثة في حالة مكسورة
   }
 
-  return { send, reset: () => { contents = []; }, size: () => contents.length };
+  return { send, reset: () => { contents = []; }, size: () => contents.length,
+    model: () => chain[cur], setModel: (m) => { chain = [m, ...FALLBACK.filter((x) => x !== m)]; cur = 0; exhausted.clear(); } };
 }
 
 async function run(o) { return createSession(o).send(o.task); }

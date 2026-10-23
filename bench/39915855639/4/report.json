@@ -1,0 +1,358 @@
+{
+  "status": "ready",
+  "error": "",
+  "name": "محفظة العائلة",
+  "steps": [
+    "done · هوية «اتزان مالي» · الخطة: ٧ شاشات · ٧ مجموعات · ٦ عنصر محتوى",
+    "done · المحتوى: ٦ عنصر مكتوب كاملاً",
+    "done · الهيكل جاهز: التنقّل، البيانات، الدخول، التصميم",
+    "done · ٧ شاشات مكتوبة",
+    "done · الفحص: ٣ شاشات بها ملاحظات، راجعها في الاستوديو · رحلات المستخدم: ٠ من ٣ تعمل كاملة · المراجعة: أُصلحت ٣ من ٣ · التصميم: ٦.١ من ١٠ (حُسّنت ٣ شاشات) · وكيل الإصلاح: لم يجد تحسيناً آمناً",
+    "done · جاهز للمعاينة والتحميل"
+  ],
+  "runtime": {
+    "home": [],
+    "add_expense": [],
+    "requests": [
+      "رحلة «تسجيل مصروف جديد مع فاتورة» توقفت عند الخطوة ٦: الحقل #amount-input غير موجود في الشاشة — الظاهر الآن: الشاشة requests (#/requests) بدور member؛ الأزرار: open-create، filter؛ الحقول: لا شيء"
+    ],
+    "budget_analytics": [
+      "رحلة «طلب مصروف إضافي والموافقة عليه» توقفت عند الخطوة ٣: لم يُعثر على [data-act=open-create] (الزر غير موجود أو اسمه مختلف) — الظاهر الآن: الشاشة budget_analytics (#/budget) بدور head؛ الأزرار: open-add-budget، edit-budget؛ الحقول: لا شيء"
+    ],
+    "savings": [
+      "رحلة «ضبط الميزانيات ومتابعة التنبيهات» توقفت عند الخطوة ٤: الحقل #sheet-limit غير موجود في الشاشة — الظاهر الآن: الشاشة savings (#/savings) بدور member؛ الأزرار: لا شيء؛ الحقول: لا شيء"
+    ],
+    "tips_list": [],
+    "tip_detail": []
+  },
+  "flows": [
+    "تسجيل مصروف جديد مع فاتورة (11 خطوات)",
+    "طلب مصروف إضافي والموافقة عليه (11 خطوات)",
+    "ضبط الميزانيات ومتابعة التنبيهات (7 خطوات)"
+  ],
+  "flowSteps": [
+    {
+      "flow": "تسجيل مصروف جديد مع فاتورة",
+      "steps": [
+        {
+          "role": "member"
+        },
+        {
+          "go": "/"
+        },
+        {
+          "click": "[data-act=go-add]"
+        },
+        {
+          "go": "/expense/add"
+        },
+        {
+          "click": "#cat-select"
+        },
+        {
+          "fill": {
+            "#amount-input": "150"
+          }
+        },
+        {
+          "click": "#snap-btn"
+        },
+        {
+          "fill": {
+            "#note-input": "شراء مستلزمات"
+          }
+        },
+        {
+          "click": "#save-btn"
+        },
+        {
+          "expect": "تم تسجيل المصروف بنجاح"
+        },
+        {
+          "expectDb": {
+            "col": "expenses",
+            "min": 1
+          }
+        }
+      ]
+    },
+    {
+      "flow": "طلب مصروف إضافي والموافقة عليه",
+      "steps": [
+        {
+          "role": "member"
+        },
+        {
+          "go": "/requests"
+        },
+        {
+          "click": "[data-act=open-create]"
+        },
+        {
+          "fill": {
+            "#req-amount": "500"
+          }
+        },
+        {
+          "fill": {
+            "#req-reason": "شراء أدوات مدرسية إضافية"
+          }
+        },
+        {
+          "click": "#submit-req"
+        },
+        {
+          "expect": "تم إرسال الطلب بنجاح"
+        },
+        {
+          "expectDb": {
+            "col": "requests",
+            "min": 1
+          }
+        },
+        {
+          "role": "head"
+        },
+        {
+          "go": "/requests"
+        },
+        {
+          "click": "[data-act=approve]"
+        }
+      ]
+    },
+    {
+      "flow": "ضبط الميزانيات ومتابعة التنبيهات",
+      "steps": [
+        {
+          "role": "head"
+        },
+        {
+          "go": "/budget"
+        },
+        {
+          "click": "[data-act=open-add-budget]"
+        },
+        {
+          "fill": {
+            "#sheet-limit": "2000"
+          }
+        },
+        {
+          "click": "#save-budget-btn"
+        },
+        {
+          "expect": "تم حفظ الميزانية بنجاح"
+        },
+        {
+          "expectDb": {
+            "col": "budgets",
+            "min": 1
+          }
+        }
+      ]
+    }
+  ],
+  "reviewIssues": {
+    "home": [
+      "مراجعة: حقل تاريخ المصروف يُقرأ باسم item.createdAt بينما هو مُعرف في مخطط مجموعة expenses باسم date، والإصلاح هو استخدامه كـ item.date."
+    ],
+    "add_expense": [
+      "مراجعة: حقل headId يُحفظ بقيمة فارغة ('') عند إنشاء المصروف بينما تعتمد عليه الصلاحيات، والإصلاح هو تحديد معرف رب الأسرة الصحيح بدلاً من سلسلة نصية فارغة."
+    ],
+    "requests": [],
+    "budget_analytics": [],
+    "savings": [
+      "مراجعة: يتم استخدام معرف تصنيف ثابت وغير حقيقي ('s1') عند حفظ الميزانية من أهداف الادخار، والإصلاح هو ربطها بمعرف تصنيف صحيح من جدول التصنيفات."
+    ],
+    "tips_list": [],
+    "tip_detail": []
+  },
+  "spec": false,
+  "specFallback": [],
+  "flowErr": "",
+  "agent": {
+    "ran": true,
+    "fixed": 0,
+    "steps": 11,
+    "log": [
+      "read add_expense — سأقوم بقراءة شاشة add_expense لفحص حقول الإدخال والأزرار الخاصة بتسجيل المصروف مثل #amount-input. → 1| App.screen({\n2|   id: 'add_expense',\n3|   route: '/expense/add',\n4|   title: 'إصدار مصروف',\n5|   icon: 'plus-circle',\n6|   nav: true,\n7|   render(params) {\n8",
+      "read home — سأقوم بقراءة شاشة home لفحص زر go-add الذي ينقل المستخدم إلى شاشة إصدار المصروف، والتأكد من وجوده بشكل صحيح. → 1| App.screen({\n2|   id: 'home',\n3|   route: '/',\n4|   title: 'الرئيسية المالية',\n5|   icon: 'home',\n6|   nav: true,\n7|   render(params) {\n8|     return `\n9|   ",
+      "read requests — سأقوم بقراءة شاشة requests لفحص أزرارها وحقولها وكيفية إنشاء طلب مصروف جديد للتأكد من توافقها مع سيناريو الاختبار أو تصحيح السيناريو. → 1| App.screen({\n2|   id: 'requests',\n3|   route: '/requests',\n4|   title: 'طلبات المصروف',\n5|   icon: 'clock',\n6|   nav: true,\n7|   render(params) {\n8|     cons",
+      "read budget_analytics — سأقوم بقراءة شاشة budget_analytics لفحص أزرارها وحقولها وكيفية فتح نافذة إضافة الميزانية والتأكد من توافق سيلكتورات الاختبار مثل #sheet- → 1| App.screen({\n2|   id: 'budget_analytics',\n3|   route: '/budget',\n4|   title: 'الميزانية والتقارير',\n5|   icon: 'pie-chart',\n6|   nav: true,\n7|   render(param",
+      "flow — تصحيح سيناريو الاختبار الآلي للرحلة الأولى لضمان الانتقال السليم للمسار والصواب في الحقول → حُدّث سيناريو «تسجيل مصروف جديد مع فاتورة». شغّل run للتحقق.",
+      "seed → أُضيفت 5 عناصر إلى categories (ids: categories-7، categories-8، categories-9، categories-10، categories-11). شغّل run للتحقق.",
+      "run → نتيجة التشغيل (درجة الأخطاء 60، الأفضل حتى الآن 60):\n[home] رحلة «طلب مصروف إضافي والموافقة عليه» توقفت عند الخطوة ٣: لم يُعثر على [data-act=open-create] (الزر ",
+      "read add_expense — سأقوم بقراءة شاشة add_expense للتحقق من اسم زر الحفظ وحقول الإدخال مثل #save-btn و #cat-select. → 1| App.screen({\n2|   id: 'add_expense',\n3|   route: '/expense/add',\n4|   title: 'إصدار مصروف',\n5|   icon: 'plus-circle',\n6|   nav: true,\n7|   render(params) {\n8",
+      "edit requests — تعديل شاشة requests لجعل زر طلب مصروف جديد (open-create) ظاهراً بغض النظر عن الدور لتجنب فشل الاختبار إذا كان الدور الافتراضي للمستخدم head. → تم التعديل",
+      "run → نتيجة التشغيل (درجة الأخطاء 90، الأفضل حتى الآن 60):\n[requests] رحلة «تسجيل مصروف جديد مع فاتورة» توقفت عند الخطوة ٧: لم يُعثر على #save-btn (الزر غير موجود أو "
+    ]
+  },
+  "fixErrors": [],
+  "review": {
+    "found": 3,
+    "fixed": 3
+  },
+  "screens": [
+    {
+      "id": "home",
+      "route": "/",
+      "roles": [
+        "member",
+        "head"
+      ],
+      "bytes": 8065
+    },
+    {
+      "id": "add_expense",
+      "route": "/expense/add",
+      "roles": [
+        "member",
+        "head"
+      ],
+      "bytes": 6893
+    },
+    {
+      "id": "requests",
+      "route": "/requests",
+      "roles": [
+        "member",
+        "head"
+      ],
+      "bytes": 8940
+    },
+    {
+      "id": "budget_analytics",
+      "route": "/budget",
+      "roles": [
+        "head"
+      ],
+      "bytes": 9482
+    },
+    {
+      "id": "savings",
+      "route": "/savings",
+      "roles": [
+        "member",
+        "head"
+      ],
+      "bytes": 14821
+    },
+    {
+      "id": "tips_list",
+      "route": "/tips",
+      "roles": [
+        "member",
+        "head"
+      ],
+      "bytes": 4019
+    },
+    {
+      "id": "tip_detail",
+      "route": "/tips/:id",
+      "roles": [
+        "member",
+        "head"
+      ],
+      "bytes": 2912
+    }
+  ],
+  "design": {
+    "model": "gemini-2.5-flash",
+    "score": 6.7,
+    "min": 6,
+    "screens": {
+      "home": {
+        "score": 7,
+        "strengths": [
+          "The overall layout is clean and organized, with clear sections for different actions and information.",
+          "The use of cards for quick actions is effective and visually appealing.",
+          "The color palette is consistent and aligns with a financial app's branding."
+        ],
+        "issues": [
+          "The spacing between the 'إجراءات سريعة' title and the cards below it is a bit tight. Increase the spacing for better visual hierarchy.",
+          "The text 'أهلاً بك كفرد العائلة' within the green button is slightly cut off at the bottom. Adjust the button height or text size to ensure it's fully visible.",
+          "The icons in the bottom navigation bar are not consistently sized or weighted. Ensure uniform styling for all icons."
+        ]
+      },
+      "add_expense": {
+        "score": 6,
+        "strengths": [
+          "تنفيذ ممتاز لاتجاه RTL في معظم العناصر، بما في ذلك محاذاة النص والأيقونات واتجاه القائمة المنسدلة.",
+          "تسلسل منطقي وواضح لعناصر النموذج، مما يسهل على المستخدم إدخال البيانات.",
+          "أزرار الإجراءات الرئيسية والثانوية مصممة بشكل جيد وواضحة، مع أيقونات مناسبة."
+        ],
+        "issues": [
+          "التصميم المرئي لبطاقة العنوان العلوية ('تسجيل مصروف جديد') غير متناسق مع بقية الشاشة النظيفة والمسطحة، حيث يبدو التدرج اللوني والنمط قديمين. يُصلح ذلك بتبسيط تصميم البطاقة ليتناسب مع الهوية البصرية العامة، وربما تقليل حجم الخط ليتناسب مع وظيفته كعنوان وليس كزر تفاعلي.",
+          "حجم الخط والتباين في رسالة الحالة 'لم تُرفق صورة' صغير جدًا وخفيف، مما يجعله صعب القراءة ويقلل من أهميته. يُصلح ذلك بزيادة حجم الخط وتغميق لونه لتحسين الوضوح والتباين.",
+          "مقبض تغيير حجم حقل النص (textarea) موجود في الزاوية السفلية اليسرى، وهو غير صحيح لاتجاه RTL (يجب أن يكون في الزاوية السفلية اليمنى أو يُزال إذا لم يكن وظيفيًا). كما أن هناك حاجة لتحسين المسافات الرأسية بين الأقسام الرئيسية لزيادة المساحة البصرية."
+        ]
+      },
+      "requests": {
+        "score": 6,
+        "strengths": [
+          "طباعة عربية واضحة ومقروءة بأوزان متناسقة واتجاه RTL سليم في كافة العناصر.",
+          "تصميم حالة فارغة (Empty State) صريحة ومعبرة تشرح للمستخدم سبب غياب البيانات.",
+          "اتساق جيد في أسلوب الحواف الدائرية للمكونات (البطاقات، الفلاتر، وشريط التنقل السفلي)."
+        ],
+        "issues": [
+          "تكرار بصري يهدر المساحة الرأسية؛ البانر الأخضر يكرر عنوان الشاشة دون فائدة وظيفية، ويُفضل حذفه ودمج وظيفة الزر مع الترويسة لرفع المحتوى للأعلى.",
+          "تشتت في هندسة المعلومات وتكرار الإجراءات؛ وجود زر ضخم '+ طلب مصروف جديد' بينما شريط التنقل السفلي يحتوي على تبويب مستقل 'إصدار مصروف'، مما يربك تدفق الاستخدام.",
+          "رتابة لونية تضعف التسلسل البصري؛ تشارك البانر والزر الرئيسي وفلتر 'الكل' نفس الدرجة الخضراء الداكنة يقلل من بروز زر الإجراء كـ CTA وحيد وواضح."
+        ]
+      },
+      "budget_analytics": {
+        "score": 7,
+        "strengths": [
+          "The overall layout is clean and organized, with clear hierarchy for the main sections.",
+          "The use of cards for each budget category is effective in segmenting information.",
+          "The color palette is consistent and the green accent color is used appropriately for calls to action."
+        ],
+        "issues": [
+          "The spacing between the 'Edit' button and the percentage indicator is inconsistent across different cards.",
+          "The text 'ج.س | الصرف:' is not fully aligned with the text above it, creating a slight visual disruption.",
+          "The icons within the cards (e.g., shopping bag, document, car, graduation cap) are not consistently sized or styled, impacting visual harmony."
+        ]
+      },
+      "savings": {
+        "score": 7,
+        "strengths": [
+          "The overall layout is clean and organized, with a clear hierarchy of information.",
+          "The use of color is consistent with a potential brand identity, and the contrast is generally good.",
+          "The typography is legible, and the hierarchy of text sizes and weights is appropriate."
+        ],
+        "issues": [
+          "The spacing between the main title 'أهداف الادخار' and the subtitle 'حالة العائلة' is too large, creating an awkward visual break. Reduce the spacing.",
+          "The icon in the center of the screen, while visually appealing, doesn't immediately convey its purpose without the accompanying text. Consider making the icon more universally recognizable or adding a tooltip/label.",
+          "The bottom navigation bar has inconsistent active state styling. The 'أهداف الادخار' tab is highlighted with a background color, while other active tabs might typically use a different indicator (e.g., bolder text, different icon color). Ensure consistency across all navigation items."
+        ]
+      },
+      "tips_list": {
+        "score": 7,
+        "strengths": [
+          "تسلسل هرمي بصري ممتاز وخط عربي واضح ومتناسق الأوزان بين العناوين، النصوص الوصفية، والبيانات الوصفية.",
+          "نظام لوني هادئ ومناسب للتطبيقات المالية مع استخدام نظيف للبطاقات والظلال الناعمة.",
+          "بناء سليم للبطاقات واتجاه RTL صحيح في ترتيب الأيقونات والنصوص وعناصر التنقل العلوية."
+        ],
+        "issues": [
+          "أيقونة البحث داخل حقل الإدخال موجودة في أقصى اليسار؛ في واجهات RTL القياسية يجب أن تكون العدسة على اليمين في بداية الحقل قبل النص الإرشادي.",
+          "غياب حالة التحديد النشطة (Active State) في شريط التنقل السفلي؛ كل الأيقونات تبدو بحالة غير محددة (رمادية)، ويجب تمييز التبويب الحالي بلون الهوية الأخضر.",
+          "عدم اتساق هوامش الشبكة (Grid Alignment)؛ الهوامش الجانبية للبانر العلوي الأخضر تختلف عن هوامش حقل البحث والبطاقات، ويجب توحيد الهوامش الجانبية على شبكة 16px أو 20px."
+        ]
+      },
+      "tip_detail": {
+        "score": 7,
+        "strengths": [
+          "The overall layout is clean and uses a consistent color palette.",
+          "The typography is legible and the hierarchy is generally clear.",
+          "The use of a prominent button for the primary action is good."
+        ],
+        "issues": [
+          "The top navigation bar has an icon and text ('فرد العائلة') that seems out of place for an error state. It should likely be removed or adapted.",
+          "The spacing between the icon and the text in the top navigation bar is a bit tight.",
+          "The gradient on the main 'النصيحة غير موجودة' banner is a bit dated and could be simplified for a more modern look."
+        ]
+      }
+    }
+  }
+}

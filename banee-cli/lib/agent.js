@@ -9,6 +9,12 @@ function systemPrompt(root) {
     const f = path.join(root, name);
     if (fs.existsSync(f)) { t += '\n\n# تعليمات هذا المشروع (من ' + name + '، لها الأولوية على العامة)\n\n' + fs.readFileSync(f, 'utf8').slice(0, 20000); break; }
   }
+  // سياق المجلد الحالي: الاسم وأول مستوى من الملفات، حتى يعرف الوكيل أين هو من أول رسالة
+  try {
+    const items = fs.readdirSync(root, { withFileTypes: true }).filter((d) => !SKIP.includes(d.name) && !d.name.startsWith('.')).slice(0, 60)
+      .map((d) => d.isDirectory() ? d.name + '/' : d.name);
+    t += '\n\n# المشروع الحالي\n\nأنت تعمل داخل المجلد «' + path.basename(root) + '». هذا هو المشروع الذي يقصده المطوّر بـ«هذا البوت/التطبيق/المشروع».\nمحتوى المجلد: ' + (items.join('، ') || '(فارغ)');
+  } catch (e) {}
   return t;
 }
 

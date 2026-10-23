@@ -1,6 +1,6 @@
 {
   "name": "banee-cli",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "بانِي من الـ terminal — صف تطبيقك بالعربي فيُبنى مشروع Capacitor كامل، أو عدّل مشروعك الحالي بوكيل ذكاء اصطناعي",
   "bin": { "banee": "bin/banee.js" },
   "files": ["bin", "lib", "engine", "README.md"],

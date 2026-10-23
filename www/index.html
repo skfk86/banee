@@ -4051,8 +4051,8 @@ function emptyCols(app){
   var plan = app.ck.plan, seed = mergedSeed(app), all = plan.screens.map(function(s){ return app.ck.screens[s.id] || ''; }).join('\n'), out = [];
   (plan.collections || []).forEach(function(c){
     if (!c || !c.name || /^(users|members|notices|devices)$/.test(c.name) || (seed[c.name] || []).length) return;
-    var f = Object.keys(c.fields || {}); if (f.indexOf('userId') > -1) return; // بيانات المستخدم تُنشأ أثناء الاستخدام
-    var n = c.name.replace(/[^\w]/g, ''), read = new RegExp('Data\\.' + n + '\\.(list|get|byStatus)|DB\\.(list|get|watch)\\(\\s*[\'"`]' + n + '[\'"`]').test(all), wr = new RegExp('Data\\.' + n + '\\.create|DB\\.add\\(\\s*[\'"`]' + n + '[\'"`]').test(all);
+    var n = c.name.replace(/[^\w]/g, ''), read = new RegExp('Data\\.' + n + '\\.(list|get|byStatus|visible|mine)|DB\\.(list|get|watch)\\(\\s*[\'"`]' + n + '[\'"`]').test(all), wr = new RegExp('Data\\.' + n + '\\.create|DB\\.add\\(\\s*[\'"`]' + n + '[\'"`]').test(all);
+    // حتى لو فيها userId (ملف الطبيب يملكه الطبيب): لا شاشة تُنشئها = كتالوج يجب ملؤه، وإلا تبقى أول شاشة فارغة
     if (read && !wr) out.push(c);
   });
   return out;

@@ -1,0 +1,258 @@
+{
+  "status": "ready",
+  "error": "",
+  "name": "مُنجِز",
+  "steps": [
+    "done · هوية «إنجاز العملي» · الخطة: ٨ شاشات · ٥ مجموعات · ٦ عنصر محتوى",
+    "done · المحتوى: ٦ عنصر مكتوب كاملاً",
+    "done · الهيكل جاهز: التنقّل، البيانات، الدخول، التصميم",
+    "done · ٨ شاشات مكتوبة",
+    "done · جُرّبت كل الشاشات وأُصلحت ١١، لا أخطاء · رحلات المستخدم: ٢ من ٢ تعمل كاملة · المراجعة: أُصلحت ٤ من ٤ · التصميم: ٤.٩ من ١٠ (حُسّنت ٣ شاشات) · وكيل الإصلاح: أصلح ٢ في ١٨ خطوة",
+    "done · جاهز للمعاينة والتحميل"
+  ],
+  "runtime": {
+    "home": [],
+    "tasksFeed": [],
+    "newOrder": [],
+    "orderDetail": [],
+    "myOrders": [],
+    "providerProfile": [],
+    "earningsDashboard": [],
+    "profile": []
+  },
+  "flows": [
+    "طلب خدمة واختيار فني (10 خطوات)",
+    "تقديم عرض سعر من الفني وتنفيذ المهمة (9 خطوات)"
+  ],
+  "flowSteps": [
+    {
+      "flow": "طلب خدمة واختيار فني",
+      "steps": [
+        {
+          "role": "customer"
+        },
+        {
+          "go": "/new-order"
+        },
+        {
+          "fill": {
+            "#categorySelect": "كهرباء"
+          }
+        },
+        {
+          "fill": {
+            "#orderTitle": "تسريب مياه في صمام الحمام"
+          }
+        },
+        {
+          "fill": {
+            "#orderDesc": "يوجد تسريب مياه مستمر في الصمام الرئيسي للحمام"
+          }
+        },
+        {
+          "fill": {
+            "#orderDate": "2023-12-31T10:00"
+          }
+        },
+        {
+          "fill": {
+            "#orderAddress": "الخرطوم، حي الرياض، شارع 15"
+          }
+        },
+        {
+          "click": "#submitBtn"
+        },
+        {
+          "expect": "تم نشر الطلب بنجاح"
+        },
+        {
+          "expectDb": {
+            "col": "orders",
+            "min": 1
+          }
+        }
+      ]
+    },
+    {
+      "flow": "تقديم عرض سعر من الفني وتنفيذ المهمة",
+      "steps": [
+        {
+          "role": "provider"
+        },
+        {
+          "go": "/tasks"
+        },
+        {
+          "click": "[data-act=viewOrder]"
+        },
+        {
+          "fill": {
+            "#bid-amount": "5000"
+          }
+        },
+        {
+          "fill": {
+            "#bid-hours": "3"
+          }
+        },
+        {
+          "fill": {
+            "#bid-message": "لدي خبرة واسعة في صيانة المضخات وسأقوم بإصلاح التسريب بكفاءة"
+          }
+        },
+        {
+          "click": "[data-act=submit-bid]"
+        },
+        {
+          "expect": "تم إرسال عرض السعر بنجاح"
+        },
+        {
+          "expectDb": {
+            "col": "bids",
+            "min": 1
+          }
+        }
+      ]
+    }
+  ],
+  "reviewIssues": {
+    "home": [],
+    "tasksFeed": [],
+    "newOrder": [
+      "مراجعة: تستخدم Data.categories كمصفوفة مباشرة في دالة render بينما هي كولكشن ويجب جلبها عبر Data.categories.list() في دالة mount."
+    ],
+    "orderDetail": [],
+    "myOrders": [
+      "مراجعة: تستدعي Data.orders.visible() لعرض طلبات العميل بينما يجب استخدام Data.orders.mine() لجلب طلبات العميل الخاصة به فقط."
+    ],
+    "providerProfile": [
+      "مراجعة: تستدعي Data.X.list بينما اسم الكولكشن في المخطط هو members. الإصلاح: استبدال Data.X بـ Data.members."
+    ],
+    "earningsDashboard": [
+      "مراجعة: تستدعي Data.orders.visible() لعرض أرباح ومهام الفني بلا فلترة بـ providerId. الإصلاح: تصفية الطلبات لتشمل فقط التي تخص الفني الحالي (providerId === Auth.user.uid)."
+    ],
+    "profile": []
+  },
+  "spec": false,
+  "specFallback": [],
+  "flowErr": "",
+  "agent": {
+    "ran": true,
+    "fixed": 2,
+    "steps": 18,
+    "log": [
+      "read tasksFeed — سأقوم بقراءة شاشة 'tasksFeed' وشاشة 'newOrder' لمعرفة سبب عدم ظهور العناصر المطلوبة في الاختبارات (الأزرار والحقول)، حيث يبدو أن الشاشات فارغة  → 1| App.screen({\n2|   id: 'tasksFeed',\n3|   route: '/tasks',\n4|   title: 'طلبات العمل',\n5|   icon: 'clipboard-list',\n6|   nav: true,\n7|   render(params) {\n8|    ",
+      "seed — الأخطاء تشير إلى عدم وجود عناصر في الشاشات. في tasksFeed، الزر موجود في الكود لكن قد لا يظهر إذا كانت القائمة فارغة. في newOrder، لم أقرأ الكود بعد. سأقو → أُضيفت 2 عناصر إلى categories (ids: categories-1، categories-2). شغّل run للتحقق.",
+      "read newOrder — سأقوم بقراءة شاشة 'newOrder' لمعرفة سبب عدم ظهور الحقول (#orderTitle) وتأكيد هيكلها، ثم سأقوم بتشغيل التطبيق للتحقق من تأثير البيانات الأولية عل → 1| App.screen({\n2|   id: 'newOrder',\n3|   route: '/new-order',\n4|   title: 'طلب خدمة',\n5|   icon: 'plus-circle',\n6|   nav: false,\n7|   async render(params) {\n8|",
+      "flow — لقد قرأت كود الشاشتين. في 'newOrder'، الحقول موجودة فعلاً في الـ DOM (IDs: orderTitle, orderDesc, orderDate, orderAddress). الخطأ في الاختبار الآلي 'الحق → حُدّث سيناريو «طلب خدمة واختيار فني». شغّل run للتحقق.",
+      "edit newOrder — لقد لاحظت أن شاشة 'newOrder' تستخدم دالة render غير متزامنة (async)، وهو ما يخالف العقد البرمجي الذي يشترط أن تكون دالة render متزامنة (synchron → رُفض التعديل لأنه يكسر الكود: خطأ صياغة JavaScript: await is only valid in async functions and the top level bodies of modules",
+      "edit newOrder — الشاشة newOrder تستخدم دالة render غير متزامنة (async) وتقوم بجلب البيانات بداخلها، وهذا يخالف العقد البرمجي الذي يشترط أن تكون render متزامنة و → تم التعديل",
+      "run — لقد قمت بتعديل دالة render في شاشة newOrder لتصبح متزامنة (synchronous) كما يقتضي العقد البرمجي، حيث أن جلب البيانات يجب أن يتم في mount. الآن سأقوم بتشغي → نتيجة التشغيل (درجة الأخطاء 200، الأفضل حتى الآن 60):\n[home] draft is not defined\n[tasksFeed] رحلة «تقديم عرض سعر من الفني وتنفيذ المهمة» توقفت عند الخطوة ٣: لم",
+      "read newOrder — لقد قمت بتعديل render لتكون متزامنة ولكن يبدو أن هناك خطأ في الوصول للمتغيرات أو في هيكلية الـ HTML الناتجة. سأقوم بقراءة شاشة 'newOrder' مرة أخ → 1| App.screen({\n2|   id: 'newOrder',\n3|   route: '/new-order',\n4|   title: 'طلب خدمة',\n5|   icon: 'plus-circle',\n6|   nav: false,\n7|   render(params) {\n8|     r",
+      "edit newOrder — الخطأ 'draft is not defined' يظهر لأن دالة render تحاول الوصول لمتغير draft غير معرف في نطاقها. يجب تعريف draft داخل render باستخدام Store.get ق → تم التعديل",
+      "run — لقد قمت بتعريف draft داخل دالة render في شاشة newOrder، مما سيحل خطأ 'draft is not defined'. الآن سأقوم بتشغيل التطبيق للتحقق من أن الشاشة تعمل بشكل صحيح  → نتيجة التشغيل (درجة الأخطاء 60، الأفضل حتى الآن 60):\n[tasksFeed] رحلة «تقديم عرض سعر من الفني وتنفيذ المهمة» توقفت عند الخطوة ٣: لم يُعثر على [data-act=viewOrde",
+      "flow — الخطأ في newOrder هو عدم اختيار تصنيف في سيناريو الاختبار، مما يمنع الحفظ. سأقوم بتعديل سيناريو الاختبار أولاً. ثم سأقرأ tasksFeed لأعرف لماذا لا تظهر ال → حُدّث سيناريو «طلب خدمة واختيار فني». شغّل run للتحقق.",
+      "read tasksFeed — لقد أصلحت سيناريو الاختبار لـ newOrder، ولكن لا يزال هناك خطأ في tasksFeed حيث لا تظهر الطلبات للفني. سأقوم بقراءة كود tasksFeed لأرى كيف تستعر → 1| App.screen({\n2|   id: 'tasksFeed',\n3|   route: '/tasks',\n4|   title: 'طلبات العمل',\n5|   icon: 'clipboard-list',\n6|   nav: true,\n7|   render(params) {\n8|    ",
+      "seed — لقد قرأت كود tasksFeed ووجدت أن الزر [data-act=viewOrder] موجود فعلاً في السطر 96. سبب فشل الاختبار الآلي هو أن `Data.orders.visible()` قد لا تعيد الطلبا → أُضيفت 2 عناصر إلى orders (ids: orders-1، orders-2). شغّل run للتحقق.",
+      "run — لقد أضفت بيانات أولية (seed) للطلبات (orders) لضمان وجود بيانات للفني في شاشة 'tasksFeed'. سأقوم الآن بتشغيل التطبيق (run) للتحقق مما إذا كان الاختبار الآ → نتيجة التشغيل (درجة الأخطاء 30، الأفضل حتى الآن 30):\n[newOrder] رحلة «طلب خدمة واختيار فني» توقفت عند الخطوة ١٠: لم يُحفظ شيء في orders بعد العملية (الحفظ لا يع",
+      "read newOrder — لقد استعرضت كود شاشة newOrder سابقاً، ولكن يبدو أنني لم أتحقق من دالة الحفظ داخل mount. سأقوم بقراءة شاشة newOrder مرة أخرى للتركيز على كيفية مع → 1| App.screen({\n2|   id: 'newOrder',\n3|   route: '/new-order',\n4|   title: 'طلب خدمة',\n5|   icon: 'plus-circle',\n6|   nav: false,\n7|   render(params) {\n8|     c",
+      "edit newOrder — لقد قرأت كود 'newOrder' ووجدت أن المشكلة هي أن قائمة التصنيفات في الـ HTML (السطر 22-24) فارغة وتعتمد على التحميل الديناميكي، لكن دالة mount لا  → تم التعديل",
+      "run — لقد قمت بتعديل شاشة newOrder لتعبئة قائمة التصنيفات بشكل صحيح في mount، وهو ما سيسمح للاختبار الآلي باختيار التصنيف بنجاح. الآن سأقوم بتشغيل التطبيق للتأك → نتيجة التشغيل (درجة الأخطاء 0، الأفضل حتى الآن 0):\nلا أخطاء وظيفية",
+      "done → تم إصلاح مشكلة تحميل التصنيفات في شاشة طلب الخدمة (newOrder) مما أدى لنجاح رحلة العميل، وتأكدت من عمل ساحة الطلبات (tasksFeed) للفنيين مع البيانات الأولية. التط"
+    ]
+  },
+  "fixErrors": [],
+  "review": {
+    "found": 4,
+    "fixed": 4
+  },
+  "screens": [
+    {
+      "id": "home",
+      "route": "/",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 8994
+    },
+    {
+      "id": "tasksFeed",
+      "route": "/tasks",
+      "roles": [
+        "provider"
+      ],
+      "bytes": 4747
+    },
+    {
+      "id": "newOrder",
+      "route": "/new-order",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 9048
+    },
+    {
+      "id": "orderDetail",
+      "route": "/order/:id",
+      "roles": [
+        "customer",
+        "provider"
+      ],
+      "bytes": 16709
+    },
+    {
+      "id": "myOrders",
+      "route": "/orders",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 4983
+    },
+    {
+      "id": "providerProfile",
+      "route": "/provider/:id",
+      "roles": [
+        "customer",
+        "provider"
+      ],
+      "bytes": 8928
+    },
+    {
+      "id": "earningsDashboard",
+      "route": "/earnings",
+      "roles": [
+        "provider"
+      ],
+      "bytes": 9340
+    },
+    {
+      "id": "profile",
+      "route": "/profile",
+      "roles": [
+        "customer",
+        "provider"
+      ],
+      "bytes": 11025
+    }
+  ],
+  "design": {
+    "model": "gemini-2.5-flash",
+    "score": 7,
+    "min": 7,
+    "screens": {
+      "tasksFeed": {
+        "score": 7,
+        "strengths": [
+          "The overall layout is clean and modern, with a good use of white space.",
+          "The color palette is consistent and appealing, with a good contrast between text and background.",
+          "The typography is legible and well-chosen for an Arabic RTL interface."
+        ],
+        "issues": [
+          "The spacing between the 'كهرباء' tag and the main job title 'تسريب مياه في صمام الحمام' is a bit tight. Consider increasing it slightly for better visual separation.",
+          "The icon for the location 'الخرطوم، حي الرياض، شارع 15' is slightly misaligned with the text. Ensure consistent vertical alignment.",
+          "The 'مقدم الخدمة' button in the header has an icon that is not perfectly centered within its container. Adjust the icon's position for better visual balance."
+        ]
+      }
+    }
+  }
+}

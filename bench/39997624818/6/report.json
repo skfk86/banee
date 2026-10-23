@@ -1,0 +1,230 @@
+{
+  "status": "ready",
+  "error": "",
+  "name": "المجلس الفاخر",
+  "steps": [
+    "done · هوية «ذوق فاخر» · الخطة: ٦ شاشات · ٦ مجموعات · ٢٤ عنصر محتوى",
+    "done · المحتوى: ٢٤ عنصر مكتوب كاملاً",
+    "done · الهيكل جاهز: التنقّل، البيانات، الدخول، التصميم",
+    "done · ٦ شاشات مكتوبة",
+    "done · جُرّبت كل الشاشات وأُصلحت ٥، لا أخطاء · رحلات المستخدم: ٤ من ٤ تعمل كاملة · المراجعة: أُصلحت ١ من ١ · التصميم: ٥.٨ من ١٠ (حُسّنت ٣ شاشات)",
+    "done · جاهز للمعاينة والتحميل"
+  ],
+  "runtime": {
+    "home": [],
+    "book": [],
+    "myBookings": [],
+    "rewards": [],
+    "hostDashboard": [],
+    "kitchenDashboard": []
+  },
+  "flows": [
+    "حجز طاولة وطلب مسبق (11 خطوات)",
+    "إدارة الصالة والمضيّف (6 خطوات)",
+    "تحضير الطلبات في المطبخ (3 خطوات)",
+    "استبدال المكافآت ونقاط الولاء (4 خطوات)"
+  ],
+  "flowSteps": [
+    {
+      "flow": "حجز طاولة وطلب مسبق",
+      "steps": [
+        {
+          "go": "/"
+        },
+        {
+          "click": "[data-act=add-to-cart][data-id=menu-1]"
+        },
+        {
+          "click": "[data-act=go-book]"
+        },
+        {
+          "fill": {
+            "#b-date": "2025-12-31"
+          }
+        },
+        {
+          "fill": {
+            "#b-time": "20:00"
+          }
+        },
+        {
+          "fill": {
+            "#b-guests": "4"
+          }
+        },
+        {
+          "fill": {
+            "#b-phone": "0512345678"
+          }
+        },
+        {
+          "fill": {
+            "#b-notes": "بدون شطة"
+          }
+        },
+        {
+          "click": "text:تأكيد وحجز الطاولة الآن"
+        },
+        {
+          "expect": "حجوزاتك وطلباتي"
+        },
+        {
+          "expectDb": {
+            "col": "bookings",
+            "min": 1
+          }
+        }
+      ]
+    },
+    {
+      "flow": "إدارة الصالة والمضيّف",
+      "steps": [
+        {
+          "role": "host"
+        },
+        {
+          "go": "/host"
+        },
+        {
+          "click": "[data-act=change-table-status][data-id=tables-1]"
+        },
+        {
+          "fill": {
+            "#sheet-table-status-select": "reserved"
+          }
+        },
+        {
+          "click": "text:حفظ التعديل"
+        },
+        {
+          "expect": "إدارة الصالة والطاولات"
+        }
+      ]
+    },
+    {
+      "flow": "تحضير الطلبات في المطبخ",
+      "steps": [
+        {
+          "role": "kitchen"
+        },
+        {
+          "go": "/kitchen"
+        },
+        {
+          "expect": "شاشة المطبخ وإعداد الطلبات"
+        }
+      ]
+    },
+    {
+      "flow": "استبدال المكافآت ونقاط الولاء",
+      "steps": [
+        {
+          "role": "customer"
+        },
+        {
+          "go": "/rewards"
+        },
+        {
+          "click": "[data-act=redeem][data-id=rewards-1]"
+        },
+        {
+          "expect": "برنامج الولاء الفاخر"
+        }
+      ]
+    }
+  ],
+  "reviewIssues": {
+    "home": [],
+    "book": [],
+    "myBookings": [],
+    "rewards": [],
+    "hostDashboard": [],
+    "kitchenDashboard": [
+      "مراجعة: استخدام Data.label(b.status) بدلاً من Data.bookings.label(b.status) مسبباً خطأ في جلب تسمية حالة الحجز في شاشة المطبخ."
+    ]
+  },
+  "spec": false,
+  "specFallback": [],
+  "flowErr": "",
+  "agent": {
+    "ran": false,
+    "fixed": 0,
+    "steps": 0,
+    "log": []
+  },
+  "fixErrors": [],
+  "review": {
+    "found": 1,
+    "fixed": 1
+  },
+  "screens": [
+    {
+      "id": "home",
+      "route": "/",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 8697
+    },
+    {
+      "id": "book",
+      "route": "/book",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 6227
+    },
+    {
+      "id": "myBookings",
+      "route": "/my-bookings",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 7683
+    },
+    {
+      "id": "rewards",
+      "route": "/rewards",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 6372
+    },
+    {
+      "id": "hostDashboard",
+      "route": "/host",
+      "roles": [
+        "host"
+      ],
+      "bytes": 10348
+    },
+    {
+      "id": "kitchenDashboard",
+      "route": "/kitchen",
+      "roles": [
+        "kitchen"
+      ],
+      "bytes": 5746
+    }
+  ],
+  "design": {
+    "model": "gemini-2.5-flash",
+    "score": 7,
+    "min": 7,
+    "screens": {
+      "home": {
+        "score": 7,
+        "strengths": [
+          "The overall layout is clean and visually appealing, with good use of imagery.",
+          "The typography is generally clear, with distinct hierarchy for titles and body text.",
+          "The RTL implementation appears correct for the main content."
+        ],
+        "issues": [
+          "The tab bar at the top has inconsistent styling and spacing between items. Consider using a more uniform design for all tabs.",
+          "The 'نقطة' button within the dark header has a star icon that is not clearly aligned or scaled appropriately with the text. It should be more integrated or removed if not essential.",
+          "The price '١٨٥' and currency 'ج.س' are not well-aligned with the dish title. They should be positioned more consistently, perhaps to the right of the title or in a dedicated price area."
+        ]
+      }
+    }
+  }
+}

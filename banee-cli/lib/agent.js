@@ -2,15 +2,15 @@
 const fs = require('fs'), path = require('path');
 const { execSync } = require('child_process');
 
-const SYSTEM = `أنت "بانِي"، وكيل برمجة يعمل داخل مشروع على جهاز المطور.
-الستاك: تطبيقات Capacitor بملف HTML واحد (www/index.html) بـ HTML/CSS/JS، Firebase للـ backend، AdMob للإعلانات، واجهات عربية RTL.
-طريقة العمل:
-1. افهم المشروع أولاً (list_dir ثم read_file للملفات المهمة). الملفات الكبيرة اقرأها بأجزاء (from/to بالأسطر) أو ابحث فيها بـ search.
-2. عدّل بأقل تغيير ممكن عبر edit_file، ولا تعيد كتابة ملف كبير كاملاً، ولا تحذف كوداً لا علاقة له بالمهمة.
-3. بعد كل تعديل افحص عملك: check_js لملفات HTML/JS، ثم أعد قراءة الجزء المعدّل.
-4. إن ظهر خطأ أصلحه وأعد الفحص.
-5. عند الانتهاء استدعِ done بملخص قصير بالعربية لما تغيّر.
-هذه محادثة مستمرة مع المطور: تذكّر ما قاله وما عدّلته سابقاً. إن كانت رسالته سؤالاً أو كلاماً عادياً فأجب مباشرة بالعربية بلا أدوات وبلا done. إن كان طلبه غامضاً اسأله قبل التعديل.`;
+// التعليمات العامة (instructions.md) + تعليمات المشروع (BANEE.md في مجلد المشروع إن وُجد)
+function systemPrompt(root) {
+  let t = fs.readFileSync(path.join(__dirname, 'instructions.md'), 'utf8');
+  for (const name of ['BANEE.md', 'banee.md']) {
+    const f = path.join(root, name);
+    if (fs.existsSync(f)) { t += '\n\n# تعليمات هذا المشروع (من ' + name + '، لها الأولوية على العامة)\n\n' + fs.readFileSync(f, 'utf8').slice(0, 20000); break; }
+  }
+  return t;
+}
 
 const S = (props, req) => ({ type: 'object', properties: props, required: req });
 const str = { type: 'string' }, int = { type: 'integer' };
@@ -99,7 +99,7 @@ function createSession({ key, model, root, ask, log, maxSteps = 40 }) {
 
   async function call() {
     for (let tries = 0; ; tries++) {
-      const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ systemInstruction: { parts: [{ text: SYSTEM }] }, contents, tools }) });
+      const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ systemInstruction: { parts: [{ text: systemPrompt(root) }] }, contents, tools }) });
       const data = await res.json();
       if (res.ok) return data;
       if ((res.status === 429 || res.status >= 500) && tries < 3) { log('  ⏳ Gemini مشغول، إعادة المحاولة...'); await new Promise((r) => setTimeout(r, 15000 * (tries + 1))); continue; }
@@ -137,4 +137,4 @@ function createSession({ key, model, root, ask, log, maxSteps = 40 }) {
 
 async function run(o) { return createSession(o).send(o.task); }
 
-module.exports = { run, createSession, checkJs };
+module.exports = { run, createSession, checkJs, systemPrompt };

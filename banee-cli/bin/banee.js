@@ -47,7 +47,7 @@ const HELP = `🧱 بانِي من الـ terminal
 
   banee
       محادثة مباشرة داخل المشروع الحالي: اطلب، اسأل، عدّل، وهو يتذكر المحادثة.
-      أوامر داخل المحادثة: /new فكرة · /check ملف · /clear · /help · /exit
+      أوامر داخل المحادثة: /init · /new فكرة · /check ملف · /clear · /help · /exit
 
   banee new "وصف التطبيق" [--out مجلد] [--name الاسم] [--id com.x.app] [--admob ca-app-pub-..~..] [--yes]
   banee new --kit delivery|store|booking|edu
@@ -68,6 +68,7 @@ const HELP = `🧱 بانِي من الـ terminal
 const CHAT_HELP = `أوامر المحادثة:
   /new وصف التطبيق   بناء تطبيق كامل جديد بمحرك بانِي
   /check [ملف]       فحص أخطاء الصياغة (الافتراضي www/index.html)
+  /init              يدرس المشروع ويكتب له BANEE.md (تعليمات خاصة به)
   /clear             محادثة جديدة (ينسى ما سبق)
   /key               تغيير مفتاح Gemini
   /exit              خروج
@@ -92,12 +93,18 @@ async function chat() {
   log('اكتب طلبك بالعربي، أو /help للأوامر، أو /exit للخروج.');
   const { createSession, checkJs } = require('../lib/agent');
   const s = createSession({ key: KEY, model: MODEL, root, ask, log, maxSteps: +flags.steps || 40 });
+  let t2 = null;
+  if (fs.existsSync(path.join(root, 'BANEE.md'))) log('📘 يقرأ تعليمات المشروع من BANEE.md');
   for (;;) {
     const t = await ask('\n❯ ');
     if (!t) continue;
     if (t === '/exit' || t === 'خروج') return bye();
     if (t === '/help') { log(CHAT_HELP); continue; }
     if (t === '/key') { await setupKey(ask, true); log('أعد تشغيل banee لاستخدام المفتاح الجديد.'); continue; }
+    if (t === '/init') {
+      if (fs.existsSync(path.join(root, 'BANEE.md')) && (await ask('BANEE.md موجود. أحدّثه؟ (y/n) ')).toLowerCase() !== 'y') continue;
+      t2 = 'ادرس هذا المشروع (البنية، الملفات الرئيسية، الستاك، الإعدادات، أسلوب الكود، الأوامر المهمة) ثم أنشئ أو حدّث ملف BANEE.md في جذره: تعليمات مختصرة بالعربية (أقل من ٨٠ سطراً) لوكيل يعمل على المشروع لاحقاً: ما هو التطبيق، أين كل شيء، الأنماط المتبعة، أوامر البناء والفحص، وما يجب تجنبه. لا تخترع ما لم تره في الملفات.';
+    }
     if (t === '/clear') { s.reset(); log('🧹 محادثة جديدة.'); continue; }
     if (t.startsWith('/check')) { try { log(checkJs(path.resolve(root, t.slice(6).trim() || 'www/index.html'))); } catch (e) { log('❌ ' + e.message); } continue; }
     if (t.startsWith('/new')) {
@@ -111,7 +118,7 @@ async function chat() {
     }
     try {
       log('  ⏳ ...');
-      const r = await s.send(t);
+      const r = await s.send(t2 || t); t2 = null;
       if (r.summary) log('\n✅ ' + r.summary);
     } catch (e) { log('❌ ' + e.message); }
   }

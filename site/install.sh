@@ -7,7 +7,7 @@ set -e
 REPO_RAW="${BANEE_RAW:-https://raw.githubusercontent.com/skfk86/banee/main}"
 DIR="$HOME/.banee"
 APP="$DIR/app"
-FILES="bin/banee.js lib/agent.js lib/engine.js package.json README.md"
+FILES="bin/banee.js lib/agent.js lib/engine.js lib/instructions.md package.json README.md"
 
 g='\033[32m'; r='\033[31m'; d='\033[2m'; n='\033[0m'
 say() { printf "%b\n" "$1"; }

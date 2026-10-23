@@ -1,0 +1,150 @@
+{
+  "status": "ready",
+  "error": "",
+  "name": "مذاق فاخر",
+  "steps": [
+    "done · هوية «مذاق فاخر» · الخطة: ٥ شاشات · ٥ مجموعات",
+    "done · لا يحتاج التطبيق محتوى جاهزاً",
+    "done · الهيكل جاهز: التنقّل، البيانات، الدخول، التصميم",
+    "done · ٥ شاشات مكتوبة",
+    "done · الفحص: ١ شاشات بها ملاحظات، راجعها في الاستوديو · رحلات المستخدم: ٠ من ١ تعمل كاملة · التصميم: ٥.٦ من ١٠ (حُسّنت ٣ شاشات) · وكيل الإصلاح: لم يجد تحسيناً آمناً",
+    "done · جاهز للمعاينة والتحميل"
+  ],
+  "runtime": {
+    "home": [],
+    "book": [
+      "رحلة «حجز وطلب مسبق» توقفت عند الخطوة ٧: لم يُحفظ شيء في bookings بعد العملية (الحفظ لا يعمل) — لم تُستدعَ أي عملية حفظ إطلاقاً بعد الضغط (الزر لا يحفظ، أو التحقق من الحقول أوقفه بصمت)"
+    ],
+    "myBookings": [],
+    "hostDashboard": [],
+    "kitchenDashboard": []
+  },
+  "flows": [
+    "حجز وطلب مسبق (7 خطوات)"
+  ],
+  "flowSteps": [
+    {
+      "flow": "حجز وطلب مسبق",
+      "steps": [
+        {
+          "go": "/"
+        },
+        {
+          "click": "[data-act=add-to-cart][data-id=menu-1]"
+        },
+        {
+          "go": "/book"
+        },
+        {
+          "fill": {
+            "#userName": "محمد أحمد",
+            "#phone": "0512345678",
+            "#guests": "2",
+            "#date": "2025-12-31",
+            "#time": "20:00",
+            "#occasion": "عشاء عائلي"
+          }
+        },
+        {
+          "click": "text:تأكيد الحجز والطلب المسبق"
+        },
+        {
+          "expect": "حجوزاتي والطلبات المسبقة"
+        },
+        {
+          "expectDb": {
+            "col": "bookings",
+            "min": 1
+          }
+        }
+      ]
+    }
+  ],
+  "reviewIssues": {
+    "home": [],
+    "book": [],
+    "myBookings": [],
+    "hostDashboard": [],
+    "kitchenDashboard": []
+  },
+  "spec": false,
+  "specFallback": [],
+  "flowErr": "",
+  "agent": {
+    "ran": true,
+    "fixed": 0,
+    "steps": 3,
+    "log": [
+      "read book — قراءة الشاشة book لفحص سبب عدم الحفظ في الحجوزات عند النقر على زر التأكيد → 1| App.screen({\n2|   id: 'book',\n3|   route: '/book',\n4|   title: 'حجز طاولة',\n5|   icon: 'calendar-plus',\n6|   nav: true,\n7|   render(params) {\n8|     const ca",
+      "read home → 1| App.screen({\n2|   id: 'home',\n3|   route: '/',\n4|   title: 'الرئيسية',\n5|   icon: 'utensils',\n6|   nav: true,\n7|   render(params) {\n8|     return `\n9|       ",
+      "done → "
+    ]
+  },
+  "fixErrors": [],
+  "review": {
+    "found": 0,
+    "fixed": 0
+  },
+  "screens": [
+    {
+      "id": "home",
+      "route": "/",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 8416
+    },
+    {
+      "id": "book",
+      "route": "/book",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 6282
+    },
+    {
+      "id": "myBookings",
+      "route": "/my-bookings",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 5366
+    },
+    {
+      "id": "hostDashboard",
+      "route": "/host",
+      "roles": [
+        "host"
+      ],
+      "bytes": 17136
+    },
+    {
+      "id": "kitchenDashboard",
+      "route": "/kitchen",
+      "roles": [
+        "kitchen"
+      ],
+      "bytes": 6685
+    }
+  ],
+  "design": {
+    "model": "gemini-2.5-flash",
+    "score": 6,
+    "min": 6,
+    "screens": {
+      "hostDashboard": {
+        "score": 6,
+        "strengths": [
+          "طباعة عربية حديثة وعالية الجودة مع مراعاة دقيقة لمحاذاة RTL والمسافات البينية.",
+          "أسلوب بصري نظيف ومريح للعين يعتمد على تباين ناعم وبطاقات ذات حواف متناسقة.",
+          "الحالة الفارغة (Empty State) مصممة بأسلوب أنيق ومزودة بأيقونة ورسالة توجيهية واضحة."
+        ],
+        "issues": [
+          "بطاقات الإحصائيات العلوية تعرض رمز '◆' غير مفهوم بدلاً من قيمة رقمية (مثل 0) أو مؤشر تحميل هيكلي (Skeleton)، ما يعطي انطباعاً بوجود خطأ برمجي.",
+          "البانر الترويجي الداكن في الأعلى يستهلك مساحة رأسية هائلة دون إضافة وظيفة تفاعلية في تطبيق تشغيلي؛ يجب تقليصه أو دمجه لرفع المحتوى العملياتي للأعلى.",
+          "شريط التنقل السفلي (Bottom Bar) يعرض تبويباً واحداً فقط، وهو نمط واجهات غير سليم؛ يجب إضافة باقي الأقسام أو إلغاء الشريط والاعتماد على التنقل القياسي."
+        ]
+      }
+    }
+  }
+}

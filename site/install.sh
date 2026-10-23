@@ -18,14 +18,19 @@ say "\n🧱 ${g}تثبيت بانِي${n}\n"
 # ── Node.js ≥ 18 ──
 if ! command -v node >/dev/null 2>&1; then
   if [ -n "$PREFIX" ] && command -v pkg >/dev/null 2>&1; then
-    say "${d}تثبيت Node.js عبر pkg...${n}"; pkg install -y nodejs >/dev/null
+    say "${d}تثبيت Node.js عبر pkg...${n}"; pkg install -y nodejs >/dev/null 2>&1
   else
     die "بانِي يحتاج Node.js 18 أو أحدث. ثبّته ثم أعد الأمر:
    Ubuntu/Debian:  sudo apt install -y nodejs npm
    أو من:          https://nodejs.org"
   fi
 fi
-NODE_MAJOR=$(node -p 'process.versions.node.split(".")[0]')
+if ! NODE_MAJOR=$(node -p 'process.versions.node.split(".")[0]' 2>/dev/null); then
+  if [ -n "$PREFIX" ]; then die "Node.js مثبّت لكنه لا يعمل (مكتبات Termux قديمة). شغّل:
+   pkg upgrade -y
+   ثم أعد أمر التثبيت."; fi
+  die "Node.js مثبّت لكنه لا يعمل. أعد تثبيته ثم أعد الأمر."
+fi
 [ "$NODE_MAJOR" -ge 18 ] || die "إصدار Node.js قديم ($(node -v)). المطلوب 18 أو أحدث."
 command -v npm >/dev/null 2>&1 || die "npm غير موجود. ثبّته مع Node.js."
 

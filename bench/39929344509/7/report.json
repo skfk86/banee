@@ -1,0 +1,266 @@
+{
+  "status": "ready",
+  "error": "",
+  "name": "إدارة العقارات والإيجارات",
+  "steps": [
+    "done · هوية «مفتاح الثقة» · الخطة: ٦ شاشات · ٧ مجموعات",
+    "done · لا يحتاج التطبيق محتوى جاهزاً",
+    "done · الهيكل جاهز: التنقّل، البيانات، الدخول، التصميم",
+    "done · ٦ شاشات مكتوبة",
+    "done · جُرّبت كل الشاشات وأُصلحت ٣، لا أخطاء · رحلات المستخدم: ٣ من ٣ تعمل كاملة · المراجعة: أُصلحت ١ من ١ · التصميم: ٦.٢ من ١٠ (حُسّنت ٣ شاشات)",
+    "done · جاهز للمعاينة والتحميل"
+  ],
+  "runtime": {
+    "home": [],
+    "propertiesList": [],
+    "tenantPayments": [],
+    "maintenanceList": [],
+    "contractsList": [],
+    "notifications": []
+  },
+  "flows": [
+    "دفع الإيجار للمستأجر (10 خطوات)",
+    "طلب صيانة (12 خطوات)",
+    "إدارة العقارات للمالك (9 خطوات)"
+  ],
+  "flowSteps": [
+    {
+      "flow": "دفع الإيجار للمستأجر",
+      "steps": [
+        {
+          "role": "tenant"
+        },
+        {
+          "go": "/"
+        },
+        {
+          "click": "[data-act=go-payments]"
+        },
+        {
+          "click": "[data-act=new-payment]"
+        },
+        {
+          "fill": {
+            "#pay-title": "إيجار شهر مارس"
+          }
+        },
+        {
+          "fill": {
+            "#pay-unit": "101"
+          }
+        },
+        {
+          "fill": {
+            "#pay-amount": "500"
+          }
+        },
+        {
+          "fill": {
+            "#pay-date": "2025-03-01"
+          }
+        },
+        {
+          "click": "text:إرسال طلب الدفع للمالك"
+        },
+        {
+          "expectDb": {
+            "col": "payments",
+            "min": 1
+          }
+        }
+      ]
+    },
+    {
+      "flow": "طلب صيانة",
+      "steps": [
+        {
+          "role": "tenant"
+        },
+        {
+          "go": "/"
+        },
+        {
+          "click": "[data-act=go-maintenance]"
+        },
+        {
+          "click": "[data-act=new-request]"
+        },
+        {
+          "fill": {
+            "#req-title": "تسرب مياه"
+          }
+        },
+        {
+          "fill": {
+            "#req-desc": "تسرب مياه في الحمام الرئيسي"
+          }
+        },
+        {
+          "click": "text:إرسال الطلب"
+        },
+        {
+          "expectDb": {
+            "col": "maintenance",
+            "min": 1
+          }
+        },
+        {
+          "role": "technician"
+        },
+        {
+          "go": "/"
+        },
+        {
+          "click": "[data-act=go-maintenance]"
+        },
+        {
+          "click": "text:استلام الطلب"
+        }
+      ]
+    },
+    {
+      "flow": "إدارة العقارات للمالك",
+      "steps": [
+        {
+          "role": "landlord"
+        },
+        {
+          "go": "/properties"
+        },
+        {
+          "click": "[data-act=add-property]"
+        },
+        {
+          "fill": {
+            "#prop-title": "عمارة النيل"
+          }
+        },
+        {
+          "fill": {
+            "#prop-address": "الخرطوم"
+          }
+        },
+        {
+          "fill": {
+            "#prop-type": "سكني"
+          }
+        },
+        {
+          "fill": {
+            "#prop-units": "5"
+          }
+        },
+        {
+          "click": "text:حفظ العقار"
+        },
+        {
+          "expectDb": {
+            "col": "properties",
+            "min": 1
+          }
+        }
+      ]
+    }
+  ],
+  "reviewIssues": {
+    "home": [],
+    "propertiesList": [],
+    "tenantPayments": [],
+    "maintenanceList": [
+      "مراجعة: عدم حفظ حقل userId و userName عند إنشاء طلب الصيانة، مما يمنع ظهوره في لوحة المستأجر الرئيسية. الإصلاح: إضافة userId: Auth.user.uid و userName: Auth.user.name || 'مستأجر' عند استدعاء Data.maintenance.create في شاشة الصيانة."
+    ],
+    "contractsList": [],
+    "notifications": []
+  },
+  "spec": false,
+  "specFallback": [],
+  "flowErr": "",
+  "agent": {
+    "ran": false,
+    "fixed": 0,
+    "steps": 0,
+    "log": []
+  },
+  "fixErrors": [],
+  "review": {
+    "found": 1,
+    "fixed": 1
+  },
+  "screens": [
+    {
+      "id": "home",
+      "route": "/",
+      "roles": [
+        "tenant",
+        "landlord",
+        "technician"
+      ],
+      "bytes": 13609
+    },
+    {
+      "id": "propertiesList",
+      "route": "/properties",
+      "roles": [
+        "landlord"
+      ],
+      "bytes": 18328
+    },
+    {
+      "id": "tenantPayments",
+      "route": "/payments",
+      "roles": [
+        "tenant",
+        "landlord"
+      ],
+      "bytes": 13615
+    },
+    {
+      "id": "maintenanceList",
+      "route": "/maintenance",
+      "roles": [
+        "tenant",
+        "technician",
+        "landlord"
+      ],
+      "bytes": 11720
+    },
+    {
+      "id": "contractsList",
+      "route": "/contracts",
+      "roles": [
+        "landlord"
+      ],
+      "bytes": 10344
+    },
+    {
+      "id": "notifications",
+      "route": "/notifications",
+      "roles": [
+        "tenant",
+        "landlord",
+        "technician"
+      ],
+      "bytes": 4191
+    }
+  ],
+  "design": {
+    "model": "gemini-2.5-flash",
+    "score": 8,
+    "min": 8,
+    "screens": {
+      "maintenanceList": {
+        "score": 8,
+        "strengths": [
+          "تصميم نظيف ومتناسق: استخدام ممتاز للمسافات والطباعة والألوان لخلق تجربة بصرية متجانسة واحترافية.",
+          "معالجة ممتازة للحالة الفارغة: أيقونة واضحة، عنوان وصفي، ورسالة مساعدة تجعل الشاشة الفارغة مفيدة وغير محبطة.",
+          "دعم مثالي لاتجاه RTL: جميع العناصر محاذية بشكل صحيح وتتدفق بسلاسة من اليمين إلى اليسار، مما يعكس فهمًا عميقًا لتصميم RTL."
+        ],
+        "issues": [
+          "قص جزء من شريحة الفلترة: شريحة \"ملغى\" مقطوعة جزئياً، مما يشير إلى مشكلة في التخطيط أو الاستجابة. يُصلح بالتأكد من أن جميع عناصر واجهة المستخدم مرئية بالكامل على جميع أحجام الشاشات، ربما عن طريق إضافة تمرير أفقي أو إعادة ترتيب الشرائح.",
+          "غموض أيقونة زر \"المستأجر\": السهم الموجود بجانب نص \"المستأجر\" غير واضح في وظيفته. يُصلح باستخدام أيقونة ملف شخصي أو سهم لأسفل (dropdown) إذا كان للتبديل بين الأدوار/الحسابات، أو إزالته إذا كان الزر مجرد عرض للمعلومات.",
+          "تباين منخفض للنصوص الثانوية: نص \"عرض وإدارة الحالات الحالية\" يمتلك تباينًا منخفضًا مع الخلفية. يُصلح بزيادة درجة قتامة لون النص لضمان سهولة القراءة والوصولية."
+        ]
+      }
+    }
+  }
+}

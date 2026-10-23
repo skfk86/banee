@@ -1,0 +1,63 @@
+#!/usr/bin/env node
+// بانِي CLI
+//   banee new "فكرة التطبيق"      يبني مشروع Capacitor كاملاً بمحرك بانِي
+//   banee edit "المهمة"           وكيل يعدّل المشروع الحالي
+//   banee check [ملف]             فحص أخطاء الصياغة
+const readline = require('readline');
+const path = require('path');
+
+const args = process.argv.slice(2);
+const cmd = args[0];
+const flags = {}, rest = [];
+for (let i = 1; i < args.length; i++) {
+  const a = args[i];
+  if (a.startsWith('--')) { const [k, v] = a.slice(2).split('='); flags[k] = v !== undefined ? v : (args[i + 1] && !args[i + 1].startsWith('--') ? args[++i] : true); }
+  else rest.push(a);
+}
+const text = rest.join(' ').trim();
+const KEY = flags.key || process.env.GEMINI_API_KEY || process.env.GEMINI_KEY;
+const MODEL = flags.model || process.env.BANEE_MODEL || 'gemini-2.5-flash';
+const log = (s) => console.log(s);
+const ask = (q) => new Promise((r) => { const rl = readline.createInterface({ input: process.stdin, output: process.stdout }); rl.question(q, (a) => { rl.close(); r(a.trim()); }); });
+const needKey = () => { if (!KEY) { console.error('❌ ضع مفتاح Gemini: export GEMINI_API_KEY=...  (أو --key)'); process.exit(1); } };
+
+const HELP = `🧱 بانِي من الـ terminal
+
+  banee new "وصف التطبيق" [--out مجلد] [--name الاسم] [--id com.x.app] [--admob ca-app-pub-..~..] [--yes]
+  banee new --kit delivery|store|booking|edu
+      يبني تطبيقاً كاملاً بمحرك بانِي (محلل ← مخطط ← شاشات ← فحص ← وكيل إصلاح)
+      ويخرج مشروع أندرويد Capacitor جاهزاً للرفع على GitHub وبناء APK.
+
+  banee edit "المهمة" [--steps 40]
+      وكيل يعمل داخل المشروع الحالي: يقرأ، يعدّل، يفحص، ويصلح أخطاءه.
+
+  banee check [www/index.html]
+      فحص أخطاء الصياغة في سكربتات HTML/JS (بلا ذكاء اصطناعي).
+
+المفتاح: export GEMINI_API_KEY=...   النموذج: --model أو BANEE_MODEL (الافتراضي ${MODEL})`;
+
+(async () => {
+  if (cmd === 'new') {
+    needKey();
+    if (!text && !flags.kit) { console.error('اكتب وصف التطبيق: banee new "تطبيق حجز مواعيد عيادة"'); process.exit(1); }
+    log('🧱 بانِي يبني: ' + (text || 'نظام ' + flags.kit) + '\n');
+    const { build } = require('../lib/engine');
+    const r = await build({ idea: text, kit: flags.kit, key: KEY, out: flags.out, name: flags.name, appId: flags.id, admob: flags.admob, slug: flags.slug,
+      yes: !!flags.yes, verbose: !!flags.verbose, maxMin: +flags.minutes || 110, ask, log });
+    if (!r) process.exit(1);
+    log(`\n✅ جاهز في ${r.minutes} دقيقة: ${r.dir}  (${r.count} ملفاً، ${r.cfg.appId})`);
+    log(`\nالتالي:\n  cd ${path.relative(process.cwd(), r.dir) || '.'}\n  git init && git add . && git commit -m "أول إصدار"\n  # ارفعه على GitHub وسيُبنى APK تلقائياً، أو محلياً: npm i && npx cap add android && npx cap sync`);
+    if (!flags.admob) log('\nℹ️  استخدمت معرّف AdMob التجريبي من Google. ضع معرّفك بـ --admob قبل النشر.');
+  } else if (cmd === 'edit') {
+    needKey();
+    if (!text) { console.error('اكتب المهمة: banee edit "أضف وضعاً ليلياً"'); process.exit(1); }
+    log('🧱 بانِي يعمل على: ' + text + '\n');
+    const r = await require('../lib/agent').run({ task: text, key: KEY, model: MODEL, root: process.cwd(), ask, log, maxSteps: +flags.steps || 40 });
+    log('\n✅ ' + (r.summary || 'انتهى'));
+  } else if (cmd === 'check') {
+    const f = path.resolve(text || 'www/index.html');
+    log(require('../lib/agent').checkJs(f));
+  } else {
+    log(HELP);
+  }
+})().catch((e) => { console.error('❌ ' + e.message); process.exit(1); });

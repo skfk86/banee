@@ -1,0 +1,239 @@
+{
+  "status": "ready",
+  "error": "",
+  "name": "إنجليزي برو",
+  "steps": [
+    "done · هوية «إنجليزي ممتع» · الخطة: ٦ شاشات · ٧ مجموعات · ٣٦ عنصر محتوى",
+    "done · المحتوى: ٣٦ عنصر مكتوب كاملاً",
+    "done · الهيكل جاهز: التنقّل، البيانات، الدخول، التصميم",
+    "done · ٦ شاشات مكتوبة",
+    "done · جُرّبت كل الشاشات وأُصلحت ٣، لا أخطاء · رحلات المستخدم: ٢ من ٢ تعمل كاملة · المراجعة: أُصلحت ٠ من ١ · التصميم: ٥.٢ من ١٠ (حُسّنت ٣ شاشات) · وكيل الإصلاح: أصلح ١ في ١١ خطوة",
+    "done · جاهز للمعاينة والتحميل"
+  ],
+  "runtime": {
+    "home": [],
+    "course": [],
+    "lesson": [],
+    "quiz": [],
+    "me": [],
+    "teacherDash": []
+  },
+  "flows": [
+    "إكمال درس واختبار (13 خطوات)",
+    "إرسال تحدي للطلاب (6 خطوات)"
+  ],
+  "flowSteps": [
+    {
+      "flow": "إكمال درس واختبار",
+      "steps": [
+        {
+          "role": "student"
+        },
+        {
+          "go": "/"
+        },
+        {
+          "click": "[data-act=open-course][data-id=courses-1]"
+        },
+        {
+          "click": "[data-act=open-lesson][data-id=lessons-1]"
+        },
+        {
+          "click": "[data-act=complete]"
+        },
+        {
+          "expectDb": {
+            "col": "progress",
+            "min": 1
+          }
+        },
+        {
+          "click": "[data-act=select-option]"
+        },
+        {
+          "click": "[data-act=next-q]"
+        },
+        {
+          "click": "[data-act=select-option]"
+        },
+        {
+          "click": "[data-act=next-q]"
+        },
+        {
+          "click": "[data-act=select-option]"
+        },
+        {
+          "click": "[data-act=submit-quiz]"
+        },
+        {
+          "expectDb": {
+            "col": "results",
+            "min": 1
+          }
+        }
+      ]
+    },
+    {
+      "flow": "إرسال تحدي للطلاب",
+      "steps": [
+        {
+          "role": "teacher"
+        },
+        {
+          "go": "/teacher"
+        },
+        {
+          "click": "[data-act=new-challenge]"
+        },
+        {
+          "fill": {
+            "#ch-title": "تحدي القراءة السريعة",
+            "#ch-desc": "اقرأ 5 صفحات يومياً",
+            "#ch-date": "الخميس القادم"
+          }
+        },
+        {
+          "click": "text:نشر التحدي"
+        },
+        {
+          "expectDb": {
+            "col": "challenges",
+            "min": 1
+          }
+        }
+      ]
+    }
+  ],
+  "reviewIssues": {
+    "home": [],
+    "course": [],
+    "lesson": [],
+    "quiz": [],
+    "me": [],
+    "teacherDash": [
+      "مراجعة: حفظ التحدي في مجموعة challenges يتم بدون التحقق من وجود حقل order المطلوب في المخطط (fields.order: 'number'). يجب تمرير order: Date.now() عند الحفظ أو إضافة حقل رقمي في واجهة الإدخال."
+    ]
+  },
+  "spec": false,
+  "specFallback": [],
+  "flowErr": "",
+  "agent": {
+    "ran": true,
+    "fixed": 1,
+    "steps": 11,
+    "log": [
+      "read quiz — أحتاج لقراءة شاشة الاختبار (quiz) لفهم كيف تُعرض خيارات الأسئلة وكيف جرى تصميم أزرار الاختيار مقارنة بطلب اختبار الآلي [data-act=select-option][data → 1| App.screen({\n2|   id: 'quiz', route: '/quiz/:id', title: 'الاختبار التفاعلي', icon: 'circle-check', nav: false,\n3|   render(params) {\n4|     return `\n5|     ",
+      "flow — السيناريو الآلي يبحث عن [data-act=select-option][data-option=\"A\"] بينما التطبيق يعرض خيارات الأسئلة بنصوص أو بدون تقييد حرف A. وفقاً للقواعد، إذا كان الت → حُدّث سيناريو «إكمال درس واختبار». شغّل run للتحقق.",
+      "run — أريد تشغيل التطبيق واختبار الرحلات بعد التأكد من صحة شاشة الاختبار وتعديل ما يلزم عبر run. → نتيجة التشغيل (درجة الأخطاء 30، الأفضل حتى الآن 30):\n[quiz] رحلة «إكمال درس واختبار» توقفت عند الخطوة ١٠: لم يُعثر على [data-act=submit-quiz] (الزر غير موجود أو",
+      "flow (مكرر) → نتيجة هذه الخطوة نفسها ظاهرة أعلاه في #2 والكود لم يتغير منذها. استخدمها: نفّذ edit أو run أو done.",
+      "edit quiz — في شاشة الاختبار، إذا لم يتم اختيار إجابة عند الضغط على التالي، كان الكود يمنع الانتقال ويظهر تنبيه، مما قد يتسبب في تعثر اختبار الآلي إذا لم يسجل ا → تم التعديل",
+      "flow (مكرر) → نتيجة هذه الخطوة نفسها ظاهرة أعلاه في #2 والكود لم يتغير منذها. استخدمها: نفّذ edit أو run أو done.",
+      "flow (مكرر) → نتيجة هذه الخطوة نفسها ظاهرة أعلاه في #2 والكود لم يتغير منذها. استخدمها: نفّذ edit أو run أو done.",
+      "read quiz — أحتاج لقراءة شاشة quiz بالكامل لمعرفة كيف يتم عرض الأسئلة ومتى يظهر زر submit-quiz → 1| App.screen({\n2|   id: 'quiz', route: '/quiz/:id', title: 'الاختبار التفاعلي', icon: 'circle-check', nav: false,\n3|   render(params) {\n4|     return `\n5|     ",
+      "flow — اختبار الآلي يفترض أن الاختبار يتكون من سؤالين فقط بينما يحتوي على 3 أسئلة، لذا زر submit-quiz لا يظهر في الخطوة العاشرة. سنقوم بتحديث سيناريو الاختبار ا → حُدّث سيناريو «إكمال درس واختبار». شغّل run للتحقق.",
+      "run → نتيجة التشغيل (درجة الأخطاء 0، الأفضل حتى الآن 0):\nلا أخطاء وظيفية",
+      "done → تم إصلاح الشاشات والرحلات واجتياز جميع اختبارات السيناريو بنجاح دون أي أخطاء وظيفية."
+    ]
+  },
+  "fixErrors": [],
+  "review": {
+    "found": 1,
+    "fixed": 0
+  },
+  "screens": [
+    {
+      "id": "home",
+      "route": "/",
+      "roles": [
+        "student"
+      ],
+      "bytes": 2938
+    },
+    {
+      "id": "course",
+      "route": "/course/:id",
+      "roles": [
+        "student"
+      ],
+      "bytes": 4565
+    },
+    {
+      "id": "lesson",
+      "route": "/lesson/:id",
+      "roles": [
+        "student"
+      ],
+      "bytes": 4144
+    },
+    {
+      "id": "quiz",
+      "route": "/quiz/:id",
+      "roles": [
+        "student"
+      ],
+      "bytes": 7429
+    },
+    {
+      "id": "me",
+      "route": "/progress",
+      "roles": [
+        "student"
+      ],
+      "bytes": 4829
+    },
+    {
+      "id": "teacherDash",
+      "route": "/teacher",
+      "roles": [
+        "teacher"
+      ],
+      "bytes": 5358
+    }
+  ],
+  "design": {
+    "model": "gemini-2.5-flash",
+    "score": 6.7,
+    "min": 6,
+    "screens": {
+      "lesson": {
+        "score": 6,
+        "strengths": [
+          "The overall layout is clean and uses a consistent color palette.",
+          "The use of an icon to represent the 'lesson unavailable' state is appropriate.",
+          "The RTL direction is correctly implemented for the Arabic text."
+        ],
+        "issues": [
+          "The 'Back to Course' button has inconsistent padding and alignment with the header text.",
+          "The main content area with the error message is too large and lacks visual hierarchy, making the error message feel lost.",
+          "The typography for the error message is too small and lacks sufficient contrast against the background."
+        ]
+      },
+      "quiz": {
+        "score": 7,
+        "strengths": [
+          "Clear and well-designed empty state: The 'Test not found' message is clear, uses a relevant icon, and provides helpful context, preventing a blank or confusing screen.",
+          "Consistent and modern component design: Elements like the header chip, green card, and empty state icon all feature consistent rounded corners and clean aesthetics, contributing to a polished look.",
+          "Effective typography and color use: Good visual hierarchy is established through varied font sizes and weights, complemented by a cohesive, high-contrast color palette that enhances readability and brand consistency."
+        ],
+        "issues": [
+          "Conflicting visual hierarchy in the empty state: The prominent 'Skills Test' banner (green card) feels out of place when the specific test is not found. It creates cognitive dissonance by highlighting a general action while simultaneously stating a specific failure. To fix: Re-evaluate if this banner should be present in a 'not found' state, or if its content should adapt to the empty state (e.g., 'No skills tests available' or 'Explore other tests').",
+          "Slightly cramped header chip: The 'الطالب' chip on the top left is positioned too close to the screen edge, lacking sufficient padding. To fix: Increase the horizontal padding/margin on the left side of the chip to provide more breathing room and improve visual balance.",
+          "Ambiguous bottom navigation icons: While functional, the generic icons for 'تقدمي' (trophy) and 'الدورات' (book) lack distinctiveness. For a global-tier app, more unique or contextually rich icons could enhance brand identity and user recognition. To fix: Consider custom icons that better represent the brand and specific functions, or explore more universally recognized symbols for these actions."
+        ]
+      },
+      "me": {
+        "score": 7,
+        "strengths": [
+          "التسلسل البصري واضح: الزر الأخضر الرئيسي يجذب الانتباه فوراً، تليه بطاقات الإنجازات والعناوين الرئيسية، مما يوجه المستخدم بفعالية.",
+          "جمالية التصميم نظيفة وعصرية: استخدام الزوايا الدائرية والظلال الخفيفة ولوحة الألوان المتناسقة (الأخضر والأبيض والرمادي) يمنح التطبيق مظهراً احترافياً وجذاباً.",
+          "حالة فارغة مصممة جيداً: قسم 'التحديات المدرسية' يعرض حالة فارغة واضحة ومفيدة، مع أيقونة معبرة ونص إرشادي يوضح الخطوات التالية للمستخدم."
+        ],
+        "issues": [
+          "الطباعة وأحجام النص لأرقام الإنجازات: الأرقام أو الرموز (مثل '%-' و '.') في بطاقات الإنجازات صغيرة جداً وخفيفة، مما يقلل من وضوحها وتأثيرها كبيانات رئيسية. الحل: زيادة حجم ووزن الخط لهذه الأرقام لجعلها أكثر بروزاً وسهولة في القراءة.",
+          "تفاوت في المسافات والمحاذاة: هناك تباين طفيف في المسافات الأفقية في شريط الرأس العلوي (عنوان 'تقدمي' وزر 'الطالب' والسهم). أيضاً، النص 'أيام' في بطاقة 'سلسلة التعلم' يبدو غير محاذٍ عمودياً بشكل مثالي مع الرقم '٠'. الحل: مراجعة وتوحيد المسافات والمحاذاة في شريط الرأس، وتعديل المحاذاة العمودية للنص 'أيام' ليتناسب مع الرقم.",
+          "عرض البيانات الناقصة/الافتراضية: استخدام رموز عامة مثل '%-' و '.' للإشارة إلى بيانات غير موجودة أو صفرية في بطاقات الإنجازات غير واضح. الحل: استبدال هذه الرموز بنصوص وصفية أكثر وضوحاً مثل 'لا توجد بيانات' أو 'لم تبدأ بعد' لتوفير سياق أفضل للمستخدم."
+        ]
+      }
+    }
+  }
+}

@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 // بانِي CLI
+//   banee                         محادثة مباشرة مع الوكيل داخل المشروع الحالي
 //   banee new "فكرة التطبيق"      يبني مشروع Capacitor كاملاً بمحرك بانِي
 //   banee edit "المهمة"           وكيل يعدّل المشروع الحالي
 //   banee check [ملف]             فحص أخطاء الصياغة
@@ -23,6 +24,10 @@ const needKey = () => { if (!KEY) { console.error('❌ ضع مفتاح Gemini: e
 
 const HELP = `🧱 بانِي من الـ terminal
 
+  banee
+      محادثة مباشرة داخل المشروع الحالي: اطلب، اسأل، عدّل، وهو يتذكر المحادثة.
+      أوامر داخل المحادثة: /new فكرة · /check ملف · /clear · /help · /exit
+
   banee new "وصف التطبيق" [--out مجلد] [--name الاسم] [--id com.x.app] [--admob ca-app-pub-..~..] [--yes]
   banee new --kit delivery|store|booking|edu
       يبني تطبيقاً كاملاً بمحرك بانِي (محلل ← مخطط ← شاشات ← فحص ← وكيل إصلاح)
@@ -36,7 +41,59 @@ const HELP = `🧱 بانِي من الـ terminal
 
 المفتاح: export GEMINI_API_KEY=...   النموذج: --model أو BANEE_MODEL (الافتراضي ${MODEL})`;
 
+
+const CHAT_HELP = `أوامر المحادثة:
+  /new وصف التطبيق   بناء تطبيق كامل جديد بمحرك بانِي
+  /check [ملف]       فحص أخطاء الصياغة (الافتراضي www/index.html)
+  /clear             محادثة جديدة (ينسى ما سبق)
+  /exit              خروج
+وأي شيء آخر تكتبه يذهب للوكيل مباشرة.`;
+
+async function chat() {
+  needKey();
+  const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+  // طابور للمدخلات: ما تكتبه أثناء عمل الوكيل لا يضيع، بل يُنفَّذ بعده بالترتيب
+  const queue = [], waiters = []; let closed = false;
+  const bye = () => { console.log('\nمع السلامة 👋'); process.exit(0); };
+  rl.on('line', (l) => { l = l.trim(); if (waiters.length) waiters.shift()(l); else queue.push(l); });
+  rl.on('close', () => { closed = true; if (waiters.length) bye(); });
+  const ask = (q) => {
+    process.stdout.write(q);
+    if (queue.length) { const l = queue.shift(); if (!process.stdin.isTTY) console.log(l); return Promise.resolve(l); }
+    if (closed) bye();
+    return new Promise((r) => waiters.push(r));
+  };
+  const root = process.cwd();
+  log('🧱 بانِي — ' + path.basename(root) + '  (' + MODEL + ')');
+  log('اكتب طلبك بالعربي، أو /help للأوامر، أو /exit للخروج.');
+  const { createSession, checkJs } = require('../lib/agent');
+  const s = createSession({ key: KEY, model: MODEL, root, ask, log, maxSteps: +flags.steps || 40 });
+  for (;;) {
+    const t = await ask('\n❯ ');
+    if (!t) continue;
+    if (t === '/exit' || t === 'خروج') return bye();
+    if (t === '/help') { log(CHAT_HELP); continue; }
+    if (t === '/clear') { s.reset(); log('🧹 محادثة جديدة.'); continue; }
+    if (t.startsWith('/check')) { try { log(checkJs(path.resolve(root, t.slice(6).trim() || 'www/index.html'))); } catch (e) { log('❌ ' + e.message); } continue; }
+    if (t.startsWith('/new')) {
+      const idea = t.slice(4).trim();
+      if (!idea) { log('اكتب الفكرة: /new تطبيق حجز مواعيد'); continue; }
+      try {
+        const r = await require('../lib/engine').build({ idea, key: KEY, ask, log });
+        if (r) log(`\n✅ جاهز في ${r.minutes} دقيقة: ${r.dir}  — افتحه بـ cd ثم شغّل banee لتكمل عليه بالمحادثة`);
+      } catch (e) { log('❌ ' + e.message); }
+      continue;
+    }
+    try {
+      log('  ⏳ ...');
+      const r = await s.send(t);
+      if (r.summary) log('\n✅ ' + r.summary);
+    } catch (e) { log('❌ ' + e.message); }
+  }
+}
+
 (async () => {
+  if (!cmd || cmd === 'chat') return chat();
   if (cmd === 'new') {
     needKey();
     if (!text && !flags.kit) { console.error('اكتب وصف التطبيق: banee new "تطبيق حجز مواعيد عيادة"'); process.exit(1); }

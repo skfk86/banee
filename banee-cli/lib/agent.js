@@ -9,7 +9,8 @@ const SYSTEM = `أنت "بانِي"، وكيل برمجة يعمل داخل مش
 2. عدّل بأقل تغيير ممكن عبر edit_file، ولا تعيد كتابة ملف كبير كاملاً، ولا تحذف كوداً لا علاقة له بالمهمة.
 3. بعد كل تعديل افحص عملك: check_js لملفات HTML/JS، ثم أعد قراءة الجزء المعدّل.
 4. إن ظهر خطأ أصلحه وأعد الفحص.
-5. عند الانتهاء استدعِ done بملخص قصير بالعربية لما تغيّر.`;
+5. عند الانتهاء استدعِ done بملخص قصير بالعربية لما تغيّر.
+هذه محادثة مستمرة مع المطور: تذكّر ما قاله وما عدّلته سابقاً. إن كانت رسالته سؤالاً أو كلاماً عادياً فأجب مباشرة بالعربية بلا أدوات وبلا done. إن كان طلبه غامضاً اسأله قبل التعديل.`;
 
 const S = (props, req) => ({ type: 'object', properties: props, required: req });
 const str = { type: 'string' }, int = { type: 'integer' };
@@ -52,7 +53,7 @@ function checkJs(file) {
   return errs.length ? 'أخطاء:\n' + errs.join('\n') : 'سليم ✓ (' + blocks.length + ' سكربت)';
 }
 
-async function run({ task, key, model, root, ask, log, maxSteps = 40 }) {
+function createSession({ key, model, root, ask, log, maxSteps = 40 }) {
   const safe = (p) => { const f = path.resolve(root, p || '.'); if (f !== root && !f.startsWith(root + path.sep)) throw new Error('مسار خارج المشروع'); return f; };
   const rel = (f) => path.relative(root, f);
 
@@ -94,30 +95,46 @@ async function run({ task, key, model, root, ask, log, maxSteps = 40 }) {
   }
 
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
-  const contents = [{ role: 'user', parts: [{ text: task }] }];
-  for (let step = 1; step <= maxSteps; step++) {
-    let data;
+  let contents = [];
+
+  async function call() {
     for (let tries = 0; ; tries++) {
       const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ systemInstruction: { parts: [{ text: SYSTEM }] }, contents, tools }) });
-      data = await res.json();
-      if (res.ok) break;
+      const data = await res.json();
+      if (res.ok) return data;
       if ((res.status === 429 || res.status >= 500) && tries < 3) { log('  ⏳ Gemini مشغول، إعادة المحاولة...'); await new Promise((r) => setTimeout(r, 15000 * (tries + 1))); continue; }
       throw new Error('Gemini: ' + (data.error?.message || res.status));
     }
-    const reply = data.candidates?.[0]?.content;
-    if (!reply || !reply.parts) throw new Error('لا رد من النموذج');
-    contents.push(reply);
-    reply.parts.filter((x) => x.text && x.text.trim()).forEach((x) => log('💬 ' + x.text.trim()));
-    const calls = reply.parts.filter((x) => x.functionCall);
-    if (!calls.length) return { summary: '' };
-    const results = [];
-    for (const { functionCall: fc } of calls) {
-      if (fc.name === 'done') return { summary: fc.args.summary };
-      results.push({ functionResponse: { name: fc.name, response: { result: await tool(fc.name, fc.args || {}) } } });
-    }
-    contents.push({ role: 'user', parts: results });
   }
-  throw new Error('وصل للحد الأقصى من الخطوات');
+
+  // رسالة واحدة من المستخدم؛ المحادثة كلها محفوظة في contents فيتذكر الوكيل ما سبق
+  async function send(text) {
+    const mark = contents.length;
+    contents.push({ role: 'user', parts: [{ text }] });
+    try {
+      for (let step = 1; step <= maxSteps; step++) {
+        const data = await call();
+        const reply = data.candidates?.[0]?.content;
+        if (!reply || !reply.parts) throw new Error('لا رد من النموذج');
+        contents.push(reply);
+        reply.parts.filter((x) => x.text && x.text.trim()).forEach((x) => log('💬 ' + x.text.trim()));
+        const calls = reply.parts.filter((x) => x.functionCall);
+        if (!calls.length) return { summary: '' };
+        const results = []; let summary = null;
+        for (const { functionCall: fc } of calls) {
+          if (fc.name === 'done') { summary = fc.args.summary || ''; results.push({ functionResponse: { name: 'done', response: { result: 'تم' } } }); continue; }
+          results.push({ functionResponse: { name: fc.name, response: { result: await tool(fc.name, fc.args || {}) } } });
+        }
+        contents.push({ role: 'user', parts: results });
+        if (summary !== null) return { summary };
+      }
+      return { summary: '⏹️ وصلت للحد الأقصى من الخطوات في هذه الرسالة، قل «كمّل» لأتابع' };
+    } catch (e) { contents = contents.slice(0, mark); throw e; } // لا نترك المحادثة في حالة مكسورة
+  }
+
+  return { send, reset: () => { contents = []; }, size: () => contents.length };
 }
 
-module.exports = { run, checkJs };
+async function run(o) { return createSession(o).send(o.task); }
+
+module.exports = { run, createSession, checkJs };

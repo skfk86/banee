@@ -1,0 +1,173 @@
+{
+  "status": "ready",
+  "error": "",
+  "name": "بيتي",
+  "steps": [
+    "done · هوية «بيتك الذكي» · الخطة: ٧ شاشات · ٥ مجموعات",
+    "done · لا يحتاج التطبيق محتوى جاهزاً",
+    "done · الهيكل جاهز: التنقّل، البيانات، الدخول، التصميم",
+    "done · ٧ شاشات مكتوبة",
+    "done · جُرّبت كل الشاشات وأُصلحت ٤، لا أخطاء · رحلات المستخدم: ١ من ١ تعمل كاملة · المراجعة: أُصلحت ٢ من ٢ · التصميم: ٦ من ١٠ (حُسّنت ٣ شاشات)",
+    "done · جاهز للمعاينة والتحميل"
+  ],
+  "runtime": {
+    "home": [],
+    "newOrder": [],
+    "orderDetail": [],
+    "myOrders": [],
+    "providerDashboard": [],
+    "providerPortfolio": [],
+    "profile": []
+  },
+  "flows": [
+    "طلب خدمة منزلية (11 خطوات)"
+  ],
+  "flowSteps": [
+    {
+      "flow": "طلب خدمة منزلية",
+      "steps": [
+        {
+          "go": "/"
+        },
+        {
+          "click": "[data-act=new-order]"
+        },
+        {
+          "fill": {
+            "#catSelect": "تنظيف المنازل"
+          }
+        },
+        {
+          "fill": {
+            "[name=title]": "تنظيف عميق للمنزل"
+          }
+        },
+        {
+          "fill": {
+            "[name=description]": "تنظيف شامل لجميع الغرف والمرافق"
+          }
+        },
+        {
+          "fill": {
+            "[name=date]": "2025-06-01"
+          }
+        },
+        {
+          "fill": {
+            "[name=address]": "الرياض، حي الملز"
+          }
+        },
+        {
+          "fill": {
+            "[name=phone]": "0500000000"
+          }
+        },
+        {
+          "click": "text:نشر الطلب واستقبال العروض"
+        },
+        {
+          "expect": "طلباتي"
+        },
+        {
+          "expectDb": {
+            "col": "orders",
+            "min": 1
+          }
+        }
+      ]
+    }
+  ],
+  "reviewIssues": {
+    "home": [],
+    "newOrder": [],
+    "orderDetail": [
+      "مراجعة: تحديد دور مقدم الخدمة يعتمد على (!isCustomer) مما قد يمنح العميل صلاحيات مقدم الخدمة إذا استعرض طلب عميل آخر؛ الإصلاح: التحقق من دور المستخدم عبر Roles.current() === 'provider'."
+    ],
+    "myOrders": [],
+    "providerDashboard": [],
+    "providerPortfolio": [],
+    "profile": [
+      "مراجعة: تعديل بيانات الملف الشخصي يغيّر كائن Auth.user محلياً بلا حفظ في قاعدة البيانات أو استدعاء دالة تحديث؛ الإصلاح: استخدام دالة تحديث الحساب أو قاعدة البيانات مع await ومعالجة الخطأ."
+    ]
+  },
+  "spec": false,
+  "specFallback": [],
+  "flowErr": "",
+  "agent": {
+    "ran": false,
+    "fixed": 0,
+    "steps": 0,
+    "log": []
+  },
+  "fixErrors": [],
+  "review": {
+    "found": 2,
+    "fixed": 2
+  },
+  "screens": [
+    {
+      "id": "home",
+      "route": "/",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 5289
+    },
+    {
+      "id": "newOrder",
+      "route": "/new-order",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 8899
+    },
+    {
+      "id": "orderDetail",
+      "route": "/order/:id",
+      "roles": [
+        "customer",
+        "provider"
+      ],
+      "bytes": 12340
+    },
+    {
+      "id": "myOrders",
+      "route": "/orders",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 4897
+    },
+    {
+      "id": "providerDashboard",
+      "route": "/dashboard",
+      "roles": [
+        "provider"
+      ],
+      "bytes": 10253
+    },
+    {
+      "id": "providerPortfolio",
+      "route": "/portfolio",
+      "roles": [
+        "provider"
+      ],
+      "bytes": 7449
+    },
+    {
+      "id": "profile",
+      "route": "/profile",
+      "roles": [
+        "customer",
+        "provider"
+      ],
+      "bytes": 7581
+    }
+  ],
+  "design": {
+    "model": "gemini-2.5-flash",
+    "score": null,
+    "min": null,
+    "screens": {}
+  }
+}

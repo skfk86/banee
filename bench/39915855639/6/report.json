@@ -1,0 +1,237 @@
+{
+  "status": "ready",
+  "error": "",
+  "name": "مذاق فاخر",
+  "steps": [
+    "done · هوية «مذاق فاخر» · الخطة: ٥ شاشات · ٥ مجموعات · ١٨ عنصر محتوى",
+    "done · المحتوى: ١٨ عنصر مكتوب كاملاً",
+    "done · الهيكل جاهز: التنقّل، البيانات، الدخول، التصميم",
+    "done · ٥ شاشات مكتوبة",
+    "done · جُرّبت كل الشاشات وأُصلحت ٣، لا أخطاء · رحلات المستخدم: ٢ من ٢ تعمل كاملة · المراجعة: أُصلحت ١ من ١ · التصميم: ٦.٢ من ١٠ (حُسّنت ٣ شاشات)",
+    "done · جاهز للمعاينة والتحميل"
+  ],
+  "runtime": {
+    "home": [],
+    "book": [],
+    "myBookings": [],
+    "hostDashboard": [],
+    "kitchenDashboard": []
+  },
+  "flows": [
+    "حجز وطلب مسبق (12 خطوات)",
+    "إدارة الطاولات والمطبخ (5 خطوات)"
+  ],
+  "flowSteps": [
+    {
+      "flow": "حجز وطلب مسبق",
+      "steps": [
+        {
+          "role": "customer"
+        },
+        {
+          "go": "/"
+        },
+        {
+          "click": "[data-act=add-to-cart][data-id=menu-1]"
+        },
+        {
+          "click": "[data-act=go-book]"
+        },
+        {
+          "go": "/book"
+        },
+        {
+          "fill": {
+            "#b-date": "2024-12-31"
+          }
+        },
+        {
+          "fill": {
+            "#b-time": "20:00"
+          }
+        },
+        {
+          "fill": {
+            "#b-guests": "4"
+          }
+        },
+        {
+          "fill": {
+            "#b-occasion": "عيد ميلاد"
+          }
+        },
+        {
+          "fill": {
+            "#b-phone": "0512345678"
+          }
+        },
+        {
+          "click": "text:تأكيد الحجز والطلب المسبق"
+        },
+        {
+          "expectDb": {
+            "col": "bookings",
+            "min": 1
+          }
+        }
+      ]
+    },
+    {
+      "flow": "إدارة الطاولات والمطبخ",
+      "steps": [
+        {
+          "role": "host"
+        },
+        {
+          "go": "/host"
+        },
+        {
+          "click": "[data-act=toggle-table][data-id=tables-1]"
+        },
+        {
+          "role": "kitchen"
+        },
+        {
+          "go": "/kitchen"
+        }
+      ]
+    }
+  ],
+  "reviewIssues": {
+    "home": [],
+    "book": [],
+    "myBookings": [],
+    "hostDashboard": [],
+    "kitchenDashboard": [
+      "مراجعة: حقل الفلترة لـ currentFilter يستخدم زر الكل بقيمة 'all' بينما الأزرار الأخرى تملك حالات preparing, ready, done بينما توجد حالات جديدة في المخطط مثل 'new' و'confirmed' لا تظهر في أزرار الفلترة بالمطبخ بالرغم من معالجة الطلبات الجديدة في الأزرار (confirmed/new)، والإصلاح هو إضافة أزرار فلترة لـ new و confirmed لتتوافق مع شاشة المطبخ."
+    ]
+  },
+  "spec": false,
+  "specFallback": [],
+  "flowErr": "",
+  "agent": {
+    "ran": false,
+    "fixed": 0,
+    "steps": 0,
+    "log": []
+  },
+  "fixErrors": [],
+  "review": {
+    "found": 1,
+    "fixed": 1
+  },
+  "screens": [
+    {
+      "id": "home",
+      "route": "/",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 9158
+    },
+    {
+      "id": "book",
+      "route": "/book",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 5800
+    },
+    {
+      "id": "myBookings",
+      "route": "/my-bookings",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 6006
+    },
+    {
+      "id": "hostDashboard",
+      "route": "/host",
+      "roles": [
+        "host"
+      ],
+      "bytes": 10735
+    },
+    {
+      "id": "kitchenDashboard",
+      "route": "/kitchen",
+      "roles": [
+        "kitchen"
+      ],
+      "bytes": 5916
+    }
+  ],
+  "design": {
+    "model": "gemini-2.5-flash",
+    "score": 6.6,
+    "min": 5,
+    "screens": {
+      "home": {
+        "score": 5,
+        "strengths": [
+          "تطبيق سليم ومريح لقواعد اتجاه RTL في النصوص وأشرطة التصفح وتوزيع العناصر الأساسية.",
+          "البانر الترويجي العلوي يتمتع بتباين جيد وتدرج لوني داكن يعكس طابع الفخامة المطلوب.",
+          "شريط التنقل السفلي (Bottom Navigation) منظم وأيقوناته واضحة مع إبراز جيد للتبويب النشط."
+        ],
+        "issues": [
+          "عنصر التنبيه العائم (Toast) يغطي النص السفلي للطبق بشكل مباشر؛ يجب نقله إلى أعلى الشاشة أو ضبط هوامشه لعدم حجب المحتوى التفاعلي.",
+          "بطاقة الطعام مكدسة بنص وصفي طويل داخل قائمة التصفح؛ يجب اختصار الوصف في سطر واحد وإضافة زر إضافة سريع (CTA)، ونقل التفاصيل الكاملة لشاشة العرض المنبثقة.",
+          "بطاقة 'برنامج الولاء' تفتقر للاتزان البصري بوجود فراغ رأسي غير مبرر وموضع غريب لزر النجمة؛ يُفضل إعادة بنائها بنمط أفقي متناسق ومحاذاة الأيقونة مع العنوان."
+        ]
+      },
+      "book": {
+        "score": 7,
+        "strengths": [
+          "The overall layout is clean and organized, with clear sections for booking details.",
+          "The use of icons alongside text in the navigation bar and input fields is helpful for quick comprehension.",
+          "The color palette is consistent and professional, with good contrast for readability."
+        ],
+        "issues": [
+          "The placeholder text 'mm/dd/yyyy' and '--:--' are in English, which is inconsistent with the Arabic UI. This should be localized to Arabic date and time formats.",
+          "The input field for 'عدد الأشخاص' (Number of People) shows '2' as a default value with up/down arrows. While functional, the visual treatment of the number and arrows could be more refined to match the overall aesthetic.",
+          "The spacing between the 'المناسبة الخاصة (اختياري)' label and its input field feels slightly larger than other label-field pairs, creating a minor rhythm inconsistency."
+        ]
+      },
+      "myBookings": {
+        "score": 7,
+        "strengths": [
+          "The overall layout is clean and modern, with good use of white space.",
+          "The typography is legible and the hierarchy is generally clear.",
+          "The color palette is consistent and aligns with a professional app identity."
+        ],
+        "issues": [
+          "The spacing between the 'الحجوزات الحالية والسابقة' title and the card below it is too large, creating an awkward gap. Reduce this spacing.",
+          "The button 'احجز الآن' has a subtle gradient that might not be necessary and could be simplified to a solid color for better consistency with other elements.",
+          "The icon for 'حجز' in the bottom navigation is slightly misaligned within its active state background. Ensure it's perfectly centered."
+        ]
+      },
+      "hostDashboard": {
+        "score": 7,
+        "strengths": [
+          "The overall layout is clean and organized, with clear sections for different information.",
+          "The use of cards for each table provides a structured way to present information.",
+          "The color palette is consistent and the typography is legible."
+        ],
+        "issues": [
+          "The spacing between the 'متاحة' status indicator and the table number could be improved for better visual hierarchy.",
+          "The 'إشغال' button has a light grey background which might lack sufficient contrast against the card background, potentially affecting usability.",
+          "The icons in the header are not aligned with the text and could be better integrated."
+        ]
+      },
+      "kitchenDashboard": {
+        "score": 7,
+        "strengths": [
+          "The overall layout is clean and organized, with a clear hierarchy of information.",
+          "The use of a dark background for the main title section effectively draws attention.",
+          "The filter chips are well-designed and easy to understand."
+        ],
+        "issues": [
+          "The spacing between the filter chips and the empty state message could be improved for better visual flow.",
+          "The font weight for the main title 'شاشة المطبخ وإعداد الطلبات' is too light, making it less impactful. Consider a bolder weight.",
+          "The empty state icon is a bit too large and could be scaled down slightly to better balance the text below it."
+        ]
+      }
+    }
+  }
+}

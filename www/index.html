@@ -4282,6 +4282,12 @@ function shootScreens(app){
     document.body.appendChild(fr);
   });
 }
+// معرّفات الوظائف في كود الشاشة: ما تعتمد عليه رحلات المستخدم ولا يجوز أن يختفي بتحسين الشكل
+function hooksOf(code){
+  var out = {}, re = /\b(data-act|data-tab|id|name)=["'`]([\w-]+)["'`]/g, m;
+  while ((m = re.exec(code || ''))) out[m[1] + '="' + m[2] + '"'] = 1;
+  return Object.keys(out).map(function(k){ return k.replace(/^([\w-]+)="(.*)"$/, '$2'); }).filter(function(v){ return v.length >= 3; });
+}
 function designPass(app, key, res, onStep){
   if (app.ck.lookDone) return Promise.resolve(res);
   var plan = app.ck.plan, before = {};
@@ -4301,8 +4307,13 @@ function designPass(app, key, res, onStep){
       app.ck.lookDone = true; saveApps();
       if (!weak.length) return res;
       if (onStep) onStep('تحسين تصميم ' + toAr(weak.length) + ' شاشات حسب ملاحظات مدير التصميم');
-      var map = {}; weak.forEach(function(r){ before[r.id] = app.ck.screens[r.id]; map[r.id] = r.issues.map(function(x){ return 'تصميم (حكم بصري ' + r.score + '/10): ' + x; }); });
+      var map = {}; weak.forEach(function(r){ before[r.id] = app.ck.screens[r.id]; map[r.id] = r.issues.map(function(x){ return 'تصميم (حكم بصري ' + r.score + '/10): ' + x; }).concat(['تصميم فقط: أبقِ كل الأزرار والحقول والوظائف كما هي حرفياً (نفس قيم data-act وid وname وdata-tab ونفس النصوص الظاهرة على الأزرار)، وغيّر التخطيط والكلاسات فقط']); });
       return fixRuntime(app, key, map, null, true).then(function(){
+        // تحسين الشكل لا يحذف وظيفة: إن اختفى زر أو حقل (data-act / id / name) كان في الشاشة تعود كما كانت، فالرحلات تعتمد عليها
+        weak.forEach(function(r){
+          var now = app.ck.screens[r.id] || '', lost = hooksOf(before[r.id]).filter(function(h){ return now.indexOf(h) < 0; });
+          if (lost.length && before[r.id]) { app.ck.screens[r.id] = before[r.id]; console.warn('designPass revert ' + r.id + ': ' + lost.slice(0, 3).join(' ')); }
+        });
         // التحسين لا يُقبل إذا كسر شيئاً كان يعمل: نجرّب التطبيق كاملاً، والشاشة التي ظهرت فيها أخطاء تشغيل جديدة تعود كما كانت
         return runtimeTest(app).then(function(after){
           var reverted = 0;

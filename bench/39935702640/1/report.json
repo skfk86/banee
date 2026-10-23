@@ -1,0 +1,210 @@
+{
+  "status": "ready",
+  "error": "",
+  "name": "عيادتي",
+  "steps": [
+    "done · هوية «عناية مستدامة» · الخطة: ٦ شاشات · ٣ مجموعات",
+    "done · لا يحتاج التطبيق محتوى جاهزاً",
+    "done · الهيكل جاهز: التنقّل، البيانات، الدخول، التصميم",
+    "done · ٦ شاشات مكتوبة",
+    "done · الفحص: ٣ شاشات بها ملاحظات، راجعها في الاستوديو · رحلات المستخدم: ٠ من ٣ تعمل كاملة · التصميم: ٥.٧ من ١٠ (حُسّنت ٣ شاشات) · وكيل الإصلاح: لم يجد تحسيناً آمناً",
+    "done · جاهز للمعاينة والتحميل"
+  ],
+  "runtime": {
+    "home": [
+      "رحلة «حجز موعد» توقفت عند الخطوة ٣: لم يُعثر على [data-act=view-provider] (الزر غير موجود أو اسمه مختلف) — الظاهر الآن: الشاشة home (#/) بدور patient؛ الأزرار: لا شيء؛ الحقول: #searchInput"
+    ],
+    "doctor": [],
+    "appointments": [],
+    "today": [
+      "رحلة «إنهاء الزيارة والكتابة الطبية» توقفت عند الخطوة ٣: لم يُعثر على [data-act=visit] (الزر غير موجود أو اسمه مختلف) — الظاهر الآن: الشاشة today (#/today) بدور doctor؛ الأزرار: لا شيء؛ الحقول: لا شيء"
+    ],
+    "visit": [],
+    "reception": [
+      "رحلة «تأكيد الحضور» توقفت عند الخطوة ٥: لم يُعثر على [data-act=confirm] (الزر غير موجود أو اسمه مختلف) — الظاهر الآن: الشاشة reception (#/reception) بدور receptionist، ونافذة منبثقة مفتوحة؛ الأزرار: new-booking؛ الحقول: [name=userName]، [name=phone]، #sheet-provider، [name=date]، [name=time]، [name="
+    ]
+  },
+  "flows": [
+    "حجز موعد (7 خطوات)",
+    "تأكيد الحضور (6 خطوات)",
+    "إنهاء الزيارة والكتابة الطبية (6 خطوات)"
+  ],
+  "flowSteps": [
+    {
+      "flow": "حجز موعد",
+      "steps": [
+        {
+          "role": "patient"
+        },
+        {
+          "go": "/"
+        },
+        {
+          "click": "[data-act=view-provider]"
+        },
+        {
+          "fill": {
+            "[name=phone]": "0912345678",
+            "[name=reason]": "فحص دوري"
+          }
+        },
+        {
+          "click": "text:تأكيد الحجز والدفع"
+        },
+        {
+          "expect": "مواعيدي الطبية"
+        },
+        {
+          "expectDb": {
+            "col": "bookings",
+            "min": 1
+          }
+        }
+      ]
+    },
+    {
+      "flow": "تأكيد الحضور",
+      "steps": [
+        {
+          "role": "receptionist"
+        },
+        {
+          "go": "/reception"
+        },
+        {
+          "click": "[data-act=new-booking]"
+        },
+        {
+          "fill": {
+            "[name=userName]": "محمد أحمد",
+            "[name=phone]": "0912345678",
+            "[name=date]": "2023-10-10",
+            "[name=time]": "10:00",
+            "[name=reason]": "متابعة"
+          }
+        },
+        {
+          "click": "[data-act=confirm]"
+        },
+        {
+          "expectDb": {
+            "col": "bookings",
+            "min": 1
+          }
+        }
+      ]
+    },
+    {
+      "flow": "إنهاء الزيارة والكتابة الطبية",
+      "steps": [
+        {
+          "role": "doctor"
+        },
+        {
+          "go": "/today"
+        },
+        {
+          "click": "[data-act=visit]"
+        },
+        {
+          "expect": "تفاصيل الزيارة والكتابة الطبية"
+        },
+        {
+          "click": "text:إنهاء الموعد وحفظ التقرير"
+        },
+        {
+          "expectDb": {
+            "col": "bookings",
+            "min": 1
+          }
+        }
+      ]
+    }
+  ],
+  "reviewIssues": {
+    "home": [],
+    "doctor": [],
+    "appointments": [],
+    "today": [],
+    "visit": [],
+    "reception": []
+  },
+  "spec": false,
+  "specFallback": [],
+  "flowErr": "رد غير صالح: {\"tests\":[{\"flow\":\"حجز موعد\",\"steps\":[{\"role\":\"patient\"},{\"go\":\"/\"},{\"click\":\"[data-act=view-provider]\"},{\"fill\":{\"[name",
+  "agent": {
+    "ran": true,
+    "fixed": 0,
+    "steps": 8,
+    "log": [
+      "seed — مجموعة providers فارغة ويحتاجها التطبيق لعرض الأطباء وتمكين رحلة حجز الموعد. سنقوم بإضافة بيانات أولية حقيقية لأطباء متنوعين. → أُضيفت 2 عناصر إلى providers (ids: providers-1، providers-2). شغّل run للتحقق.",
+      "read home — قراءة كود شاشة home لمعرفة سبب عدم وجود [data-act=view-provider] → 1| App.screen({\n2|   id: 'home',\n3|   route: '/',\n4|   title: 'الأطباء',\n5|   icon: 'home',\n6|   nav: true,\n7|   render(params) {\n8|     return `\n9|       <div ",
+      "read today — قراءة شاشة today لمعرفة سبب عدم وجود [data-act=visit] ولماذا لا تظهر المواعيد (هل تستخدم Data.bookings.visible() أو byStatus؟) → 1| App.screen({\n2|   id: 'today',\n3|   route: '/today',\n4|   title: 'مواعيد اليوم',\n5|   icon: 'stethoscope',\n6|   nav: true,\n7|   render(params) {\n8|     retur",
+      "read reception → 1| App.screen({\n2|   id: 'reception',\n3|   route: '/reception',\n4|   title: 'إدارة المواعيد',\n5|   icon: 'clipboard-list',\n6|   nav: true,\n7|   render(params) {",
+      "seed (مكرر) → نتيجة هذه الخطوة نفسها ظاهرة أعلاه في #1 والكود لم يتغير منذها. استخدمها: نفّذ edit أو run أو done.",
+      "edit home — تعديل شاشة home لاستخدام Data.providers.visible() بدلاً من Data.providers.list حسب تعليمات العقد → تم التعديل",
+      "run — تشغيل التطبيق بعد تعديل شاشة home باستخدام Data.providers.visible() لمعرفة ما إذا كانت أخطاء اختبار حجز الموعد قد اختفت → نتيجة التشغيل (درجة الأخطاء 101، الأفضل حتى الآن 90):\n[doctor] Uncaught SyntaxError: Failed to execute 'closest' on 'Element': The provided selector is empty. ("
+    ]
+  },
+  "fixErrors": [],
+  "review": {
+    "found": 0,
+    "fixed": 0
+  },
+  "screens": [
+    {
+      "id": "home",
+      "route": "/",
+      "roles": [
+        "patient"
+      ],
+      "bytes": 4503
+    },
+    {
+      "id": "doctor",
+      "route": "/doctor/:id",
+      "roles": [
+        "patient"
+      ],
+      "bytes": 9201
+    },
+    {
+      "id": "appointments",
+      "route": "/appointments",
+      "roles": [
+        "patient"
+      ],
+      "bytes": 5996
+    },
+    {
+      "id": "today",
+      "route": "/today",
+      "roles": [
+        "doctor"
+      ],
+      "bytes": 5272
+    },
+    {
+      "id": "visit",
+      "route": "/visit/:id",
+      "roles": [
+        "doctor"
+      ],
+      "bytes": 4856
+    },
+    {
+      "id": "reception",
+      "route": "/reception",
+      "roles": [
+        "receptionist"
+      ],
+      "bytes": 10187
+    }
+  ],
+  "design": {
+    "model": "gemini-2.5-flash",
+    "score": null,
+    "min": null,
+    "screens": {}
+  }
+}

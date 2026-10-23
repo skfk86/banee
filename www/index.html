@@ -2341,7 +2341,7 @@ var ROLES = {
 'أعد JSON فقط: {"tests":[{"flow":"اسم الرحلة","steps":[ ... ]}]}\n' +
 'الخطوات المتاحة فقط:\n' +
 '{"role":"driver"} ← تبديل الدور. في الأنظمة متعددة الأدوار ابدأ كل رحلة بخطوة role لدور صاحبها، وبدّل الدور داخل الرحلة إذا انتقلت لدور آخر (الطالب يسلّم ثم {"role":"teacher"} يصحّح). الرحلات تعمل بالترتيب على نفس البيانات، فما أنشأته رحلة سابقة موجود للتالية\n' +
-'{"go":"/route"} ← فتح شاشة (لمسار فيه :id استخدم id حقيقياً من البيانات المعطاة)\n' +
+'{"go":"/route"} ← فتح شاشة (لمسار فيه :id استخدم id حقيقياً من البيانات المعطاة من نفس المجموعة التي تقرأ منها الشاشة: شاشة الموعد تأخذ id موعد لا id طبيب. لفتح عنصر أُنشئ في الرحلة نفسها افتح شاشة القائمة واضغط العنصر بدل go)\n' +
 '{"fill":{"#selector":"قيمة واقعية"}} ← تعبئة حقول موجودة فعلاً في الكود\n' +
 '{"click":"[data-act=xxx]"} أو {"click":"text:نص الزر"} ← ضغط عنصر موجود فعلاً\n' +
 '{"expect":"نص يجب أن يظهر"} ← نص ثابت مؤكد الظهور بعد الخطوة (من الكود أو البيانات، وليس من رسائل toast)\n' +
@@ -3964,7 +3964,7 @@ function runFlows(app, w, d, note, setCur){
           // الحقل غير ظاهر لأن النموذج داخل نافذة لم تُفتح؟ نضغط زر الإنشاء/الإضافة الظاهر ثم نعيد البحث
           var keys = Object.keys(st.fill), miss = keys.filter(function(sel){ return !find(sel); });
           var opener = null;
-          if (miss.length && !d.getElementById('sheet')) { var cands = [].slice.call(d.querySelectorAll('[data-act]')).filter(function(e){ return /^(create|add|new|open-form|compose|post|publish)([-_]|$)/i.test(e.getAttribute('data-act') || '') && e.offsetParent !== null; }); if (cands.length) opener = cands[0]; }
+          if (miss.length && !d.getElementById('sheet')) { var cands = [].slice.call(d.querySelectorAll('[data-act]')).filter(function(e){ return /(^|[-_])(create|add|new|open-form|compose|post|publish|request)([-_]|$)/i.test(e.getAttribute('data-act') || '') && !/^(submit|send|save|confirm|cancel|delete|remove|approve|reject)/i.test(e.getAttribute('data-act') || '') && e.offsetParent !== null; }); if (cands.length) opener = cands[0]; }
           p = (opener ? (opener.click(), sleep(700)) : Promise.resolve()).then(function(){
             keys.forEach(function(sel){
               if (failed) return;
@@ -4270,7 +4270,9 @@ function shootScreens(app){
           var s = list[i++];
           try { w.__banee.setRole((plan.roles || []).length > 1 && s.roles && s.roles.length ? s.roles[0] : null); } catch(e){}
           w.location.hash = s.route.replace(/:\w+/g, function(){ return encodeURIComponent(seedIdFor({ seed: mergedSeed(app) }, app.ck.screens[s.id])); });
-          sleep(1400).then(function(){
+          // ننتظر المحتوى الفعلي بدل الهيكل العظمي (حتى ٦ ثوانٍ) حتى لا تُقيَّم شاشة بطيئة كأنها فارغة
+          var t0 = Date.now(), ready = function(){ var a = d.getElementById('app'); return a && (a.innerText || '').trim().length > 20 && !a.querySelector('.sk'); };
+          (function wait(){ return sleep(400).then(function(){ return ready() || Date.now() - t0 > 6000 ? null : wait(); }); })().then(function(){
             try { w.lucide.createIcons(); } catch(e){} // rAF متوقف في الإطار المخفي فلا تُرسم الأيقونات تلقائياً
             return w.html2canvas(d.body, { width: 390, height: 844, windowWidth: 390, windowHeight: 844, scale: 1, useCORS: true, logging: false, backgroundColor: null, onclone: flatColors });
           }).then(function(cv){ shots[s.id] = cv.toDataURL('image/jpeg', 0.72).split(',')[1]; }, function(){}).then(next);

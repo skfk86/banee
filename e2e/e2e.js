@@ -85,6 +85,8 @@ const log = (...a) => { const s = '[' + new Date().toISOString().slice(11, 19) +
       let route = s.route.replace(/:\w+/g, () => encodeURIComponent(sid || 's1'));
       await ap.evaluate(([r, role]) => { try { window.__banee.setRole(role); } catch (e) {} location.hash = r; }, [route, plan.roles.length > 1 && s.roles && s.roles.length ? s.roles[0] : null]);
       await ap.waitForTimeout(1800);
+      // ننتظر ظهور المحتوى الفعلي (لا الهيكل العظمي) حتى ٦ ثوانٍ، فالشاشة البطيئة لا تُصوَّر فارغة
+      await ap.waitForFunction(() => { const a = document.querySelector('#app'); return a && a.innerText.trim().length > 20 && !a.querySelector('.skeleton, .sk'); }, null, { timeout: 6000 }).catch(() => {});
       await ap.screenshot({ path: path.join(OUT, String(n++).padStart(2, '0') + '-' + s.id + '.png'), fullPage: true });
     }
     fs.writeFileSync(path.join(OUT, 'app-errors.json'), JSON.stringify(aerr, null, 2));

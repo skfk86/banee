@@ -1,0 +1,183 @@
+{
+  "status": "ready",
+  "error": "",
+  "name": "إنجليزي بلس",
+  "steps": [
+    "done · هوية «حماس المعرفة» · الخطة: ٦ شاشات · ٧ مجموعات · ٢٨ عنصر محتوى",
+    "done · المحتوى: ٢٨ عنصر مكتوب كاملاً",
+    "done · الهيكل جاهز: التنقّل، البيانات، الدخول، التصميم",
+    "done · ٦ شاشات مكتوبة",
+    "done · جُرّبت كل الشاشات وأُصلحت ٦، لا أخطاء · رحلات المستخدم: ٢ من ٢ تعمل كاملة · المراجعة: أُصلحت ١ من ١ · التصميم: ٥.٧ من ١٠ (حُسّنت ٣ شاشات)",
+    "done · جاهز للمعاينة والتحميل"
+  ],
+  "runtime": {
+    "home": [],
+    "course": [],
+    "lesson": [],
+    "quiz": [],
+    "me": [],
+    "teacherDashboard": []
+  },
+  "flows": [
+    "رحلة التعلم اليومية (8 خطوات)",
+    "متابعة المعلم وإرسال التحديات (7 خطوات)"
+  ],
+  "flowSteps": [
+    {
+      "flow": "رحلة التعلم اليومية",
+      "steps": [
+        {
+          "role": "student"
+        },
+        {
+          "go": "/"
+        },
+        {
+          "click": "[data-act=open-course][data-id=courses-1]"
+        },
+        {
+          "click": "[data-act=lesson][data-id=lessons-1]"
+        },
+        {
+          "click": "[data-act=complete]"
+        },
+        {
+          "click": "[data-act=select-opt][data-val=Good morning]"
+        },
+        {
+          "click": "[data-act=next-q]"
+        },
+        {
+          "expect": "أحسنت! أتممت الاختبار"
+        }
+      ]
+    },
+    {
+      "flow": "متابعة المعلم وإرسال التحديات",
+      "steps": [
+        {
+          "role": "teacher"
+        },
+        {
+          "go": "/teacher"
+        },
+        {
+          "click": "[data-act=open-challenge-modal]"
+        },
+        {
+          "fill": {
+            "[name=title]": "تحدي القواعد"
+          }
+        },
+        {
+          "fill": {
+            "[name=description]": "يرجى مراجعة الدرس الأول بدقة"
+          }
+        },
+        {
+          "click": "text:إرسال التحدي الآن"
+        },
+        {
+          "expectDb": {
+            "col": "challenges",
+            "min": 1
+          }
+        }
+      ]
+    }
+  ],
+  "reviewIssues": {
+    "home": [],
+    "course": [],
+    "lesson": [],
+    "quiz": [],
+    "me": [],
+    "teacherDashboard": [
+      "مراجعة: حقل studentName يُحفظ في مجموعة challenges عند إنشاء التحدي، ولكنه غير موجود في مخطط الحقول لـ challenges."
+    ]
+  },
+  "spec": false,
+  "specFallback": [],
+  "flowErr": "",
+  "agent": {
+    "ran": false,
+    "fixed": 0,
+    "steps": 0,
+    "log": []
+  },
+  "fixErrors": [],
+  "review": {
+    "found": 1,
+    "fixed": 1
+  },
+  "screens": [
+    {
+      "id": "home",
+      "route": "/",
+      "roles": [
+        "student"
+      ],
+      "bytes": 4160
+    },
+    {
+      "id": "course",
+      "route": "/course/:id",
+      "roles": [
+        "student"
+      ],
+      "bytes": 4936
+    },
+    {
+      "id": "lesson",
+      "route": "/lesson/:id",
+      "roles": [
+        "student"
+      ],
+      "bytes": 2778
+    },
+    {
+      "id": "quiz",
+      "route": "/quiz/:id",
+      "roles": [
+        "student"
+      ],
+      "bytes": 6438
+    },
+    {
+      "id": "me",
+      "route": "/progress",
+      "roles": [
+        "student"
+      ],
+      "bytes": 7200
+    },
+    {
+      "id": "teacherDashboard",
+      "route": "/teacher",
+      "roles": [
+        "teacher"
+      ],
+      "bytes": 7920
+    }
+  ],
+  "design": {
+    "model": "gemini-2.5-flash",
+    "score": 6,
+    "min": 6,
+    "screens": {
+      "teacherDashboard": {
+        "score": 6,
+        "strengths": [
+          "نظام بصري وألوان متناسقة مع درجات البنفسجي، وحواف دائرية عصرية تعطي طابعاً حديثاً وودوداً.",
+          "مراعاة جيدة لاتجاه RTL ومحاذاة العناصر والنصوص وقابليتها للقراءة.",
+          "وجود حالة فارغة مصممة بوضوح لقسم التحديات مع أيقونة ملائمة ورسالة واضحة."
+        ],
+        "issues": [
+          "وجود شريط تنقل سفلي (Bottom Nav) يحتوي على تبويب واحد فقط؛ يجب إما إكمال بقية التبويبات أو إزالة الشريط بالكامل والاعتماد على التنقل البسيط لتوفير المساحة الرأسية.",
+          "تكرار عنوان 'لوحة المعلم' ثلاث مرات في شاشة واحدة (في الشريط العلوي، البانر الترويجي، والتبويب السفلي)؛ يُفضل حذف البانر العلوي لرفع المحتوى التشغيلي الفعلي للأعلى وتفادي هدر المساحة.",
+          "اضطراب التسلسل البصري داخل بطاقة الطالب وبطاقة 'إرسال تحدي' من حيث توزيع الأوزان؛ يُصلح بمحاذاة الشارات (Badge) مع خط الأساس وتوحيد الهوامش الداخلية (Padding) لتقليل التشتت البصري."
+        ]
+      }
+    }
+  }
+}

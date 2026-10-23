@@ -1,0 +1,222 @@
+{
+  "status": "ready",
+  "error": "",
+  "name": "سوبرماركت طازج",
+  "steps": [
+    "done · هوية «مؤونة طازجة» · الخطة: ٦ شاشات · ٥ مجموعات · ٢٤ عنصر محتوى",
+    "done · المحتوى: ٢٤ عنصر مكتوب كاملاً",
+    "done · الهيكل جاهز: التنقّل، البيانات، الدخول، التصميم",
+    "done · ٦ شاشات مكتوبة",
+    "done · الفحص: ١ شاشات بها ملاحظات، راجعها في الاستوديو · رحلات المستخدم: ١ من ٢ تعمل كاملة · المراجعة: أُصلحت ١ من ١ · التصميم: ٥.٧ من ١٠ (حُسّنت ٣ شاشات) · وكيل الإصلاح: لم يجد تحسيناً آمناً",
+    "done · جاهز للمعاينة والتحميل"
+  ],
+  "runtime": {
+    "home": [],
+    "store": [],
+    "checkout": [],
+    "track": [],
+    "shopperBoard": [
+      "رحلة «تجهيز وتوصيل الطلب» توقفت عند الخطوة ٤: لم يُعثر على [data-act=finish-prep] (الزر غير موجود أو اسمه مختلف) — الظاهر الآن: الشاشة shopperBoard (#/shopper) بدور shopper؛ الأزرار: لا شيء؛ الحقول: لا شيء"
+    ],
+    "driverBoard": []
+  },
+  "flows": [
+    "طلب توصيل بقالة (11 خطوات)",
+    "تجهيز وتوصيل الطلب (11 خطوات)"
+  ],
+  "flowSteps": [
+    {
+      "flow": "طلب توصيل بقالة",
+      "steps": [
+        {
+          "role": "customer"
+        },
+        {
+          "go": "/"
+        },
+        {
+          "fill": {
+            "#searchInput": "سوبرماركت"
+          }
+        },
+        {
+          "click": "[data-act=open-store][data-id=stores-1]"
+        },
+        {
+          "go": "/store/stores-1"
+        },
+        {
+          "click": "[data-act=add][data-id=items-1]"
+        },
+        {
+          "click": "[data-act=checkout]"
+        },
+        {
+          "go": "/checkout"
+        },
+        {
+          "fill": {
+            "#name": "محمد أحمد",
+            "#phone": "0912345678",
+            "#address": "شارع النيل، منزل رقم 5"
+          }
+        },
+        {
+          "click": "[data-act=submit-order]"
+        },
+        {
+          "expectDb": {
+            "col": "orders",
+            "min": 1
+          }
+        }
+      ]
+    },
+    {
+      "flow": "تجهيز وتوصيل الطلب",
+      "steps": [
+        {
+          "role": "shopper"
+        },
+        {
+          "go": "/shopper"
+        },
+        {
+          "click": "[data-act=take-order]"
+        },
+        {
+          "click": "[data-act=finish-prep]"
+        },
+        {
+          "role": "driver"
+        },
+        {
+          "go": "/driver"
+        },
+        {
+          "click": "[data-act=filter]"
+        },
+        {
+          "click": "[data-act=take]"
+        },
+        {
+          "click": "[data-act=status]"
+        },
+        {
+          "click": "[data-act=status]"
+        },
+        {
+          "expectDb": {
+            "col": "orders",
+            "min": 1
+          }
+        }
+      ]
+    }
+  ],
+  "reviewIssues": {
+    "home": [],
+    "store": [],
+    "checkout": [],
+    "track": [],
+    "shopperBoard": [
+      "مراجعة: زر 'تم التجهيز وتسليم للمندوب' (finish-prep) يغير حالة الطلب إلى 'delivering' مباشرة، بينما لوحة المندوب تتطلب أن يكون الطلب بحالة 'processing' ليتمكن من استلامه، مما يعطل رحلة التوصيل. الإصلاح: تعديل زر إنهاء التجهيز ليترك الطلب بحالة تسمح للمندوب باستلامه أو تعديل شاشة المندوب لقبول الطلبات بحالة 'delivering'."
+    ],
+    "driverBoard": []
+  },
+  "spec": false,
+  "specFallback": [],
+  "flowErr": "",
+  "agent": {
+    "ran": true,
+    "fixed": 0,
+    "steps": 10,
+    "log": [
+      "read shopperBoard — أحتاج لقراءة شاشة shopperBoard لمعرفة سبب عدم وجود زر [data-act=finish-prep] وتعديلها لتتوافق مع سيناريو الاختبار. → 1| App.screen({\n2|   id: 'shopperBoard',\n3|   route: '/shopper',\n4|   title: 'تجهيز الطلبات',\n5|   icon: 'clipboard-list',\n6|   nav: true,\n7|   render(params) {",
+      "edit shopperBoard — تعديل شاشة shopperBoard لتغيير التبويب النشط تلقائياً إلى قيد التجهيز بعد النقر على قبول الطلب، وتصحيح حالة الطلب عند إنهاء التجهيز إلى deli → find غير موجود في shopperBoard حتى مع تجاهل المسافات؛ استخدم search بكلمة مميزة منه لتعرف النص الحالي، ثم انسخ سطراً أو سطرين فقط",
+      "edit shopperBoard — في شاشة shopperBoard، عند النقر على قبول الطلب (take-order) يبقى التبويب على الطلبات الجديدة ويختفي الطلب، كما أن إنهاء التجهيز كان يضبط الح → تم التعديل",
+      "edit shopperBoard — تعديل شاشة shopperBoard لتحديث التبويب تلقائياً إلى 'قيد التجهيز' عند قبول الطلب ليظهر زر finish-prep مباشرة، وتصحيح حالة finish-prep إلى 'd → find غير موجود في shopperBoard حتى مع تجاهل المسافات؛ استخدم search بكلمة مميزة منه لتعرف النص الحالي، ثم انسخ سطراً أو سطرين فقط",
+      "edit shopperBoard — تعديل شاشة shopperBoard لتغيير الحالة إلى delivering عند إنهاء التجهيز بدلاً من الإبقاء على processing، وتغيير التبويب الحالي إلى processing → تم التعديل",
+      "edit (مكرر) → نتيجة هذه الخطوة نفسها ظاهرة أعلاه في #4 والكود لم يتغير منذها. استخدمها: نفّذ edit أو run أو done.",
+      "edit shopperBoard — تعديل شاشة shopperBoard لتغيير التبويب النشط تلقائياً إلى 'قيد التجهيز' بعد النقر على زر قبول الطلب ليظهر زر finish-prep مباشرة، وتغيير حالة → find غير موجود في shopperBoard حتى مع تجاهل المسافات؛ استخدم search بكلمة مميزة منه لتعرف النص الحالي، ثم انسخ سطراً أو سطرين فقط",
+      "read shopperBoard — قراءة شاشة shopperBoard لمعرفة محتواها بالكامل وأزرارها الحالية لإنشاء زر [data-act=finish-prep] بشكل صحيح → 1| App.screen({\n2|   id: 'shopperBoard',\n3|   route: '/shopper',\n4|   title: 'تجهيز الطلبات',\n5|   icon: 'clipboard-list',\n6|   nav: true,\n7|   render(params) {",
+      "run — أنا جاهز لتشغيل التطبيق والتحقق من تقدم الاختبار بعد إصلاح زر finish-prep وتغيير الحالة في shopperBoard. سأستخدم أداة run. → نتيجة التشغيل (درجة الأخطاء 30، الأفضل حتى الآن 30):\n[shopperBoard] رحلة «تجهيز وتوصيل الطلب» توقفت عند الخطوة ٤: لم يُعثر على [data-act=finish-prep] (الزر غير ",
+      "done → "
+    ]
+  },
+  "fixErrors": [],
+  "review": {
+    "found": 1,
+    "fixed": 1
+  },
+  "screens": [
+    {
+      "id": "home",
+      "route": "/",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 4657
+    },
+    {
+      "id": "store",
+      "route": "/store/:id",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 8637
+    },
+    {
+      "id": "checkout",
+      "route": "/checkout",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 8730
+    },
+    {
+      "id": "track",
+      "route": "/orders",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 5400
+    },
+    {
+      "id": "shopperBoard",
+      "route": "/shopper",
+      "roles": [
+        "shopper"
+      ],
+      "bytes": 6608
+    },
+    {
+      "id": "driverBoard",
+      "route": "/driver",
+      "roles": [
+        "driver"
+      ],
+      "bytes": 7399
+    }
+  ],
+  "design": {
+    "model": "gemini-2.5-flash",
+    "score": 5,
+    "min": 5,
+    "screens": {
+      "shopperBoard": {
+        "score": 5,
+        "strengths": [
+          "طباعة عربية واضحة ومقروءة بأوزان متناسقة وتباين جيد للنصوص",
+          "تطبيق صحيح للاتجاه من اليمين إلى اليسار (RTL) في كافة العناصر",
+          "لوحة ألوان متناسقة تعتمد درجات الأخضر المتناغمة مع هوية التطبيق"
+        ],
+        "issues": [
+          "شريط التبويبات (Segmented Control) مكسور بصرياً بتوزع الخيارات على سطرين غير متكافئين؛ يجب تحويله إلى تبويبات أفقية من ثلاثة أعمدة متساوية في سطر واحد أو تبويبات قابلة للتمرير",
+          "أيقونة الحالة الفارغة مفقودة ويظهر مكانها شكل بيضاوي مفرغ؛ يجب وضع رسم توضيحي أو أيقونة معبّرة داخل العنصر لإعطاء مظهر مكتمل واحترافي",
+          "شريط التنقل السفلي يحتوي على عنصر وحيد فقط مما يهدر مساحة الشاشة؛ يجب إزالته إذا لم تكن هناك أقسام أخرى أو إضافة بقية وجهات التطبيق"
+        ]
+      }
+    }
+  }
+}

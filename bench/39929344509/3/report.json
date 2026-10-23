@@ -1,0 +1,252 @@
+{
+  "status": "ready",
+  "error": "",
+  "name": "ملعبك والأكاديمية",
+  "steps": [
+    "done · هوية «نبض الملاعب» · الخطة: ٧ شاشات · ٦ مجموعات",
+    "done · لا يحتاج التطبيق محتوى جاهزاً",
+    "done · الهيكل جاهز: التنقّل، البيانات، الدخول، التصميم",
+    "done · ٧ شاشات مكتوبة",
+    "done · جُرّبت كل الشاشات وأُصلحت ٦، لا أخطاء · رحلات المستخدم: ٣ من ٣ تعمل كاملة · المراجعة: أُصلحت ٢ من ٢ · التصميم: ٥.٤ من ١٠ (حُسّنت ٣ شاشات) · وكيل الإصلاح: أصلح ١ في ٦ خطوة",
+    "done · جاهز للمعاينة والتحميل"
+  ],
+  "runtime": {
+    "home": [],
+    "book": [],
+    "myBookings": [],
+    "ownerDashboard": [],
+    "academyClasses": [],
+    "attendanceView": [],
+    "notifications": []
+  },
+  "flows": [
+    "حجز ملعب وتقسيم التكلفة (9 خطوات)",
+    "إدارة الملعب (6 خطوات)",
+    "تسجيل حضور الأكاديمية (10 خطوات)"
+  ],
+  "flowSteps": [
+    {
+      "flow": "حجز ملعب وتقسيم التكلفة",
+      "steps": [
+        {
+          "role": "customer"
+        },
+        {
+          "go": "/"
+        },
+        {
+          "click": "[data-act=view-all-stadiums]"
+        },
+        {
+          "go": "/book/s1"
+        },
+        {
+          "fill": {
+            "#booking-date": "2025-06-01"
+          }
+        },
+        {
+          "fill": {
+            "#booking-time": "20:00"
+          }
+        },
+        {
+          "click": "[data-act=confirm-booking]"
+        },
+        {
+          "expect": "حجوزاتي الرياضية"
+        },
+        {
+          "expectDb": {
+            "col": "bookings",
+            "min": 1
+          }
+        }
+      ]
+    },
+    {
+      "flow": "إدارة الملعب",
+      "steps": [
+        {
+          "role": "owner"
+        },
+        {
+          "go": "/owner/dashboard"
+        },
+        {
+          "click": "[data-act=add-stadium]"
+        },
+        {
+          "fill": {
+            "#s-name": "ملعب النجم",
+            "#s-location": "الرياض",
+            "#s-price": "20",
+            "#s-photo": "http://img.com/p.jpg",
+            "#s-open": "08:00",
+            "#s-close": "23:00"
+          }
+        },
+        {
+          "click": "[data-act=filter-booking][data-status=all]"
+        },
+        {
+          "expect": "لوحة تحكم صاحب الملعب"
+        }
+      ]
+    },
+    {
+      "flow": "تسجيل حضور الأكاديمية",
+      "steps": [
+        {
+          "role": "trainer"
+        },
+        {
+          "go": "/academy"
+        },
+        {
+          "click": "[data-act=add-class]"
+        },
+        {
+          "fill": {
+            "#cls-title": "حصة كرة قدم",
+            "#cls-sport": "كرة القدم",
+            "#cls-trainer": "كابتن أحمد",
+            "#cls-date": "2025-06-01",
+            "#cls-time": "16:00",
+            "#cls-price": "50",
+            "#cls-capacity": "15"
+          }
+        },
+        {
+          "go": "/attendance/s1"
+        },
+        {
+          "click": "[data-act=add-child]"
+        },
+        {
+          "fill": {
+            "#child-name-input": "محمد أحمد"
+          }
+        },
+        {
+          "click": "#save-child-btn"
+        },
+        {
+          "expect": "سجل الحضور والانصراف"
+        },
+        {
+          "expectDb": {
+            "col": "attendances",
+            "min": 1
+          }
+        }
+      ]
+    }
+  ],
+  "reviewIssues": {
+    "home": [],
+    "book": [],
+    "myBookings": [],
+    "ownerDashboard": [
+      "مراجعة: تستعرض لوحة تحكم صاحب الملعب جميع ملاعب المنصة عبر Data.stadiums.visible() بدلاً من ملاعبه الخاصة Data.stadiums.mine()، مما يتيح له تعديل أو حذف ملاعب الآخرين. الإصلاح: استبدال Data.stadiums.visible() بـ Data.stadiums.mine()."
+    ],
+    "academyClasses": [],
+    "attendanceView": [
+      "مراجعة: عند إضافة المدرب لطفل من خلال زر إضافة طفل، يتم تعيين حقل parentId بقيمة Auth.user.uid الخاصة بالمدرب بالخطأ، مما يمنع ولي الأمر من رؤية الأطفال المضافين لعدم مطابقة معرف ولي الأمر. الإصلاح: عدم تعيين parentId كمعرف للتدريب أو ربطه بولي الأمر الصحيح عند الإضافة."
+    ],
+    "notifications": []
+  },
+  "spec": false,
+  "specFallback": [],
+  "flowErr": "",
+  "agent": {
+    "ran": true,
+    "fixed": 1,
+    "steps": 6,
+    "log": [
+      "read attendanceView — قراءة شاشة متابعة الحضور لمعرفة كيفية إضافة طفل وحفظ الحضور في attendances → 1| App.screen({\n2|   id: 'attendanceView',\n3|   route: '/attendance/:classId',\n4|   title: 'متابعة الحضور',\n5|   icon: 'check',\n6|   nav: false,\n7|   render(par",
+      "read academyClasses — قراءة شاشة الأكاديمية لمعرفة كيفية إنشاء الحصص والانتقال لشاشة الحضور → 1| App.screen({\n2|   id: 'academyClasses',\n3|   route: '/academy',\n4|   title: 'الأكاديمية',\n5|   icon: 'circle',\n6|   nav: true,\n7|   render(params) {\n8|     c",
+      "flow — تعديل سيناريو اختبار تسجيل حضور الأكاديمية لإضافة خطوة النقر على زر حفظ الطفل (#save-child-btn) لكي يتم حفظ الحضور في قاعدة البيانات بشكل صحيح. → حُدّث سيناريو «تسجيل حضور الأكاديمية». شغّل run للتحقق.",
+      "run → نتيجة التشغيل (درجة الأخطاء 0، الأفضل حتى الآن 0):\nلا أخطاء وظيفية",
+      "run — التطبيق يعمل بشكل سليم تماماً حسب آخر نتيجة تشغيل ولا توجد أي أخطاء وظيفية. سأقوم بتشغيل التطبيق مرة أخرى للتأكد النهائي. → نتيجة التشغيل (درجة الأخطاء 0، الأفضل حتى الآن 0):\nلا أخطاء وظيفية",
+      "done → تم التحقق من اكتمال كافة رحلات المستخدم وسيناريوهات الاختبار بنجاح تام وعمل جميع الشاشات والمجموعات بدون أخطاء."
+    ]
+  },
+  "fixErrors": [],
+  "review": {
+    "found": 2,
+    "fixed": 2
+  },
+  "screens": [
+    {
+      "id": "home",
+      "route": "/",
+      "roles": [
+        "customer",
+        "owner",
+        "trainer",
+        "parent"
+      ],
+      "bytes": 9468
+    },
+    {
+      "id": "book",
+      "route": "/book/:id",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 9533
+    },
+    {
+      "id": "myBookings",
+      "route": "/my-bookings",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 7634
+    },
+    {
+      "id": "ownerDashboard",
+      "route": "/owner/dashboard",
+      "roles": [
+        "owner"
+      ],
+      "bytes": 13114
+    },
+    {
+      "id": "academyClasses",
+      "route": "/academy",
+      "roles": [
+        "trainer",
+        "parent"
+      ],
+      "bytes": 8981
+    },
+    {
+      "id": "attendanceView",
+      "route": "/attendance/:classId",
+      "roles": [
+        "trainer",
+        "parent"
+      ],
+      "bytes": 7598
+    },
+    {
+      "id": "notifications",
+      "route": "/notifications",
+      "roles": [
+        "customer",
+        "owner",
+        "trainer",
+        "parent"
+      ],
+      "bytes": 4648
+    }
+  ],
+  "design": {
+    "model": "gemini-2.5-flash",
+    "score": null,
+    "min": null,
+    "screens": {}
+  }
+}

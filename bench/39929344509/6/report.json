@@ -1,0 +1,155 @@
+{
+  "status": "ready",
+  "error": "",
+  "name": "مذاق فاخر",
+  "steps": [
+    "done · هوية «ذوق فاخر» · الخطة: ٥ شاشات · ٥ مجموعات · ٢٠ عنصر محتوى",
+    "done · المحتوى: ٢٠ عنصر مكتوب كاملاً",
+    "done · الهيكل جاهز: التنقّل، البيانات، الدخول، التصميم",
+    "done · ٥ شاشات مكتوبة",
+    "done · جُرّبت كل الشاشات وأُصلحت ٣، لا أخطاء · رحلات المستخدم: ١ من ١ تعمل كاملة · المراجعة: أُصلحت ١ من ١ · التصميم: ٥ من ١٠ (حُسّنت ٣ شاشات)",
+    "done · جاهز للمعاينة والتحميل"
+  ],
+  "runtime": {
+    "home": [],
+    "book": [],
+    "myBookings": [],
+    "hostDashboard": [],
+    "kitchenDashboard": []
+  },
+  "flows": [
+    "حجز وطلب مسبق (13 خطوات)"
+  ],
+  "flowSteps": [
+    {
+      "flow": "حجز وطلب مسبق",
+      "steps": [
+        {
+          "role": "customer"
+        },
+        {
+          "go": "/"
+        },
+        {
+          "click": "[data-act=add-to-cart][data-id=menu-1]"
+        },
+        {
+          "click": "[data-act=open-cart]"
+        },
+        {
+          "fill": {
+            "[name=userName]": "محمد أحمد"
+          }
+        },
+        {
+          "fill": {
+            "[name=phone]": "0501234567"
+          }
+        },
+        {
+          "fill": {
+            "[name=guests]": "2"
+          }
+        },
+        {
+          "fill": {
+            "[name=occasion]": "عشاء رومانسي"
+          }
+        },
+        {
+          "fill": {
+            "[name=date]": "2025-12-31"
+          }
+        },
+        {
+          "fill": {
+            "[name=time]": "20:00"
+          }
+        },
+        {
+          "click": "text:تأكيد الحجز والطلب"
+        },
+        {
+          "expect": "حجوزاتي وطلباتي المسبقة"
+        },
+        {
+          "expectDb": {
+            "col": "bookings",
+            "min": 1
+          }
+        }
+      ]
+    }
+  ],
+  "reviewIssues": {
+    "home": [],
+    "book": [],
+    "myBookings": [],
+    "hostDashboard": [
+      "مراجعة: في تبويب الطلبات والحجوزات، الشرط المعروض للإنهاء هو b.status === 'ready' || b.status === 'confirmed'، لكن زر إسناد الطاولة أو تغييرها لا يحدث حالة الحجز، ويوجد خطأ في كود زر الإنهاء حيث تظهر تعليقات داخل الـ JSX غير مدعومة مثل {/* المطبخ يتولى... */}. الإصلاح: إزالة التعليق وتصحيح شروط أزرار الحالة للمضيف."
+    ],
+    "kitchenDashboard": []
+  },
+  "spec": false,
+  "specFallback": [],
+  "flowErr": "",
+  "agent": {
+    "ran": false,
+    "fixed": 0,
+    "steps": 0,
+    "log": []
+  },
+  "fixErrors": [],
+  "review": {
+    "found": 1,
+    "fixed": 1
+  },
+  "screens": [
+    {
+      "id": "home",
+      "route": "/",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 9517
+    },
+    {
+      "id": "book",
+      "route": "/book",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 6694
+    },
+    {
+      "id": "myBookings",
+      "route": "/my-bookings",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 6354
+    },
+    {
+      "id": "hostDashboard",
+      "route": "/host",
+      "roles": [
+        "host"
+      ],
+      "bytes": 10530
+    },
+    {
+      "id": "kitchenDashboard",
+      "route": "/kitchen",
+      "roles": [
+        "kitchen"
+      ],
+      "bytes": 6800
+    }
+  ],
+  "design": {
+    "model": "gemini-2.5-flash",
+    "score": null,
+    "min": null,
+    "screens": {}
+  }
+}

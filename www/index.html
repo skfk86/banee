@@ -2829,7 +2829,7 @@ function adminKey(app){ var s = String(app.adminPin || '0000') + '|' + app.id, x
 function UI_esc(s){ return String(s||'').replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
 
 // ════ عقد البيانات: طبقة Data تُولَّد آلياً من المخطط (بلا ذكاء اصطناعي) فتتفق كل الشاشات على الحقول والقيم ════
-var STATUS_AR = { new:'جديد', pending:'قيد الانتظار', accepted:'مقبول', confirmed:'مؤكد', preparing:'قيد التجهيز', ready:'جاهز', delivering:'في الطريق', shipped:'تم الشحن', delivered:'تم التوصيل', done:'مكتمل', completed:'مكتمل', cancelled:'ملغي', canceled:'ملغي', rejected:'مرفوض', paid:'مدفوع', unpaid:'غير مدفوع', active:'نشط', inactive:'غير نشط', expired:'منتهي', open:'مفتوح', closed:'مغلق', submitted:'مُسلَّم', graded:'مُقيَّم', draft:'مسودة', published:'منشور', approved:'مقبول', scheduled:'مجدول', attended:'حضر', absent:'غائب', inprogress:'قيد التنفيذ', in_progress:'قيد التنفيذ', review:'قيد المراجعة' };
+var STATUS_AR = { new:'جديد', pending:'قيد الانتظار', accepted:'مقبول', confirmed:'مؤكد', preparing:'قيد التجهيز', ready:'جاهز', delivering:'في الطريق', shipped:'تم الشحن', delivered:'تم التوصيل', done:'مكتمل', completed:'مكتمل', cancelled:'ملغي', canceled:'ملغي', rejected:'مرفوض', paid:'مدفوع', unpaid:'غير مدفوع', active:'نشط', inactive:'غير نشط', expired:'منتهي', open:'مفتوح', closed:'مغلق', submitted:'مُسلَّم', graded:'مُقيَّم', draft:'مسودة', published:'منشور', approved:'مقبول', scheduled:'مجدول', attended:'حضر', absent:'غائب', inprogress:'قيد التنفيذ', in_progress:'قيد التنفيذ', review:'قيد المراجعة', requested:'بانتظار الموافقة', request:'طلب', returned:'أُعيد', borrowed:'مستعار', overdue:'متأخر', late:'متأخر', processing:'قيد المعالجة', assigned:'مُسند', picked:'تم الاستلام', picked_up:'تم الاستلام', on_the_way:'في الطريق', arrived:'وصل', started:'بدأ', finished:'انتهى', failed:'فشل', refunded:'مُسترد', waiting:'بانتظار', queued:'في الانتظار', booked:'محجوز', checked_in:'سجّل الحضور', present:'حاضر', no_show:'لم يحضر', available:'متاح', unavailable:'غير متاح', sold:'مُباع', reserved:'محجوز', occupied:'مشغول', vacant:'شاغر', rented:'مؤجَّر', due:'مستحق', overdue_payment:'متأخر السداد', partial:'جزئي', settled:'مُسدَّد', verified:'موثَّق', blocked:'محظور', archived:'مؤرشف', hidden:'مخفي', sent:'مُرسَل', read:'مقروء', answered:'تمت الإجابة', resolved:'تم الحل', escalated:'مُصعَّد', on_hold:'معلّق', paused:'متوقف', planned:'مخطط', todo:'للتنفيذ', doing:'قيد العمل', blocked_task:'متعثر', passed:'ناجح', ready_for_pickup:'جاهز للاستلام', out_for_delivery:'خرج للتوصيل' };
 function contractOf(plan){
   var roles = (plan.roles || []).map(function(r){ return r.id; }), out = {};
   // مجموعة لها محتوى جاهز (أطباء، دورات، منتجات) كتالوج عام يراه الجميع، لا «ما أنشأته أنا»
@@ -3794,6 +3794,10 @@ function runtimeTest(app, onProgress){
         if (!el.textContent.trim() && !el.querySelector('img,svg,i,input,button')) note(s.id, 'الشاشة فارغة تماماً');
         if (/undefined|\[object Object\]|NaN/.test(el.textContent.replace(new RegExp(LEGIT_WORDS, 'g'), ''))) note(s.id, 'يظهر للمستخدم نص مثل undefined أو [object Object] أو NaN — حقل غير موجود أو اسم خاطئ');
         try { designAudit(w, d, el).forEach(function(m){ note(s.id, 'تصميم: ' + m); }); } catch(e){}
+        // قيمة حالة خام (requested, in_progress) ظاهرة للمستخدم بدل اسمها العربي
+        try { var stW = {}, CC = contractOf(plan); Object.keys(CC).forEach(function(c){ CC[c].statuses.forEach(function(x){ if (/^[a-z_]{3,}$/i.test(x)) stW[x] = 1; }); });
+          var vis = (el.innerText || ''), rawS = Object.keys(stW).filter(function(x){ return (STATUS_AR[x] || STATUS_AR[x.toLowerCase()]) && new RegExp('(^|[^A-Za-z_])' + x + '([^A-Za-z_]|$)').test(vis); });
+          if (rawS.length) note(s.id, 'قيمة الحالة الخام «' + rawS.slice(0, 3).join('، ') + '» ظاهرة للمستخدم بالإنجليزية: اعرضها بـ Data.label(x.status) لا بالقيمة نفسها'); } catch(e){}
       }
       // خريطة الواجهة الفعلية: ما يظهر في كل شاشة، وما يفعله كل زر (يفتح نافذة بحقول، أو ينقل لشاشة) — يكتب منها وكيل الاختبار سيناريوهات صحيحة
       function uiOf(root){ var acts = [], ins = []; if (!root) return { acts: acts, ins: ins }; var seenA = {}; [].forEach.call(root.querySelectorAll('[data-act]'), function(b){ var a = b.getAttribute('data-act'); if (seenA[a]) return; seenA[a] = 1; var ex = ''; [].forEach.call(b.attributes, function(at){ if (/^data-/.test(at.name) && at.name !== 'data-act' && !ex) ex = '[' + at.name + '=' + String(at.value).slice(0, 30) + ']'; }); acts.push('[data-act=' + a + ']' + ex + (b.textContent.trim() ? ' «' + b.textContent.trim().replace(/\s+/g, ' ').slice(0, 24) + '»' : '')); }); [].forEach.call(root.querySelectorAll('input, textarea, select'), function(e){ if (ins.length < 14 && e.type !== 'hidden') ins.push((e.id ? '#' + e.id : e.name ? '[name=' + e.name + ']' : e.tagName.toLowerCase()) + (e.type === 'radio' || e.type === 'checkbox' ? '(' + e.type + ')' : '')); }); return { acts: acts.slice(0, 16), ins: ins }; }
@@ -5042,6 +5046,64 @@ ROLES.assistant =
 'عند إضافة شاشة في القائمة السفلية لا تتجاوز ٤ شاشات nav. حافظ على كل ما يعمل ولا تحذف ميزات لم يطلب حذفها.';
 
 // ════ مساعد المحادثة كوكيل: يفهم الطلب، يقرأ ويبحث، يعدّل جراحياً أو يضيف شاشات، يجرّب التطبيق فعلياً، ثم يشرح ما فعله ════
+// ── عينا المساعد ويداه: يفتح التطبيق في إطار مخفي، يصوّر الشاشة ويقرأ ما يظهر فيها، ويجرّب خطوات كالمستخدم ──
+function openLive(app){
+  return new Promise(function(resolve){
+    var id = 'lv' + Date.now(), fr = document.createElement('iframe'), errs = [];
+    fr.setAttribute('style', 'position:fixed;left:-2000px;top:0;width:390px;height:844px;border:0;opacity:0;pointer-events:none');
+    var close = function(){ try { var w = fr.contentWindow; Object.keys(w.localStorage).forEach(function(k){ if (k.indexOf('st_' + id) === 0) w.localStorage.removeItem(k); }); } catch(e){} fr.remove(); };
+    fr.onload = function(){
+      var w = fr.contentWindow, d = fr.contentDocument;
+      try { w.addEventListener('error', function(e){ errs.push(String(e.message || e).slice(0, 200)); }); w.addEventListener('unhandledrejection', function(e){ errs.push(String(e.reason && e.reason.message || e.reason).slice(0, 200)); }); } catch(e){}
+      var sc = d.createElement('script'); sc.src = new URL('vendor/html2canvas.min.js', location.href).href;
+      var go = function(){ sleep(900).then(function(){ resolve({ w: w, d: d, errs: errs, close: close }); }); };
+      sc.onload = go; sc.onerror = go; d.head.appendChild(sc);
+    };
+    fr.srcdoc = assemble(app, { test: true, id: id });
+    document.body.appendChild(fr);
+  });
+}
+function liveState(L){
+  var d = L.d, w = L.w, app0 = d.getElementById('app'), root = d.getElementById('sheet') || app0 || d.body, out = [];
+  var role = ''; try { role = w.__banee.Roles.current() || ''; } catch(e){}
+  out.push('المسار: ' + (w.location.hash || '#/') + (role ? ' | الدور: ' + role : '') + (d.getElementById('sheet') ? ' | نافذة منبثقة مفتوحة' : ''));
+  var btns = []; [].forEach.call(root.querySelectorAll('[data-act], button'), function(e){ if (btns.length < 25 && e.offsetParent !== null) btns.push((e.getAttribute('data-act') ? '[data-act=' + e.getAttribute('data-act') + (e.dataset.id ? '][data-id=' + e.dataset.id : '') + ']' : 'button') + ' «' + (e.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 30) + '»'); });
+  var ins = []; [].forEach.call(root.querySelectorAll('input, textarea, select'), function(e){ if (ins.length < 15) ins.push((e.id ? '#' + e.id : e.name ? '[name=' + e.name + ']' : e.tagName.toLowerCase()) + (e.placeholder ? ' «' + e.placeholder.slice(0, 25) + '»' : '') + (e.value ? ' =' + String(e.value).slice(0, 20) : '')); });
+  out.push('الأزرار: ' + (btns.join('، ') || 'لا شيء'));
+  out.push('الحقول: ' + (ins.join('، ') || 'لا شيء'));
+  var toast = d.querySelector('.toast.show, .toast'); if (toast && toast.textContent.trim()) out.push('رسالة ظاهرة: ' + toast.textContent.trim().slice(0, 120));
+  out.push('النص الظاهر: ' + ((root.innerText || '').replace(/\s+/g, ' ').trim().slice(0, 1400) || '(فارغة)'));
+  if (L.errs.length) out.push('أخطاء تشغيل: ' + L.errs.slice(-4).join(' | '));
+  return out.join('\n');
+}
+function liveShot(L){
+  if (!L.w.html2canvas) return Promise.resolve(null);
+  try { L.w.lucide.createIcons(); } catch(e){}
+  return L.w.html2canvas(L.d.body, { width: 390, height: 844, windowWidth: 390, windowHeight: 844, scale: 1, useCORS: true, logging: false, backgroundColor: null, onclone: flatColors })
+    .then(function(cv){ return cv.toDataURL('image/jpeg', 0.7).split(',')[1]; }, function(){ return null; });
+}
+function liveWait(L){
+  var t0 = Date.now(), ready = function(){ var a = L.d.getElementById('app'); return a && (a.innerText || '').trim().length > 20 && !a.querySelector('.sk'); };
+  return (function wait(){ return sleep(350).then(function(){ return ready() || Date.now() - t0 > 5000 ? null : wait(); }); })();
+}
+// look: يفتح مساراً بدور ويعيد وصف ما يظهر + صورة. try: ينفّذ خطوات رحلة (نفس صيغة سيناريوهات الاختبار) ويعيد أين توقفت + الحالة الأخيرة + صورة
+function liveLook(app, route, role){
+  return openLive(app).then(function(L){
+    try { L.w.__banee.setRole(role || null); } catch(e){}
+    L.w.location.hash = route || '/';
+    return liveWait(L).then(function(){ return liveShot(L); }).then(function(img){ var t = liveState(L); L.close(); return { text: t, image: img }; });
+  });
+}
+function liveTry(app, steps){
+  return openLive(app).then(function(L){
+    var notes = [], keep = app.ck.flowTests;
+    app.ck.flowTests = [{ flow: 'تجربة المساعد', steps: steps }];
+    return runFlows(app, L.w, L.d, function(id, m){ notes.push(m); }, function(){}).then(function(){ app.ck.flowTests = keep; }, function(e){ app.ck.flowTests = keep; notes.push(String(e && e.message || e)); })
+      .then(function(){ return liveWait(L); }).then(function(){ return liveShot(L); }).then(function(img){
+        var t = (notes.length ? 'النتيجة: ' + notes.join('\n') : 'النتيجة: نُفّذت كل الخطوات بنجاح') + '\n\nالحالة الأخيرة:\n' + liveState(L); L.close(); return { text: t, image: img };
+      });
+  });
+}
 ROLES.editor =
 'أنت مهندس تطبيقات خبير يعمل داخل محرر بانِي كوكيل مستقل. المستخدم صاحب التطبيق يكلمك بالعربية العامية أو الفصحى ويطلب تعديلاً أو ميزة جديدة أو إصلاحاً أو يسأل سؤالاً. افهم ما يريده فعلاً ونفّذه كاملاً حتى يعمل.\n' +
 'أعد JSON فقط في كل خطوة: {"think":"تفكيرك القصير","tool":"اسم الأداة", ...معاملاتها}\n' +
@@ -5056,8 +5118,11 @@ ROLES.editor =
 '{"tool":"seed","collection":"x","items":[{...}]} ← بيانات أولية لمجموعة\n' +
 '{"tool":"set","color":"blue|green|purple|orange","name":"اسم جديد"} ← اللون أو الاسم\n' +
 '{"tool":"run"} ← تشغيل التطبيق كاملاً وتجربة كل الشاشات والرحلات، يعيد الأخطاء الحالية\n' +
+'{"tool":"look","route":"/orders","role":"driver"} ← افتح الشاشة كما يراها المستخدم: صورة لها ترفق بالخطوة التالية + الأزرار والحقول والنص الظاهر وأخطاء التشغيل. استخدمها لترى المشكلة التي يصفها المستخدم بعينك، ولتتأكد من شكل التعديل بعد تنفيذه\n' +
+'{"tool":"try","steps":[{"role":"customer"},{"go":"/"},{"click":"[data-act=open][data-id=products-1]"},{"fill":{"#qty":"2"}},{"click":"text:أضف للسلة"},{"expect":"تمت الإضافة"},{"expectDb":{"col":"orders","min":1}}]} ← جرّب بيديك كالمستخدم: تنفّذ الخطوات وتعيد أين توقفت ولماذا + ما يظهر في النهاية + صورة. استخدمها لإعادة إنتاج الخطأ قبل الإصلاح، ثم للتأكد أنه أُصلح\n' +
 '{"tool":"ask","question":"سؤال واحد قصير"} ← فقط إذا كان الطلب غامضاً فعلاً ولا يمكن تخمين المقصود بشكل معقول\n' +
 '{"tool":"done","reply":"ردك للمستخدم"} ← عند الانتهاء\n' +
+'عندما يشتكي المستخدم من خطأ أو شكل: ابدأ بـ look أو try لترى ما يراه هو فعلاً، وبعد التعديل أعد نفس look/try لتتأكد بعينك قبل done. لا تقل «أصلحته» دون أن تراه يعمل.\n' +
 'المنهج: (١) افهم الطلب ومكانه: اقرأ الشاشات المعنية وابحث عن الأماكن المرتبطة قبل أي تعديل. (٢) نفّذ بأقل تغيير يحقق الطلب كاملاً: ميزة جديدة تعني الواجهة + الحفظ + العرض في كل شاشة تحتاجها + التنقل إليها. (٣) شغّل run بعد التعديل وأصلح ما ينكسر. (٤) أنهِ بـ done.\n' +
 'reply: عربي بسيط ومختصر منسّق Markdown: ماذا فعلت بالضبط، وأين يجده المستخدم في التطبيق وكيف يجرّبه. إن كان سؤالاً بلا تعديل أجب مباشرة بـ done.\n' +
 'قواعد: لا تحذف ميزات لم يُطلب حذفها. لا تتجاوز ٤ شاشات nav لكل دور. استخدم طبقة Data وعقد البيانات. القوائم التي تعرض عناصر الآخرين بـ Data.X.visible().\n' +
@@ -5065,7 +5130,7 @@ ROLES.editor =
 THINK.editor = 'low';
 
 function chatAgent(app, key, msg, onStep){
-  var plan = app.ck.plan, MAX = paidUser() ? 24 : 14, n = 0, hist = [], touched = {}, asked = null, reply = '';
+  var plan = app.ck.plan, MAX = paidUser() ? 24 : 16, n = 0, hist = [], touched = {}, asked = null, reply = '', lastImg = null;
   var history = (app.chat || []).slice(-9, -1).filter(function(m){ return m.role !== 'sys'; }).map(function(m){ return (m.role === 'me' ? 'المستخدم: ' : 'أنت: ') + String(m.text).slice(0, 600); }).join('\n');
   function numbered(js){ return String(js || '').split('\n').map(function(l, i){ return (i + 1) + '| ' + l; }).join('\n'); }
   function scr(id){ return plan.screens.filter(function(s){ return s.id === id; })[0]; }
@@ -5117,12 +5182,16 @@ function chatAgent(app, key, msg, onStep){
     if (a.tool === 'seed') { var sc = String(a.collection || ''), it = (Array.isArray(a.items) ? a.items : []).filter(function(x){ return x && typeof x === 'object'; }).slice(0, 20); if (!sc || !it.length) return Promise.resolve('غير صالح'); plan.seed = plan.seed || {}; var arr = plan.seed[sc] = plan.seed[sc] || []; it.forEach(function(x){ if (!x.id) x.id = sc + '-' + (arr.length + 1); arr.push(x); }); touched.__data = 1; return Promise.resolve('أُضيفت ' + it.length + ' عناصر'); }
     if (a.tool === 'set') { var said = []; if (a.color && COLORS[a.color]) { app.color = a.color; said.push('اللون'); } if (a.name) { plan.name = String(a.name).slice(0, 40); app.name = plan.name; said.push('الاسم'); } if (said.length) touched.__meta = 1; return Promise.resolve(said.length ? 'غُيّر ' + said.join(' و') : 'لا شيء صالح'); }
     if (a.tool === 'run') return runtimeTest(app).then(function(r){ setRuntime(app, r); return 'نتيجة التشغيل:\n' + issuesText(app, r); });
+    if (a.tool === 'look') return liveLook(app, String(a.route || '/'), a.role || null).then(function(r){ lastImg = r.image; return r.text + (r.image ? '\n(صورة الشاشة مرفقة بهذه الخطوة)' : ''); });
+    if (a.tool === 'try') { if (!Array.isArray(a.steps) || !a.steps.length) return Promise.resolve('steps مطلوبة'); return liveTry(app, a.steps.slice(0, 20)).then(function(r){ lastImg = r.image; return r.text + (r.image ? '\n(صورة الشاشة مرفقة بهذه الخطوة)' : ''); }); }
     return Promise.resolve('أداة غير معروفة');
   }
   function loop(){
     if (n >= MAX) return Promise.resolve();
     n++;
-    return ask(key, 'editor', ctx(), true).then(function(raw){
+    // صورة آخر look/try تُرفق بالخطوة التالية فقط (العين ترى الشاشة الحالية لا كل الصور السابقة)
+    var img = lastImg; lastImg = null;
+    return ask(key, 'editor', img ? { text: ctx(), images: [img] } : ctx(), true).then(function(raw){
       var a = parseJSON(raw) || {};
       if (onStep) onStep(n, a);
       if (a.tool === 'done' || !a.tool) { reply = String(a.reply || a.think || ''); return; }
@@ -5807,7 +5876,7 @@ function stSend(){
   function stage(t){ ST.stage = t; var el = document.getElementById('chat-stage'); if (el) el.textContent = t; }
   var prev = { ck: deepCopy({ plan: app.ck.plan, screens: app.ck.screens, seed: app.ck.plan.seed || null }), color: app.color, name: app.name, approved: app.approved, screens: app.screens };
   var base = baseline(app).catch(function(){ return null; }), b0 = null;
-  var LBL = { read: 'يقرأ ', search: 'يبحث عن ', edit: 'يعدّل ', write: 'يعيد كتابة ', add: 'يضيف شاشة ', remove: 'يحذف ', collection: 'يضيف بيانات ', seed: 'يضيف بيانات أولية ', set: 'يغيّر الإعدادات', run: 'يشغّل التطبيق ويجرّبه', ask: 'يحتاج توضيحاً', done: 'يكتب الرد' };
+  var LBL = { read: 'يقرأ ', search: 'يبحث عن ', edit: 'يعدّل ', write: 'يعيد كتابة ', add: 'يضيف شاشة ', remove: 'يحذف ', collection: 'يضيف بيانات ', seed: 'يضيف بيانات أولية ', set: 'يغيّر الإعدادات', run: 'يشغّل التطبيق ويجرّبه', look: 'ينظر إلى الشاشة ', try: 'يجرّب بنفسه كمستخدم', ask: 'يحتاج توضيحاً', done: 'يكتب الرد' };
   Promise.resolve(base).then(function(x){ b0 = x; return chatAgent(app, key, msg, function(k, a){ stage((LBL[a.tool] || 'يعمل') + (a.screen || a.id || (a.text ? '«' + String(a.text).slice(0, 24) + '»' : '') || '') ); }); })
   .then(function(r){
     var ids = Object.keys(r.touched).filter(function(k){ return k.indexOf('__') !== 0; }), changed = ids.length || r.touched.__data || r.touched.__meta;

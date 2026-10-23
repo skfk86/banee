@@ -369,8 +369,14 @@ function altAsk(req) {
 // يحوّل طلب بصيغة Gemini (systemInstruction/contents) إلى Claude، ويعيد الرد بصيغة Gemini حتى لا يتغير التطبيق
 function claudeAsk(req) {
   var txt = function(c){ return ((c && c.parts) || []).map(function(p){ return p.text || ''; }).join(''); };
-  var messages = (req.contents || []).map(function(c){ return { role: c.role === 'model' ? 'assistant' : 'user', content: txt(c) }; })
-    .filter(function(m){ return m.content; });
+  // الصور (لقطات الشاشات للحكم البصري وعين المساعد) تُمرَّر لـ Claude كـ image blocks
+  var blocks = function(c){
+    var imgs = ((c && c.parts) || []).filter(function(p){ return p.inline_data && p.inline_data.data; })
+      .map(function(p){ return { type: 'image', source: { type: 'base64', media_type: p.inline_data.mime_type || 'image/jpeg', data: p.inline_data.data } }; });
+    var t = txt(c); return imgs.length ? imgs.concat(t ? [{ type: 'text', text: t }] : []) : t;
+  };
+  var messages = (req.contents || []).map(function(c){ return { role: c.role === 'model' ? 'assistant' : 'user', content: blocks(c) }; })
+    .filter(function(m){ return m.content && m.content.length; });
   if (!messages.length || messages[0].role !== 'user') return null;
   var json = req.generationConfig && req.generationConfig.responseMimeType === 'application/json';
   var system = txt(req.systemInstruction) + (json ? '\n\nأعد JSON صالحاً فقط، بلا أي نص قبله أو بعده وبلا ```.' : '');

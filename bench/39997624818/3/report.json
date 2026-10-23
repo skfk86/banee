@@ -1,0 +1,285 @@
+{
+  "status": "ready",
+  "error": "",
+  "name": "ملعبك والأكاديمية",
+  "steps": [
+    "done · هوية «نبض الملاعب» · الخطة: ٨ شاشات · ٧ مجموعات · ١٢ عنصر محتوى",
+    "done · المحتوى: ١٢ عنصر مكتوب كاملاً",
+    "done · الهيكل جاهز: التنقّل، البيانات، الدخول، التصميم",
+    "done · ٨ شاشات مكتوبة",
+    "done · الفحص: ٥ شاشات بها ملاحظات، راجعها في الاستوديو · رحلات المستخدم: ٠ من ٣ تعمل كاملة · المراجعة: أُصلحت ١ من ٢ · التصميم: ٦.١ من ١٠ (حُسّنت ٢ شاشات)",
+    "done · جاهز للمعاينة والتحميل"
+  ],
+  "runtime": {
+    "home": [],
+    "stadiumDetail": [],
+    "book": [],
+    "myBookings": [
+      "تصميم: صورة لا تُحمَّل: https://images.unsplash.com/photo-1529900748604-0756c9d30069. استخدم صورة من بيانات التطبيق أو أيقونة بديلة."
+    ],
+    "ownerDashboard": [],
+    "academyClasses": [
+      "تصميم: صورة لا تُحمَّل: https://images.unsplash.com/photo-1529900748604-0756c9d30069. استخدم صورة من بيانات التطبيق أو أيقونة بديلة.",
+      "تصميم: صورة لا تُحمَّل: https://images.unsplash.com/photo-1508098682722-e99c43a406b2. استخدم صورة من بيانات التطبيق أو أيقونة بديلة.",
+      "رحلة «حجز ملعب وتقسيم التكلفة» توقفت عند الخطوة ٣: لم يُعثر على [data-act=stadium-detail][data-id=stadiums-1] (الزر غير موجود أو اسمه مختلف) — الظاهر الآن: الشاشة academyClasses (#/academy) بدور trainer، ونافذة منبثقة مفتوحة؛ الأزرار: create-class؛ الحقول: #class-title، #class-sport، #class-trainer-"
+    ],
+    "attendanceView": [],
+    "notifications": [
+      "رحلة «حجز ملعب وتقسيم التكلفة» توقفت عند الخطوة ٤: الحقل #b-date غير موجود في الشاشة — الظاهر الآن: الشاشة notifications (#/notifications) بدور customer؛ الأزرار: لا شيء؛ الحقول: لا شيء",
+      "رحلة «حجز ملعب وتقسيم التكلفة» توقفت عند الخطوة ٤: الحقل #b-date غير موجود في الشاشة — الظاهر الآن: الشاشة notifications (#/notifications) بدور owner؛ الأزرار: لا شيء؛ الحقول: لا شيء",
+      "رحلة «إدارة الملعب والإيرادات» توقفت عند الخطوة ٣: لم يُعثر على [data-act=confirm-booking] (الزر غير موجود أو اسمه مختلف) — الظاهر الآن: الشاشة notifications (#/notifications) بدور owner؛ الأزرار: لا شيء؛ الحقول: لا شيء",
+      "رحلة «حجز ملعب وتقسيم التكلفة» توقفت عند الخطوة ٣: لم يُعثر على [data-act=stadium-detail][data-id=stadiums-1] (الزر غير موجود أو اسمه مختلف) — الظاهر الآن: الشاشة notifications (#/notifications) بدور owner؛ الأزرار: لا شيء؛ الحقول: لا شيء",
+      "رحلة «إدارة الملعب والإيرادات» توقفت عند الخطوة ٣: لم يُعثر على [data-act=confirm-booking] (الزر غير موجود أو اسمه مختلف) — الظاهر الآن: الشاشة notifications (#/notifications) بدور trainer؛ الأزرار: لا شيء؛ الحقول: لا شيء",
+      "رحلة «تسجيل حضور الأكاديمية» توقفت عند الخطوة ٣: لم يُعثر على [data-act=create-class] (الزر غير موجود أو اسمه مختلف) — الظاهر الآن: الشاشة notifications (#/notifications) بدور customer؛ الأزرار: لا شيء؛ الحقول: لا شيء"
+    ]
+  },
+  "flows": [
+    "حجز ملعب وتقسيم التكلفة (9 خطوات)",
+    "إدارة الملعب والإيرادات (5 خطوات)",
+    "تسجيل حضور الأكاديمية (6 خطوات)"
+  ],
+  "flowSteps": [
+    {
+      "flow": "حجز ملعب وتقسيم التكلفة",
+      "steps": [
+        {
+          "role": "customer"
+        },
+        {
+          "go": "/"
+        },
+        {
+          "click": "[data-act=stadium-detail][data-id=stadiums-1]"
+        },
+        {
+          "fill": {
+            "#b-date": "2025-06-01",
+            "#b-time": "18:00"
+          }
+        },
+        {
+          "click": "text:متابعة لتأكيد الحجز وتقسيم الفاتورة"
+        },
+        {
+          "fill": {
+            "#split-count-input": "2"
+          }
+        },
+        {
+          "click": "text:تكيد الحجز وإنشاء الفاتورة"
+        },
+        {
+          "expect": "مواعيدك وحجوزاتك الرياضية"
+        },
+        {
+          "expectDb": {
+            "col": "bookings",
+            "min": 1
+          }
+        }
+      ]
+    },
+    {
+      "flow": "إدارة الملعب والإيرادات",
+      "steps": [
+        {
+          "role": "owner"
+        },
+        {
+          "go": "/owner/dashboard"
+        },
+        {
+          "click": "[data-act=confirm-booking]"
+        },
+        {
+          "expect": "لوحة تحكم الملعب"
+        },
+        {
+          "expectDb": {
+            "col": "bookings",
+            "min": 1
+          }
+        }
+      ]
+    },
+    {
+      "flow": "تسجيل حضور الأكاديمية",
+      "steps": [
+        {
+          "role": "trainer"
+        },
+        {
+          "go": "/academy"
+        },
+        {
+          "click": "[data-act=create-class]"
+        },
+        {
+          "fill": {
+            "#class-title": "حصة براعم كرة القدم",
+            "#class-sport": "كرة القدم",
+            "#class-trainer-name": "الكابتن أحمد",
+            "#class-date": "2025-06-01",
+            "#class-time": "16:00",
+            "#class-price": "50",
+            "#class-capacity": "15"
+          }
+        },
+        {
+          "click": "text:حفظ الحصة"
+        },
+        {
+          "expect": "الحصص والبرامج المتاحة"
+        }
+      ]
+    }
+  ],
+  "reviewIssues": {
+    "home": [],
+    "stadiumDetail": [],
+    "book": [],
+    "myBookings": [],
+    "ownerDashboard": [
+      "مراجعة: عرض الحجوزات والملاعب بدون فلترة حسب ownerId يتيح لصاحب الملعب رؤية بيانات وحجوزات ملاعب الآخرين. الإصلاح: تصفية القوائم بربطها بـ ownerId === Auth.user.uid."
+    ],
+    "academyClasses": [],
+    "attendanceView": [],
+    "notifications": [
+      "مراجعة: عرض جميع الإشعارات بدون فلترة حسب userId يتيح للمستخدم رؤية تنبيهات المستخدمين الآخرين. الإصلاح: فلترة العناصر بناءً على n.userId === Auth.user.uid."
+    ]
+  },
+  "spec": false,
+  "specFallback": [],
+  "flowErr": "",
+  "agent": {
+    "ran": false,
+    "fixed": 0,
+    "steps": 0,
+    "log": []
+  },
+  "fixErrors": [],
+  "review": {
+    "found": 2,
+    "fixed": 1
+  },
+  "screens": [
+    {
+      "id": "home",
+      "route": "/",
+      "roles": [
+        "customer",
+        "owner",
+        "trainer",
+        "parent"
+      ],
+      "bytes": 5841
+    },
+    {
+      "id": "stadiumDetail",
+      "route": "/stadium/:id",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 6899
+    },
+    {
+      "id": "book",
+      "route": "/book/:id",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 6865
+    },
+    {
+      "id": "myBookings",
+      "route": "/my-bookings",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 7353
+    },
+    {
+      "id": "ownerDashboard",
+      "route": "/owner/dashboard",
+      "roles": [
+        "owner"
+      ],
+      "bytes": 11501
+    },
+    {
+      "id": "academyClasses",
+      "route": "/academy",
+      "roles": [
+        "trainer",
+        "parent"
+      ],
+      "bytes": 13734
+    },
+    {
+      "id": "attendanceView",
+      "route": "/attendance/:classId",
+      "roles": [
+        "trainer",
+        "parent"
+      ],
+      "bytes": 7543
+    },
+    {
+      "id": "notifications",
+      "route": "/notifications",
+      "roles": [
+        "customer",
+        "owner",
+        "trainer",
+        "parent"
+      ],
+      "bytes": 4291
+    }
+  ],
+  "design": {
+    "model": "gemini-2.5-flash",
+    "score": 6,
+    "min": 4,
+    "screens": {
+      "home": {
+        "score": 7,
+        "strengths": [
+          "التسلسل البصري والطباعة: استخدام ممتاز لأحجام وأوزان الخطوط لخلق تسلسل بصري واضح وجذاب، مما يسهل قراءة المحتوى وفهم الأهمية.",
+          "جودة المكونات وتناسق الهوية: تصميم احترافي للمكونات مثل البطاقات والأزرار وشريط التنقل السفلي، مع تناسق جيد في الألوان والهوية البصرية.",
+          "صحة اتجاه RTL: تطبيق مثالي لاتجاه اليمين إلى اليسار (RTL) في جميع عناصر الواجهة، من النصوص إلى الأيقونات والمحاذاة."
+        ],
+        "issues": [
+          "عنصر واجهة مستخدم فارغ/غير معرف: وجود مربع أبيض فارغ بجانب زر البحث يمثل عيبًا واضحًا. يجب إما إزالته إذا كان غير وظيفي، أو تحديد غرضه بوضوح باستخدام أيقونة أو تسمية (مثل زر تصفية).",
+          "المسافات في الشريط العلوي: الأيقونات والعناصر في الزاوية العلوية اليمنى (زر الرجوع وزر 'لاعب') تبدو متقاربة جدًا. يجب زيادة المسافات الأفقية حولها وبينها لتحسين التوازن البصري.",
+          "هيمنة الخريطة على المحتوى الأساسي: تشغل الخريطة مساحة كبيرة من الشاشة، مما يدفع قائمة الملاعب المتاحة (التي قد تكون نقطة تفاعل رئيسية) إلى أسفل الشاشة وتتطلب التمرير. يمكن تقليل ارتفاع الخريطة أو تقديم معاينة أصغر مع خيار التوسيع لإظهار المزيد من المحتوى الأساسي فورًا."
+        ]
+      },
+      "stadiumDetail": {
+        "score": 4,
+        "strengths": [
+          "تصميم حالة الخطأ (البطاقة البيضاء) واضح وجذاب، مع أيقونة مناسبة وعنوان ورسالة وصفية تشرح المشكلة بوضوح للمستخدم.",
+          "جودة المكونات مثل البطاقات والأيقونات وشريط التنقل السفلي متناسقة وتتبع أسلوب تصميم عصري (زوايا مستديرة، ظلال خفيفة)، مما يعطي مظهرًا احترافيًا.",
+          "استخدام الخطوط وأحجام النصوص وأوزانها في البطاقة البيضاء وشريط التنقل السفلي جيد، مما يضمن سهولة القراءة ووضوح المعلومات."
+        ],
+        "issues": [
+          "زر الرجوع (رجوع) في أعلى يمين الشاشة يتعارض مع اتجاه RTL الصحيح؛ يجب أن يكون في أعلى يسار الشاشة لتجربة مستخدم متسقة مع اللغة العربية.",
+          "النص الكبير 'الملعب غير موجود' في الخلفية مقطوع بشكل سيء، مما يعطي انطباعًا بعدم اكتمال التصميم أو وجود خطأ تقني. يجب إزالته أو تعديل حجمه وموضعه ليكون مرئيًا بالكامل.",
+          "وجود النص 'الملعب غير موجود' في الخلفية بالإضافة إلى عنوان الشاشة 'تفاصيل الملعب' والرسالة الواضحة في البطاقة البيضاء يخلق تضاربًا بصريًا وتكرارًا للمعلومة، مما يشتت المستخدم. يجب تبسيط الرسالة وجعلها مركزة في البطاقة البيضاء فقط."
+        ]
+      },
+      "book": {
+        "score": 7,
+        "strengths": [
+          "The overall layout is clean and modern, with a good use of white space.",
+          "The typography is legible and the hierarchy is generally clear.",
+          "The color palette is consistent and aligns with a professional app identity."
+        ],
+        "issues": [
+          "The spacing between the 'ملخص الحجز' title and the card below it is a bit too large, creating a visual disconnect. Reduce the spacing.",
+          "The icon within the card is a bit too small and could be more prominent. Increase its size or padding.",
+          "The button 'اختيار موعد الحجز' has a slightly rounded bottom edge that doesn't match the sharp top edge, creating an inconsistent button shape. Ensure consistent corner radius."
+        ]
+      }
+    }
+  }
+}

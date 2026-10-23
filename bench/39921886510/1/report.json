@@ -1,0 +1,284 @@
+{
+  "status": "ready",
+  "error": "",
+  "name": "عيادتي التخصصية",
+  "steps": [
+    "done · هوية «عناية ورعاية» · الخطة: ٩ شاشات · ٤ مجموعات · ٦ عنصر محتوى",
+    "done · المحتوى: ٦ عنصر مكتوب كاملاً",
+    "done · الهيكل جاهز: التنقّل، البيانات، الدخول، التصميم",
+    "done · ٩ شاشات مكتوبة",
+    "done · الفحص: ٦ شاشات بها ملاحظات، راجعها في الاستوديو · رحلات المستخدم: ٠ من ٣ تعمل كاملة · المراجعة: أُصلحت ٢ من ٢ · التصميم: ٥.٩ من ١٠ (حُسّنت ٢ شاشات) · وكيل الإصلاح: لم يجد تحسيناً آمناً",
+    "done · جاهز للمعاينة والتحميل"
+  ],
+  "runtime": {
+    "home": [],
+    "doctor": [
+      "تصميم: صورة لا تُحمَّل: https://images.unsplash.com/photo-1594824813572-2d0a0f02787e. استخدم صورة من بيانات التطبيق أو أيقونة بديلة.",
+      "رحلة «حجز موعد والدفع» توقفت عند الخطوة ٣: لم يُعثر على [data-act=view-provider][data-id=providers-1] (الزر غير موجود أو اسمه مختلف) — الظاهر الآن: الشاشة notifications (#/notifications) بدور patient؛ الأزرار: go-notice؛ الحقول: لا شيء",
+      "رحلة «حجز موعد والدفع» توقفت عند الخطوة ٣: لم يُعثر على [data-act=view-provider][data-id=providers-1] (الزر غير موجود أو اسمه مختلف) — الظاهر الآن: الشاشة doctor (#/doctor/providers-1) بدور secretary؛ الأزرار: back؛ الحقول: #patient-phone، #patient-reason",
+      "رحلة «تأكيد الحضور» توقفت عند الخطوة ٣: لم يُعثر على text:تأكيد الحجز (الزر غير موجود أو اسمه مختلف) — الظاهر الآن: الشاشة doctor (#/doctor/providers-1) بدور patient؛ الأزرار: back؛ الحقول: #patient-phone، #patient-reason",
+      "رحلة «تأكيد الحضور» توقفت عند الخطوة ٣: لم يُعثر على text:تأكيد الحجز (الزر غير موجود أو اسمه مختلف) — الظاهر الآن: الشاشة doctor (#/doctor/providers-1) بدور secretary؛ الأزرار: back؛ الحقول: #patient-phone، #patient-reason",
+      "رحلة «كتابة التشخيص» توقفت عند الخطوة ٣: لم يُعثر على [data-act=visit][data-id=providers-1] (الزر غير موجود أو اسمه مختلف) — الظاهر الآن: الشاشة doctor (#/doctor/providers-1) بدور patient؛ الأزرار: back؛ الحقول: #patient-phone، #patient-reason"
+    ],
+    "checkout": [],
+    "appointments": [
+      "تصميم: صورة لا تُحمَّل: https://images.unsplash.com/photo-1594824813572-2d0a0f02787e. استخدم صورة من بيانات التطبيق أو أيقونة بديلة."
+    ],
+    "medicalRecords": [],
+    "doctorToday": [],
+    "visit": [
+      "رحلة «كتابة التشخيص» توقفت عند الخطوة ٣: لم يُعثر على [data-act=visit][data-id=providers-1] (الزر غير موجود أو اسمه مختلف) — الظاهر الآن: الشاشة visit (#/visit/providers-1) بدور doctor؛ الأزرار: لا شيء؛ الحقول: لا شيء"
+    ],
+    "secretaryDashboard": [],
+    "notifications": []
+  },
+  "flows": [
+    "حجز موعد والدفع (9 خطوات)",
+    "تأكيد الحضور (5 خطوات)",
+    "كتابة التشخيص (10 خطوات)"
+  ],
+  "flowSteps": [
+    {
+      "flow": "حجز موعد والدفع",
+      "steps": [
+        {
+          "role": "patient"
+        },
+        {
+          "go": "/"
+        },
+        {
+          "click": "[data-act=view-provider][data-id=providers-1]"
+        },
+        {
+          "fill": {
+            "#patient-phone": "0912345678"
+          }
+        },
+        {
+          "fill": {
+            "#patient-reason": "فحص دوري واستشارة باطنة"
+          }
+        },
+        {
+          "click": "text:المتابعة إلى الدفع"
+        },
+        {
+          "click": "text:تأكيد الحجز والدفع"
+        },
+        {
+          "expect": "مواعيدك الطبية"
+        },
+        {
+          "expectDb": {
+            "col": "bookings",
+            "min": 1
+          }
+        }
+      ]
+    },
+    {
+      "flow": "تأكيد الحضور",
+      "steps": [
+        {
+          "role": "secretary"
+        },
+        {
+          "go": "/secretary"
+        },
+        {
+          "click": "text:تأكيد الحجز"
+        },
+        {
+          "click": "text:تسجيل حضور المريض"
+        },
+        {
+          "expect": "المريض في العيادة بانتظار الطبيب"
+        }
+      ]
+    },
+    {
+      "flow": "كتابة التشخيص",
+      "steps": [
+        {
+          "role": "doctor"
+        },
+        {
+          "go": "/doctor-today"
+        },
+        {
+          "click": "[data-act=visit][data-id=providers-1]"
+        },
+        {
+          "fill": {
+            "#diagnosis": "حالة سليمة وتم صرف العلاج اللازم"
+          }
+        },
+        {
+          "fill": {
+            "#prescription": "بنادول عند اللزوم"
+          }
+        },
+        {
+          "click": "text:إنهاء الموعد وحفظ السجل الطبي"
+        },
+        {
+          "role": "patient"
+        },
+        {
+          "go": "/records"
+        },
+        {
+          "expect": "حالة سليمة وتم صرف العلاج اللازم"
+        },
+        {
+          "expectDb": {
+            "col": "medicalRecords",
+            "min": 1
+          }
+        }
+      ]
+    }
+  ],
+  "reviewIssues": {
+    "home": [],
+    "doctor": [
+      "مراجعة: حقل رقم الهاتف يستخدم Auth.user.email بدلاً من رقم الهاتف، والإصلاح هو تغييرها إلى Auth.user.phone."
+    ],
+    "checkout": [
+      "مراجعة: حقل الهاتف في كائن الحجز (bookingData.phone) يُحفظ فارغاً ('') بدلاً من استخدام draft.phone، والإصلاح هو تعيينه كـ draft.phone || ''."
+    ],
+    "appointments": [],
+    "medicalRecords": [],
+    "doctorToday": [],
+    "visit": [],
+    "secretaryDashboard": [],
+    "notifications": []
+  },
+  "spec": false,
+  "specFallback": [],
+  "flowErr": "",
+  "agent": {
+    "ran": true,
+    "fixed": 0,
+    "steps": 3,
+    "log": [
+      "read doctor — أحتاج لقراءة شاشة doctor لفحص سبب عدم ظهور زر التأكيد والدفع والخطأ البرمجي. → 1| App.screen({\n2|   id: 'doctor',\n3|   route: '/doctor/:id',\n4|   title: 'حجز موعد',\n5|   icon: 'calendar',\n6|   nav: false,\n7|   \n8|   render(params) {\n9|    ",
+      "edit doctor — في شاشة doctor، يتوقف الاختبار الآلي عند خطوة المتابعة لأن الزر يبقى معطلاً (disabled) لعدم اختيار يوم ووقت تلقائياً. سنقوم بتحديد أول يوم وأول وق → رُفض التعديل لأنه يكسر الكود: خطأ صياغة JavaScript: Identifier 'days' has already been declared"
+    ]
+  },
+  "fixErrors": [],
+  "review": {
+    "found": 2,
+    "fixed": 2
+  },
+  "screens": [
+    {
+      "id": "home",
+      "route": "/",
+      "roles": [
+        "patient"
+      ],
+      "bytes": 4180
+    },
+    {
+      "id": "doctor",
+      "route": "/doctor/:id",
+      "roles": [
+        "patient"
+      ],
+      "bytes": 7990
+    },
+    {
+      "id": "checkout",
+      "route": "/checkout",
+      "roles": [
+        "patient"
+      ],
+      "bytes": 6882
+    },
+    {
+      "id": "appointments",
+      "route": "/appointments",
+      "roles": [
+        "patient"
+      ],
+      "bytes": 8551
+    },
+    {
+      "id": "medicalRecords",
+      "route": "/records",
+      "roles": [
+        "patient"
+      ],
+      "bytes": 3519
+    },
+    {
+      "id": "doctorToday",
+      "route": "/doctor-today",
+      "roles": [
+        "doctor"
+      ],
+      "bytes": 2897
+    },
+    {
+      "id": "visit",
+      "route": "/visit/:id",
+      "roles": [
+        "doctor"
+      ],
+      "bytes": 5242
+    },
+    {
+      "id": "secretaryDashboard",
+      "route": "/secretary",
+      "roles": [
+        "secretary"
+      ],
+      "bytes": 6383
+    },
+    {
+      "id": "notifications",
+      "route": "/notifications",
+      "roles": [
+        "patient",
+        "doctor",
+        "secretary"
+      ],
+      "bytes": 4330
+    }
+  ],
+  "design": {
+    "model": "gemini-2.5-flash",
+    "score": 6.5,
+    "min": 6,
+    "screens": {
+      "appointments": {
+        "score": 7,
+        "strengths": [
+          "Clear visual hierarchy with the main card at the top.",
+          "Good use of color and contrast for the main call to action.",
+          "Consistent branding with the use of green tones."
+        ],
+        "issues": [
+          "The spacing between the tab bar items and the content above could be improved for better rhythm.",
+          "The font weight for the descriptive text 'تابع حجوزاتك القادمة...' is too light, making it harder to read.",
+          "The icon for 'لا توجد مواعيد قادمة' is a bit small and could be more prominent."
+        ]
+      },
+      "medicalRecords": {
+        "score": 6,
+        "strengths": [
+          "تصميم حالة فارغة ممتاز: الشاشة تعرض حالة فارغة مصممة جيداً مع أيقونة واضحة وعنوان وصفي ونص إرشادي، مما يحسن تجربة المستخدم ويمنع الشاشات الفارغة غير المفيدة.",
+          "تسلسل بصري واضح: هناك تسلسل هرمي بصري جيد يوجه المستخدم من البطاقة الرئيسية الجذابة إلى قسم الزيارات ثم الحالة الفارغة، مما يسهل فهم المحتوى وتحديد الأولويات.",
+          "جودة مكونات واجهة المستخدم (باستثناء الهيدر): البطاقة الرئيسية وشريط التنقل السفلي مصممان بشكل جيد مع زوايا مستديرة وتحديد واضح للحالة النشطة، مما يوفر تجربة تفاعلية متناسقة."
+        ],
+        "issues": [
+          "مشاكل حرجة في اتجاه RTL في شريط العنوان: عنوان الصفحة \"السجل الطبي\" محاذٍ لليسار، بينما يجب أن يكون محاذياً لليمين أو في المنتصف لتطبيق RTL صحيح. زر الرجوع (->) موجود على اليمين ويشير إلى الأمام، بينما يجب أن يكون على اليسار ويشير إلى الخلف (<-) في سياق RTL. كيف يُصلح: يجب محاذاة عنوان الصفحة لليمين أو المنتصف. يجب نقل زر الرجوع إلى اليسار وتغيير الأيقونة لتشير إلى الخلف (<-).",
+          "ضعف جودة الخطوط واختيارها: الخط المستخدم يبدو عاماً وغير مميز، ولا يرتقي إلى مستوى التطبيقات العالمية التي تركز على التفاصيل الدقيقة. أوزان الخطوط في شريط التنقل السفلي تبدو ثقيلة قليلاً بالنسبة لحجمها. كيف يُصلح: اختيار خط عربي احترافي وحديث يعكس هوية التطبيق، مع مراجعة أوزان وأحجام الخطوط لضمان التناسق والوضوح عبر الشاشة.",
+          "عدم تناسق الأيقونات: أيقونة المجلد بجانب \"الزيارات والتقارير الطبية\" تبدو مختلفة في أسلوبها وحجمها عن أيقونات شريط التنقل السفلي وأيقونة الحالة الفارغة، مما يكسر التناسق البصري العام. كيف يُصلح: توحيد مجموعة الأيقونات المستخدمة في التطبيق لضمان تناسق بصري كامل، مع التأكد من أن جميع الأيقونات تنتمي إلى نفس النمط (مثل خطي، مملوء، إلخ)."
+        ]
+      }
+    }
+  }
+}

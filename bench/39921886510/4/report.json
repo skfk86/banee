@@ -1,0 +1,233 @@
+{
+  "status": "ready",
+  "error": "",
+  "name": "محفظتي العائلية",
+  "steps": [
+    "done · هوية «خزنة العائلة» · الخطة: ٦ شاشات · ٦ مجموعات",
+    "done · لا يحتاج التطبيق محتوى جاهزاً",
+    "done · الهيكل جاهز: التنقّل، البيانات، الدخول، التصميم",
+    "done · ٦ شاشات مكتوبة",
+    "done · الفحص: ١ شاشات بها ملاحظات، راجعها في الاستوديو · رحلات المستخدم: ٢ من ٣ تعمل كاملة · المراجعة: أُصلحت ٠ من ٢ · التصميم: ٦ من ١٠ (حُسّنت ٣ شاشات) · وكيل الإصلاح: لم يجد تحسيناً آمناً",
+    "done · جاهز للمعاينة والتحميل"
+  ],
+  "runtime": {
+    "home": [],
+    "expensesList": [],
+    "addExpense": [],
+    "requests": [
+      "Uncaught TypeError: Cannot read properties of null (reading 'title') (line 1850)",
+      "رحلة «طلب مصروف للأبناء» توقفت عند الخطوة ٤: الحقل [name=title] غير موجود في الشاشة — الظاهر الآن: الشاشة requests (#/requests) بدور member؛ الأزرار: open-new-request؛ الحقول: لا شيء"
+    ],
+    "savings": [],
+    "parentDashboard": []
+  },
+  "flows": [
+    "تسجيل مصروف (7 خطوات)",
+    "طلب مصروف للأبناء (7 خطوات)",
+    "متابعة الميزانية والطلبات لرب الأسرة (7 خطوات)"
+  ],
+  "flowSteps": [
+    {
+      "flow": "تسجيل مصروف",
+      "steps": [
+        {
+          "role": "member"
+        },
+        {
+          "go": "/"
+        },
+        {
+          "click": "[data-act=go-add]"
+        },
+        {
+          "fill": {
+            "#exp-title": "تسوق بقالة",
+            "#exp-amount": "1500",
+            "#exp-date": "2023-11-20"
+          }
+        },
+        {
+          "click": "#btn-save"
+        },
+        {
+          "expect": "إجمالي المنفق"
+        },
+        {
+          "expectDb": {
+            "col": "expenses",
+            "min": 1
+          }
+        }
+      ]
+    },
+    {
+      "flow": "طلب مصروف للأبناء",
+      "steps": [
+        {
+          "role": "member"
+        },
+        {
+          "go": "/requests"
+        },
+        {
+          "click": "[data-act=open-new-request]"
+        },
+        {
+          "fill": {
+            "[name=title]": "شراء كتب مدرسية",
+            "[name=amount]": "3000",
+            "[name=reason]": "كتب الفصل الدراسي الجديد"
+          }
+        },
+        {
+          "click": "text:إرسال الطلب لرب الأسرة"
+        },
+        {
+          "expect": "شراء كتب مدرسية"
+        },
+        {
+          "expectDb": {
+            "col": "requests",
+            "min": 1
+          }
+        }
+      ]
+    },
+    {
+      "flow": "متابعة الميزانية والطلبات لرب الأسرة",
+      "steps": [
+        {
+          "role": "parent"
+        },
+        {
+          "go": "/parent-dashboard"
+        },
+        {
+          "click": "[data-act=add-budget]"
+        },
+        {
+          "fill": {
+            "#b-cat": "تعليم",
+            "#b-limit": "10000",
+            "#b-month": "2023-11"
+          }
+        },
+        {
+          "click": "#save-b-btn"
+        },
+        {
+          "expect": "تعليم"
+        },
+        {
+          "expectDb": {
+            "col": "budgets",
+            "min": 1
+          }
+        }
+      ]
+    }
+  ],
+  "reviewIssues": {
+    "home": [
+      "مراجعة: زر الموافقة يوجه إلى مسار الطلبات بـ [data-act=\"open-new-request\"] ولكنه مخفي بـ style=\"display: none;\"; الإصلاح: نقله إلى مكان ظاهر أو تفعيله بالشكل الصحيح بدلاً من إخفائه.",
+      "مراجعة: زر حفظ الميزانية يوجه إلى لوحة التحكم بـ [data-act=\"add-budget\"] وهو مخفي تماماً بـ style=\"display: none;\"; الإصلاح: إظهار الزر أو ربطه بالوظيفة المناسبة."
+    ],
+    "expensesList": [],
+    "addExpense": [],
+    "requests": [],
+    "savings": [],
+    "parentDashboard": []
+  },
+  "spec": false,
+  "specFallback": [],
+  "flowErr": "",
+  "agent": {
+    "ran": true,
+    "fixed": 0,
+    "steps": 2,
+    "log": [
+      "read requests — نقرأ كود شاشة الطلبات (requests) لنكتشف سبب الخطأ وعدم وجود الحقل [name=title]. → 1| App.screen({\n2|   id: 'requests',\n3|   route: '/requests',\n4|   title: 'الطلبات',\n5|   icon: 'file-text',\n6|   nav: true,\n7|   \n8|   render(params) {\n9|     ",
+      "done → "
+    ]
+  },
+  "fixErrors": [],
+  "review": {
+    "found": 2,
+    "fixed": 0
+  },
+  "screens": [
+    {
+      "id": "home",
+      "route": "/",
+      "roles": [
+        "member",
+        "parent"
+      ],
+      "bytes": 8061
+    },
+    {
+      "id": "expensesList",
+      "route": "/expenses",
+      "roles": [
+        "member",
+        "parent"
+      ],
+      "bytes": 4649
+    },
+    {
+      "id": "addExpense",
+      "route": "/add-expense",
+      "roles": [
+        "member",
+        "parent"
+      ],
+      "bytes": 6400
+    },
+    {
+      "id": "requests",
+      "route": "/requests",
+      "roles": [
+        "member",
+        "parent"
+      ],
+      "bytes": 7553
+    },
+    {
+      "id": "savings",
+      "route": "/savings",
+      "roles": [
+        "member",
+        "parent"
+      ],
+      "bytes": 8180
+    },
+    {
+      "id": "parentDashboard",
+      "route": "/parent-dashboard",
+      "roles": [
+        "parent"
+      ],
+      "bytes": 17576
+    }
+  ],
+  "design": {
+    "model": "gemini-2.5-flash",
+    "score": 7,
+    "min": 7,
+    "screens": {
+      "home": {
+        "score": 7,
+        "strengths": [
+          "The overall layout is clean and uses a consistent color scheme.",
+          "The use of icons and clear typography aids in understanding the content.",
+          "The RTL direction is correctly implemented throughout the interface."
+        ],
+        "issues": [
+          "The spacing between the 'إجمالي الميزانية الشهرية' title and the content below it feels a bit tight. Consider increasing the vertical space.",
+          "The button 'إضافة مصروف' is visually more prominent than 'طلبات المصروف', which might not align with the intended user flow if requests are equally important.",
+          "The empty state message 'لا توجد مصروفات مسجلة بعد' could be more actionable. Suggest adding a clear call to action or a brief explanation of what to do next."
+        ]
+      }
+    }
+  }
+}

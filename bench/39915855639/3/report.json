@@ -1,0 +1,341 @@
+{
+  "status": "ready",
+  "error": "",
+  "name": "ميداني",
+  "steps": [
+    "done · هوية «طاقة الملاعب» · الخطة: ٧ شاشات · ٧ مجموعات · ٢٤ عنصر محتوى",
+    "done · المحتوى: ٢٤ عنصر مكتوب كاملاً",
+    "done · الهيكل جاهز: التنقّل، البيانات، الدخول، التصميم",
+    "done · ٧ شاشات مكتوبة",
+    "done · الفحص: ٢ شاشات بها ملاحظات، راجعها في الاستوديو · رحلات المستخدم: ١ من ٣ تعمل كاملة · المراجعة: أُصلحت ١ من ١ · التصميم: ٥.٧ من ١٠ (حُسّنت ٣ شاشات) · وكيل الإصلاح: لم يجد تحسيناً آمناً",
+    "done · جاهز للمعاينة والتحميل"
+  ],
+  "runtime": {
+    "home": [
+      "رحلة «تسجيل طفل في الأكاديمية ومتابعة الحضور» توقفت عند الخطوة ٣: لم يُعثر على [data-act=registerChild][data-id=academyClasses-1] (الزر غير موجود أو اسمه مختلف) — الظاهر الآن: الشاشة home (#/) بدور player؛ الأزرار: new، stadium، edit-stadium؛ الحقول: #searchInput"
+    ],
+    "stadiumDetails": [],
+    "myBookings": [
+      "رحلة «حجز ملعب وتقسيم التكلفة بين الأصدقاء» توقفت عند الخطوة ٤: الحقل #bookingDate غير موجود في الشاشة — الظاهر الآن: الشاشة myBookings (#/my-bookings) بدور player؛ الأزرار: switch-tab، filter-booking، go-stadiums، filter-split؛ الحقول: لا شيء"
+    ],
+    "ownerDashboard": [],
+    "academy": [],
+    "attendanceTracker": [],
+    "ordersHistory": []
+  },
+  "flows": [
+    "حجز ملعب وتقسيم التكلفة بين الأصدقاء (9 خطوات)",
+    "إدارة الملاعب ومتابعة الإيرادات اليومية (7 خطوات)",
+    "تسجيل طفل في الأكاديمية ومتابعة الحضور (12 خطوات)"
+  ],
+  "flowSteps": [
+    {
+      "flow": "حجز ملعب وتقسيم التكلفة بين الأصدقاء",
+      "steps": [
+        {
+          "role": "player"
+        },
+        {
+          "go": "/"
+        },
+        {
+          "click": "[data-act=stadium][data-id=stadiums-1]"
+        },
+        {
+          "fill": {
+            "#bookingDate": "2025-05-01"
+          }
+        },
+        {
+          "click": "#splitToggle"
+        },
+        {
+          "fill": {
+            "#splitCountInput": "2"
+          }
+        },
+        {
+          "click": "text:تأكيد الحجز والدفع"
+        },
+        {
+          "expect": "سجل المعاملات المالية"
+        },
+        {
+          "expectDb": {
+            "col": "orders",
+            "min": 1
+          }
+        }
+      ]
+    },
+    {
+      "flow": "إدارة الملاعب ومتابعة الإيرادات اليومية",
+      "steps": [
+        {
+          "role": "owner"
+        },
+        {
+          "go": "/owner-dashboard"
+        },
+        {
+          "click": "[data-act=edit-stadium][data-id=stadiums-1]"
+        },
+        {
+          "fill": {
+            "#edit-stadium-price": "150"
+          }
+        },
+        {
+          "click": "text:حفظ التعديلات"
+        },
+        {
+          "expect": "لوحة تحكم إشغال الملاعب"
+        },
+        {
+          "expectDb": {
+            "col": "stadiums",
+            "min": 1
+          }
+        }
+      ]
+    },
+    {
+      "flow": "تسجيل طفل في الأكاديمية ومتابعة الحضور",
+      "steps": [
+        {
+          "role": "player"
+        },
+        {
+          "go": "/academy"
+        },
+        {
+          "click": "[data-act=registerChild][data-id=academyClasses-1]"
+        },
+        {
+          "fill": {
+            "[name=childName]": "محمد أحمد",
+            "[name=parentPhone]": "0501234567"
+          }
+        },
+        {
+          "click": "text:تأكيد ودفع الاشتراك"
+        },
+        {
+          "role": "trainer"
+        },
+        {
+          "go": "/attendance/academyClasses-1"
+        },
+        {
+          "click": "text:رصد طفل جديد"
+        },
+        {
+          "fill": {
+            "#sheetChildName": "محمد أحمد",
+            "#sheetParentPhone": "0501234567",
+            "#sheetNotes": "ممتاز"
+          }
+        },
+        {
+          "click": "text:حفظ وسجل الحضور"
+        },
+        {
+          "expect": "لوحة رصد المدرب"
+        },
+        {
+          "expectDb": {
+            "col": "attendances",
+            "min": 1
+          }
+        }
+      ]
+    }
+  ],
+  "reviewIssues": {
+    "home": [],
+    "stadiumDetails": [],
+    "myBookings": [],
+    "ownerDashboard": [],
+    "academy": [],
+    "attendanceTracker": [],
+    "ordersHistory": [
+      "مراجعة: تستخدم الشاشة Data.orders.visible() لعرض الطلبات المعروضة للمستخدم، ولكن في المخطط أو القواعد قد تعرض معاملات غير مفلترة بـ userId مما يعرض بيانات مستخدمين آخرين؛ يجب فلترة المعاملات باستخدام معرف المستخدم الحالي مثل Data.orders.visible() أو استعلام مخصص بـ userId."
+    ]
+  },
+  "spec": false,
+  "specFallback": [],
+  "flowErr": "",
+  "agent": {
+    "ran": true,
+    "fixed": 0,
+    "steps": 2,
+    "log": [
+      "read academy — أحتاج لقراءة شاشة الأكاديميات academy لمعرفة سبب عدم ظهور الزر المطلوب أو كيف صُممت القائمة والبيانات → 1| App.screen({\n2|   id: 'academy',\n3|   route: '/academy',\n4|   title: 'الأكاديميات الرياضية',\n5|   icon: 'award',\n6|   nav: true,\n7|   render(params) {\n8|    "
+    ]
+  },
+  "fixErrors": [],
+  "review": {
+    "found": 1,
+    "fixed": 1
+  },
+  "screens": [
+    {
+      "id": "home",
+      "route": "/",
+      "roles": [
+        "player"
+      ],
+      "bytes": 11026
+    },
+    {
+      "id": "stadiumDetails",
+      "route": "/stadium/:id",
+      "roles": [
+        "player"
+      ],
+      "bytes": 13285
+    },
+    {
+      "id": "myBookings",
+      "route": "/my-bookings",
+      "roles": [
+        "player"
+      ],
+      "bytes": 14500
+    },
+    {
+      "id": "ownerDashboard",
+      "route": "/owner-dashboard",
+      "roles": [
+        "owner"
+      ],
+      "bytes": 15959
+    },
+    {
+      "id": "academy",
+      "route": "/academy",
+      "roles": [
+        "player",
+        "trainer"
+      ],
+      "bytes": 15213
+    },
+    {
+      "id": "attendanceTracker",
+      "route": "/attendance/:classId",
+      "roles": [
+        "trainer",
+        "player"
+      ],
+      "bytes": 18357
+    },
+    {
+      "id": "ordersHistory",
+      "route": "/my-orders",
+      "roles": [
+        "player",
+        "owner",
+        "trainer"
+      ],
+      "bytes": 4156
+    }
+  ],
+  "design": {
+    "model": "gemini-2.5-flash",
+    "score": 7,
+    "min": 7,
+    "screens": {
+      "home": {
+        "score": 7,
+        "strengths": [
+          "The overall layout is clean and follows a logical flow.",
+          "Good use of visual hierarchy with the prominent welcome message and search bar.",
+          "The color palette is consistent and aligns with a sporty theme."
+        ],
+        "issues": [
+          "The spacing between the filter chips (كرة سلة, كرة قدم, etc.) and the 'All' button is inconsistent. Consider applying a uniform spacing or using a component that handles this automatically.",
+          "The text 'كرة قدم' within the chip is slightly cut off at the bottom. Adjust the padding or font size for better legibility.",
+          "The 'Edit' button (تعديل) is visually less prominent than the 'Book Now' (احجز الآن) button. Consider making it more distinct if it's a primary action for the user."
+        ]
+      },
+      "stadiumDetails": {
+        "score": 7,
+        "strengths": [
+          "The overall layout is clean and uses a good visual hierarchy.",
+          "The use of images is appropriate and enhances the content.",
+          "The color palette is consistent with a sports-related app."
+        ],
+        "issues": [
+          "The text 'ملعب أرينا الخماسي العشبي' is too large and takes up too much vertical space, consider reducing font size or splitting into more lines.",
+          "The spacing between the price '٢٨٠ ج.س / ساعة' and the address 'طريق أبي بكر الصديق...' is inconsistent. The price should be closer to the image or the address should have more padding below it.",
+          "The date input field '10/23/2026' lacks a clear label indicating it's for booking, and the calendar icon is on the right side which is unusual for RTL."
+        ]
+      },
+      "myBookings": {
+        "score": 7,
+        "strengths": [
+          "The overall layout is clean and follows a clear visual hierarchy.",
+          "The color palette is consistent and uses the brand's green effectively.",
+          "The empty state is well-designed and provides a clear call to action."
+        ],
+        "issues": [
+          "The spacing between the tab bar items ('مطالبات التقسيم', 'حجوزات الملاعب', 'بانتظار التأكيد', 'المكتملة', 'المؤكدة') is inconsistent, with 'حجوزات الملاعب' having more space around it.",
+          "The font weight for the main heading 'حجوزاتي ومطالباتي' is too light, making it less impactful compared to the subtitle.",
+          "The icons in the tab bar are not consistently aligned vertically with the text; for example, the calendar icon for 'حجوزات الملاعب' is slightly higher than the text."
+        ]
+      },
+      "ownerDashboard": {
+        "score": 7,
+        "strengths": [
+          "The overall layout is clean and organized, with clear sections for different information.",
+          "The use of cards for financial indicators is effective in segmenting data.",
+          "The RTL layout appears to be correctly implemented for Arabic text."
+        ],
+        "issues": [
+          "The typography hierarchy could be improved; the large green numbers for revenue are visually dominant but lack clear context (e.g., currency symbol is implied but not explicit).",
+          "The spacing between the 'إدارة ملعبى وقائمة الأسعار' title and the card below it is a bit tight.",
+          "The 'معدل الإشغال' card has a very low contrast between the text '0/0' and its background, making it difficult to read."
+        ]
+      },
+      "academy": {
+        "score": 7,
+        "strengths": [
+          "The overall layout is clean and organized, with clear hierarchy.",
+          "Good use of color to highlight active states and branding.",
+          "Typography is generally legible and appropriate for the content."
+        ],
+        "issues": [
+          "The spacing between the price '٤٥٠ ج.س' and the age group '6-9 سنوات' is inconsistent with other elements.",
+          "The icon for 'مدرب' (coach) is a simple silhouette and could be more distinct or informative.",
+          "The text 'استكشاف الملاعب' in the bottom navigation is slightly cut off on the right side, indicating a potential overflow issue."
+        ]
+      },
+      "attendanceTracker": {
+        "score": 7,
+        "strengths": [
+          "The overall layout is clean and organized, with clear visual hierarchy.",
+          "The use of color is consistent with the brand identity, and the contrast is generally good.",
+          "The components like cards and buttons are well-designed and visually appealing."
+        ],
+        "issues": [
+          "The date format '10/23/2026' is not localized for Arabic users; it should ideally be in a format familiar to the region or use Arabic numerals.",
+          "The spacing between the date input field and the calendar icon could be improved for better visual balance.",
+          "The empty state message 'لا يوجد سجلات حضور مسجلة لهذا اليوم' is a bit long and could be more concise or visually integrated with the icon above it."
+        ]
+      },
+      "ordersHistory": {
+        "score": 7,
+        "strengths": [
+          "The overall layout is clean and follows a clear visual hierarchy.",
+          "The use of color is consistent with the brand identity, and the contrast is generally good.",
+          "The empty state is well-designed and informative, with a clear icon and message."
+        ],
+        "issues": [
+          "The spacing between the tab buttons ('قيد المراجعة', 'المؤكدة', 'الكل') and the main content area is inconsistent. Increase the spacing to create better visual separation.",
+          "The font weight for the main title 'سجل المعاملات المالية' is too light, making it less impactful. Consider using a bolder weight for better emphasis.",
+          "The icon in the empty state is slightly off-center within its container. Adjust its position for perfect alignment."
+        ]
+      }
+    }
+  }
+}

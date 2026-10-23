@@ -1,0 +1,218 @@
+{
+  "status": "ready",
+  "error": "",
+  "name": "بيتي",
+  "steps": [
+    "done · هوية «إتقان منزلي» · الخطة: ٧ شاشات · ٥ مجموعات · ٦ عنصر محتوى",
+    "done · المحتوى: ٦ عنصر مكتوب كاملاً",
+    "done · الهيكل جاهز: التنقّل، البيانات، الدخول، التصميم",
+    "done · ٧ شاشات مكتوبة",
+    "done · جُرّبت كل الشاشات وأُصلحت ٥، لا أخطاء · رحلات المستخدم: ١ من ١ تعمل كاملة · المراجعة: أُصلحت ٣ من ٣ · التصميم: ٥.٤ من ١٠ (حُسّنت ٣ شاشات)",
+    "done · جاهز للمعاينة والتحميل"
+  ],
+  "runtime": {
+    "home": [],
+    "newOrder": [],
+    "orderDetail": [],
+    "myOrders": [],
+    "providerDashboard": [],
+    "providerPortfolio": [],
+    "profile": []
+  },
+  "flows": [
+    "طلب خدمة منزلية (12 خطوات)"
+  ],
+  "flowSteps": [
+    {
+      "flow": "طلب خدمة منزلية",
+      "steps": [
+        {
+          "role": "customer"
+        },
+        {
+          "go": "/"
+        },
+        {
+          "click": "[data-act=new-order]"
+        },
+        {
+          "fill": {
+            "#catSelect": "تنظيف المنازل"
+          }
+        },
+        {
+          "fill": {
+            "[name=title]": "تنظيف عميق"
+          }
+        },
+        {
+          "fill": {
+            "[name=description]": "شقة 3 غرف"
+          }
+        },
+        {
+          "fill": {
+            "[name=date]": "2023-12-01T10:00"
+          }
+        },
+        {
+          "fill": {
+            "[name=phone]": "0500000000"
+          }
+        },
+        {
+          "fill": {
+            "[name=address]": "الرياض"
+          }
+        },
+        {
+          "click": "text:نشر الطلب الآن"
+        },
+        {
+          "expect": "طلباتي المنزلية"
+        },
+        {
+          "expectDb": {
+            "col": "orders",
+            "min": 1
+          }
+        }
+      ]
+    }
+  ],
+  "reviewIssues": {
+    "home": [],
+    "newOrder": [],
+    "orderDetail": [
+      "مراجعة: استخدام Data.bids.visible() بينما دور العميل لا يملك صلاحية الوصول لمجموعة bids حسب roleAccess مما يسبب خطأ في جلب العروض."
+    ],
+    "myOrders": [
+      "مراجعة: استخدام Data.orders.visible() لعرض طلبات العميل بدلاً من Data.orders.mine() مما يظهر طلبات العملاء الآخرين أو يفشل بسبب صلاحيات دور العميل."
+    ],
+    "providerDashboard": [],
+    "providerPortfolio": [],
+    "profile": [
+      "مراجعة: استخدام Data.orders.visible() للعميل في جلب سجل الطلبات والمدفوعات بدلاً من Data.orders.mine() مما يعرض بيانات وطلبات العملاء الآخرين."
+    ]
+  },
+  "spec": false,
+  "specFallback": [],
+  "flowErr": "",
+  "agent": {
+    "ran": false,
+    "fixed": 0,
+    "steps": 0,
+    "log": []
+  },
+  "fixErrors": [],
+  "review": {
+    "found": 3,
+    "fixed": 3
+  },
+  "screens": [
+    {
+      "id": "home",
+      "route": "/",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 5690
+    },
+    {
+      "id": "newOrder",
+      "route": "/new-order",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 8958
+    },
+    {
+      "id": "orderDetail",
+      "route": "/order/:id",
+      "roles": [
+        "customer",
+        "provider"
+      ],
+      "bytes": 13360
+    },
+    {
+      "id": "myOrders",
+      "route": "/orders",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 5776
+    },
+    {
+      "id": "providerDashboard",
+      "route": "/dashboard",
+      "roles": [
+        "provider"
+      ],
+      "bytes": 9512
+    },
+    {
+      "id": "providerPortfolio",
+      "route": "/portfolio",
+      "roles": [
+        "provider"
+      ],
+      "bytes": 6623
+    },
+    {
+      "id": "profile",
+      "route": "/profile",
+      "roles": [
+        "customer",
+        "provider"
+      ],
+      "bytes": 6807
+    }
+  ],
+  "design": {
+    "model": "gemini-2.5-flash",
+    "score": 7.7,
+    "min": 7,
+    "screens": {
+      "home": {
+        "score": 7,
+        "strengths": [
+          "The overall layout is clean and organized, with clear sections for different content types.",
+          "The use of cards for service categories is visually appealing and easy to understand.",
+          "The RTL implementation appears correct, with text and elements aligned appropriately."
+        ],
+        "issues": [
+          "The spacing between the 'تصنيفات رئيسية' heading and the service cards is a bit tight. Consider increasing it slightly for better visual separation.",
+          "The 'عرض الكل' button is visually weak and could be more prominent to encourage interaction.",
+          "The empty state for 'طلباتي النشطة' is functional but could be more engaging with a clearer call to action or illustrative icon."
+        ]
+      },
+      "orderDetail": {
+        "score": 7,
+        "strengths": [
+          "The overall layout is clean and modern, with good use of whitespace.",
+          "The color palette is consistent and adheres to a professional aesthetic.",
+          "The navigation bar at the bottom is well-designed and functional."
+        ],
+        "issues": [
+          "The main content area displays a ' الطلب غير موجود' (Order not found) state. While this is a valid empty state, the accompanying text 'قد يكون تم حذف الطلب أو أن الرابط غير صحيح' (The order may have been deleted or the link is incorrect) is a bit generic. Consider providing more specific guidance or a clear call to action, such as 'Try searching again' or 'Go to homepage'.",
+          "The header 'تفاصيل الطلب' (Order Details) has an arrow icon pointing left, which is standard for LTR navigation but visually inconsistent in an RTL layout. The arrow should point right to indicate moving forward or back within the RTL flow.",
+          "The spacing between the 'الطلب غير موجود' text and the descriptive text below it could be slightly increased for better readability and visual hierarchy."
+        ]
+      },
+      "myOrders": {
+        "score": 9,
+        "strengths": [
+          "تصميم حالة فارغة ممتاز: الأيقونة، العنوان، الوصف، وزر الإجراء كلها واضحة وذات صلة، وتوفر تجربة مستخدم إيجابية حتى في غياب المحتوى.",
+          "تنفيذ اتجاه RTL صحيح ومتقن: جميع العناصر، من الترويسة إلى أزرار التصفية والتنقل السفلي، تتبع قواعد RTL بدقة مما يضمن تجربة سلسة للمستخدم العربي.",
+          "تسلسل بصري واضح ومكونات عالية الجودة: الشاشة منظمة بشكل جيد مع تدرج هرمي بصري فعال، والمكونات (مثل اللافتة العلوية، أزرار الفلترة، الأزرار الرئيسية) مصممة باحترافية وتناسق."
+        ],
+        "issues": [
+          "تكرار العنوان الرئيسي: كلمة \"طلباتي\" تتكرر كعنوان للصفحة وكجزء من عنوان اللافتة الرئيسية \"طلباتي المنزلية\". يُفضل أن يكون عنوان الصفحة فريدًا وموجزًا، بينما يمكن أن تكون اللافتة أكثر وصفية دون تكرار مباشر، مثل \"إدارة طلباتك المنزلية\".",
+          "الظل البارز لزر الإجراء: الظل أسفل زر \"طلب خدمة جديدة\" يبدو قويًا ومحددًا جدًا، مما يقلل من الإحساس بالخفة والعصرية لبقية عناصر الواجهة. يمكن تخفيف حدة الظل أو جعله أكثر نعومة وتشتتًا ليتناسب مع الأسلوب العام.",
+          "نمط الخلفية في اللافتة العلوية: النمط النقطي/النجومي في خلفية لافتة \"طلباتي المنزلية\" قد يبدو مشغولًا بعض الشيء ويقلل من وضوح النص. يُمكن استبداله بتدرج لوني ناعم أو نمط تجريدي بسيط جدًا للحفاظ على الأناقة والتركيز على المحتوى."
+        ]
+      }
+    }
+  }
+}

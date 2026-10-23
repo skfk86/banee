@@ -1,0 +1,408 @@
+{
+  "status": "ready",
+  "error": "",
+  "name": "شفاء كير",
+  "steps": [
+    "done · هوية «عناية فائقة» · الخطة: ٨ شاشات · ٤ مجموعات · ١٢ عنصر محتوى",
+    "done · المحتوى: ١٢ عنصر مكتوب كاملاً",
+    "done · الهيكل جاهز: التنقّل، البيانات، الدخول، التصميم",
+    "done · ٨ شاشات مكتوبة",
+    "done · الفحص: ٧ شاشات بها ملاحظات، راجعها في الاستوديو · رحلات المستخدم: ٠ من ٣ تعمل كاملة · المراجعة: أُصلحت ٠ من ٥ · التصميم: ٥.٦ من ١٠ (حُسّنت ٣ شاشات) · وكيل الإصلاح: لم يجد تحسيناً آمناً",
+    "done · جاهز للمعاينة والتحميل"
+  ],
+  "runtime": {
+    "patient_home": [],
+    "doctor_profile": [],
+    "checkout": [],
+    "patient_appointments": [],
+    "patient_medical_record": [],
+    "doctor_schedule": [
+      "رحلة «حجز موعد ودفع الرسوم» توقفت عند الخطوة ٣: الحقل #doctor-search غير موجود في الشاشة — الظاهر الآن: الشاشة doctor_schedule (#/doctor-schedule) بدور doctor؛ الأزرار: tab؛ الحقول: لا شيء",
+      "رحلة «فحص الطبيب وتسجيل السجل الطبي» توقفت عند الخطوة ٤: لم يُعثر على [data-act=open-consultation] (الزر غير موجود أو اسمه مختلف) — الظاهر الآن: الشاشة doctor_schedule (#/doctor-schedule) بدور doctor؛ الأزرار: tab؛ الحقول: لا شيء"
+    ],
+    "doctor_consultation": [
+      "تصميم: النص \"الكل\" غير مقروء: تباين 3.2:1 — لونه #8a909d والخلفية #ffffff من العنصر <button class=\"chip\">. الخلفية فاتحة: استخدم var(--text) للنص، أو أزل خلفية ذلك العنصر إن كان داخل hero.",
+      "تصميم: النص \"جديد بانتظار التأكيد\" غير مقروء: تباين 4.4:1 — لونه #c0c3ca والخلفية #0d5c63 من العنصر <button class=\"chip active\">. الخلفية داكنة/ملونة: استخدم var(--on-primary) للنص، ولا تضع muted أو subtitle داخلها.",
+      "رحلة «إدارة وتأكيد الحضور من السكرتارية» توقفت عند الخطوة ٤: لم يُعثر على [data-act=confirm] (الزر غير موجود أو اسمه مختلف) — الظاهر الآن: الشاشة doctor_consultation (#/consultation/doctors-1) بدور doctor؛ الأزرار: back، add-prescription، add-lab، finish-consultation؛ الحقول: #diag-input، #notes-inp",
+      "رحلة «إدارة وتأكيد الحضور من السكرتارية» توقفت عند الخطوة ٣: لم يُعثر على [data-act=filter][data-status=new] (الزر غير موجود أو اسمه مختلف) — الظاهر الآن: الشاشة doctor_schedule (#/doctor-schedule) بدور receptionist؛ الأزرار: tab؛ الحقول: لا شيء",
+      "رحلة «إدارة وتأكيد الحضور من السكرتارية» توقفت عند الخطوة ٣: لم يُعثر على [data-act=filter][data-status=new] (الزر غير موجود أو اسمه مختلف) — الظاهر الآن: الشاشة doctor_consultation (#/consultation/doctors-1) بدور doctor؛ الأزرار: back، add-prescription، add-lab، finish-consultation؛ الحقول: #diag-i",
+      "رحلة «فحص الطبيب وتسجيل السجل الطبي» توقفت عند الخطوة ٣: لم يُعثر على [data-act=tab][data-tab=waiting] (الزر غير موجود أو اسمه مختلف) — الظاهر الآن: الشاشة doctor_consultation (#/consultation/doctors-1) بدور doctor؛ الأزرار: back، add-prescription، add-lab، finish-consultation؛ الحقول: #diag-input، "
+    ],
+    "reception_desk": [
+      "تصميم: النص \"الكل\" غير مقروء: تباين 1.1:1 — لونه #ffffff والخلفية #f4f9f9 من العنصر <body class=\"has-nav few-nav\">. الخلفية فاتحة: استخدم var(--text) للنص، أو أزل خلفية ذلك العنصر إن كان داخل hero.",
+      "تصميم: النص \"جديد بانتظار التأكيد\" غير مقروء: تباين 1.0:1 — لونه #4b5468 والخلفية #0d5c63 من العنصر <button class=\"chip active\">. الخلفية داكنة/ملونة: استخدم var(--on-primary) للنص، ولا تضع muted أو subtitle داخلها."
+    ]
+  },
+  "flows": [
+    "حجز موعد ودفع الرسوم (12 خطوات)",
+    "إدارة وتأكيد الحضور من السكرتارية (7 خطوات)",
+    "فحص الطبيب وتسجيل السجل الطبي (14 خطوات)"
+  ],
+  "flowSteps": [
+    {
+      "flow": "حجز موعد ودفع الرسوم",
+      "steps": [
+        {
+          "role": "patient"
+        },
+        {
+          "go": "/"
+        },
+        {
+          "fill": {
+            "#doctor-search": "أحمد"
+          }
+        },
+        {
+          "click": "[data-act=open-doctor][data-id=doctors-1]"
+        },
+        {
+          "click": "[data-act=pick-slot]"
+        },
+        {
+          "fill": {
+            "#userPhoneInput": "0912345678"
+          }
+        },
+        {
+          "fill": {
+            "#reasonInput": "مراجعة عامة"
+          }
+        },
+        {
+          "click": "text:متابعة إتمام الحجز والدفع"
+        },
+        {
+          "click": "[data-act=set-method][data-id=cod]"
+        },
+        {
+          "click": "#btn-submit"
+        },
+        {
+          "expect": "مواعيدي"
+        },
+        {
+          "expectDb": {
+            "col": "bookings",
+            "min": 1
+          }
+        }
+      ]
+    },
+    {
+      "flow": "إدارة وتأكيد الحضور من السكرتارية",
+      "steps": [
+        {
+          "role": "receptionist"
+        },
+        {
+          "go": "/reception"
+        },
+        {
+          "click": "[data-act=filter][data-status=new]"
+        },
+        {
+          "click": "[data-act=confirm]"
+        },
+        {
+          "click": "[data-act=arrive]"
+        },
+        {
+          "expect": "وصل العيادة"
+        },
+        {
+          "expectDb": {
+            "col": "bookings",
+            "min": 1
+          }
+        }
+      ]
+    },
+    {
+      "flow": "فحص الطبيب وتسجيل السجل الطبي",
+      "steps": [
+        {
+          "role": "doctor"
+        },
+        {
+          "go": "/doctor-schedule"
+        },
+        {
+          "click": "[data-act=tab][data-tab=waiting]"
+        },
+        {
+          "click": "[data-act=open-consultation]"
+        },
+        {
+          "fill": {
+            "#diag-input": "الفحص سليم ولا توجد مشاكل"
+          }
+        },
+        {
+          "click": "[data-act=add-prescription]"
+        },
+        {
+          "fill": {
+            "#modal-med-name": "Panadol"
+          }
+        },
+        {
+          "fill": {
+            "#modal-med-dose": "حبة كل 8 ساعات"
+          }
+        },
+        {
+          "fill": {
+            "#modal-med-dur": "3 أيام"
+          }
+        },
+        {
+          "click": "#modal-med-submit"
+        },
+        {
+          "fill": {
+            "#notes-input": "الراحة وشرب السوائل"
+          }
+        },
+        {
+          "click": "[data-act=finish-consultation]"
+        },
+        {
+          "expect": "جدول العيادة اليومي"
+        },
+        {
+          "expectDb": {
+            "col": "records",
+            "min": 1
+          }
+        }
+      ]
+    }
+  ],
+  "reviewIssues": {
+    "patient_home": [
+      "مراجعة: لا يمكن للمريض عرض قائمة الأطباء لأن دور patient غير مصرح له بالوصول إلى مجموعة doctors في roleAccess بالمخطط، والإصلاح هو إضافة patient إلى صلاحيات الوصول للـ doctors."
+    ],
+    "doctor_profile": [
+      "مراجعة: لا يمكن للمريض جلب المواعيد للتحقق من الفترات المشغولة لأن دور patient غير مصرح له بالوصول إلى مجموعة bookings في roleAccess، والإصلاح هو إضافة patient إلى صلاحيات الوصول للـ bookings."
+    ],
+    "checkout": [
+      "مراجعة: لا يمكن للمريض حفظ الحجز وإنشائه لأن دور patient غير مصرح له بالوصول إلى مجموعة bookings في roleAccess، والإصلاح هو إضافة patient إلى صلاحيات الوصول للـ bookings."
+    ],
+    "patient_appointments": [
+      "مراجعة: لا يمكن للمريض عرض مواعيده لأن دور patient غير مصرح له بالوصول إلى مجموعة bookings في roleAccess، والإصلاح هو إضافة patient إلى صلاحيات الوصول للـ bookings."
+    ],
+    "patient_medical_record": [
+      "مراجعة: لا يمكن للمريض عرض سجله الطبي لأن دور patient غير مصرح له بالوصول إلى مجموعة records في roleAccess، والإصلاح هو إضافة patient إلى صلاحيات الوصول للـ records."
+    ],
+    "doctor_schedule": [],
+    "doctor_consultation": [],
+    "reception_desk": []
+  },
+  "spec": false,
+  "specFallback": [],
+  "flowErr": "",
+  "agent": {
+    "ran": true,
+    "fixed": 0,
+    "steps": 3,
+    "log": [
+      "read patient_home — أريد قراءة شاشة patient_home لفهم كيفية البحث عن الأطباء والعثور على سبب الخطأ في حقل البحث #doctor-search → 1| App.screen({\n2|   id: 'patient_home',\n3|   route: '/',\n4|   title: 'العيادات',\n5|   icon: 'stethoscope',\n6|   nav: true,\n7|   render() {\n8|     return `\n9|  ",
+      "read reception_desk → 1| App.screen({\n2|   id: 'reception_desk',\n3|   route: '/reception',\n4|   title: 'الاستقبال والحضور',\n5|   icon: 'clipboard-check',\n6|   nav: true,\n7| \n8|   ren"
+    ]
+  },
+  "fixErrors": [],
+  "review": {
+    "found": 5,
+    "fixed": 0
+  },
+  "screens": [
+    {
+      "id": "patient_home",
+      "route": "/",
+      "roles": [
+        "patient"
+      ],
+      "bytes": 7384
+    },
+    {
+      "id": "doctor_profile",
+      "route": "/doctor/:id",
+      "roles": [
+        "patient"
+      ],
+      "bytes": 11532
+    },
+    {
+      "id": "checkout",
+      "route": "/checkout",
+      "roles": [
+        "patient"
+      ],
+      "bytes": 13130
+    },
+    {
+      "id": "patient_appointments",
+      "route": "/appointments",
+      "roles": [
+        "patient"
+      ],
+      "bytes": 9612
+    },
+    {
+      "id": "patient_medical_record",
+      "route": "/medical-records",
+      "roles": [
+        "patient"
+      ],
+      "bytes": 5904
+    },
+    {
+      "id": "doctor_schedule",
+      "route": "/doctor-schedule",
+      "roles": [
+        "doctor"
+      ],
+      "bytes": 9723
+    },
+    {
+      "id": "doctor_consultation",
+      "route": "/consultation/:bookingId",
+      "roles": [
+        "doctor"
+      ],
+      "bytes": 15298
+    },
+    {
+      "id": "reception_desk",
+      "route": "/reception",
+      "roles": [
+        "receptionist"
+      ],
+      "bytes": 16555
+    }
+  ],
+  "design": {
+    "model": "gemini-2.5-flash",
+    "score": 6.8,
+    "min": 5,
+    "screens": {
+      "patient_home": {
+        "score": 7,
+        "strengths": [
+          "حالة فارغة (Empty State) مصممة بعناية مع أيقونة معبرة ورسالة توجيهية واضحة للمستخدم.",
+          "هوية بصرية ونظام ألوان متناسق وهادئ ومناسب جداً للقطاع الصحي.",
+          "تطبيق دقيق وصحيح لقواعد واجهات RTL في كافة المكونات والمحاذاة وشريط التنقل."
+        ],
+        "issues": [
+          "غياب زر اتخاذ إجراء (CTA) في شاشة الحالة الفارغة؛ يجب إضافة زر 'إعادة تعيين الفلاتر' لتسهيل استعادة النتائج بنقرة واحدة.",
+          "صياغة ركيكة في إشعار التوست السفلي ('أهلاً بك كالمريض')؛ يجب تعديل النص إلى صياغة طبيعية مثل 'مرحباً بك' أو 'حساب المريض'.",
+          "تداخل حقل البحث مع خلفية البانر يفتقر للعمق والاتساق؛ يُفضل منحه ظلاً ناعماً (Elevation) أو فصله بمسافة مدروسة لفك التزاحم البصري."
+        ]
+      },
+      "doctor_profile": {
+        "score": 7,
+        "strengths": [
+          "التسلسل البصري ووضوح الأهم أولاً ممتاز، حيث تبرز بطاقة حجز الموعد ومعلومات الطبيب الأساسية بوضوح.",
+          "تنفيذ اتجاه RTL صحيح ودقيق في جميع العناصر، من رأس الشاشة إلى التنقل السفلي، مما يضمن تجربة مستخدم سلسة للغة العربية.",
+          "تصميم المكونات (البطاقات، الأيقونات، شرائح التاريخ) احترافي ونظيف، مع استخدام جيد للمسافات البيضاء والمحاذاة."
+        ],
+        "issues": [
+          "توجد تباينات طفيفة في درجات اللون الأخضر المستخدمة (مثل البطاقة العلوية وشريحة التخصص)، مما يكسر تناسق الهوية البصرية. يُصلح بتوحيد درجة اللون الأخضر للعلامة التجارية عبر جميع المكونات.",
+          "تحتاج الطباعة إلى بعض التحسينات: تباعد الأسطر في وصف الطبيب ضيق قليلاً، ووحدات الأرقام (مثل 'ج.س' و 'سنوات') لا تتطابق في وزن الخط مع الأرقام نفسها. يُصلح بزيادة تباعد الأسطر وتوحيد أوزان الخطوط.",
+          "شريحة 'المريض' في رأس الشاشة غير متناسقة عمودياً مع العنوان الرئيسي، وهدفها غير واضح تماماً. كما أن الترقيم '١.' في '١. اختر تاريخ الموعد' يوحي بخطوات غير مكتملة. يُصلح بمحاذاة الشريحة وتوضيح وظيفتها، وإما إزالة الترقيم أو تطبيقه بشكل متسق على جميع الخطوات."
+        ]
+      },
+      "checkout": {
+        "score": 7,
+        "strengths": [
+          "تصميم حالة فارغة ممتاز: أيقونة واضحة، رسالة مفيدة، وزر إجراء واضح ومناسب يدعو المستخدم للتفاعل.",
+          "جودة المكونات البصرية: البطاقات والأزرار والأيقونات مصممة بشكل احترافي ومتناسق مع حواف مستديرة وظلال خفيفة.",
+          "التسلسل البصري والطباعة: استخدام فعال لأحجام وأوزان الخطوط لإنشاء تسلسل بصري واضح وقابلية قراءة ممتازة للمحتوى."
+        ],
+        "issues": [
+          {
+            "عيب محدد وكيف يُصلح": "عدم اتساق اتجاه RTL في شريط التنقل العلوي: السهم المتجه لليمين (->) يتعارض مع مبادئ RTL لتطبيقات الجوال؛ يجب أن يكون السهم المتجه لليسار (<-) ليعبر عن الرجوع أو التقدم. يُصلح بتعديل اتجاه السهم ليصبح `<-` ووضعه على الجانب الأيسر من شريط التنقل، أو إزالته إذا لم يكن ضروريًا."
+          },
+          {
+            "عيب محدد وكيف يُصلح": "ازدحام وتوزيع عناصر شريط التنقل العلوي: وجود زر 'المريض' على اليمين بجانب السهم وعنوان الصفحة يسبب ازدحامًا بصريًا ويشتت الانتباه عن العنوان الرئيسي. يُصلح بإعادة ترتيب عناصر شريط التنقل العلوي، ربما بنقل زر 'المريض' إلى اليسار أو دمجه بطريقة أكثر تناسقًا."
+          },
+          {
+            "عيب محدد وكيف يُصلح": "وضوح أيقونة الحالة الفارغة: علامة 'X' الصغيرة على أيقونة التقويم قد لا تكون واضحة بما يكفي لتعبر عن 'لا يوجد حجز' بشكل فوري. يُصلح بتحسين وضوح الأيقونة إما بتكبير علامة 'X' أو استخدام أيقونة بديلة أكثر تعبيرًا عن حالة 'لا يوجد بيانات'."
+          }
+        ]
+      },
+      "patient_appointments": {
+        "score": 5,
+        "strengths": [
+          "تصميم الحالة الفارغة (Empty State) أنيق ومرتب مع تسلسل نصوص وأيقونة متناسقة بصرياً.",
+          "شريط التنقل السفلي (Bottom Navigation) نظيف ومريح وعصري، ومؤشر التحديد فيه واضح.",
+          "الهوية البصرية واللوحة اللونية المختارة ملائمة جداً وموثوقة للتطبيقات الصحية والطبية."
+        ],
+        "issues": [
+          "شريط التبويب الأوسط به خلل فادح؛ الزر الأبيض النشط فارغ من أي نص (أو النص أبيض فوق خلفية بيضاء)، والحل هو كتابة التبويب النشط مثل 'القادمة' بلون داكن ومتباين.",
+          "بطاقتا المواعيد داخل البانر العلوي تظهران نقطة فقط (•) بدون أرقام، ويجب عرض رقم صريح للحجوزات (مثل: ٠) أو معالجة حالة الصفر برمجياً بشكل أفضل.",
+          "تشتيت بصري بسبب تكرار زر الدعوة للإجراء (CTA) مرتين في نفس الشاشة ('حجز جديد' في البانر و'احجز موعدك الآن' في المنتصف)، والأصح إبقاء زر واحد بارز."
+        ]
+      },
+      "patient_medical_record": {
+        "score": 7,
+        "strengths": [
+          "The overall layout is clean and follows a logical flow.",
+          "The color palette is consistent and uses a pleasant teal accent.",
+          "The empty state message is clear and informative."
+        ],
+        "issues": [
+          "The spacing between the '0 زيارة مسجلة' button and the 'سجل زياراتك والتشخيصات' text is too large, creating an imbalance.",
+          "The font weight for the main title 'الأرشيف الطبي الصحي' is too light, making it less impactful compared to the subtitle.",
+          "The icons in the bottom navigation bar lack visual hierarchy; the active state icon is not distinct enough from the inactive ones."
+        ]
+      },
+      "doctor_schedule": {
+        "score": 7,
+        "strengths": [
+          "The overall layout is clean and follows a clear hierarchy.",
+          "The use of color is consistent with a calming and professional aesthetic.",
+          "The empty state is well-designed and informative, with a clear icon and message."
+        ],
+        "issues": [
+          "The spacing between the tab bar items (المكتملة, القادمة, في الانتظار) feels slightly inconsistent, particularly between 'القادمة' and 'في الانتظار'. Consider increasing the gap.",
+          "The font weight for the main title 'جدول العيادة اليومي' could be bolder to create a stronger visual hierarchy against the subtitle.",
+          "The icons within the three cards (تم الكشف, في الانتظار, مواعيد اليوم) are very small and could be more prominent or replaced with more descriptive icons to improve scannability."
+        ]
+      },
+      "doctor_consultation": {
+        "score": 7,
+        "strengths": [
+          "The overall layout is clean and uses a pleasant color palette.",
+          "The header with the title and back arrow is well-designed and functional.",
+          "The use of icons and typography is generally good, conveying information clearly."
+        ],
+        "issues": [
+          "The empty state message 'الحجز غير موجود' and its description are too close to the calendar icon. Increase the vertical spacing.",
+          "The bottom button 'جدول العيادة' has a very light grey text color which has poor contrast against the white background. Consider a darker color or a more prominent background.",
+          "The main content area has a large amount of empty space below the 'الحجز غير موجود' section and above the bottom button. This could be optimized for better visual flow or to present more information if available."
+        ]
+      },
+      "reception_desk": {
+        "score": 7,
+        "strengths": [
+          "تنفيذ ممتاز لاتجاه RTL وتخطيط الشاشة بشكل عام، مع محاذاة العناصر بشكل صحيح من اليمين إلى اليسار.",
+          "هوية بصرية قوية ومتناسقة مع استخدام جيد للألوان والتباين، مما يضمن سهولة القراءة والجاذبية.",
+          "حالة فارغة مصممة بشكل جيد ومفيدة، تتضمن أيقونة ذات صلة ورسالة واضحة وزر دعوة لاتخاذ إجراء."
+        ],
+        "issues": [
+          {
+            "عيب محدد وكيف يُصلح": "البطاقات الملخصة الأربعة (إجمالي المواعيد، وصلوا العيادة، بانتظار التأكيد، المكتملة) تعرض مربعًا أسود صغيرًا بدلاً من الأرقام الفعلية. هذا يجعلها غير وظيفية وغير مكتملة بصريًا. الحل: استبدال العناصر النائبة بالبيانات الرقمية الفعلية (مثل '0' إذا لم تكن هناك مواعيد، أو العدد الصحيح). إذا كانت البيانات قيد التحميل، يجب استخدام مؤشر تحميل مناسب."
+          },
+          {
+            "عيب محدد وكيف يُصلح": "المسافات الرأسية بين بطاقة العنوان الرئيسية (مكتب الاستقبال والحضور) وصف بطاقات الملخص أدناه تبدو ضيقة قليلاً. الحل: زيادة الهامش الرأسي بين الحافة السفلية لبطاقة العنوان الرئيسية والحافة العلوية لبطاقات الملخص لتحسين المساحة البصرية."
+          },
+          {
+            "عيب محدد وكيف يُصلح": "المحاذاة والتباعد داخل البطاقات الملخصة غير متناسقين، والعنصر النائب (المربع الأسود الصغير) سيء التصميم. الحل: ضمان محاذاة رأسية متسقة للنص والبيانات داخل كل بطاقة. تصميم عنصر نائب مناسب للأرقام (مثل شرطة، '0'، أو مؤشر تحميل هيكلي إذا كانت البيانات معلقة) يكون متكاملاً بصريًا ومحاذيًا بشكل صحيح."
+          }
+        ]
+      }
+    }
+  }
+}

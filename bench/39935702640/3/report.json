@@ -1,0 +1,259 @@
+{
+  "status": "ready",
+  "error": "",
+  "name": "ملعبك والأكاديمية",
+  "steps": [
+    "done · هوية «ملعب النخبة» · الخطة: ٧ شاشات · ٧ مجموعات",
+    "done · لا يحتاج التطبيق محتوى جاهزاً",
+    "done · الهيكل جاهز: التنقّل، البيانات، الدخول، التصميم",
+    "done · ٧ شاشات مكتوبة",
+    "done · جُرّبت كل الشاشات وأُصلحت ٥، لا أخطاء · رحلات المستخدم: ٣ من ٣ تعمل كاملة · المراجعة: أُصلحت ٣ من ٥ · التصميم: ٦ من ١٠ (حُسّنت ٣ شاشات)",
+    "done · جاهز للمعاينة والتحميل"
+  ],
+  "runtime": {
+    "home": [],
+    "book": [],
+    "myBookings": [],
+    "ownerDashboard": [],
+    "academyClasses": [],
+    "attendanceView": [],
+    "notifications": []
+  },
+  "flows": [
+    "حجز ملعب وتقسيم التكلفة (12 خطوات)",
+    "إدارة الملعب (9 خطوات)",
+    "تسجيل حضور الأكاديمية (7 خطوات)"
+  ],
+  "flowSteps": [
+    {
+      "flow": "حجز ملعب وتقسيم التكلفة",
+      "steps": [
+        {
+          "role": "customer"
+        },
+        {
+          "go": "/"
+        },
+        {
+          "click": "[data-act=go-all-stadiums]"
+        },
+        {
+          "go": "/book/s1"
+        },
+        {
+          "fill": {
+            "#booking-date": "2026-06-01"
+          }
+        },
+        {
+          "fill": {
+            "#booking-time": "19:00"
+          }
+        },
+        {
+          "click": "[data-act=inc-hours]"
+        },
+        {
+          "click": "[data-act=add-friend]"
+        },
+        {
+          "fill": {
+            "[data-index=\"0\"]": "0790000000"
+          }
+        },
+        {
+          "click": "[data-act=confirm-booking]"
+        },
+        {
+          "expect": "حجوزاتي الرياضية"
+        },
+        {
+          "expectDb": {
+            "col": "bookings",
+            "min": 1
+          }
+        }
+      ]
+    },
+    {
+      "flow": "إدارة الملعب",
+      "steps": [
+        {
+          "role": "owner"
+        },
+        {
+          "go": "/owner/dashboard"
+        },
+        {
+          "click": "[data-act=add-stadium]"
+        },
+        {
+          "fill": {
+            "#stadiumName": "ملعب الأبطال",
+            "#stadiumLocation": "عمان",
+            "#stadiumPrice": "100",
+            "#stadiumOpen": "08:00",
+            "#stadiumClose": "23:00"
+          }
+        },
+        {
+          "click": "#saveStadiumBtn"
+        },
+        {
+          "click": "[data-act=filter-booking][data-status=new]"
+        },
+        {
+          "click": "[data-act=confirm-booking][data-id=mvkstm1n4liph]"
+        },
+        {
+          "expect": "إدارة الحجوزات"
+        },
+        {
+          "expectDb": {
+            "col": "stadiums",
+            "min": 1
+          }
+        }
+      ]
+    },
+    {
+      "flow": "تسجيل حضور الأكاديمية",
+      "steps": [
+        {
+          "role": "trainer"
+        },
+        {
+          "go": "/academy"
+        },
+        {
+          "click": "[data-act=add-class]"
+        },
+        {
+          "fill": {
+            "[name=title]": "تدريب متقدم",
+            "[name=sport]": "كرة القدم",
+            "[name=trainerName]": "الكابتن أحمد",
+            "[name=date]": "2026-06-02",
+            "[name=time]": "16:00",
+            "[name=price]": "50",
+            "[name=capacity]": "20"
+          }
+        },
+        {
+          "click": "text:نشر الحصة"
+        },
+        {
+          "go": "/attendance/s1"
+        },
+        {
+          "expect": "سجل الحضور والغياب"
+        }
+      ]
+    }
+  ],
+  "reviewIssues": {
+    "home": [
+      "مراجعة: زر عرض الكل للملاعب يوجه المستخدم إلى صفحة المواعيد (/my-bookings) بدلاً من مسار عرض الملاعب. الإصلاح: تعديل الحدث ليوجّه المستخدم إلى مسار عرض الملاعب المناسب."
+    ],
+    "book": [
+      "مراجعة: حقل الهاتف (phone) في بيانات الحجز يتم حفظه بقيمة البريد الإلكتروني (Auth.user.email). الإصلاح: تخزين رقم هاتف المستخدم الفعلي بدلاً من البريد الإلكتروني."
+    ],
+    "myBookings": [],
+    "ownerDashboard": [
+      "مراجعة: استخدام Data.stadiums.visible() و Data.bookings.visible() يعرض ملاعب وحجوزات جميع المستخدمين لصاحب الملعب. الإصلاح: استخدام الدوال المخصصة لمالك الملعب مثل Data.stadiums.mine() وفلترة الحجوزات الخاصة بملاعبه."
+    ],
+    "academyClasses": [
+      "مراجعة: تسجيل طفل في الحصة يضيف سجلاً في الحضور بلا تحديث حقل enrolledCount في جدول الحصص التدريبية. الإصلاح: زيادة قيمة enrolledCount بمقدار 1 عند نجاح تسجيل الطفل."
+    ],
+    "attendanceView": [],
+    "notifications": [
+      "مراجعة: جلب الإشعارات عبر Data.notifications.visible() يتم بلا فلتر userId مما يتيح للمستخدم رؤية إشعارات باقي المستخدمين. الإصلاح: فلترة الإشعارات باستخدام userId الخاص بالمستخدم الحالي."
+    ]
+  },
+  "spec": false,
+  "specFallback": [],
+  "flowErr": "",
+  "agent": {
+    "ran": false,
+    "fixed": 0,
+    "steps": 0,
+    "log": []
+  },
+  "fixErrors": [],
+  "review": {
+    "found": 5,
+    "fixed": 3
+  },
+  "screens": [
+    {
+      "id": "home",
+      "route": "/",
+      "roles": [
+        "customer",
+        "owner",
+        "trainer",
+        "parent"
+      ],
+      "bytes": 10008
+    },
+    {
+      "id": "book",
+      "route": "/book/:id",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 8726
+    },
+    {
+      "id": "myBookings",
+      "route": "/my-bookings",
+      "roles": [
+        "customer"
+      ],
+      "bytes": 4937
+    },
+    {
+      "id": "ownerDashboard",
+      "route": "/owner/dashboard",
+      "roles": [
+        "owner"
+      ],
+      "bytes": 13877
+    },
+    {
+      "id": "academyClasses",
+      "route": "/academy",
+      "roles": [
+        "trainer",
+        "parent"
+      ],
+      "bytes": 9365
+    },
+    {
+      "id": "attendanceView",
+      "route": "/attendance/:classId",
+      "roles": [
+        "trainer",
+        "parent"
+      ],
+      "bytes": 9551
+    },
+    {
+      "id": "notifications",
+      "route": "/notifications",
+      "roles": [
+        "customer",
+        "owner",
+        "trainer",
+        "parent"
+      ],
+      "bytes": 5107
+    }
+  ],
+  "design": {
+    "model": "gemini-2.5-flash",
+    "score": null,
+    "min": null,
+    "screens": {}
+  }
+}

@@ -1,0 +1,199 @@
+{
+  "status": "ready",
+  "error": "",
+  "name": "محفظة الأسرة الذكية",
+  "steps": [
+    "done · هوية «خزنة العائلة» · الخطة: ٥ شاشات · ٥ مجموعات · ٩ عنصر محتوى",
+    "done · المحتوى: ٩ عنصر مكتوب كاملاً",
+    "done · الهيكل جاهز: التنقّل، البيانات، الدخول، التصميم",
+    "done · ٥ شاشات مكتوبة",
+    "done · جُرّبت كل الشاشات وأُصلحت ٦، لا أخطاء · رحلات المستخدم: ٢ من ٢ تعمل كاملة · المراجعة: أُصلحت ٣ من ٣ · التصميم: ٦ من ١٠ (حُسّنت ٣ شاشات)",
+    "done · جاهز للمعاينة والتحميل"
+  ],
+  "runtime": {
+    "home": [],
+    "add_expense": [],
+    "requests_list": [],
+    "savings_goals": [],
+    "analytics": []
+  },
+  "flows": [
+    "تسجيل مصروف جديد (9 خطوات)",
+    "طلب صرف وموافقة رب الأسرة (13 خطوات)"
+  ],
+  "flowSteps": [
+    {
+      "flow": "تسجيل مصروف جديد",
+      "steps": [
+        {
+          "role": "member"
+        },
+        {
+          "go": "/"
+        },
+        {
+          "click": "[data-act=go-add-expense]"
+        },
+        {
+          "fill": {
+            "#category-select": "categories-1"
+          }
+        },
+        {
+          "fill": {
+            "#amount-input": "150"
+          }
+        },
+        {
+          "fill": {
+            "#notes-input": "شراء مستلزمات"
+          }
+        },
+        {
+          "click": "#save-btn"
+        },
+        {
+          "expect": "السجل الرقابي"
+        },
+        {
+          "expectDb": {
+            "col": "expenses",
+            "min": 1
+          }
+        }
+      ]
+    },
+    {
+      "flow": "طلب صرف وموافقة رب الأسرة",
+      "steps": [
+        {
+          "role": "member"
+        },
+        {
+          "go": "/requests"
+        },
+        {
+          "click": "[data-act=new-request]"
+        },
+        {
+          "fill": {
+            "#req-cat": "categories-2"
+          }
+        },
+        {
+          "fill": {
+            "#req-amount": "500"
+          }
+        },
+        {
+          "fill": {
+            "#req-reason": "شراء جهاز لوحي للدراسة"
+          }
+        },
+        {
+          "click": "#submit-req-btn"
+        },
+        {
+          "expect": "قائمة الطلبات"
+        },
+        {
+          "role": "head"
+        },
+        {
+          "go": "/requests"
+        },
+        {
+          "click": "[data-act=approve]"
+        },
+        {
+          "expect": "موافقة"
+        },
+        {
+          "expectDb": {
+            "col": "requests",
+            "min": 1
+          }
+        }
+      ]
+    }
+  ],
+  "reviewIssues": {
+    "home": [
+      "مراجعة: استخدام الحقل غير المعرف createdAt في فرز وعرض تاريخ المصروفات بدلاً من الحقلين المعرفين order أو date."
+    ],
+    "add_expense": [],
+    "requests_list": [
+      "مراجعة: استخدام الحقل غير المعرف createdAt في فرز وعرض تاريخ الطلبات بدلاً من order أو date، وإغفال إرسال الحقلين userId و userName عند إنشاء الطلب."
+    ],
+    "savings_goals": [
+      "مراجعة: إغفال إرسال حقل userId عند إنشاء هدف الادخار رغم وجوده في مخطط مجموعة savings."
+    ],
+    "analytics": []
+  },
+  "spec": false,
+  "specFallback": [],
+  "flowErr": "",
+  "agent": {
+    "ran": false,
+    "fixed": 0,
+    "steps": 0,
+    "log": []
+  },
+  "fixErrors": [],
+  "review": {
+    "found": 3,
+    "fixed": 3
+  },
+  "screens": [
+    {
+      "id": "home",
+      "route": "/",
+      "roles": [
+        "member",
+        "head"
+      ],
+      "bytes": 9324
+    },
+    {
+      "id": "add_expense",
+      "route": "/expense/add",
+      "roles": [
+        "member",
+        "head"
+      ],
+      "bytes": 6645
+    },
+    {
+      "id": "requests_list",
+      "route": "/requests",
+      "roles": [
+        "member",
+        "head"
+      ],
+      "bytes": 7943
+    },
+    {
+      "id": "savings_goals",
+      "route": "/savings",
+      "roles": [
+        "member",
+        "head"
+      ],
+      "bytes": 11288
+    },
+    {
+      "id": "analytics",
+      "route": "/analytics",
+      "roles": [
+        "head"
+      ],
+      "bytes": 7136
+    }
+  ],
+  "design": {
+    "model": "gemini-2.5-flash",
+    "score": null,
+    "min": null,
+    "screens": {}
+  }
+}

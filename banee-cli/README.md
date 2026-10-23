@@ -2,15 +2,28 @@
 
 بانِي من الـ terminal. نفس محرك تطبيق بانِي (`www/index.html`) يعمل في متصفح خفي، فتحصل على نفس الجودة: المحلل، المخطط، الشاشات، الفحص، ووكيل الإصلاح.
 
-## التثبيت
+## التثبيت (أمر واحد)
 
 ```bash
-cd banee-cli
-npm install            # يثبّت Playwright ومتصفح Chromium
-npm run sync-engine    # ينسخ محرك بانِي من ../www
-npm link               # يجعل الأمر banee متاحاً في أي مكان
-export GEMINI_API_KEY="مفتاحك"
+curl -fsSL https://skfk86.github.io/banee/install.sh | bash
 ```
+
+ثم داخل أي مشروع:
+
+```bash
+banee
+```
+
+أول مرة يطلب مفتاح Gemini (مجاني من [aistudio.google.com/apikey](https://aistudio.google.com/apikey))، يتحقق منه ويحفظه، ولا يسأل بعدها.
+يعمل على Linux وmacOS وTermux، ويحتاج Node.js 18 أو أحدث.
+
+| الأمر | المعنى |
+|---|---|
+| `banee update` | تحديث لآخر إصدار |
+| `banee key` | تغيير المفتاح |
+| `banee -v` | رقم الإصدار |
+
+> للتطوير من داخل المستودع: `cd banee-cli && npm install && npm run sync-engine && npm link`
 
 ## الأوامر
 

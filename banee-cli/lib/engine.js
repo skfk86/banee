@@ -22,7 +22,13 @@ async function build(o) {
   const { idea, kit, key, out, ask, log } = o;
   let chromium;
   try { ({ chromium } = require('playwright')); } catch (e) { throw new Error('ثبّت المتصفح: npm i && npx playwright install chromium'); }
-  const b = await chromium.launch();
+  let b;
+  try { b = await chromium.launch(); } catch (e) {
+    if (!/Executable doesn't exist|install/i.test(e.message)) throw e;
+    log('⬇️  أول مرة: تحميل متصفح Chromium لمحرك بانِي (حوالي ١٥٠ ميغا، مرة واحدة فقط)...');
+    require('child_process').execSync('npx playwright install chromium', { cwd: path.resolve(__dirname, '..'), stdio: 'inherit' });
+    b = await chromium.launch();
+  }
   try {
     const ctx = await b.newContext({ viewport: { width: 390, height: 844 } });
     await ctx.route(/gstatic\.com\/firebasejs/, (r) => r.abort());

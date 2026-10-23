@@ -6,8 +6,7 @@
   "files": ["bin", "lib", "engine", "README.md"],
   "scripts": {
     "sync-engine": "node scripts/sync-engine.js",
-    "prepack": "node scripts/sync-engine.js",
-    "postinstall": "playwright install chromium || echo 'شغّل: npx playwright install chromium'"
+    "prepack": "node scripts/sync-engine.js"
   },
   "dependencies": {
     "playwright": "1.48.2"

@@ -130,28 +130,18 @@ function createSession({ key, model, root, ask, log, maxSteps = 40 }) {
     }
   }
 
-  // سلسلة نماذج: لكل نموذج حصة يومية منفصلة في الخطة المجانية، فإذا نفدت حصة نموذج انتقلنا للتالي تلقائياً
+  // بانِي CLI للمفاتيح المفعّل عليها الفوترة فقط: نموذج واحد ثابت، بلا تنقّل بين حصص مجانية
   let contents = [];
-  const FALLBACK = ['gemini-2.5-flash', 'gemini-2.5-flash-lite', 'gemini-flash-latest', 'gemini-flash-lite-latest', 'gemini-2.0-flash'];
-  let chain = [model, ...FALLBACK.filter((m) => m !== model)], cur = 0;
-  const exhausted = new Set();
+  let curModel = model;
+  const BILLING_MSG = 'هذا المفتاح على الخطة المجانية. بانِي CLI يعمل فقط بمفتاح مفعّل عليه الفوترة. فعّلها من Google AI Studio ← Billing، أو استخدم /key بمفتاح آخر.';
 
   async function call() {
     for (let tries = 0; ; ) {
-      const m = chain[cur];
-      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${key}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ systemInstruction: { parts: [{ text: systemPrompt(root) }] }, contents, tools }) });
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${curModel}:generateContent?key=${key}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ systemInstruction: { parts: [{ text: systemPrompt(root) }] }, contents, tools }) });
       const data = await res.json().catch(() => ({}));
       if (res.ok) return data;
       const msg = (data.error && data.error.message) || String(res.status);
-      const daily = res.status === 429 && /per ?day|PerDay|daily/i.test(msg);
-      const gone = res.status === 404 || (res.status === 400 && /not found|not supported/i.test(msg));
-      if (daily || gone) {
-        exhausted.add(m);
-        const next = chain.findIndex((x, i) => i > cur && !exhausted.has(x));
-        if (next > -1) { log(dim('  ↪ ' + (daily ? 'انتهت حصة اليوم لـ ' : 'النموذج غير متاح: ') + m + '، أكمل بـ ' + chain[next])); cur = next; continue; }
-        const wait = (msg.match(/retry in ([\dhms.]+)/i) || [])[1];
-        throw new Error('انتهت الحصة المجانية لكل النماذج اليوم' + (wait ? ' (تتجدد بعد ' + wait.replace(/\.\d+s$/, 's') + ')' : '') + '. الحلول: انتظر التجدد، أو /key بمفتاح من حساب Google آخر، أو فعّل الفوترة في Google AI Studio.');
-      }
+      if (res.status === 429 && /free_tier|free tier/i.test(msg)) throw new Error(BILLING_MSG);
       if ((res.status === 429 || res.status >= 500) && tries < 3) {
         tries++;
         const sec = Math.min(60, +((msg.match(/retry in ([\d.]+)s/i) || [])[1] || 10 * tries));
@@ -168,9 +158,13 @@ function createSession({ key, model, root, ask, log, maxSteps = 40 }) {
     contents.push({ role: 'user', parts: [{ text }] });
     try {
       for (let step = 1; step <= maxSteps; step++) {
-        const data = await call();
-        const reply = data.candidates?.[0]?.content;
-        if (!reply || !reply.parts) throw new Error('لا رد من النموذج');
+        let data = await call(), reply = data.candidates?.[0]?.content;
+        const empty = (r) => !r || !r.parts || !r.parts.some((x) => (x.text && x.text.trim() && !x.thought) || x.functionCall);
+        if (empty(reply)) { data = await call(); reply = data.candidates?.[0]?.content; }
+        if (empty(reply)) {
+          const why = data.candidates?.[0]?.finishReason || data.promptFeedback?.blockReason || 'غير معروف';
+          throw new Error('النموذج أرجع رداً فارغاً (السبب: ' + why + '). أعد صياغة الطلب أو جرّب /model آخر.');
+        }
         contents.push(reply);
         reply.parts.filter((x) => x.text && x.text.trim() && !x.thought).forEach((x) => log('\n' + x.text.trim()));
         const calls = reply.parts.filter((x) => x.functionCall);
@@ -188,7 +182,7 @@ function createSession({ key, model, root, ask, log, maxSteps = 40 }) {
   }
 
   return { send, reset: () => { contents = []; }, size: () => contents.length,
-    model: () => chain[cur], setModel: (m) => { chain = [m, ...FALLBACK.filter((x) => x !== m)]; cur = 0; exhausted.clear(); } };
+    model: () => curModel, setModel: (m) => { curModel = m; } };
 }
 
 async function run(o) { return createSession(o).send(o.task); }

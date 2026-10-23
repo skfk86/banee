@@ -22,22 +22,24 @@ const readCfg = () => { try { return JSON.parse(fs.readFileSync(CFG_FILE, 'utf8'
 const saveCfg = (c) => { fs.mkdirSync(path.dirname(CFG_FILE), { recursive: true }); fs.writeFileSync(CFG_FILE, JSON.stringify(c, null, 2), { mode: 0o600 }); };
 let KEY = flags.key || process.env.GEMINI_API_KEY || process.env.GEMINI_KEY || readCfg().key;
 const VERSION = require('../package.json').version;
-const MODEL = flags.model || process.env.BANEE_MODEL || readCfg().model || 'gemini-2.5-flash';
+const MODEL = flags.model || process.env.BANEE_MODEL || readCfg().model || 'gemini-2.5-pro';
 const log = (s) => console.log(s);
 const ask = (q) => new Promise((r) => { const rl = readline.createInterface({ input: process.stdin, output: process.stdout }); rl.question(q, (a) => { rl.close(); r(a.trim()); }); });
 // أول تشغيل: يطلب المفتاح مرة واحدة ويتحقق منه ثم يحفظه في ~/.banee/config.json
 async function setupKey(askFn, force) {
   if (KEY && !force) return;
   if (!process.stdin.isTTY && !force) { console.error('❌ لا يوجد مفتاح Gemini. شغّل: banee key'); process.exit(1); }
-  log('🔑 بانِي يحتاج مفتاح Gemini (مجاني من https://aistudio.google.com/apikey)');
+  log('🔑 بانِي يحتاج مفتاح Gemini مفعّل عليه الفوترة (https://aistudio.google.com/apikey)');
   for (;;) {
     const k = (await askFn('الصق المفتاح: ')).trim();
     if (!k) continue;
     process.stdout.write('  يتحقق... ');
     try {
-      const r = await fetch('https://generativelanguage.googleapis.com/v1beta/models?key=' + encodeURIComponent(k));
+      const r = await fetch('https://generativelanguage.googleapis.com/v1beta/models/' + MODEL + ':generateContent?key=' + encodeURIComponent(k), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contents: [{ role: 'user', parts: [{ text: 'ok' }] }], generationConfig: { maxOutputTokens: 1 } }) });
+      const j = await r.json().catch(() => ({})), em = (j.error && j.error.message) || '';
       if (r.ok) { saveCfg({ ...readCfg(), key: k }); KEY = k; log('✓ حُفظ المفتاح\n'); return; }
-      const j = await r.json().catch(() => ({})); log('✗ ' + ((j.error && j.error.message) || r.status));
+      if (r.status === 429 && /free_tier|free tier/i.test(em)) log('✗ هذا مفتاح على الخطة المجانية. بانِي CLI يتطلب مفتاحاً مفعّل عليه الفوترة (Google AI Studio ← Billing).');
+      else log('✗ ' + (em.split('\n')[0] || r.status));
     } catch (e) { log('✗ تعذّر الاتصال: ' + e.message); }
   }
 }
@@ -108,7 +110,7 @@ async function chat() {
     }
     if (t.startsWith('/model')) {
       const m = t.slice(6).trim();
-      if (!m) { log('النموذج الحالي: ' + s.model() + '\nللتغيير: /model gemini-2.5-flash-lite  (يُحفظ للمرات القادمة)'); continue; }
+      if (!m) { log('النموذج الحالي: ' + s.model() + '\nللتغيير: /model gemini-2.5-flash  (يُحفظ للمرات القادمة)'); continue; }
       s.setModel(m); saveCfg({ ...readCfg(), model: m }); log('✓ النموذج: ' + m); continue;
     }
     if (t === '/clear') { s.reset(); log('🧹 محادثة جديدة.'); continue; }

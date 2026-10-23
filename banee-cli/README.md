@@ -14,7 +14,9 @@ curl -fsSL https://raw.githubusercontent.com/skfk86/banee/main/site/install.sh |
 banee
 ```
 
-أول مرة يطلب مفتاح Gemini (مجاني من [aistudio.google.com/apikey](https://aistudio.google.com/apikey))، يتحقق منه ويحفظه، ولا يسأل بعدها.
+أول مرة يطلب مفتاح Gemini، يتحقق منه ويحفظه، ولا يسأل بعدها.
+
+> **يتطلب مفتاحاً مفعّل عليه الفوترة.** الخطة المجانية لا تكفي لوكيل يرسل عدة طلبات في كل مهمة. فعّلها من Google AI Studio ← Billing، وضع حداً للإنفاق. النموذج الافتراضي `gemini-2.5-pro`، وللمهام البسيطة الأرخص: `/model gemini-2.5-flash`.
 يعمل على Linux وmacOS وTermux، ويحتاج Node.js 18 أو أحدث.
 
 | الأمر | المعنى |

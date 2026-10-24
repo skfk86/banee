@@ -333,6 +333,31 @@
     .choice { text-align: start; }
     @media (prefers-color-scheme: dark) { .seg button.active { background: var(--surface2); box-shadow: 0 0 0 1px var(--hair), var(--shadow-sm); } }
     @media (prefers-reduced-motion: reduce) { .screen, .screen .card, .screen .stat, .screen .item { animation: none; } }
+
+    /* ═══ أشكال الهيكل: يختارها المصمم لكل تطبيق حتى لا تتشابه التطبيقات ═══ */
+    /* القائمة: شريط كلاسيكي بعرض الشاشة */
+    body.nav-bar .bottom-nav { left: 0; right: 0; bottom: 0; height: calc(var(--nav-h) + var(--safe-bottom)); padding: 0 0 var(--safe-bottom); border-radius: 0; border: 0; border-top: 1px solid var(--hair); box-shadow: none; background: var(--surface); }
+    body.nav-bar.has-nav #app { bottom: calc(var(--nav-h) + var(--safe-bottom)); }
+    body.nav-bar .nav-item [data-lucide], body.nav-bar .nav-item .lucide { padding: 0; background: none !important; }
+    body.nav-bar .nav-item.active::before { display: block; }
+    body.nav-bar .fab { bottom: calc(var(--nav-h) + var(--safe-bottom) + 16px); }
+    /* القائمة: تبويبات علوية تحت العنوان (تطبيقات المحتوى والقراءة) */
+    body.nav-top .bottom-nav { top: calc(var(--header-h) + var(--safe-top)); bottom: auto; left: 0; right: 0; height: 48px; padding: 0 8px; border-radius: 0; border: 0; border-bottom: 1px solid var(--hair); box-shadow: none; background: var(--bg); backdrop-filter: none; gap: 4px; overflow-x: auto; }
+    body.nav-top .nav-item { flex: 0 0 auto; flex-direction: row; gap: 6px; padding: 0 14px; font-size: 13.5px; border-bottom: 2.5px solid transparent; border-radius: 0; }
+    body.nav-top .nav-item.active { border-bottom-color: var(--primary); }
+    body.nav-top .nav-item [data-lucide], body.nav-top .nav-item .lucide { width: 18px; height: 18px; padding: 0; background: none !important; transform: none !important; }
+    body.nav-top.has-nav #app { top: calc(var(--header-h) + var(--safe-top) + 48px); bottom: 0; }
+    body.nav-top .fab, body.nav-top .toast { bottom: calc(var(--safe-bottom) + 22px); }
+    /* العنوان: كبير على اليمين بلا شريط (أسلوب iOS الحديث) */
+    body.head-large { --header-h: 68px; }
+    body.head-large .app-header { border-bottom: 0; background: var(--bg); backdrop-filter: none; }
+    body.head-large .app-header h1 { font-size: 26px; font-weight: 800; letter-spacing: -.3px; }
+    /* العنوان: في المنتصف (تطبيقات الخدمات والمتاجر) */
+    body.head-center .app-header h1 { position: absolute; left: 50%; transform: translateX(-50%); text-align: center; max-width: 60%; }
+    /* العنوان: شريط بلون الهوية */
+    body.head-brand .app-header { background: var(--primary); border-bottom: 0; backdrop-filter: none; }
+    body.head-brand .app-header h1, body.head-brand .app-header .hbtn { color: var(--on-primary); }
+    body.head-brand .app-header .role-pill { background: rgba(255,255,255,.18); border-color: rgba(255,255,255,.3); color: var(--on-primary); }
   </style>
 </head>
 <body>
@@ -348,6 +373,7 @@
   <script type="module">
     // ═════════════ إعدادات ═════════════
     const META = {{META}};
+    try { const sh = META.shell || {}; document.body.classList.add('nav-' + (sh.nav || 'pill'), 'head-' + (sh.head || 'plain')); } catch (e) {}
 
     // قاعدة البيانات: تطبيقات بانِي المنشورة تعمل على سحابة بانِي تلقائياً (META.cloud).
     // لاستخدام مشروع Firebase خاص بك: احذف cloud من META وضع إعداداتك هنا.
@@ -363,7 +389,8 @@
     const ROOT = META.cloud ? ['apps', META.cloud.id] : [];   // كل تطبيق في مساحة منفصلة: apps/{id}/{collection}
 
     // AdMob — معرّفات الاختبار، استبدلها بالحقيقية عند النشر
-    const AD_IDS = { banner: 'ca-app-pub-3940256099942544/6300978111', interstitial: 'ca-app-pub-3940256099942544/1033173712' };
+    // معرّف الإعلان من إعدادات صاحب التطبيق، وإلا معرّف Google التجريبي (والإعلانات معطّلة أصلاً ما لم يفعّلها)
+    const AD_IDS = { banner: (META.ads && META.ads.banner) || 'ca-app-pub-3940256099942544/6300978111', interstitial: 'ca-app-pub-3940256099942544/1033173712' }, AD_TEST = !(META.ads && META.ads.banner);
 
     // ═════════════ أدوات الواجهة ═════════════
     const UI = {
@@ -866,6 +893,9 @@ _e(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&
       screen(def) {
         def.keys = [];
         def.re = new RegExp('^' + def.route.replace(/:(\w+)/g, (_, k) => { def.keys.push(k); return '([^/]+)'; }) + '/?$');
+        // شاشة من التطبيق بنفس مسار شاشة مدمجة (/login, /register) تحل محلها: صاحب التطبيق يصمم دخوله بنفسه
+        const i = this.screens.findIndex(x => x.builtin && x.route === def.route);
+        if (i > -1) { def.public = true; this.screens[i] = def; return; }
         this.screens.push(def);
       },
       match(path) {
@@ -935,8 +965,8 @@ _e(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&
           finally { UI.busy(btn, false); }
         });
       };
-      App.screen({ id: 'login', route: '/login', title: 'تسجيل الدخول', public: true, render: () => authForm(false), mount: authMount(false) });
-      App.screen({ id: 'register', route: '/register', title: 'إنشاء حساب', public: true, render: () => authForm(true), mount: authMount(true) });
+      App.screen({ id: 'login', route: '/login', title: 'تسجيل الدخول', public: true, builtin: true, render: () => authForm(false), mount: authMount(false) });
+      App.screen({ id: 'register', route: '/register', title: 'إنشاء حساب', public: true, builtin: true, render: () => authForm(true), mount: authMount(true) });
     }
 
     // ═════════════ محرّك المواصفات: شاشات كاملة تُبنى من وصف قصير (Spec.screen) بلا كود، مجرَّبة ومتسقة ═════════════
@@ -1274,9 +1304,9 @@ _e(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&
     async function initAds() {
       try {
         const AdMob = window.Capacitor?.Plugins?.AdMob;
-        if (!AdMob || !window.Capacitor.isNativePlatform()) return;
-        await AdMob.initialize({ initializeForTesting: true });
-        await AdMob.showBanner({ adId: AD_IDS.banner, adSize: 'ADAPTIVE_BANNER', position: 'BOTTOM_CENTER', margin: 64, isTesting: true });
+        if (!META.ads || !AdMob || !window.Capacitor.isNativePlatform()) return; // الإعلانات فقط إذا فعّلها صاحب التطبيق
+        await AdMob.initialize({ initializeForTesting: AD_TEST });
+        await AdMob.showBanner({ adId: AD_IDS.banner, adSize: 'ADAPTIVE_BANNER', position: 'BOTTOM_CENTER', margin: 64, isTesting: AD_TEST });
       } catch (e) {}
     }
 

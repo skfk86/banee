@@ -88,7 +88,8 @@ jobs:
           npx cap add android
           sed -i 's/compileSdkVersion = [0-9]*/compileSdkVersion = 36/; s/targetSdkVersion = [0-9]*/targetSdkVersion = 36/; s/minSdkVersion = [0-9]*/minSdkVersion = 24/' android/variables.gradle
           echo "android.suppressUnsupportedCompileSdk=36" >> android/gradle.properties
-          sed -i "s|</application>|<meta-data android:name=\"com.google.android.gms.ads.APPLICATION_ID\" android:value=\"${ADMOB}\"/></application>|" android/app/src/main/AndroidManifest.xml
+          # معرّف AdMob فقط إذا فعّل صاحب التطبيق الإعلانات (المكتبة موجودة في package.json)
+          if grep -q '@capacitor-community/admob' package.json; then sed -i "s|</application>|<meta-data android:name=\"com.google.android.gms.ads.APPLICATION_ID\" android:value=\"${ADMOB}\"/></application>|" android/app/src/main/AndroidManifest.xml; fi
           if [ -f assets/icon-only.png ]; then npx @capacitor/assets generate --android --iconBackgroundColor "$BG" --splashBackgroundColor "$BG" --splashBackgroundColorDark "$BG" || true; fi
           npx cap sync android
           cd android && chmod +x gradlew && ./gradlew assembleDebug --no-daemon

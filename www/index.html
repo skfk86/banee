@@ -2456,7 +2456,9 @@ function domainPreset(text){
 // مستوى التفكير لكل دور: التفكير العميق مكلف، ولا تحتاجه إلا الخطة وكتابة الشاشات
 var THINK = { analyst: 'low', designer: 'low', content: 'low', fixer: 'low', assist: null };
 var THINK_OFF = false;
-function thinkCfg(role, model, cfg){
+function thinkCfg(role, model, cfg, level){
+  // تصعيد صريح عند تكرار فشل الإصلاح: يتغلّب على المستوى الافتراضي للدور
+  if (level && !THINK_OFF && /^gemini-3/.test(model)) { cfg.thinkingConfig = { thinkingLevel: level }; return cfg; }
   if (role === 'reviewer' && !THINK_OFF && /^gemini-3/.test(model)) { cfg.thinkingConfig = { thinkingLevel: 'medium' }; return cfg; }
   if (role === 'agent' && !THINK_OFF && /^gemini-3/.test(model)) { cfg.thinkingConfig = { thinkingLevel: 'medium' }; return cfg; }
   if (role === 'tester' && !THINK_OFF && /^gemini-3/.test(model)) { cfg.thinkingConfig = { thinkingLevel: 'low' }; return cfg; }
@@ -2572,14 +2574,14 @@ function retryDelayMs(e){
   var m = /retry in ([\d.]+)s/i.exec((e.error && e.error.message) || ''); return m ? Math.min(90000, parseFloat(m[1]) * 1000 + 1000) : 30000;
 }
 function firstAlive(){ for (var i = 0; i < MODELS.length; i++) if (!DEAD_MODELS[MODELS[i]]) return i; return 0; }
-function ask(key, role, input, json){
+function ask(key, role, input, json, level){
   var attempt = 0, mi = firstAlive();
-  if (key === 'PROXY') return askProxy(role, input, json);
+  if (key === 'PROXY') return askProxy(role, input, json, level);
   function once(){ return coolDown().then(send); }
   function send(){
     var ctrl = new AbortController();
     var timer = setTimeout(function(){ ctrl.abort(); }, 300000); // الشاشات الكبيرة مع التفكير قد تأخذ أكثر من دقيقتين
-    var cfg = thinkCfg(role, MODELS[mi], { temperature: json ? 0.4 : 0.5, maxOutputTokens: 32768 });
+    var cfg = thinkCfg(role, MODELS[mi], { temperature: json ? 0.4 : 0.5, maxOutputTokens: 32768 }, level);
     if (json) cfg.responseMimeType = 'application/json';
     return fetch('https://generativelanguage.googleapis.com/v1beta/models/'+MODELS[mi]+':generateContent?key='+encodeURIComponent(key), {
       method: 'POST', headers: { 'Content-Type': 'application/json' }, signal: ctrl.signal,
@@ -2624,10 +2626,10 @@ function partsOf(input){
   if (typeof input === 'string') return [{ text: input }];
   return [{ text: input.text || '' }].concat((input.images || []).map(function(b){ return { inline_data: { mime_type: 'image/jpeg', data: b } }; }));
 }
-function askProxy(role, input, json){
+function askProxy(role, input, json, level){
   var attempt = 0, mi = 0;
   function once(){
-    var cfg = thinkCfg(role, MODELS[mi], { temperature: json ? 0.4 : 0.5, maxOutputTokens: 12000 });
+    var cfg = thinkCfg(role, MODELS[mi], { temperature: json ? 0.4 : 0.5, maxOutputTokens: 12000 }, level);
     if (json) cfg.responseMimeType = 'application/json';
     return proxyCall({ op: 'ask', role: role, model: MODELS[mi], systemInstruction: { parts: [{ text: ROLES[role] }] },
       contents: [{ role: 'user', parts: partsOf(input) }], generationConfig: cfg })
@@ -3151,22 +3153,33 @@ function runBuild(app, key){
       if (specOf(app.ck.screens[b.s.id])) return fixSpec(app, key, b.s, b.errs).then(function(c){ if (c) app.ck.screens[b.s.id] = c; app.ck.fixed[b.s.id] = true; });
       return ask(key, 'fixer', 'الأخطاء:\n- ' + b.errs.join('\n- ') + '\n\nسياق الشاشة:\n' + screenCtx(plan, b.s, app.ck.content) + relatedCode(app, b.s) + '\n\nالكود الحالي:\n```javascript\n' + app.ck.screens[b.s.id] + '\n```')
         .then(function(r){
-          var js = grab(r, 'javascript');
-          if (checkScreen(js, b.s, plan).length <= b.errs.length) app.ck.screens[b.s.id] = js;
+          var js = grab(r, 'javascript'), prevJs = app.ck.screens[b.s.id];
+          // نقارن على نفس الأساس (فحص الشاشة + الفحص المتقاطع) ونقبل فقط إن انخفضت الأخطاء فعلاً، وإلا نُبقي الكود السابق
+          if (js) {
+            app.ck.screens[b.s.id] = js;
+            var nowErrs = checkScreen(js, b.s, plan).length + (crossCheck(app)[b.s.id] || []).length;
+            if (nowErrs >= b.errs.length) app.ck.screens[b.s.id] = prevJs;
+          }
           app.ck.fixed[b.s.id] = true; saveApps();
         });
     })).then(function(){ return bad.length; });
   }).then(function(nFixed){
     alive();
     var round = 0, fixedLive = 0, miss = 0;
-    // الإصلاح العادي لم يكفِ: الوكيل المستقل يتتبّع السبب بين الشاشات بنفسه (مرة لكل بناء، وفقط لأخطاء وظيفية)
+    // الإصلاح العادي لم يكفِ: الوكيل المستقل يتتبّع السبب بين الشاشات بنفسه (وفقط لأخطاء وظيفية).
+    // جولة ثانية أقصر (١٢ خطوة) فقط إن حسّنت الأولى التطبيق وبقيت أخطاء، فلا نكرر جولة لم تجد شيئاً
     function runAgent(res){
       var fn = 0; for (var id in res) fn += (res[id] || []).filter(function(m){ return !/^تصميم:/.test(m); }).length;
-      if (!fn || app.ck.agentRan) return res;
-      app.ck.agentRan = true; saveApps();
-      jstep(app,4,'cur','وكيل الإصلاح يتتبّع الأخطاء بين الشاشات');
-      return agentFix(app, key, res, function(k, a){ alive(); jstep(app,4,'cur','وكيل الإصلاح — خطوة ' + toAr(k) + ': ' + ({ read:'يقرأ ', search:'يبحث عن ', edit:'يعدّل ', run:'يشغّل التطبيق ويجرّبه', seed:'يضيف بيانات لـ ', flow:'يصحّح سيناريو اختبار ', done:'ينهي' }[a.tool] || '') + (a.screen || (a.text ? '«' + String(a.text).slice(0, 30) + '»' : ''))); })
-        .then(function(r){ alive(); fixedLive += Math.max(0, r.fixed || 0); app.ck.agentFixed = r.fixed || 0; app.ck.agentSteps = r.steps; return r.res; });
+      var runs = app.ck.agentRuns || (app.ck.agentRan ? 1 : 0); // يحفظ العدّاد القديم للبناءات المستأنفة
+      if (!fn || runs >= 2) return res;
+      app.ck.agentRan = true; app.ck.agentRuns = runs + 1; saveApps();
+      jstep(app,4,'cur', runs ? 'وكيل الإصلاح — جولة ثانية على الأخطاء المتبقية' : 'وكيل الإصلاح يتتبّع الأخطاء بين الشاشات');
+      return agentFix(app, key, res, function(k, a){ alive(); jstep(app,4,'cur','وكيل الإصلاح — خطوة ' + toAr(k) + ': ' + ({ read:'يقرأ ', search:'يبحث عن ', edit:'يعدّل ', run:'يشغّل التطبيق ويجرّبه', seed:'يضيف بيانات لـ ', flow:'يصحّح سيناريو اختبار ', done:'ينهي' }[a.tool] || '') + (a.screen || (a.text ? '«' + String(a.text).slice(0, 30) + '»' : ''))); }, runs ? 12 : 20)
+        .then(function(r){
+          alive(); fixedLive += Math.max(0, r.fixed || 0);
+          app.ck.agentFixed = (runs ? app.ck.agentFixed || 0 : 0) + (r.fixed || 0); app.ck.agentSteps = (runs ? app.ck.agentSteps || 0 : 0) + (r.steps || 0);
+          return (!runs && r.fixed > 0) ? runAgent(r.res) : r.res;
+        });
     }
     function liveRound(known){
       if (round === 0 && !known && !app.ck.flowTests && (app.ck.plan.flows || []).length) {
@@ -4087,8 +4100,8 @@ function issuesText(app, res){
   var out = []; app.ck.plan.screens.forEach(function(s){ (res[s.id] || []).forEach(function(m){ if (!/^تصميم:/.test(m)) out.push('[' + s.id + '] ' + m); }); });
   return out.length ? out.slice(0, 25).join('\n') : 'لا أخطاء وظيفية';
 }
-function agentFix(app, key, res, onStep){
-  var plan = app.ck.plan, start = {}, MAX = 20, n = 0, hist = [], cur = res, best = appScore(app, res), bestScreens = null;
+function agentFix(app, key, res, onStep, maxSteps){
+  var plan = app.ck.plan, start = {}, MAX = maxSteps || 20, n = 0, hist = [], cur = res, best = appScore(app, res), bestScreens = null;
   plan.screens.forEach(function(s){ start[s.id] = app.ck.screens[s.id]; });
   var startSeed = JSON.stringify(plan.seed || {}), seedChanged = false, flowBackup = null;
   function numbered(js){ return String(js || '').split('\n').map(function(l, i){ return (i + 1) + '| ' + l; }).join('\n'); }
@@ -4362,7 +4375,8 @@ function fixRuntime(app, key, res, onStage, review, attempt){
       '\n\nبيانات تجريبية متاحة:\n' + JSON.stringify(plan.seed || {}).slice(0, 1500) +
       '\n\nالكود الحالي:\n```javascript\n' + old[s.id] + '\n```';
     if (specOf(old[s.id])) return fixSpec(app, key, s, res[s.id] || []).then(function(c){ if (c) app.ck.screens[s.id] = c; });
-    return ask(key, 'fixer', prompt).then(function(r){
+    // المحاولة الثانية تفكّر بعمق متوسط والثالثة فأكثر بعمق عالٍ؛ الأولى تبقى اقتصادية
+    return ask(key, 'fixer', prompt, false, attempt >= 3 ? 'high' : attempt === 2 ? 'medium' : undefined).then(function(r){
       var js = grab(r, 'javascript');
       if (!checkScreen(js, s, plan).length && js.length > (old[s.id] || '').length * 0.6) app.ck.screens[s.id] = js;
     }).catch(function(e){ if (e && /رصيد|حصة/.test(e.message || '')) throw e; (app.ck.fixErrors = app.ck.fixErrors || []).push(s.id + ': ' + String(e && e.message || e).slice(0, 160)); });

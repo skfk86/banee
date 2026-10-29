@@ -682,6 +682,26 @@
     .po-name small { display: block; font-size: 12px; font-weight: 500; color: var(--text3); }
     .po-price { font-size: 26px; font-weight: 700; font-variant-numeric: tabular-nums; direction: ltr; }
     .po-price span { font-size: 13px; font-weight: 400; color: var(--text3); }
+    .plan-opt.key { border: 0; padding: 0; overflow: hidden; background: var(--surface); box-shadow: 0 0 0 1.5px var(--primary) inset, 0 10px 30px -12px color-mix(in srgb, var(--primary) 45%, transparent); }
+    .pk-hero { padding: 18px 16px 16px; color: #fff; background: linear-gradient(135deg, var(--primary), color-mix(in srgb, var(--primary) 55%, #0B1220)); position: relative; }
+    .pk-hero .po-name, .pk-hero .po-price, .pk-hero .po-price span { color: #fff; }
+    .pk-hero p { font-size: 12.5px; opacity: .9; margin-top: 4px; line-height: 1.6; }
+    .pk-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 100px; background: rgba(255,255,255,.18); margin-bottom: 8px; }
+    .pk-badge .i { width: 12px; height: 12px; }
+    .pk-body { padding: 12px 16px 16px; }
+    .pk-grp { font-size: 11.5px; font-weight: 800; color: var(--primary); margin: 12px 0 4px; letter-spacing: .2px; }
+    .pk-grp:first-child { margin-top: 2px; }
+    .pk-body .po-feats { margin-top: 0; }
+    .pk-body .po-feats li { align-items: flex-start; line-height: 1.55; }
+    .pk-body .po-feats li .i { margin-top: 3px; flex-shrink: 0; }
+    .pk-body .po-feats li b { color: var(--text); font-weight: 700; }
+    .eng { margin: 4px 0 14px; }
+    .eng-h { font-size: 12.5px; font-weight: 700; color: var(--text2); margin-bottom: 6px; }
+    .eng-seg { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .eng-seg button { text-align: right; border: 1.5px solid var(--border); background: var(--surface); border-radius: 14px; padding: 10px 12px; cursor: pointer; font: inherit; color: var(--text); }
+    .eng-seg button b { display: block; font-size: 14px; }
+    .eng-seg button small { display: block; font-size: 11.5px; color: var(--text2); margin-top: 3px; line-height: 1.5; }
+    .eng-seg button.on { border-color: var(--primary); background: var(--primary-soft); box-shadow: 0 0 0 1px var(--primary) inset; }
     .po-feats { margin-top: 10px; display: flex; flex-direction: column; gap: 5px; list-style: none; }
     .po-feats li { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text2); }
     .po-feats li .i { width: 15px; height: 15px; color: var(--success); stroke-width: 2.4; }
@@ -1380,6 +1400,7 @@
     <div class="mtitle"><svg class="i"><use href="#i-key"/></svg>مفتاح Gemini API</div>
     <p class="msub">احصل على مفتاح من aistudio.google.com ← Get API key. يُحفظ على جهازك فقط.</p>
     <p class="msub" id="kmod-note"></p>
+    <div id="engine-box"></div>
     <ol class="msub" style="margin:0 0 12px;padding-inline-start:20px;line-height:1.9;font-size:13px">
       <li>افتح <b dir="ltr">aistudio.google.com</b> وسجّل بحساب Google</li>
       <li>اضغط <b dir="ltr">Get API key</b> ثم <b dir="ltr">Create API key</b></li>
@@ -1983,12 +2004,23 @@ function renderPlans(){
   var px = proxyMode();
   var feats = {
     starter: [px ? '٤٬٠٠٠ نقطة شهرياً (٤–١٥ تطبيقاً)' : 'تطبيق واحد كل شهر', 'محتوى كامل وهوية خاصة', 'فحص حي وإصلاح تلقائي', 'مشروع أندرويد جاهز للبناء'],
-    key: ['ابنِ بمفتاح Gemini الخاص بك (مجاني من Google)', 'تطبيقات بلا حد يومي ولا نقاط ولا انتظار', 'بلا أي إعلانات', 'مزامنة مشاريعك سحابياً بين أجهزتك ونسخة احتياطية دائمة', 'كل الأدوات: المخطط، الأدوار، الاختبار الآلي', 'ذكاء اصطناعي داخل تطبيقاتك المنشورة'],
+    key: [],
     pro: [px ? '٨٬٥٠٠ نقطة شهرياً' : '٣ تطبيقات كل شهر', 'الاستوديو مع المساعد الذكي', 'حزمة Google Play كاملة', 'دليل نشر خطوة بخطوة'],
     business: [px ? '٢٢٬٠٠٠ نقطة شهرياً' : 'تطبيقات غير محدودة', 'كل مميزات المحترف', 'أولوية في البناء', 'دعم مباشر عبر واتساب']
   };
+  var KEYG = [
+    ['البناء', ['<b>محرّكان بتبديل عادي:</b> مفتاحك الخاص بلا نقاط ولا حد، أو المفتاح العام برصيد ثلاثة أضعاف المجاني', '<b>تطبيقات بلا حد يومي</b> وبلا انتظار عند ازدحام الخدمة']],
+    ['جودة أعلى', ['<b>مدير تصميم أشد صرامة:</b> يحسّن حتى ٦ شاشات بمعيار ٧٫٥ من ١٠ (المجاني ٣ شاشات بمعيار ٧)', '<b>وكيل إصلاح أعمق:</b> ٣٢ خطوة لإكمال رحلات المستخدم (المجاني ٢٠)', '<b>مساعد استوديو أقوى:</b> ٢٤ خطوة لكل طلب، يرى الشاشة ويجرّبها بنفسه']],
+    ['راحة', ['<b>بلا أي إعلانات</b>', '<b>مزامنة سحابية</b> لمشاريعك بين أجهزتك ونسخة احتياطية دائمة', 'ذكاء اصطناعي داخل تطبيقاتك المنشورة']]
+  ];
   document.getElementById('plans-box').innerHTML = (px ? ['key'] : ['starter', 'pro', 'business']).map(function(k){
     var P = PLANS[k], on = cur === k;
+    if (k === 'key') return '<div class="plan-opt key"><div class="pk-hero"><div class="pk-badge"><svg class="i"><use href="#i-sparkles"/></svg>للمحترفين والمطورين</div>' +
+      '<div class="po-row"><div class="po-name">' + P.name + '</div><div class="po-price"><bdi dir="ltr">' + esc(Billing.price(k)) + '</bdi><span> / شهر</span></div></div>' +
+      '<p>ابنِ بلا حدود، بجودة أعلى، وبدّل بين مفتاحك والمفتاح العام متى شئت.</p></div><div class="pk-body">' +
+      KEYG.map(function(g){ return '<div class="pk-grp">' + g[0] + '</div><ul class="po-feats">' + g[1].map(function(f){ return '<li>' + C + '<span>' + f + '</span></li>'; }).join('') + '</ul>'; }).join('') +
+      (on ? '<button class="btn btn-ghost btn-sm po-btn" onclick="Billing.manage()">خطتك الحالية · إدارة الاشتراك</button>' + (localKey() ? '' : '<button class="btn btn-primary btn-sm po-btn" style="margin-top:8px" onclick="closeModal(\'upg-modal\');openKeyModal()">أضف مفتاحك لتفعيل البناء بلا نقاط</button>')
+          : '<button class="btn btn-primary btn-sm po-btn" onclick="Billing.buy(\'' + k + '\')">اشترك الآن</button>') + '</div></div>';
     return '<div class="plan-opt' + (k === 'pro' ? ' pop' : '') + '">' + (k === 'pro' ? '<div class="pop-tag"><svg class="i"><use href="#i-sparkles"/></svg>الأكثر اختياراً</div>' : '') +
       '<div class="po-row"><div class="po-name">' + P.name + '</div><div class="po-price"><bdi dir="ltr">' + esc(Billing.price(k)) + '</bdi><span> / شهر</span></div></div>' +
       '<ul class="po-feats">' + feats[k].map(function(f){ return '<li>' + C + f + '</li>'; }).join('') + '</ul>' +
@@ -1996,7 +2028,7 @@ function renderPlans(){
           : '<button class="btn btn-primary btn-sm po-btn" onclick="Billing.buy(\'' + k + '\')">اشترك</button>') + '</div>';
   }).join('');
   if (px && cur !== 'key') document.getElementById('plans-box').insertAdjacentHTML('afterbegin', '<table class="cmp"><thead><tr><th></th><th>مجاني</th><th class="hl">مفتاحك الخاص</th></tr></thead><tbody>' +
-    [['التطبيقات', 'واحد يومياً', 'بلا حد'], ['النقاط', '٢٥٠ كل ٤ ساعات', 'بلا نقاط ولا انتظار'], ['الإعلانات', 'نعم', 'لا'], ['عند ازدحام الخدمة', 'قد يتوقف', 'لا يتأثر'], ['مزامنة بين أجهزتك', '—', '✓']]
+    [['التطبيقات', 'واحد يومياً', 'بلا حد'], ['النقاط', '٢٥٠ كل ٤ ساعات', 'بلا نقاط بمفتاحك · ٧٥٠ بالعام'], ['تحسين التصميم', '٣ شاشات', '٦ شاشات بمعيار أعلى'], ['وكيل الإصلاح', '٢٠ خطوة', '٣٢ خطوة'], ['الإعلانات', 'نعم', 'لا'], ['عند ازدحام الخدمة', 'قد يتوقف', 'لا يتأثر بمفتاحك'], ['مزامنة بين أجهزتك', '—', '✓']]
       .map(function(r){ return '<tr><td>' + r[0] + '</td><td>' + r[1] + '</td><td class="hl">' + r[2] + '</td></tr>'; }).join('') + '</tbody></table>');
   if (px && Ads.eligible()) document.getElementById('plans-box').insertAdjacentHTML('afterbegin', '<div class="ad-earn"><div><b>نقاط مجانية</b><span>شاهد إعلاناً قصيراً واحصل على ' + toAr(S.credits.adPoints || 15) + ' نقطة · ' + (S.credits.adsLeft ? 'متبقي ' + toAr(S.credits.adsLeft) + ' اليوم' : 'انتهت إعلانات اليوم') + '</span></div><button class="btn btn-accent btn-sm" onclick="Ads.reward(this)"' + (S.credits.adsLeft ? '' : ' disabled') + '><svg class="i i-sm"><use href="#i-play"/></svg>شاهد</button></div>');
   document.getElementById('plans-box').insertAdjacentHTML('beforeend', px && SHOW_PACKS ? '<div class="packs"><div class="packs-h">رصيد إضافي (لا ينتهي)</div>' +
@@ -2065,7 +2097,7 @@ function saveKey() {
 function keyItemSync(){
   var it = document.getElementById('key-item'); if (!it) return;
   it.hidden = false;
-  var sm = it.querySelector('small'); if (sm) sm.textContent = ownKeyOn() ? 'مفعّل: البناء بلا نقاط ولا حدود' : localKey() ? 'محفوظ، يعمل مع الاشتراك' : 'ابنِ بلا حدود بمفتاحك (للمشتركين)';
+  var sm = it.querySelector('small'); if (sm) sm.textContent = ownKeyOn() ? 'المحرّك: مفتاحك الخاص · بلا نقاط ولا حدود' : localKey() && paidUser() ? 'المحرّك: المفتاح العام · مفتاحك محفوظ للتبديل' : localKey() ? 'محفوظ، يعمل مع الاشتراك' : 'ابنِ بلا حدود بمفتاحك (للمشتركين)';
   var rm = document.getElementById('kmod-rm'); if (rm) rm.hidden = !localKey();
 }
 function openKeyModal(){
@@ -2073,7 +2105,16 @@ function openKeyModal(){
   var n = document.getElementById('kmod-note');
   if (n) n.innerHTML = PROXY_URL && !paidUser() ? 'هذه الميزة للمشتركين. أرخص خطة: <b>مفتاحك الخاص</b> <bdi dir="ltr">' + esc(Billing.price('key')) + '</bdi> شهرياً، بلا نقاط ولا حد يومي. <button class="link-btn" onclick="closeModal(\'key-modal\');Billing.buy(\'key\')">اشترك</button>' : 'الطلبات تذهب من جهازك إلى Google مباشرة، ولا يمر المفتاح على خوادم بانِي.';
   if (n && PROXY_URL && paidUser() && !localKey()) n.innerHTML = '<b>خطوة أخيرة لتفعيل اشتراكك:</b> أضف مفتاح Gemini المجاني من Google، فتبني بلا نقاط ولا حد يومي.<br>١. افتح <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a> وسجّل بحساب Google.<br>٢. اضغط <b>Create API key</b> وانسخه.<br>٣. الصقه هنا واضغط حفظ.';
-  keyItemSync(); openModal('key-modal');
+  keyItemSync(); renderEngine(); openModal('key-modal');
+}
+function renderEngine(){
+  var b = document.getElementById('engine-box'); if (!b) return;
+  if (!(PROXY_URL && paidUser() && localKey())) { b.innerHTML = ''; return; }
+  var m = keyMode(), rem = S.credits ? toAr(S.credits.remaining) : '';
+  b.innerHTML = '<div class="eng"><div class="eng-h">محرّك البناء</div><div class="eng-seg">' +
+    '<button class="' + (m === 'own' ? 'on' : '') + '" onclick="setKeyMode(\'own\')"><b>مفتاحي الخاص</b><small>بلا نقاط ولا حد يومي</small></button>' +
+    '<button class="' + (m === 'shared' ? 'on' : '') + '" onclick="setKeyMode(\'shared\')"><b>المفتاح العام</b><small>' + (rem ? 'رصيدك ' + rem + ' نقطة' : 'بالنقاط') + ' · مفيد عند نفاد حصة مفتاحك</small></button>' +
+    '</div></div>';
 }
 function removeKey(){ try { localStorage.removeItem('bgkey'); } catch(e){} keyItemSync(); closeModal('key-modal'); toast('حُذف المفتاح، رجعت للبناء بالنقاط','suc'); }
 function saveKeyModal() {
@@ -2558,7 +2599,7 @@ function rqStart(){
 
 function arErr(code, msg){
   if (msg === 'quota-day') return 'انتهت الحصة اليومية لمفتاح Gemini. أكمل غداً من حيث توقفت، أو فعّل الفوترة في Google AI Studio';
-  if (ownKeyOn() && (code===429 || /quota|exhausted|rate limit/i.test(msg))) return 'انتهت حصة مفتاحك في Google حالياً. انتظر قليلاً ثم اضغط متابعة، أو فعّل الفوترة في Google AI Studio لحصة أكبر، أو احذف المفتاح من حسابي لتكمل بالنقاط';
+  if (ownKeyOn() && (code===429 || /quota|exhausted|rate limit/i.test(msg))) return 'انتهت حصة مفتاحك في Google حالياً. بدّل إلى «المفتاح العام» من الإعدادات ← مفتاح Gemini وأكمل فوراً، أو انتظر قليلاً ثم اضغط متابعة، أو فعّل الفوترة في Google AI Studio لحصة أكبر، أو احذف المفتاح من حسابي لتكمل بالنقاط';
   if (code===503 || code===429 || /high demand|overloaded|quota|exhausted/i.test(msg)) return 'خوادم Gemini مشغولة الآن، أكمل بعد دقيقة';
   if (code===400 && /API key|API_KEY/i.test(msg)) return 'مفتاح Gemini غير صالح، راجعه من حسابي';
   if (code===403) return 'المفتاح لا يملك صلاحية، أنشئ مفتاحاً جديداً';
@@ -3622,7 +3663,11 @@ function proxyMode(){ return !!(PROXY_URL && CLOUD && FB && FB.auth && FB.auth.c
 function localKey(){ try { return localStorage.getItem('bgkey') || ''; } catch(e){ return ''; } }
 // مفتاح المستخدم الخاص: للمشتركين فقط. بلا نقاط ولا حدود، والطلب يذهب من الجهاز إلى Google مباشرة
 function paidUser(){ return (S.credits && S.credits.plan && S.credits.plan !== 'free') || curPlan() !== 'free'; }
-function ownKeyOn(){ return !!(PROXY_URL && localKey() && paidUser()); }
+// المشترك يختار محرّك البناء: مفتاحه الخاص (بلا نقاط) أو المفتاح العام لبانِي (بالنقاط، برصيد المشترك المضاعف)
+function keyMode(){ try { return localStorage.getItem('bkmode') === 'shared' ? 'shared' : 'own'; } catch(e){ return 'own'; } }
+function setKeyMode(m){ try { localStorage.setItem('bkmode', m === 'shared' ? 'shared' : 'own'); } catch(e){} keyItemSync(); updatePlan(); try { renderEngine(); } catch(e){}
+  toast(m === 'shared' ? 'تعمل الآن بالمفتاح العام لبانِي (بالنقاط)' : 'تعمل الآن بمفتاحك الخاص: بلا نقاط ولا حدود', 'suc'); }
+function ownKeyOn(){ return !!(PROXY_URL && localKey() && paidUser() && keyMode() === 'own'); }
 function getKey(){ if (ownKeyOn()) return localKey(); if (proxyMode()) return 'PROXY'; var k = null; try { k = localStorage.getItem('bgkey'); } catch(e){} return k; }
 
 // ── الاتصال بخادم بانِي ──
@@ -4109,7 +4154,7 @@ function issuesText(app, res){
   return out.length ? out.slice(0, 25).join('\n') : 'لا أخطاء وظيفية';
 }
 function agentFix(app, key, res, onStep){
-  var plan = app.ck.plan, start = {}, MAX = 20, n = 0, hist = [], cur = res, best = appScore(app, res), bestScreens = null;
+  var plan = app.ck.plan, start = {}, MAX = paidUser() ? 32 : 20, n = 0, hist = [], cur = res, best = appScore(app, res), bestScreens = null;
   plan.screens.forEach(function(s){ start[s.id] = app.ck.screens[s.id]; });
   var startSeed = JSON.stringify(plan.seed || {}), seedChanged = false, flowBackup = null;
   function numbered(js){ return String(js || '').split('\n').map(function(l, i){ return (i + 1) + '| ' + l; }).join('\n'); }
@@ -4259,7 +4304,8 @@ ROLES.judge = 'أنت مدير تصميم في شركة تطبيقات عالم�
 'أعد JSON فقط: {"score": رقم, "issues": ["تعليمة إصلاح محددة"]} بحد أقصى ٤ عيوب.';
 
 // ٧) حلقة التصميم البصرية: تصوير كل شاشة كما تظهر فعلاً ← حكم رؤية من ١٠ ← إصلاح الشاشات الضعيفة بعيوبها المحددة ← تأكد أن الإصلاح لم يكسر شيئاً
-var DESIGN_MIN = 7, DESIGN_FIX_MAX = 3;
+var DESIGN_MIN = 7, DESIGN_FIX_MAX = 3; // المشترك: معيار أعلى وتحسين حتى ٦ شاشات (designLimits)
+function designLimits(){ return paidUser() ? { min: 7.5, max: 6 } : { min: DESIGN_MIN, max: DESIGN_FIX_MAX }; }
 // html2canvas لا يفهم color(srgb ...) وoklab الناتجة من color-mix، فتُحوَّل إلى rgba في النسخة المصوّرة
 var FLAT_PROPS = ['color', 'background-color', 'background-image', 'border-top-color', 'border-right-color', 'border-bottom-color', 'border-left-color', 'box-shadow', 'outline-color', 'text-decoration-color', 'fill', 'stroke'];
 function flatColors(doc){
@@ -4337,7 +4383,7 @@ function designPass(app, key, res, onStep){
         .then(function(raw){ var j = parseJSON(raw) || {}; judged.push({ id: id, score: Math.max(1, Math.min(10, Number(j.score) || 0)), issues: (j.issues || []).slice(0, 4) }); }, function(){});
     }); }, Promise.resolve()).then(function(){ return judged; }).then(function(rs){
       rs = rs.filter(function(r){ return r && r.score; });
-      var weak = rs.filter(function(r){ return r.score < DESIGN_MIN && r.issues.length; }).sort(function(a, b){ return a.score - b.score; }).slice(0, DESIGN_FIX_MAX);
+      var DL = designLimits(), weak = rs.filter(function(r){ return r.score < DL.min && r.issues.length; }).sort(function(a, b){ return a.score - b.score; }).slice(0, DL.max);
       app.ck.look = { score: rs.length ? Math.round(rs.reduce(function(t, r){ return t + r.score; }, 0) / rs.length * 10) / 10 : null, screens: rs.reduce(function(o, r){ o[r.id] = r.score; return o; }, {}) };
       app.ck.lookDone = true; saveApps();
       if (!weak.length) return res;

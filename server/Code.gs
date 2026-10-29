@@ -65,7 +65,7 @@ var CFG = {
 // الرصيد الشهري لكل خطة (نقاط). المجانية رصيد مرة واحدة.
 var PLANS = {
   free:     { points: 250,   product: null },   // تتجدد يومياً (FREE_DAY_POINTS)
-  key:      { points: 100,   product: 'banee_key' }, // مفتاح المستخدم الخاص للبناء؛ والنقاط اليومية للذكاء داخل تطبيقاته المنشورة
+  key:      { points: 750,   product: 'banee_key' }, // على المفتاح العام: ثلاثة أضعاف المجاني كل ٤ ساعات (ومع مفتاحه الخاص بلا نقاط) // مفتاح المستخدم الخاص للبناء؛ والنقاط اليومية للذكاء داخل تطبيقاته المنشورة
   starter:  { points: 4000,  product: 'banee_starter' },
   pro:      { points: 8500,  product: 'banee_pro' },
   business: { points: 22000, product: 'banee_business' }

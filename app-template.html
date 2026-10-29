@@ -891,6 +891,16 @@ _e(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&
     const App = {
       screens: [], _leave: [],
       onLeave(fn) { this._leave.push(fn); },
+      // يحصر قواعد الشاشة داخل حاويتها، ويرمي ما يمس الهيكل (العنوان، القائمة، الثابت، الألوان الثابتة)
+      scopeCss(css, scope) {
+        css = css.replace(/\/\*[\s\S]*?\*\//g, '').replace(/@import[^;]*;?/gi, '').replace(/<\/?style[^>]*>/gi, '');
+        return css.replace(/([^{}@]+)\{([^{}]*)\}/g, (all, sel, body) => {
+          if (/html|\bbody\b|#app|app-header|bottom-nav|:root/i.test(sel)) return '';
+          const b = body.split(';').filter(d => { const v = d.toLowerCase(); return d.indexOf(':') > 0 && !/position\s*:\s*(fixed|sticky)|url\(|!important|#[0-9a-f]{3,8}\b/.test(v); }).join(';');
+          if (!b.trim()) return '';
+          return sel.split(',').map(x => { x = x.trim(); return x === ':scope' || x === '&' ? scope : scope + ' ' + x.replace(/^&\s*/, ''); }).join(', ') + '{' + b + '}';
+        });
+      },
       screen(def) {
         def.keys = [];
         def.re = new RegExp('^' + def.route.replace(/:(\w+)/g, (_, k) => { def.keys.push(k); return '([^/]+)'; }) + '/?$');
@@ -921,7 +931,10 @@ _e(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&
         if (!s.public && !Roles.can(s.route)) { const h = Roles.home(); if (h !== path) { if (path !== '/') UI.toast('هذه الصفحة غير متاحة لدورك الحالي', 'info'); return App.go(h); } }
         const main = document.getElementById('app');
         const el = document.createElement('div');
-        el.className = 'screen';
+        el.className = 'screen'; el.dataset.scr = s.id || '';
+        // تصميم خاص بالشاشة (الحقل css في App.screen): محصور داخلها فلا يمس بقية التطبيق
+        let st = document.getElementById('scr-css'); if (!st) { st = document.createElement('style'); st.id = 'scr-css'; document.head.appendChild(st); }
+        st.textContent = s.css ? App.scopeCss(String(s.css), '.screen[data-scr="' + (s.id || '') + '"]') : '';
         try { el.innerHTML = s.render(params); }
         catch (e) { console.error(e); el.innerHTML = UI.empty('alert-triangle', 'تعذّر عرض الشاشة', 'حاول مرة أخرى'); }
         main.replaceChildren(el); main.scrollTop = 0;

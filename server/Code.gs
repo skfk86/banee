@@ -169,35 +169,44 @@ function verifyUser(idToken) {
 function userPlan(user, token) {
   var cache = CacheService.getScriptCache(), ck = 'plan:' + user.uid + ':' + (token ? hash(token).slice(0, 12) : '-');
   var hit = cache.get(ck); if (hit) return JSON.parse(hit);
-  var plan = { name: 'free', period: 'free' };
+  var plan = { name: 'free', period: 'free', why: token ? 'unchecked' : 'no_token' };
   try {
     // رمز الاشتراك يرسله التطبيق، ونتحقق منه هنا مباشرة مع Google Play: لا يمكن تزويره
     if (token) {
       var owner = prop('tokOwner:' + hash(token));
+      if (owner && owner !== user.uid) plan.why = 'token_other_user';
       if (!owner || owner === user.uid) {
         var sub = playGet('purchases/subscriptionsv2/tokens/' + encodeURIComponent(token));
+        plan.why = !sub ? 'play_api:' + (PLAY_LAST || '?') : !/SUBSCRIPTION_STATE_(ACTIVE|IN_GRACE_PERIOD)/.test(sub.subscriptionState || '') ? 'state:' + sub.subscriptionState : 'ok';
         var active = sub && /SUBSCRIPTION_STATE_(ACTIVE|IN_GRACE_PERIOD)/.test(sub.subscriptionState || '');
         var acct = sub && sub.externalAccountIdentifiers && sub.externalAccountIdentifiers.obfuscatedExternalAccountId;
-        if (active && (!acct || acct === user.uid)) {
+        // مكتبة الشراء تُرسل معرّف الحساب مشفّراً (md5) أو لا ترسله: نقبل الشكلين
+        var acctOk = !acct || acct === user.uid || acct === md5hex(user.uid);
+        if (active && !acctOk) plan.why = 'account_mismatch';
+        if (active && acctOk) {
           var item = (sub.lineItems || [])[0] || {};
           var name = planByProduct(item.productId);
+          if (!name) plan.why = 'unknown_product:' + item.productId;
           if (name) {
-            plan = { name: name, period: String(item.expiryTime || sub.latestOrderId || '') };
+            plan = { name: name, period: String(item.expiryTime || sub.latestOrderId || ''), why: 'ok' };
             if (!owner) PropertiesService.getScriptProperties().setProperty('tokOwner:' + hash(token), user.uid);
           }
         }
       }
     }
   } catch (err) { console.warn('plan check', err); }
-  cache.put(ck, JSON.stringify(plan), 21600); // ٦ ساعات
+  // الرفض بسبب خطأ اتصال بـ Google لا يُحفظ ٦ ساعات: نعيد المحاولة في الطلب التالي
+  cache.put(ck, JSON.stringify(plan), /^play_api|unchecked/.test(plan.why) ? 60 : 21600);
   return plan;
 }
 function planByProduct(id) { for (var k in PLANS) if (PLANS[k].product === id) return k; return null; }
+var PLAY_LAST = '';
+function md5hex(t) { return Utilities.computeDigest(Utilities.DigestAlgorithm.MD5, t).map(function(b){ return ('0' + (b & 255).toString(16)).slice(-2); }).join(''); }
 function playGet(path) {
   var r = UrlFetchApp.fetch('https://androidpublisher.googleapis.com/androidpublisher/v3/applications/' + CFG.PACKAGE_NAME + '/' + path, {
     headers: { Authorization: 'Bearer ' + ScriptApp.getOAuthToken() }, muteHttpExceptions: true
   });
-  if (r.getResponseCode() !== 200) { console.warn('play', r.getResponseCode(), r.getContentText().slice(0, 300)); return null; }
+  if (r.getResponseCode() !== 200) { PLAY_LAST = r.getResponseCode(); console.warn('play', r.getResponseCode(), r.getContentText().slice(0, 300)); return null; }
   return JSON.parse(r.getContentText());
 }
 
@@ -213,20 +222,20 @@ function loadState(user) {
     PropertiesService.getScriptProperties().setProperty('u:' + user.uid, JSON.stringify(s));
   }
   var plan = userPlan(user, token);
-  if (plan.name === 'free' || plan.name === 'key') plan = { name: plan.name, period: freeWindow() }; // رصيد يتجدد كل ٤ ساعات
+  if (plan.name === 'free' || plan.name === 'key') plan = { name: plan.name, period: freeWindow(), why: plan.why }; // رصيد يتجدد كل ٤ ساعات
   if (s.period !== plan.period) { s.period = plan.period; s.used = 0; } // تجديد شهري = رصيد جديد
-  s.plan = plan.name;
+  s.plan = plan.name; s.planWhy = plan.why || '';
   return s;
 }
 // نافذة تجديد نقاط المجاني: كل ٤ ساعات بتوقيت UTC+3 (00، 04، 08، 12، 16، 20 بتوقيت الخليج؛ 23، 03، 07… بتوقيت السودان)
 function freeWindow(d) { var x = new Date((d || new Date()).getTime() + 3 * 3600000); return 'h' + Utilities.formatDate(x, 'UTC', 'yyyy-MM-dd') + '-' + Math.floor(x.getUTCHours() / CFG.FREE_REFILL_HOURS); }
 function nextRefill() { var x = new Date(Date.now() + 3 * 3600000), h = (Math.floor(x.getUTCHours() / CFG.FREE_REFILL_HOURS) + 1) * CFG.FREE_REFILL_HOURS; x.setUTCHours(h, 0, 0, 0); return x.getTime() - 3 * 3600000; }
 function saveState(user, s) { PropertiesService.getScriptProperties().setProperty('u:' + user.uid, JSON.stringify(s)); }
-function planPoints(s) { return s.plan === 'free' ? CFG.FREE_DAY_POINTS : PLANS[s.plan].points; }
+function planPoints(s) { return s.plan === 'free' ? CFG.FREE_DAY_POINTS : s.plan === 'key' ? Math.max(CFG.FREE_DAY_POINTS, PLANS.key.points) : PLANS[s.plan].points; } // مشترك «مفتاحك» بلا مفتاح بعد لا يقل عن المجاني
 function creditsView(user, s) {
   var allow = planPoints(s);
   var today = Utilities.formatDate(new Date(), 'UTC', 'yyyy-MM-dd');
-  return { adsLeft: s.plan === 'free' ? Math.max(0, CFG.AD_PER_DAY - (s.adDay === today ? s.adN || 0 : 0)) : 0, adPoints: CFG.AD_POINTS, plan: s.plan, founder: !!s.founder, no: s.no || 0, allowance: allow, used: Math.round(s.used), bonus: Math.round(s.bonus || 0), remaining: Math.max(0, Math.round(allow - s.used + (s.bonus || 0))), blocked: !!s.blocked, refillAt: s.plan === 'free' ? nextRefill() : 0, at: Date.now() };
+  return { planWhy: s.planWhy || '', adsLeft: s.plan === 'free' ? Math.max(0, CFG.AD_PER_DAY - (s.adDay === today ? s.adN || 0 : 0)) : 0, adPoints: CFG.AD_POINTS, plan: s.plan, founder: !!s.founder, no: s.no || 0, allowance: allow, used: Math.round(s.used), bonus: Math.round(s.bonus || 0), remaining: Math.max(0, Math.round(allow - s.used + (s.bonus || 0))), blocked: !!s.blocked, refillAt: s.plan === 'free' ? nextRefill() : 0, at: Date.now() };
 }
 
 // ═════════════ الطلب إلى Gemini ═════════════

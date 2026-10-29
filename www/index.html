@@ -1448,7 +1448,7 @@ var ADMOB = { rewarded: 'ca-app-pub-7608701150166997/5799679986', interstitial: 
 var Ads = {
   ready: false, busy: false,
   plugin: function(){ return window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform() && window.Capacitor.Plugins && window.Capacitor.Plugins.AdMob; },
-  eligible: function(){ return proxyMode() && !ownKeyOn() && S.credits && S.credits.plan === 'free'; },
+  eligible: function(){ return proxyMode() && !ownKeyOn() && !paidUser() && S.credits && S.credits.plan === 'free'; }, // المشترك لا يرى إعلانات حتى لو تأخر تأكيد الخادم
   init: function(){
     var A = this.plugin(); if (!A || this.ready) return Promise.resolve(!!this.ready);
     return A.initialize({ initializeForTesting: ADMOB.testing }).then(function(){ Ads.ready = true; return true; }).catch(function(){ return false; });
@@ -1938,7 +1938,7 @@ var Billing = {
     if (!this.ready) { toast('جارٍ الاتصال بـ Google Play، حاول بعد لحظات', 'err'); return; }
     var p = this.store.get(PLANS[plan].product, window.CdvPurchase.Platform.GOOGLE_PLAY);
     var offer = p && p.getOffer();
-    if (!offer) { toast('هذه الخطة غير متاحة حالياً في Google Play', 'err'); return; }
+    if (!offer) { try { this.store.update(); } catch(e){} toast(p ? 'هذه الخطة غير مفعّلة في Google Play بعد، جرّب بعد قليل' : 'لم يجد Google Play هذه الخطة. ثبّت بانِي من متجر Google Play بنفس حسابك ثم جرّب', 'err'); reportErr('billing', new Error('no offer ' + PLANS[plan].product + ' product=' + !!p)); return; }
     this.store.order(offer, { applicationUsername: S.user && S.user.uid }).then(function(err){ if (err && err.code !== window.CdvPurchase.ErrorCode.PAYMENT_CANCELLED) toast('لم يكتمل الاشتراك: ' + (err.message || ''), 'err'); });
   },
   // أعلى خطة نشطة يملكها المستخدم الآن على هذا الجهاز ← تُحفظ في Firestore
@@ -1960,6 +1960,8 @@ var Billing = {
         setTimeout(function(){ refreshCredits(true); }, 1500);
         Object.assign(S.profile, patch); saveProfile(patch); updatePlan();
         if (cur !== best) toast('تم تفعيل خطة ' + PLANS[best].name + '، شكراً لك', 'suc');
+        // خطة «مفتاحك الخاص» لا تعمل مزاياها إلا بمفتاح Gemini: نطلبه فوراً بدل أن يظن المشترك أن لا شيء تغيّر
+        if (best === 'key' && !localKey()) setTimeout(openKeyModal, 1600);
       }
     } else if (cur !== 'free' && S.profile.planSource === 'google_play' && (!S.profile.planUntil || S.profile.planUntil < Date.now())) {
       var p2 = { plan: 'free', planUntil: 0 }; Object.assign(S.profile, p2); saveProfile(p2); updatePlan();
@@ -2070,6 +2072,7 @@ function openKeyModal(){
   document.getElementById('kmod').value = '';
   var n = document.getElementById('kmod-note');
   if (n) n.innerHTML = PROXY_URL && !paidUser() ? 'هذه الميزة للمشتركين. أرخص خطة: <b>مفتاحك الخاص</b> <bdi dir="ltr">' + esc(Billing.price('key')) + '</bdi> شهرياً، بلا نقاط ولا حد يومي. <button class="link-btn" onclick="closeModal(\'key-modal\');Billing.buy(\'key\')">اشترك</button>' : 'الطلبات تذهب من جهازك إلى Google مباشرة، ولا يمر المفتاح على خوادم بانِي.';
+  if (n && PROXY_URL && paidUser() && !localKey()) n.innerHTML = '<b>خطوة أخيرة لتفعيل اشتراكك:</b> أضف مفتاح Gemini المجاني من Google، فتبني بلا نقاط ولا حد يومي.<br>١. افتح <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a> وسجّل بحساب Google.<br>٢. اضغط <b>Create API key</b> وانسخه.<br>٣. الصقه هنا واضغط حفظ.';
   keyItemSync(); openModal('key-modal');
 }
 function removeKey(){ try { localStorage.removeItem('bgkey'); } catch(e){} keyItemSync(); closeModal('key-modal'); toast('حُذف المفتاح، رجعت للبناء بالنقاط','suc'); }
@@ -3651,12 +3654,30 @@ function refillTxt(){
   var m = Math.max(1, Math.round((at - Date.now()) / 60000)), h = Math.floor(m / 60), r = m % 60;
   return 'بعد ' + (h ? (h === 1 ? 'ساعة' : h === 2 ? 'ساعتين' : toAr(h) + ' ساعات') + (r ? ' و' + toAr(r) + ' دقيقة' : '') : toAr(r) + ' دقيقة');
 }
+// اشترى من Google Play (الجهاز يعرف) لكن الخادم ما زال يراه مجانياً: نشرح السبب بدل الصمت، ونعيد التحقق تلقائياً مرة
+var PLAN_WHY = {
+  no_token: 'لم يصل رمز الاشتراك من Google Play إلى الخادم. اضغط «استعادة المشتريات».',
+  play_api: 'خادم بانِي لم يستطع سؤال Google Play عن اشتراكك (إعداد ربط Google Play بالخادم). نعمل على إصلاحه، واشتراكك محفوظ.',
+  'state:SUBSCRIPTION_STATE_PENDING': 'الدفع ما زال قيد المعالجة في Google Play. سيُفعَّل تلقائياً عند اكتماله.',
+  account_mismatch: 'هذا الاشتراك مرتبط بحساب بانِي آخر. سجّل الدخول بالحساب الذي اشتركت به.',
+  token_other_user: 'هذا الاشتراك مسجّل لحساب بانِي آخر. سجّل الدخول بالحساب الذي اشتركت به.'
+};
+var planMismatchTries = 0;
+function planMismatch(c){
+  var local = (S.profile && S.profile.plan) || 'free';
+  if (local === 'free' || !c || c.plan !== 'free' || !S.profile || S.profile.planSource !== 'google_play') return;
+  if (planMismatchTries++ < 1) { setTimeout(function(){ refreshCredits(true); }, 4000); return; }
+  var w = String(c.planWhy || ''), msg = PLAN_WHY[w] || PLAN_WHY[w.split(':')[0]] || 'اشتراكك ظاهر في Google Play لكنه لم يُفعَّل على الخادم بعد (' + (w || 'سبب غير معروف') + '). اضغط «استعادة المشتريات».';
+  toast(msg, 'err');
+  reportErr('planMismatch', new Error('local=' + local + ' server=free why=' + w));
+}
 function setCredits(c){
   if (!c) return;
   var wasSub = paidUser();
   if (S.credits && S.credits.at && c.at && c.at < S.credits.at) return; // رد قديم وصل متأخراً
   S.credits = c;
   try { keyItemSync(); } catch(e){}
+  try { planMismatch(c); } catch(e){}
   try { if (!wasSub && paidUser()) cloudPull(); syncPillRender(); } catch(e){}
   var el = document.getElementById('credit-chip');
   if (el) { el.hidden = false; el.querySelector('b').textContent = toAr(c.remaining); el.classList.toggle('low', c.remaining < 300); }

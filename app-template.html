@@ -434,10 +434,10 @@ _e(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&
         close();
         return `<div class="rich">${html}</div>`;
       },
-      num(n) { return Number(n || 0).toLocaleString('ar-EG'); },
+      num(n) { return Number(n || 0).toLocaleString('en-US'); }, // أرقام غربية واضحة: الصفر العربي «٠» يبدو نقطة، والشاشات تكتب أرقاماً غربية مباشرة فيختلط الشكلان
       money(n, cur = 'ج.س') { return UI.num(n) + ' ' + cur; },
-      date(d) { try { return new Date(d).toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' }); } catch (e) { return ''; } },
-      time(d) { try { return new Date(d).toLocaleTimeString('ar-EG', { hour: 'numeric', minute: '2-digit' }); } catch (e) { return ''; } },
+      date(d) { try { return new Date(d).toLocaleDateString('ar-EG-u-nu-latn', { year: 'numeric', month: 'long', day: 'numeric' }); } catch (e) { return ''; } },
+      time(d) { try { return new Date(d).toLocaleTimeString('ar-EG-u-nu-latn', { hour: 'numeric', minute: '2-digit' }); } catch (e) { return ''; } },
       ago(d) {
         const s = (Date.now() - new Date(d)) / 1000;
         if (s < 60) return 'الآن';
@@ -953,6 +953,27 @@ _e(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&
         }
       }
     };
+
+    // ── حارس القراءة: نص بتباين ضعيف مع خلفيته الفعلية يتحول تلقائياً لنص داكن أو فاتح مقروء (شبكة أمان لما يفوت المصلح) ──
+    const Readable = (() => {
+      const rgb = v => { const m = String(v).match(/rgba?\(([^)]+)\)/); if (!m) return null; const p = m[1].split(/[\s,\/]+/).filter(Boolean).map(parseFloat); return { r: p[0], g: p[1], b: p[2], a: p.length > 3 ? p[3] : 1 }; };
+      const lum = c => [c.r, c.g, c.b].map(v => { v /= 255; return v <= .03928 ? v / 12.92 : Math.pow((v + .055) / 1.055, 2.4); }).reduce((s, v, i) => s + v * [.2126, .7152, .0722][i], 0);
+      const bgOf = el => { for (let e = el; e && e !== document.documentElement; e = e.parentElement) { const st = getComputedStyle(e); if (st.backgroundImage && st.backgroundImage !== 'none') return null; const c = rgb(st.backgroundColor); if (c && c.a > .85) return c; } return rgb(getComputedStyle(document.body).backgroundColor); };
+      let t = 0;
+      const run = () => {
+        const root = document.getElementById('app'); if (!root) return;
+        let n = 0;
+        root.querySelectorAll('*').forEach(el => {
+          if (n > 400 || el.dataset.rd) return;
+          const own = [].some.call(el.childNodes, x => x.nodeType === 3 && x.textContent.trim()); if (!own) return; n++;
+          const st = getComputedStyle(el), fg = rgb(st.color), bg = bgOf(el); if (!fg || !bg || fg.a < .5) return;
+          const a = lum(fg), b = lum(bg), k = (Math.max(a, b) + .05) / (Math.min(a, b) + .05);
+          if (k < 3) { el.style.color = b > .4 ? 'var(--text)' : '#FFFFFF'; el.dataset.rd = '1'; }
+        });
+      };
+      return { check() { clearTimeout(t); t = setTimeout(run, 250); } };
+    })();
+    try { new MutationObserver(() => Readable.check()).observe(document.getElementById('app'), { childList: true, subtree: true }); } catch (e) {}
 
     // شاشات الدخول (مدمجة)
     if (META.auth) {

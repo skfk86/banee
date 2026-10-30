@@ -59,7 +59,7 @@
     .role-opt.on { border-color: var(--primary); background: var(--primary-soft); }
     .role-opt b { display: block; font-size: 15px; } .role-opt small { color: var(--text2); font-size: 12.5px; line-height: 1.6; }
     .role-badge { font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 100px; background: var(--warning-soft); color: var(--warning); }
-    .hbtn[hidden] { display: none; }
+    .hbtn[hidden], .role-pill[hidden] { display: none; } /* بلا هذا يظهر زر الدور فارغاً في التطبيقات أحادية الدور */
     #app { position: fixed; inset: calc(var(--header-h) + var(--safe-top)) 0 0 0; overflow-y: auto; -webkit-overflow-scrolling: touch; }
     body.has-nav #app { bottom: calc(var(--nav-h) + var(--safe-bottom)); }
     .screen { padding: 16px; max-width: 720px; margin: 0 auto; animation: in .22s ease; }

@@ -397,7 +397,17 @@
     const UI = {
       esc(s) { return UI._e(String(s ?? '').replace(/\*\*(.+?)\*\*/g, '$1').replace(/\*\*/g, '').replace(/^\s*(?:>|#{1,6})\s+/gm, '')); },
 _e(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); },
-      icons() { document.querySelectorAll('[data-lucide]').forEach(n => { const v = n.getAttribute('data-lucide'); if (/[A-Z_ ]/.test(v)) n.setAttribute('data-lucide', v.replace(/([a-z0-9])([A-Z])/g, '$1-$2').replace(/[_ ]+/g, '-').toLowerCase()); }); try { window.lucide.createIcons(); } catch (e) {} },
+      icons() { document.querySelectorAll('[data-lucide]').forEach(n => { const v = n.getAttribute('data-lucide'); if (/[A-Z_ ]/.test(v)) n.setAttribute('data-lucide', v.replace(/([a-z0-9])([A-Z])/g, '$1-$2').replace(/[_ ]+/g, '-').toLowerCase()); }); try { window.lucide.createIcons(); } catch (e) {}
+        // أيقونة باسم غير موجود في Lucide تبقى مربعاً فارغاً: نجرّب اسماً قريباً ثم أيقونة بديلة حسب المعنى
+        const L = window.lucide && window.lucide.icons; if (!L || !Object.keys(L).length) return;
+        const has = n => !!L[n.replace(/(^|-)([a-z0-9])/g, (_, a, c) => c.toUpperCase())];
+        const near = { 'sunrise': 'sunrise', 'sun-rise': 'sunrise', 'sunset': 'sunset', 'moon-stars': 'moon-star', 'bed-single': 'bed', 'pray': 'hand', 'prayer': 'hand', 'mosque': 'landmark', 'quran': 'book-open', 'book': 'book-open', 'tasbih': 'circle-dot', 'beads': 'circle-dot', 'favorite': 'heart', 'favorites': 'heart', 'fav': 'heart', 'counter': 'hash', 'stats': 'bar-chart-3', 'statistics': 'bar-chart-3', 'chart': 'bar-chart-3', 'money': 'wallet', 'cash': 'banknote', 'doctor': 'stethoscope', 'food': 'utensils', 'car': 'car', 'delivery': 'truck', 'profile': 'user', 'account': 'user', 'notification': 'bell', 'notifications': 'bell', 'setting': 'settings', 'cart': 'shopping-cart', 'location': 'map-pin', 'time': 'clock', 'date': 'calendar', 'wake': 'alarm-clock', 'wakeup': 'alarm-clock', 'sleep': 'bed', 'morning': 'sunrise', 'evening': 'sunset', 'night': 'moon' };
+        document.querySelectorAll('i[data-lucide]').forEach(n => {
+          const v = n.getAttribute('data-lucide'), base = v.replace(/-(icon|outline|filled|fill|solid|alt|o)$/, '').replace(/[0-9]+$/, '').replace(/-$/, '');
+          const pick = [near[v], base, near[base], base.split('-')[0], near[base.split('-')[0]]].filter(Boolean).find(has);
+          n.setAttribute('data-lucide', pick || 'sparkles');
+        });
+        try { window.lucide.createIcons(); } catch (e) {} },
       toast(msg, type = 'info') {
         document.querySelectorAll('.toast').forEach(t => t.remove());
         const t = document.createElement('div');

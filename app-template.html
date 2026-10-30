@@ -104,6 +104,9 @@
     .card.tap:active, .item.tap:active { transform: scale(.985); }
     .media { aspect-ratio: 4/3; border-radius: var(--r-md); background: var(--surface2); object-fit: cover; width: 100%; }
     .media-sq { aspect-ratio: 1; }
+    /* صورة غير موجودة أو فارغة: خلفية بلون الهوية مع نقش خفيف بدل صندوق رمادي فارغ */
+    .media:empty, .noimg { background: radial-gradient(circle at 78% 22%, color-mix(in srgb, var(--accent) 35%, transparent), transparent 55%), linear-gradient(150deg, color-mix(in srgb, var(--primary) 82%, var(--surface)), var(--primary-dark)) !important; }
+    .media:empty { display: block; min-height: 120px; }
     .list { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg); overflow: hidden; }
     .item { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-bottom: 1px solid var(--border); background: var(--surface); width: 100%; text-align: right; border-inline: 0; border-top: 0; }
     .list .item:last-child { border-bottom: none; }
@@ -972,6 +975,8 @@ _e(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&
       let t = 0;
       const run = () => {
         const root = document.getElementById('app'); if (!root) return;
+        // صور بلا رابط أو فشل تحميلها: نعرض خلفية الهوية بدل الصندوق الرمادي أو أيقونة الصورة المكسورة
+        root.querySelectorAll('img').forEach(im => { const src = im.getAttribute('src'); if (!src || src === 'undefined' || src === 'null' || (im.complete && !im.naturalWidth)) { if (!im.classList.contains('noimg')) { im.classList.add('noimg'); im.removeAttribute('alt'); im.src = 'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=='; } } else if (!im.dataset.rdw) { im.dataset.rdw = '1'; im.addEventListener('error', () => Readable.check(), { once: true }); } });
         let n = 0;
         root.querySelectorAll('*').forEach(el => {
           if (n > 400 || el.dataset.rd) return;

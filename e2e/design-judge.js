@@ -29,7 +29,7 @@ module.exports = async function judge(dir, keys, model) {
   const screens = {};
   for (const f of files) {
     const j = await ask(keys, models, fs.readFileSync(path.join(dir, f)).toString('base64'));
-    if (j) screens[f.replace(/^\d\d-|\.png$/g, '')] = { score: Math.max(1, Math.min(10, j.score)), strengths: (j.strengths || []).slice(0, 3), issues: (j.issues || []).slice(0, 3) };
+    if (j) screens[f.replace(/^\d\d-|\.png$/g, '')] = { score: Math.max(1, Math.min(10, j.score)), strengths: (j.strengths || []).map(x => typeof x === 'string' ? x : Object.values(x || {}).join(' — ')).slice(0, 3), issues: (j.issues || []).map(x => typeof x === 'string' ? x : Object.values(x || {}).join(' — ')).slice(0, 3) };
   }
   const sc = Object.values(screens).map(x => x.score);
   return { model, score: sc.length ? Math.round(sc.reduce((a, b) => a + b, 0) / sc.length * 10) / 10 : null, min: sc.length ? Math.min(...sc) : null, screens };

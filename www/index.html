@@ -4497,7 +4497,7 @@ function designPass(app, key, res, onStep){
     return ids.reduce(function(chain, id){ return chain.then(function(){
       var s = plan.screens.filter(function(x){ return x.id === id; })[0] || {};
       return ask(key, 'judge', { text: 'الشاشة: ' + (s.title || id) + ' — ' + String(s.purpose || '').slice(0, 300), images: [shots[id]] }, true)
-        .then(function(raw){ var j = parseJSON(raw) || {}; judged.push({ id: id, score: Math.max(1, Math.min(10, Number(j.score) || 0)), issues: (j.issues || []).slice(0, 4) }); }, function(){});
+        .then(function(raw){ var j = parseJSON(raw) || {}; judged.push({ id: id, score: Math.max(1, Math.min(10, Number(j.score) || 0)), issues: (j.issues || []).map(function(x){ return typeof x === 'string' ? x : Object.keys(x || {}).map(function(k){ return x[k]; }).join(' — '); }).slice(0, 4) }); }, function(){});
     }); }, Promise.resolve()).then(function(){ return judged; }).then(function(rs){
       rs = rs.filter(function(r){ return r && r.score; });
       var DL = designLimits(), weak = rs.filter(function(r){ return r.score < DL.min && r.issues.length; }).sort(function(a, b){ return a.score - b.score; }).slice(0, DL.max);

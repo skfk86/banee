@@ -410,6 +410,15 @@
     .pro-perks { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
     .pro-perks span { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 600; padding: 5px 10px; border-radius: 100px; background: rgba(255,255,255,.12); color: #fff; }
     .pro-perks .i { width: 13px; height: 13px; color: #FCD34D; }
+    #pv-pick.on { background: var(--primary); color: #fff; }
+    .pick-chip { display: flex; align-items: center; gap: 8px; margin: 0 12px 6px; padding: 8px 10px; border-radius: 12px; background: var(--primary-soft, #EEF2FF); border: 1px dashed var(--primary, #2563EB); font-size: 12.5px; }
+    .pick-chip b { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; min-width: 0; }
+    .pick-chip button { border: 0; background: none; cursor: pointer; color: inherit; padding: 2px; }
+    .ba { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
+    .ba figure { margin: 0; text-align: center; font-size: 11.5px; color: var(--text2); }
+    .ba img { width: 100%; border-radius: 12px; border: 1px solid var(--border); display: block; margin-bottom: 4px; cursor: zoom-in; }
+    .plan-list { list-style: none; margin: 6px 0 0; padding: 0; font-size: 13px; }
+    .plan-list li { display: flex; gap: 6px; align-items: flex-start; padding: 2px 0; }
     .credit-chip.pro { border: 0; color: #451A03; background: linear-gradient(135deg, #FCD34D, #F59E0B); font-weight: 800; }
     .credit-chip { display: inline-flex; align-items: center; gap: 6px; margin-top: 10px; height: 32px; padding: 0 12px; border-radius: 100px; border: 1px solid var(--border); background: var(--surface); color: var(--text2); font-size: 13px; cursor: pointer; }
     .credit-chip[hidden] { display: none; }
@@ -890,6 +899,7 @@
   <symbol id="i-wallet" viewBox="0 0 24 24"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/></symbol><symbol id="i-map-pin" viewBox="0 0 24 24"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></symbol><symbol id="i-users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></symbol><symbol id="i-git-branch" viewBox="0 0 24 24"><path d="M6 3v12"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></symbol><symbol id="i-database" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5M3 12a9 3 0 0 0 18 0"/></symbol><symbol id="i-link" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></symbol><symbol id="i-maximize" viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3M21 8V5a2 2 0 0 0-2-2h-3M3 16v3a2 2 0 0 0 2 2h3M16 21h3a2 2 0 0 0 2-2v-3"/></symbol><symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol><symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6M10 11v6M14 11v6"/></symbol><symbol id="i-book" viewBox="0 0 24 24"><path d="M12 7v14M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/></symbol>
   <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></symbol>
   <symbol id="i-more" viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.5" fill="currentColor"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/><circle cx="12" cy="19" r="1.5" fill="currentColor"/></symbol>
+  <symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="3.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 1v4M12 19v4M1 12h4M19 12h4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
   <symbol id="i-dot" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1" fill="currentColor"/></symbol>
 </svg>
 
@@ -1229,6 +1239,7 @@
       <div class="pv-bar" id="pv-bar">
         <span class="pv-status" id="pv-status"><i></i><b>محلي</b></span>
         <select class="pv-sel" id="pv-screen" onchange="pvGo(this.value)" aria-label="انتقل إلى شاشة"></select>
+        <button class="pv-btn" id="pv-pick" onclick="pickMode()" title="حدّد عنصراً وصف مشكلته" aria-label="تحديد عنصر"><svg class="i"><use href="#i-target"/></svg></button>
         <button class="pv-btn" onclick="stPreview()" title="إعادة التشغيل" aria-label="إعادة التشغيل"><svg class="i"><use href="#i-rotate"/></svg></button>
         <button class="pv-btn" onclick="pvNewUser()" title="مستخدم جديد" aria-label="مستخدم جديد"><svg class="i"><use href="#i-user"/></svg></button>
         <button class="pv-btn" onclick="pvFull(true)" title="ملء الشاشة" aria-label="ملء الشاشة"><svg class="i"><use href="#i-maximize"/></svg></button>
@@ -1239,6 +1250,7 @@
     </section>
     <section class="st-pane" id="st-chat">
       <div class="chat-log" id="chat-log"></div>
+      <div class="pick-chip" id="pick-chip" hidden></div>
       <div class="chat-box">
         <textarea id="chat-in" rows="1" placeholder="اطلب تعديلاً… مثلاً: أضف زر مشاركة في صفحة المنتج" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();stSend()}"></textarea>
         <button class="send" id="chat-send" onclick="stSend()" aria-label="إرسال"><svg class="i"><use href="#i-send"/></svg></button>
@@ -4075,7 +4087,7 @@ function runFlows(app, w, d, note, setCur){
   var chain = Promise.resolve();
   function here(){ return routeScreen(plan, w.location.hash.slice(1) || '/'); }
   function find(sel){
-    if (/^text:/.test(sel)){ var tx = sel.slice(5).trim(); var all = d.querySelectorAll('button, a, [data-act], .item, .card, [role=button]'); for (var i = all.length - 1; i >= 0; i--) if ((all[i].textContent || '').replace(/\s+/g, ' ').indexOf(tx) > -1) return all[i]; return null; }
+    if (/^text:/.test(sel)){ var dg = function(x){ return String(x || '').replace(/[\u0660-\u0669]/g, function(c){ return String(c.charCodeAt(0) - 0x660); }).replace(/\s+/g, ' '); }; var tx = dg(sel.slice(5).trim()); var all = d.querySelectorAll('button, a, [data-act], .item, .card, [role=button]'); for (var i = all.length - 1; i >= 0; i--) if (dg(all[i].textContent).indexOf(tx) > -1) return all[i]; return null; }
     try { var el = d.querySelector('#sheet ' + sel) || d.querySelector(sel); if (el) return el; } catch (e) {}
     // السيناريو خمّن اسماً قريباً (#address-input) والحقل الحقيقي name="address": نجرّب البدائل المعقولة
     // [data-act=X][data-val=Y] والزر الحقيقي data-status="Y" أو data-id="Y": نطابق data-act ثم أي سمة data-* قيمتها Y
@@ -4199,7 +4211,7 @@ function runFlows(app, w, d, note, setCur){
         });
         else if (st.expect) {
           // نص قد يتأخر تحميله أو يختلف في التشكيل والمسافات (ابدأ أذكارَ  الصباح): ننتظر حتى ٣ ثوانٍ ونقارن بعد التطبيع
-          var norm = function(x){ return String(x || '').replace(/[\u064B-\u0652\u0670\u0640]/g, '').replace(/[أإآ]/g, 'ا').replace(/ة/g, 'ه').replace(/ى/g, 'ي').replace(/\s+/g, ' ').trim(); };
+          var norm = function(x){ return String(x || '').replace(/[\u0660-\u0669]/g, function(c){ return String(c.charCodeAt(0) - 0x660); }).replace(/[\u06F0-\u06F9]/g, function(c){ return String(c.charCodeAt(0) - 0x6F0); }).replace(/[\u064B-\u0652\u0670\u0640]/g, '').replace(/[أإآ]/g, 'ا').replace(/ة/g, 'ه').replace(/ى/g, 'ي').replace(/\s+/g, ' ').trim(); };
           var want = norm(st.expect), t0 = Date.now();
           p = (function poll(){ if (norm(d.body.textContent).indexOf(want) > -1) return Promise.resolve(); if (Date.now() - t0 > 3000) { fail('كان متوقعاً ظهور «' + String(st.expect).slice(0, 60) + '» ولم يظهر'); return Promise.resolve(); } return sleep(300).then(poll); })();
         }
@@ -5356,7 +5368,9 @@ ROLES.editor =
 '{"tool":"look","route":"/orders","role":"driver"} ← افتح الشاشة كما يراها المستخدم: صورة لها ترفق بالخطوة التالية + الأزرار والحقول والنص الظاهر وأخطاء التشغيل. استخدمها لترى المشكلة التي يصفها المستخدم بعينك، ولتتأكد من شكل التعديل بعد تنفيذه\n' +
 '{"tool":"try","steps":[{"role":"customer"},{"go":"/"},{"click":"[data-act=open][data-id=products-1]"},{"fill":{"#qty":"2"}},{"click":"text:أضف للسلة"},{"expect":"تمت الإضافة"},{"expectDb":{"col":"orders","min":1}}]} ← جرّب بيديك كالمستخدم: تنفّذ الخطوات وتعيد أين توقفت ولماذا + ما يظهر في النهاية + صورة. استخدمها لإعادة إنتاج الخطأ قبل الإصلاح، ثم للتأكد أنه أُصلح\n' +
 '{"tool":"ask","question":"سؤال واحد قصير"} ← فقط إذا كان الطلب غامضاً فعلاً ولا يمكن تخمين المقصود بشكل معقول\n' +
-'{"tool":"done","reply":"ردك للمستخدم"} ← عند الانتهاء\n' +
+'{"tool":"plan","items":["بند ١","بند ٢"]} ← لطلب فيه ٣ أجزاء أو أكثر: اكتب الخطة أولاً بنوداً قصيرة يفهمها المستخدم، ثم نفّذها بنداً بنداً\n' +
+'{"tool":"remember","note":"قرار ثابت للمستخدم"} ← احفظ تفضيلاً دائماً قاله المستخدم (لا أريد تسجيل دخول، الألوان هادئة، الأسعار بالجنيه...) ليُحترم في كل الطلبات القادمة\n' +
+'{"tool":"done","reply":"ردك للمستخدم","checked":[1,2]} ← عند الانتهاء، وchecked أرقام بنود الخطة التي نُفّذت وتحققت منها\n' +
 'عندما يشتكي المستخدم من خطأ أو شكل: ابدأ بـ look أو try لترى ما يراه هو فعلاً، وبعد التعديل أعد نفس look/try لتتأكد بعينك قبل done. لا تقل «أصلحته» دون أن تراه يعمل.\n' +
 'المنهج: (١) افهم الطلب ومكانه: اقرأ الشاشات المعنية وابحث عن الأماكن المرتبطة قبل أي تعديل. (٢) نفّذ بأقل تغيير يحقق الطلب كاملاً: ميزة جديدة تعني الواجهة + الحفظ + العرض في كل شاشة تحتاجها + التنقل إليها. (٣) شغّل run بعد التعديل وأصلح ما ينكسر. (٤) أنهِ بـ done.\n' +
 'reply: عربي بسيط ومختصر منسّق Markdown: ماذا فعلت بالضبط، وأين يجده المستخدم في التطبيق وكيف يجرّبه. إن كان سؤالاً بلا تعديل أجب مباشرة بـ done.\n' +
@@ -5365,7 +5379,7 @@ ROLES.editor =
 THINK.editor = 'low';
 
 function chatAgent(app, key, msg, onStep){
-  var plan = app.ck.plan, MAX = paidUser() ? 24 : 16, n = 0, hist = [], touched = {}, asked = null, reply = '', lastImg = null;
+  var plan = app.ck.plan, MAX = paidUser() ? 24 : 16, n = 0, hist = [], touched = {}, asked = null, reply = '', lastImg = null, planItems = [], checked = [];
   var history = (app.chat || []).slice(-9, -1).filter(function(m){ return m.role !== 'sys'; }).map(function(m){ return (m.role === 'me' ? 'المستخدم: ' : 'أنت: ') + String(m.text).slice(0, 600); }).join('\n');
   function numbered(js){ return String(js || '').split('\n').map(function(l, i){ return (i + 1) + '| ' + l; }).join('\n'); }
   function scr(id){ return plan.screens.filter(function(s){ return s.id === id; })[0]; }
@@ -5375,6 +5389,8 @@ function chatAgent(app, key, msg, onStep){
       '\nالشاشات:\n' + plan.screens.map(function(s){ return '- ' + s.id + ' ' + s.route + ' «' + s.title + '»' + (s.nav ? ' [قائمة سفلية]' : '') + (s.roles && s.roles.length ? ' أدوار: ' + s.roles.join('/') : '') + ' (' + String(app.ck.screens[s.id] || '').split('\n').length + ' سطر)'; }).join('\n') +
       '\nالمجموعات: ' + JSON.stringify(plan.collections || []).slice(0, 3000) + dataDoc(plan) +
       (ST.file && scr(ST.file) ? '\nالملف المفتوح الآن في المحرر: ' + ST.file : '') +
+      ((app.memory || []).length ? '\n\nقرارات صاحب التطبيق الثابتة (احترمها دائماً ولا تخالفها إلا إن طلب ذلك صراحة):\n- ' + app.memory.join('\n- ') : '') +
+      (planItems.length ? '\n\nخطتك المعلنة للمستخدم:\n' + planItems.map(function(x, i){ return (i + 1) + '. ' + x; }).join('\n') : '') +
       (history ? '\n\nآخر المحادثة:\n' + history : '') +
       (app.ck.runtime && runtimeIssues(app.ck.runtime) ? '\n\nأخطاء من آخر تشغيل فعلي: ' + issuesText(app, app.ck.runtime).slice(0, 1500) : '') +
       '\n\nطلب المستخدم الآن: ' + msg +
@@ -5422,6 +5438,8 @@ function chatAgent(app, key, msg, onStep){
       if (['gradient','solid','soft','none'].indexOf(a.hero) > -1) { dz.heroStyle = a.hero; said.push('البانر'); }
       if (typeof a.auth === 'boolean') { if (!a.auth && (plan.roles || []).length > 1) return Promise.resolve('لا يمكن إلغاء الدخول في تطبيق متعدد الأدوار'); plan.auth = a.auth; app.auth = a.auth ? 'yes' : 'no'; said.push('تسجيل الدخول'); } if (a.name) { plan.name = String(a.name).slice(0, 40); app.name = plan.name; said.push('الاسم'); } if (said.length) touched.__meta = 1; return Promise.resolve(said.length ? 'غُيّر ' + said.join(' و') : 'لا شيء صالح'); }
     if (a.tool === 'run') return runtimeTest(app).then(function(r){ setRuntime(app, r); return 'نتيجة التشغيل:\n' + issuesText(app, r); });
+    if (a.tool === 'plan') { planItems = (Array.isArray(a.items) ? a.items : []).map(String).filter(Boolean).slice(0, 10); return Promise.resolve('سُجّلت الخطة (' + planItems.length + ' بنود)، نفّذها بنداً بنداً'); }
+    if (a.tool === 'remember') { var nt = String(a.note || '').trim().slice(0, 160); if (!nt) return Promise.resolve('note فارغ'); app.memory = (app.memory || []).filter(function(x){ return x !== nt; }).concat([nt]).slice(-12); return Promise.resolve('حُفظ في ذاكرة التطبيق'); }
     if (a.tool === 'look') return liveLook(app, String(a.route || '/'), a.role || null).then(function(r){ lastImg = r.image; return r.text + (r.image ? '\n(صورة الشاشة مرفقة بهذه الخطوة)' : ''); });
     if (a.tool === 'try') { if (!Array.isArray(a.steps) || !a.steps.length) return Promise.resolve('steps مطلوبة'); return liveTry(app, a.steps.slice(0, 20)).then(function(r){ lastImg = r.image; return r.text + (r.image ? '\n(صورة الشاشة مرفقة بهذه الخطوة)' : ''); }); }
     return Promise.resolve('أداة غير معروفة');
@@ -5434,13 +5452,13 @@ function chatAgent(app, key, msg, onStep){
     return ask(key, 'editor', img ? { text: ctx(), images: [img] } : ctx(), true).then(function(raw){
       var a = parseJSON(raw) || {};
       if (onStep) onStep(n, a);
-      if (a.tool === 'done' || !a.tool) { reply = String(a.reply || a.think || ''); return; }
+      if (a.tool === 'done' || !a.tool) { reply = String(a.reply || a.think || ''); checked = Array.isArray(a.checked) ? a.checked.map(Number) : []; return; }
       if (a.tool === 'ask') { asked = String(a.question || ''); return; }
       var call = a.tool + (a.screen || a.id ? ' ' + (a.screen || a.id) : '') + (a.text ? ' «' + String(a.text).slice(0, 50) + '»' : '') + (a.think ? ' — ' + String(a.think).slice(0, 180) : '');
       return act(a).then(function(obs){ hist.push({ call: call, obs: String(obs) }); return loop(); });
     });
   }
-  return loop().then(function(){ return { reply: reply, asked: asked, touched: touched, steps: n, log: hist }; });
+  return loop().then(function(){ return { reply: reply, asked: asked, touched: touched, steps: n, log: hist, plan: planItems, checked: checked }; });
 }
 var ST = { id: null, file: null, tab: 'editor', dirty: false, busy: false };
 
@@ -6074,13 +6092,18 @@ function edPair(e, ta){
 }
 
 // ── المساعد ──
+function baHTML(app, mi){
+  var b = ST.shots && ST.shots[app.id + ':' + mi]; if (!b || !b.after) return '';
+  var im = function(x, t){ return '<figure><img src="data:image/jpeg;base64,' + x + '" alt="' + t + '" onclick="window.open(this.src)">' + t + '</figure>'; };
+  return '<div class="ba">' + (b.before ? im(b.before, 'قبل') : '') + im(b.after, 'بعد') + '</div>';
+}
 function stChat(){
   var app = stApp(), log = document.getElementById('chat-log');
   log.innerHTML = app.chat.map(function(m, mi){
     if (m.role === 'sys') return '<div class="msg sys">'+ic('rotate','i-sm')+esc(m.text)+'</div>';
     var files = (m.files||[]).map(function(f){ return '<button class="fchip" onclick="stOpenFile(\''+f.id+'\')">'+ic(f.kind==='add'?'plus':f.kind==='remove'?'x-circle':'code','i-sm')+esc(f.id)+'.js</button>'; }).join('');
     return '<div class="msg '+m.role+'">'+(m.role==='ai'?'<span class="msg-av">'+ic('sparkles','i-sm')+'</span>':'')+
-      '<div class="msg-b">'+(m.role==='ai' ? '<div class="md">'+md(m.text)+'</div>' : '<p>'+esc(m.text).replace(/\n/g,'<br>')+'</p>')+(files?'<div class="fchips">'+files+'</div>':'')+(m.role==='ai' ? '<button class="msg-rep" onclick="reportAi('+mi+')"'+(m.reported?' disabled':'')+'>'+(m.reported?'أُبلغ عنه':'إبلاغ')+'</button>' : '')+'</div></div>';
+      '<div class="msg-b">'+(m.role==='ai' ? '<div class="md">'+md(m.text)+'</div>' : '<p>'+esc(m.text).replace(/\n/g,'<br>')+'</p>')+(files?'<div class="fchips">'+files+'</div>':'')+baHTML(app, mi)+(m.role==='ai' ? '<button class="msg-rep" onclick="reportAi('+mi+')"'+(m.reported?' disabled':'')+'>'+(m.reported?'أُبلغ عنه':'إبلاغ')+'</button>' : '')+'</div></div>';
   }).join('') + (ST.busy ? '<div class="msg ai"><span class="msg-av">'+ic('sparkles','i-sm')+'</span><div class="msg-b typing"><i></i><i></i><i></i><span id="chat-stage">'+esc(ST.stage||'يقرأ ملفات التطبيق')+'</span></div></div>' : '');
   log.scrollTop = log.scrollHeight;
   document.getElementById('chat-send').disabled = ST.busy;
@@ -6089,6 +6112,48 @@ function stAskFix(){
   var errs = stIssues(); if (!errs.length) return;
   document.getElementById('chat-in').value = 'أصلح هذه المشاكل في ' + ST.file + '.js:\n- ' + errs.join('\n- ');
   stTab('chat'); stSend();
+}
+// ── تحديد عنصر من المعاينة: المستخدم يضغط العنصر ويصف مشكلته، فيصل للمساعد بمكانه وكوده وشكله ──
+function pickMode(on){
+  var f = document.getElementById('st-frame'), w = f && f.contentWindow, d = w && w.document, btn = document.getElementById('pv-pick');
+  if (!d) return;
+  on = on == null ? !ST.picking : on; ST.picking = on; if (btn) btn.classList.toggle('on', on);
+  var st = d.getElementById('__pickcss');
+  if (!on) { if (st) st.remove(); if (ST.pickOff) ST.pickOff(); ST.pickOff = null; return; }
+  if (!st) { st = d.createElement('style'); st.id = '__pickcss'; st.textContent = '.__pk{outline:2.5px solid #2563EB!important;outline-offset:2px;cursor:crosshair!important;background-color:rgba(37,99,235,.08)!important}'; d.head.appendChild(st); }
+  toast('اضغط على العنصر الذي فيه المشكلة في المعاينة', 'suc');
+  var cur = null;
+  var over = function(e){ if (cur) cur.classList.remove('__pk'); cur = e.target.closest('#app *') || null; if (cur) cur.classList.add('__pk'); };
+  var click = function(e){
+    var el = e.target.closest('#app *'); if (!el) return;
+    e.preventDefault(); e.stopPropagation(); el.classList.remove('__pk');
+    ST.pick = pickInfo(w, d, el); pickMode(false); pickChip();
+    stTab('chat'); var inp = document.getElementById('chat-in'); if (inp) { inp.placeholder = 'ما المشكلة في هذا العنصر؟ مثلاً: الزر لا يعمل، النص صغير، اجعله أوضح…'; inp.focus(); }
+  };
+  d.addEventListener('mouseover', over, true); d.addEventListener('click', click, true);
+  ST.pickOff = function(){ d.removeEventListener('mouseover', over, true); d.removeEventListener('click', click, true); if (cur) cur.classList.remove('__pk'); };
+}
+function pickInfo(w, d, el){
+  var app = stApp(), plan = app.ck.plan, path = (w.location.hash || '#/').slice(1) || '/', sid = routeScreen(plan, path);
+  // شاشة الدخول المدمجة ليست من شاشات الخطة: نسمّيها باسمها حتى لا يعدّل المساعد الرئيسية بالخطأ
+  if (/^\/(login|register)$/.test(path) && !plan.screens.some(function(x){ return x.route === path; })) sid = 'login (مدمجة: لتغييرها أضف شاشة route "' + path + '" بـ add)';
+  // العنصر ذو الوظيفة الأقرب (زر أو بطاقة) أوضح للمساعد من نص داخلي صغير
+  var host = el.closest('[data-act], button, a, .card, .item, .stat, .hero, .chip, .badge, input, textarea, select, img') || el;
+  var sel = []; for (var e = host; e && e.id !== 'app' && sel.length < 5; e = e.parentElement) { var t = e.tagName.toLowerCase() + (e.id ? '#' + e.id : '') + (e.getAttribute('data-act') ? '[data-act=' + e.getAttribute('data-act') + ']' : '') + (e.className && typeof e.className === 'string' ? '.' + e.className.trim().split(/\s+/).filter(function(c){ return c !== '__pk'; }).slice(0, 3).join('.') : ''); sel.unshift(t); }
+  var cs = w.getComputedStyle(host), r = host.getBoundingClientRect();
+  var html = host.outerHTML.replace(/ class="([^"]*)\s*__pk"/, ' class="$1"').replace(/\s+/g, ' ').slice(0, 1500);
+  return { screen: sid, route: path, path: sel.join(' > '), text: (host.innerText || host.value || '').replace(/\s+/g, ' ').trim().slice(0, 160), html: html,
+    style: 'لون ' + cs.color + ' · خلفية ' + cs.backgroundColor + ' · خط ' + cs.fontSize + ' ' + cs.fontWeight + ' · حجم ' + Math.round(r.width) + '×' + Math.round(r.height) + 'px', label: (host.getAttribute('data-act') || host.tagName.toLowerCase()) };
+}
+function pickChip(){
+  var c = document.getElementById('pick-chip'); if (!c) return;
+  if (!ST.pick) { c.hidden = true; c.innerHTML = ''; return; }
+  c.hidden = false;
+  c.innerHTML = '<svg class="i i-sm"><use href="#i-target"/></svg><b>العنصر المحدد: ' + esc(ST.pick.text ? '«' + ST.pick.text.slice(0, 40) + '»' : ST.pick.label) + ' · شاشة ' + esc(ST.pick.screen || '') + '</b><button onclick="ST.pick=null;pickChip()" aria-label="إلغاء التحديد"><svg class="i i-sm"><use href="#i-x"/></svg></button>';
+}
+function pickPrompt(p){
+  return '\n\n[العنصر الذي حدده المستخدم في المعاينة — طلبه يخص هذا العنصر تحديداً]\nالشاشة: ' + p.screen + ' (المسار ' + p.route + ')\nموقعه: ' + p.path + '\nنصه: ' + (p.text || '—') + '\nشكله الحالي: ' + p.style + '\nكوده الظاهر: ' + p.html +
+    '\nابدأ بـ look على هذا المسار لترى العنصر، وابحث عنه بـ search بجزء مميز من كوده أو data-act، وعدّل هذا العنصر نفسه دون غيره ما لم يلزم.';
 }
 function stSend(){
   var app = stApp(), inp = document.getElementById('chat-in'), msg = inp.value.trim();
@@ -6111,13 +6176,16 @@ function stSend(){
     .then(function(){ ST.busy = false; saveApps(); if (ST.id === app.id) { stRender(); stPreview(); } });
     return;
   }
-  inp.value = ''; app.chat.push({ role: 'me', text: msg }); ST.busy = true; ST.stage = 'يفهم طلبك'; stChat();
-  var plan = app.ck.plan;
+  var pick = ST.pick; ST.pick = null; pickChip(); inp.placeholder = 'اطلب تعديلاً… مثلاً: أضف زر مشاركة في صفحة المنتج';
+  inp.value = ''; app.chat.push({ role: 'me', text: pick ? msg + '\n— عن العنصر: ' + (pick.text ? '«' + pick.text.slice(0, 50) + '»' : pick.label) + ' في شاشة ' + pick.screen : msg }); ST.busy = true; ST.stage = 'يفهم طلبك'; stChat();
+  var plan = app.ck.plan, agentMsg = pick ? msg + pickPrompt(pick) : msg;
+  // صورة «قبل»: الشاشة المعنية (المحددة، أو الأولى) قبل أي تعديل، للمقارنة بعده
+  var shotRoute = pick ? pick.route : null, beforeShot = shotRoute ? liveLook(app, shotRoute, null).then(function(r){ return r.image; }, function(){ return null; }) : Promise.resolve(null);
   function stage(t){ ST.stage = t; var el = document.getElementById('chat-stage'); if (el) el.textContent = t; }
   var prev = { ck: deepCopy({ plan: app.ck.plan, screens: app.ck.screens, seed: app.ck.plan.seed || null }), color: app.color, name: app.name, approved: app.approved, screens: app.screens };
   var base = baseline(app).catch(function(){ return null; }), b0 = null;
-  var LBL = { read: 'يقرأ ', search: 'يبحث عن ', edit: 'يعدّل ', write: 'يعيد كتابة ', add: 'يضيف شاشة ', remove: 'يحذف ', collection: 'يضيف بيانات ', seed: 'يضيف بيانات أولية ', set: 'يغيّر الإعدادات', run: 'يشغّل التطبيق ويجرّبه', look: 'ينظر إلى الشاشة ', try: 'يجرّب بنفسه كمستخدم', ask: 'يحتاج توضيحاً', done: 'يكتب الرد' };
-  Promise.resolve(base).then(function(x){ b0 = x; return chatAgent(app, key, msg, function(k, a){ stage((LBL[a.tool] || 'يعمل') + (a.screen || a.id || (a.text ? '«' + String(a.text).slice(0, 24) + '»' : '') || '') ); }); })
+  var LBL = { plan: 'يكتب خطة التنفيذ', remember: 'يحفظ تفضيلك ', read: 'يقرأ ', search: 'يبحث عن ', edit: 'يعدّل ', write: 'يعيد كتابة ', add: 'يضيف شاشة ', remove: 'يحذف ', collection: 'يضيف بيانات ', seed: 'يضيف بيانات أولية ', set: 'يغيّر الإعدادات', run: 'يشغّل التطبيق ويجرّبه', look: 'ينظر إلى الشاشة ', try: 'يجرّب بنفسه كمستخدم', ask: 'يحتاج توضيحاً', done: 'يكتب الرد' };
+  Promise.all([base, beforeShot]).then(function(xs){ b0 = xs[0]; ST.before = xs[1]; return chatAgent(app, key, agentMsg, function(k, a){ stage((LBL[a.tool] || 'يعمل') + (a.screen || a.id || (a.text ? '«' + String(a.text).slice(0, 24) + '»' : '') || '') ); }); })
   .then(function(r){
     var ids = Object.keys(r.touched).filter(function(k){ return k.indexOf('__') !== 0; }), changed = ids.length || r.touched.__data || r.touched.__meta;
     if (!changed) { app.chat.push({ role: 'ai', text: r.asked ? r.asked : (r.reply || 'لم أجد ما يحتاج تعديلاً. صف لي ما تريده بتفصيل أكثر.') }); return; }
@@ -6145,7 +6213,10 @@ function stSend(){
       }
       app.ver = verNo(app) + 1;
       var files = ids.map(function(id){ return { id: id, kind: r.touched[id] }; });
-      app.chat.push({ role: 'ai', text: (r.reply || 'تم التعديل.') + (r.asked ? '\n\n' + r.asked : ''), files: files });
+      var planTxt = r.plan && r.plan.length ? '\n\n**الخطة:**\n' + r.plan.map(function(x, i){ return ((r.checked || []).indexOf(i + 1) > -1 ? '✅ ' : '⬜ ') + x; }).join('\n') : '';
+      app.chat.push({ role: 'ai', text: (r.reply || 'تم التعديل.') + planTxt + (r.asked ? '\n\n' + r.asked : ''), files: files });
+      var mi = app.chat.length - 1, rt = shotRoute || (function(){ var s0 = app.ck.plan.screens.filter(function(x){ return x.id === ids[0]; })[0]; return s0 && !/:/.test(s0.route) ? s0.route : null; })();
+      if (rt) liveLook(app, rt, null).then(function(a){ if (!a.image) return; ST.shots = ST.shots || {}; ST.shots[app.id + ':' + mi] = { before: ST.before, after: a.image }; if (ST.id === app.id) stChat(); }, function(){});
       if (ST.id === app.id && files[0] && files[0].kind !== 'remove') ST.file = files[0].id;
     });
   }).catch(function(e){

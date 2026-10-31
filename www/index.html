@@ -5352,8 +5352,10 @@ function liveTry(app, steps){
       });
   });
 }
+var BANEE_MAKER = 'علي القاسم'; // صاحب بانِي ومصممه: يذكره المساعد إذا سُئل من صنعه
 ROLES.editor =
 'أنت مهندس تطبيقات خبير يعمل داخل محرر بانِي كوكيل مستقل. المستخدم صاحب التطبيق يكلمك بالعربية العامية أو الفصحى ويطلب تعديلاً أو ميزة جديدة أو إصلاحاً أو يسأل سؤالاً. افهم ما يريده فعلاً ونفّذه كاملاً حتى يعمل.\n' +
+'هويتك: أنت «بانِي»، مساعد ذكي لبناء تطبيقات أندرويد بالعربي. صمّمك وبرمجك ' + BANEE_MAKER + '. إذا كانت الرسالة تحية أو سؤالاً عاماً أو عنك (مرحبا، السلام عليكم، كيف حالك، من أنت، من صممك أو برمجك، ماذا تستطيع، شكراً) فلا تستخدم أي أداة: أجب فوراً بـ done ورد ودود قصير طبيعي باللهجة نفسها، وعرّف بنفسك عند السؤال (اسمك، ومن صممك، وأنك تبني التطبيقات وتعدّلها وتجرّبها بنفسك)، ثم اقترح بجملة ما يمكن أن تفعله في تطبيقه الآن.\n' +
 'أعد JSON فقط في كل خطوة: {"think":"تفكيرك القصير","tool":"اسم الأداة", ...معاملاتها}\n' +
 'الأدوات:\n' +
 '{"tool":"read","screen":"id"} ← كود شاشة بأرقام الأسطر\n' +
@@ -6168,16 +6170,20 @@ function pickMode(on){
   if (!d) return;
   on = on == null ? !ST.picking : on; ST.picking = on; if (btn) btn.classList.toggle('on', on);
   var st = d.getElementById('__pickcss');
-  if (!on) { if (st) st.remove(); if (ST.pickOff) ST.pickOff(); ST.pickOff = null; return; }
-  if (!st) { st = d.createElement('style'); st.id = '__pickcss'; st.textContent = '.__pk{outline:2.5px solid #2563EB!important;outline-offset:2px;cursor:crosshair!important;background-color:rgba(37,99,235,.08)!important}'; d.head.appendChild(st); }
-  toast('اضغط على العنصر الذي فيه المشكلة في المعاينة', 'suc');
+  if (!on) { if (st) st.remove(); [].forEach.call(d.querySelectorAll('.__pkon'), function(x){ x.classList.remove('__pkon'); }); if (ST.pickOff) ST.pickOff(); ST.pickOff = null; pickChip(); return; }
+  if (!st) { st = d.createElement('style'); st.id = '__pickcss'; st.textContent = '.__pk{outline:2.5px dashed #2563EB!important;outline-offset:2px;cursor:crosshair!important}.__pkon{outline:3px solid #F59E0B!important;outline-offset:2px;background-color:rgba(245,158,11,.12)!important}'; d.head.appendChild(st); }
+  toast('اضغط على عنصر أو أكثر في المعاينة، ثم «تم التحديد»', 'suc');
   var cur = null;
   var over = function(e){ if (cur) cur.classList.remove('__pk'); cur = e.target.closest('#app *') || null; if (cur) cur.classList.add('__pk'); };
+  // تحديد متعدد: كل ضغطة تضيف عنصراً (أو تزيله إن كان محدداً)، والتحديد يبقى مفعّلاً حتى «تم»
+  ST.picks = ST.picks || [];
+  var mark = function(){ [].forEach.call(d.querySelectorAll('.__pkon'), function(x){ x.classList.remove('__pkon'); }); ST.picks.forEach(function(p){ if (p.el && p.el.isConnected) p.el.classList.add('__pkon'); }); };
   var click = function(e){
     var el = e.target.closest('#app *'); if (!el) return;
     e.preventDefault(); e.stopPropagation(); el.classList.remove('__pk');
-    ST.pick = pickInfo(w, d, el); pickMode(false); pickChip();
-    stTab('chat'); var inp = document.getElementById('chat-in'); if (inp) { inp.placeholder = 'ما المشكلة في هذا العنصر؟ مثلاً: الزر لا يعمل، النص صغير، اجعله أوضح…'; inp.focus(); }
+    var info = pickInfo(w, d, el), at = ST.picks.findIndex(function(p){ return p.el === info.el; });
+    if (at > -1) ST.picks.splice(at, 1); else if (ST.picks.length < 8) ST.picks.push(info); else toast('ثمانية عناصر كحد أقصى في الطلب الواحد', 'err');
+    mark(); pickChip();
   };
   d.addEventListener('mouseover', over, true); d.addEventListener('click', click, true);
   ST.pickOff = function(){ d.removeEventListener('mouseover', over, true); d.removeEventListener('click', click, true); if (cur) cur.classList.remove('__pk'); };
@@ -6191,22 +6197,44 @@ function pickInfo(w, d, el){
   var sel = []; for (var e = host; e && e.id !== 'app' && sel.length < 5; e = e.parentElement) { var t = e.tagName.toLowerCase() + (e.id ? '#' + e.id : '') + (e.getAttribute('data-act') ? '[data-act=' + e.getAttribute('data-act') + ']' : '') + (e.className && typeof e.className === 'string' ? '.' + e.className.trim().split(/\s+/).filter(function(c){ return c !== '__pk'; }).slice(0, 3).join('.') : ''); sel.unshift(t); }
   var cs = w.getComputedStyle(host), r = host.getBoundingClientRect();
   var html = host.outerHTML.replace(/ class="([^"]*)\s*__pk"/, ' class="$1"').replace(/\s+/g, ' ').slice(0, 1500);
-  return { screen: sid, route: path, path: sel.join(' > '), text: (host.innerText || host.value || '').replace(/\s+/g, ' ').trim().slice(0, 160), html: html,
+  return { el: host, screen: sid, route: path, path: sel.join(' > '), text: (host.innerText || host.value || '').replace(/\s+/g, ' ').trim().slice(0, 160), html: html,
     style: 'لون ' + cs.color + ' · خلفية ' + cs.backgroundColor + ' · خط ' + cs.fontSize + ' ' + cs.fontWeight + ' · حجم ' + Math.round(r.width) + '×' + Math.round(r.height) + 'px', label: (host.getAttribute('data-act') || host.tagName.toLowerCase()) };
 }
+function pickLabel(p){ return (p.text ? '«' + p.text.slice(0, 26) + '»' : p.label) + ' · ' + String(p.screen || '').split(' ')[0]; }
 function pickChip(){
   var c = document.getElementById('pick-chip'); if (!c) return;
-  if (!ST.pick) { c.hidden = true; c.innerHTML = ''; return; }
+  var P = ST.picks || [];
+  if (!P.length) { c.hidden = true; c.innerHTML = ''; return; }
   c.hidden = false;
-  c.innerHTML = '<svg class="i i-sm"><use href="#i-target"/></svg><b>العنصر المحدد: ' + esc(ST.pick.text ? '«' + ST.pick.text.slice(0, 40) + '»' : ST.pick.label) + ' · شاشة ' + esc(ST.pick.screen || '') + '</b><button onclick="ST.pick=null;pickChip()" aria-label="إلغاء التحديد"><svg class="i i-sm"><use href="#i-x"/></svg></button>';
+  c.innerHTML = '<svg class="i i-sm"><use href="#i-target"/></svg><b>' + (P.length === 1 ? 'العنصر المحدد: ' + esc(pickLabel(P[0])) : toAr(P.length) + ' عناصر محددة: ' + P.map(function(p, i){ return toAr(i + 1) + ') ' + esc(pickLabel(p)); }).join(' · ')) + '</b>' +
+    (ST.picking ? '<button class="btn btn-primary btn-sm" style="padding:4px 10px" onclick="pickDone()">تم التحديد</button>' : '') +
+    '<button onclick="ST.picks=[];pickMode(false)" aria-label="إلغاء التحديد"><svg class="i i-sm"><use href="#i-x"/></svg></button>';
 }
-function pickPrompt(p){
-  return '\n\n[العنصر الذي حدده المستخدم في المعاينة — طلبه يخص هذا العنصر تحديداً]\nالشاشة: ' + p.screen + ' (المسار ' + p.route + ')\nموقعه: ' + p.path + '\nنصه: ' + (p.text || '—') + '\nشكله الحالي: ' + p.style + '\nكوده الظاهر: ' + p.html +
-    '\nابدأ بـ look على هذا المسار لترى العنصر، وابحث عنه بـ search بجزء مميز من كوده أو data-act، وعدّل هذا العنصر نفسه دون غيره ما لم يلزم.';
+function pickDone(){
+  pickMode(false); stTab('chat');
+  var inp = document.getElementById('chat-in'); if (inp) { inp.placeholder = (ST.picks || []).length > 1 ? 'ما المطلوب في هذه العناصر؟ مثلاً: وحّد شكل هذه الأزرار، أو كبّر هذه العناوين…' : 'ما المشكلة في هذا العنصر؟ مثلاً: الزر لا يعمل، النص صغير، اجعله أوضح…'; inp.focus(); }
+}
+function pickPrompt(P){
+  return '\n\n[' + (P.length > 1 ? toAr(P.length) + ' عناصر حددها المستخدم في المعاينة — طلبه يخصها كلها' : 'العنصر الذي حدده المستخدم في المعاينة — طلبه يخص هذا العنصر تحديداً') + ']' +
+    P.map(function(p, i){ return '\n— العنصر ' + (i + 1) + ': الشاشة ' + p.screen + ' (المسار ' + p.route + ')\n  موقعه: ' + p.path + '\n  نصه: ' + (p.text || '—') + '\n  شكله الحالي: ' + p.style + '\n  كوده الظاهر: ' + p.html.slice(0, P.length > 3 ? 600 : 1500); }).join('') +
+    '\nابدأ بـ look على المسار لترى العناصر، وابحث عنها بـ search بجزء مميز من كودها أو data-act، وعدّل هذه العناصر نفسها دون غيرها ما لم يلزم.' + (P.length > 2 ? ' اكتب خطة plan ببند لكل عنصر.' : '');
+}
+function smallTalk(msg){
+  var t = msg.replace(/[؟?!.،,]/g, ' ').replace(/\s+/g, ' ').trim();
+  if (t.length > 60) return null;
+  if (/^(مرحب[اًا]?|اهلا|أهلا|هلا|السلام عليكم|سلام|هاي|hi|hello|صباح الخير|مساء الخير)( (يا )?(باني|بانِي))?( كيف حالك| كيفك)?$/i.test(t)) return 'أهلاً وسهلاً! 👋 أنا **بانِي**. تحب نعدّل شيئاً في «' + esc(stApp().name) + '» أو نضيف ميزة جديدة؟';
+  if (/^(كيف حالك|كيفك|عامل ايه|شلونك|كيف الحال)$/.test(t)) return 'بخير والحمد لله، وجاهز أشتغل معك 😊 ماذا تريد أن نحسّن في تطبيقك اليوم؟';
+  if (/^(شكرا|شكراً|مشكور|تسلم|يعطيك العافية|جزاك الله خير[اً]?)( (لك|جزيلا|جزيلاً))?$/.test(t)) return 'العفو! 🌟 إذا احتجت أي تعديل آخر أنا هنا.';
+  if (/(من انت|من أنت|منو انت|عرفني بنفسك|عرّف بنفسك|ما اسمك|شنو اسمك)/.test(t)) return 'أنا **بانِي** 🤖، مساعد ذكي لبناء تطبيقات أندرويد بالعربي. صمّمني وبرمجني **' + BANEE_MAKER + '**.\n\nأستطيع أن أعدّل تطبيقك بالكلام العادي: أضيف شاشات وميزات، أغيّر الشكل والألوان، وأصلح الأخطاء، وأجرّب التطبيق بنفسي بعد كل تعديل. جرّب: «أضف زر مشاركة في الصفحة الرئيسية».';
+  if (/(من (صممك|صمّمك|برمجك|صنعك|طورك|عملك|سواك)|مين (صممك|برمجك|عملك))/.test(t)) return 'صمّمني وبرمجني **' + BANEE_MAKER + '** 💙، لأساعد أي شخص يبني تطبيقه بالعربي دون أن يكتب سطر كود.';
+  if (/^(ماذا تستطيع|ايش تقدر تسوي|شنو تقدر تعمل|ماذا يمكنك|ساعدني)$/.test(t)) return 'أستطيع:\n- إضافة شاشات وميزات جديدة\n- تغيير التصميم والألوان وشكل القائمة\n- إصلاح أي زر أو شاشة لا تعمل (حدّدها بزر 🎯 في المعاينة)\n- تجربة التطبيق بنفسي والتأكد قبل أن أقول «تم»\n\nقل لي ماذا تريد بكلامك العادي.';
+  return null;
 }
 function stSend(){
   var app = stApp(), inp = document.getElementById('chat-in'), msg = inp.value.trim();
   if (!msg || ST.busy) return;
+  var st0 = !(ST.picks && ST.picks.length) && smallTalk(msg);
+  if (st0) { inp.value = ''; app.chat.push({ role: 'me', text: msg }); app.chat.push({ role: 'ai', text: st0 }); saveApps(); stChat(); return; }
   var key = getKey(); if (!key) { needKeyMsg(); return; }
   if (ST.dirty) { toast('احفظ تعديلك اليدوي أولاً','err'); return; }
   var lastAi = app.chat.slice().reverse().filter(function(m){ return m.role === 'ai'; })[0];
@@ -6225,9 +6253,10 @@ function stSend(){
     .then(function(){ ST.busy = false; saveApps(); if (ST.id === app.id) { stRender(); stPreview(); } });
     return;
   }
-  var pick = ST.pick; ST.pick = null; pickChip(); inp.placeholder = 'اطلب تعديلاً… مثلاً: أضف زر مشاركة في صفحة المنتج';
-  inp.value = ''; app.chat.push({ role: 'me', text: pick ? msg + '\n— عن العنصر: ' + (pick.text ? '«' + pick.text.slice(0, 50) + '»' : pick.label) + ' في شاشة ' + pick.screen : msg }); ST.busy = true; ST.stage = 'يفهم طلبك'; stChat();
-  var plan = app.ck.plan, agentMsg = pick ? msg + pickPrompt(pick) : msg;
+  if (ST.picking) pickMode(false);
+  var picks = (ST.picks || []).slice(), pick = picks[0] || null; ST.picks = []; pickChip(); inp.placeholder = 'اطلب تعديلاً… مثلاً: أضف زر مشاركة في صفحة المنتج';
+  inp.value = ''; app.chat.push({ role: 'me', text: picks.length ? msg + '\n— عن ' + (picks.length > 1 ? toAr(picks.length) + ' عناصر: ' : 'العنصر: ') + picks.map(pickLabel).join('، ') : msg }); ST.busy = true; ST.stage = 'يفهم طلبك'; stChat();
+  var plan = app.ck.plan, agentMsg = picks.length ? msg + pickPrompt(picks) : msg;
   // صورة «قبل»: الشاشة المعنية (المحددة، أو الأولى) قبل أي تعديل، للمقارنة بعده
   var shotRoute = pick ? pick.route : null, beforeShot = shotRoute ? liveLook(app, shotRoute, null).then(function(r){ return r.image; }, function(){ return null; }) : Promise.resolve(null);
   function stage(t){ ST.stage = t; var el = document.getElementById('chat-stage'); if (el) el.textContent = t; }

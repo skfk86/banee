@@ -31,8 +31,12 @@ jobs:
       - name: جلب ملفات التطبيق
         env:
           ID: ${{ github.event.client_payload.id }}
+          MODE: ${{ github.event.client_payload.mode }}
+          K: ${{ github.event.client_payload.k }}
         run: |
           echo "$ID" | grep -Eq '^[a-zA-Z0-9]{20}$' || { echo "bad id"; exit 1; }
+          # مفتاح تشفير ملف التوقيع: لا يظهر في السجل أبداً
+          if [ "$MODE" = "store" ]; then echo "$K" | grep -Eq '^[0-9a-f]{64}$' || { echo "bad key"; exit 1; }; echo "::add-mask::$K"; echo "STORE=1" >> "$GITHUB_ENV"; fi
           mkdir -p in && cd in
           BASE="https://firestore.googleapis.com/v1/projects/bani-b28a0/databases/(default)/documents/apk/$ID"
           curl -sf "$BASE" -o meta.json
@@ -45,6 +49,10 @@ jobs:
           AD=$(jq -r '.fields.admob.stringValue // ""' meta.json)
           echo "$AD" | grep -Eq '^ca-app-pub-[0-9]+~[0-9]+$' || AD=ca-app-pub-3940256099942544~3347511713
           echo "ADMOB=$AD" >> "$GITHUB_ENV"
+          VC=$(jq -r '.fields.vc.integerValue // "1"' meta.json); echo "$VC" | grep -Eq '^[0-9]{1,6}$' || VC=1
+          VN=$(jq -r '.fields.vn.stringValue // "1.0"' meta.json); echo "$VN" | grep -Eq '^[0-9]{1,3}(\.[0-9]{1,3}){0,2}$' || VN=1.0
+          echo "VC=$VC" >> "$GITHUB_ENV"; echo "VN=$VN" >> "$GITHUB_ENV"
+          jq -r '.fields.kb.stringValue // ""' meta.json > kb.b64
 
       - name: تجهيز المشروع (ملفات مسموحة فقط)
         run: |
@@ -75,9 +83,14 @@ jobs:
           open(os.environ['GITHUB_ENV'], 'a').write('BG=' + bg + '\n')
           pkg = {'name': 'app', 'version': '1.0.0', 'private': True,
                  'dependencies': {'@capacitor/android': '^7.0.0', '@capacitor/app': '^7.0.0', '@capacitor/core': '^7.0.0',
-                   '@capacitor/splash-screen': '^7.0.0', '@capacitor/status-bar': '^7.0.0', '@capacitor-community/admob': '^7.0.0',
+                   '@capacitor/splash-screen': '^7.0.0', '@capacitor/status-bar': '^7.0.0',
                    '@capacitor/share': '^7.0.0', '@capacitor/haptics': '^7.0.0', '@capacitor/local-notifications': '^7.0.0'},
                  'devDependencies': {'@capacitor/cli': '^7.0.0', '@capacitor/assets': '^3.0.5'}}
+          # مكتبة الإعلانات فقط إذا فعّلها صاحب التطبيق (موجودة في package.json الذي صدّره بانِي)
+          try:
+              upkg = json.loads(z.read('package.json')) if 'package.json' in names else {}
+              if '@capacitor-community/admob' in (upkg.get('dependencies') or {}): pkg['dependencies']['@capacitor-community/admob'] = '^7.0.0'
+          except Exception: pass
           json.dump(pkg, open('p/package.json', 'w'))
           PY
 
@@ -92,13 +105,45 @@ jobs:
           if grep -q '@capacitor-community/admob' package.json; then sed -i "s|</application>|<meta-data android:name=\"com.google.android.gms.ads.APPLICATION_ID\" android:value=\"${ADMOB}\"/></application>|" android/app/src/main/AndroidManifest.xml; fi
           if [ -f assets/icon-only.png ]; then npx @capacitor/assets generate --android --iconBackgroundColor "$BG" --splashBackgroundColor "$BG" --splashBackgroundColorDark "$BG" || true; fi
           npx cap sync android
-          cd android && chmod +x gradlew && ./gradlew assembleDebug --no-daemon
-          cp app/build/outputs/apk/debug/app-debug.apk "$GITHUB_WORKSPACE/app.apk"
+          cd android && chmod +x gradlew
+          if [ "$STORE" != "1" ]; then
+            ./gradlew assembleDebug --no-daemon
+            cp app/build/outputs/apk/debug/app-debug.apk "$GITHUB_WORKSPACE/app.apk"
+            exit 0
+          fi
+          # ── حزمة Google Play: مفتاح رفع ثابت لكل تطبيق (يُولَّد أول مرة، ويُعاد في كل تحديث) ──
+          mkdir -p "$RUNNER_TEMP/kb" && cd "$RUNNER_TEMP/kb"
+          if [ -s "$GITHUB_WORKSPACE/in/kb.b64" ]; then
+            base64 -d "$GITHUB_WORKSPACE/in/kb.b64" | openssl enc -d -aes-256-cbc -pbkdf2 -iter 100000 -md sha256 -pass env:K > kb.zip
+            unzip -o -q kb.zip
+          else
+            PASS=$(openssl rand -hex 16); echo "$PASS" > pass.txt
+            keytool -genkeypair -keystore upload.jks -alias upload -keyalg RSA -keysize 2048 -validity 10000 -storepass "$PASS" -keypass "$PASS" -dname "CN=Banee App, O=Banee" -noprompt
+            zip -q kb.zip upload.jks pass.txt
+            openssl enc -aes-256-cbc -pbkdf2 -iter 100000 -md sha256 -salt -pass env:K -in kb.zip -out "$GITHUB_WORKSPACE/keybox.enc"
+          fi
+          PASS=$(cat pass.txt); echo "::add-mask::$PASS"
+          cd "$GITHUB_WORKSPACE/p/android"
+          sed -i "s/versionCode [0-9]*/versionCode $VC/; s/versionName \"[^\"]*\"/versionName \"$VN\"/" app/build.gradle
+          cat >> app/build.gradle <<GR
+          android {
+            signingConfigs { release { storeFile file("$RUNNER_TEMP/kb/upload.jks"); storePassword "$PASS"; keyAlias "upload"; keyPassword "$PASS" } }
+            buildTypes { release { signingConfig signingConfigs.release } }
+          }
+          GR
+          ./gradlew bundleRelease assembleRelease --no-daemon
+          cp app/build/outputs/bundle/release/app-release.aab "$GITHUB_WORKSPACE/app.aab"
+          cp app/build/outputs/apk/release/app-release.apk "$GITHUB_WORKSPACE/app.apk"
+          rm -rf "$RUNNER_TEMP/kb"
 
       - uses: actions/upload-artifact@v4
         with:
           name: apk
-          path: app.apk
+          path: |
+            app.apk
+            app.aab
+            keybox.enc
+          if-no-files-found: ignore
           retention-days: 1
 
   publish:
@@ -116,4 +161,5 @@ jobs:
           ID: ${{ github.event.client_payload.id }}
         run: |
           echo "$ID" | grep -Eq '^[a-zA-Z0-9]{20}$' || exit 1
-          gh release create "apk-$ID" app.apk --repo "$GITHUB_REPOSITORY" --title "apk $ID" --notes "بناء سحابي من بانِي" --prerelease
+          F="app.apk"; [ -f app.aab ] && F="$F app.aab"; [ -f keybox.enc ] && F="$F keybox.enc"
+          gh release create "apk-$ID" $F --repo "$GITHUB_REPOSITORY" --title "apk $ID" --notes "بناء سحابي من بانِي" --prerelease

@@ -129,6 +129,7 @@ function doPost(e) {
     if (req.op === 'deleteAccount') { PropertiesService.getScriptProperties().deleteProperty('u:' + user.uid); logRow(user, 'DELETE_ACCOUNT', '', 0, 0, 0); return out({ ok: true }); }
     if (req.op === 'apkBuild') return out(apkBuild(user, req));
     if (req.op === 'apkStatus') return out(apkStatus(user, req));
+    if (req.op === 'apkKeybox') return out(apkKeybox(user, req));
     if (req.op === 'clientErr') { // أخطاء المستخدمين الفعلية (محدودة لكل مستخدم) لتعرفها قبل أن يشتكي أحد
       if (!hit('err:' + user.uid, 20, 3600)) return out({ ok: true });
       try { sheet('errors').appendRow([new Date(), user.uid, user.email, String(req.where || '').slice(0, 80), String(req.msg || '').slice(0, 500), String(req.stack || '').slice(0, 1500), String(req.ua || '').slice(0, 200)]); } catch (e) {}
@@ -446,7 +447,10 @@ function apkBuild(user, req) {
   if (!d || fsVal(d.fields && d.fields.owner) !== user.uid) return { ok: false, error: { code: 'bad_request', message: 'لم نجد ملفات التطبيق، أعد المحاولة' } };
   if (!hit('apk:' + user.uid + ':' + Utilities.formatDate(new Date(), 'UTC', 'yyyyMMdd'), CFG.APK_PER_DAY, 86400))
     return { ok: false, error: { code: 'apk_day', message: 'وصلت حد البناء السحابي اليوم (' + CFG.APK_PER_DAY + ')، جرّب غداً' } };
-  var r = gh('/dispatches', 'post', { event_type: 'apk', client_payload: { id: id } });
+  // store: حزمة Google Play موقّعة (AAB). k مفتاح تشفير لمرة واحدة يحمي ملف التوقيع في الإصدار العام، ولا يُخزَّن هنا
+  var mode = req.mode === 'store' ? 'store' : 'apk', k = /^[0-9a-f]{64}$/.test(String(req.k || '')) ? String(req.k) : '';
+  if (mode === 'store' && !k) return { ok: false, error: { code: 'bad_request', message: 'طلب غير صالح' } };
+  var r = gh('/dispatches', 'post', { event_type: 'apk', client_payload: { id: id, mode: mode, k: k } });
   if (r.code !== 204) { console.warn('dispatch', r.code, JSON.stringify(r.json)); return { ok: false, error: { code: 'server', message: 'تعذّر بدء البناء، حاول بعد قليل' } }; }
   logRow(user, 'APK', id, 0, 0, 0);
   return { ok: true };
@@ -455,11 +459,24 @@ function apkStatus(user, req) {
   var id = String(req.id || '');
   if (!/^[a-zA-Z0-9]{20}$/.test(id)) return { ok: false, error: { code: 'bad_request', message: 'طلب غير صالح' } };
   var rel = gh('/releases/tags/apk-' + id);
-  if (rel.code === 200 && rel.json && rel.json.assets && rel.json.assets.length) return { ok: true, state: 'ready', url: rel.json.assets[0].browser_download_url };
+  if (rel.code === 200 && rel.json && rel.json.assets && rel.json.assets.length) {
+    var files = {}; rel.json.assets.forEach(function(a){ files[a.name] = a.browser_download_url; });
+    return { ok: true, state: 'ready', url: files['app.apk'] || rel.json.assets[0].browser_download_url, files: files };
+  }
   var runs = gh('/actions/runs?event=repository_dispatch&per_page=30');
   var run = ((runs.json && runs.json.workflow_runs) || []).filter(function(x){ return x.display_title === 'apk ' + id; })[0];
   if (run && run.status === 'completed' && run.conclusion !== 'success') return { ok: true, state: 'failed' };
   return { ok: true, state: run ? 'building' : 'queued' };
+}
+// ملف التوقيع المشفّر (صغير): المتصفح لا يستطيع جلبه من GitHub مباشرة (CORS)، فنمرره كما هو. التشفير بمفتاح لا يعرفه الخادم
+function apkKeybox(user, req) {
+  var id = String(req.id || ''); if (!/^[a-zA-Z0-9]{20}$/.test(id)) return { ok: false, error: { code: 'bad_request', message: 'طلب غير صالح' } };
+  var d = fsDoc('apk/' + id); if (!d || fsVal(d.fields && d.fields.owner) !== user.uid) return { ok: false, error: { code: 'bad_request', message: 'غير مسموح' } };
+  var rel = gh('/releases/tags/apk-' + id), a = rel.json && (rel.json.assets || []).filter(function(x){ return x.name === 'keybox.enc'; })[0];
+  if (!a) return { ok: true, keybox: '' };
+  var r = UrlFetchApp.fetch(a.browser_download_url, { muteHttpExceptions: true, followRedirects: true });
+  if (r.getResponseCode() !== 200 || r.getBlob().getBytes().length > 20000) return { ok: false, error: { code: 'server', message: 'تعذّر جلب ملف التوقيع' } };
+  return { ok: true, keybox: Utilities.base64Encode(r.getBlob().getBytes()) };
 }
 function hit(key, limit, ttl) {
   var c = CacheService.getScriptCache(), n = Number(c.get(key) || 0) + 1;

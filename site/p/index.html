@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>سياسة الخصوصية</title>
+<meta name="robots" content="index">
+<style>
+  :root { --bg: #ffffff; --text: #1F2533; --text2: #5B6475; --line: #E5E8EF; --primary: #2C64DD; }
+  @media (prefers-color-scheme: dark) { :root { --bg: #0F1522; --text: #E8ECF4; --text2: #A3ACBD; --line: #232C3D; --primary: #7FA3FF; } }
+  body { margin: 0; background: var(--bg); color: var(--text); font-family: system-ui, 'Segoe UI', Tahoma, sans-serif; line-height: 1.9; }
+  main { max-width: 760px; margin: 0 auto; padding: 32px 18px 60px; }
+  h1 { font-size: 26px; margin: 0 0 4px; color: var(--primary); }
+  h2 { font-size: 18px; margin: 28px 0 6px; }
+  p, li { color: var(--text2); font-size: 15.5px; }
+  .meta { font-size: 13px; color: var(--text2); border-bottom: 1px solid var(--line); padding-bottom: 14px; }
+  footer { margin-top: 40px; font-size: 12.5px; color: var(--text2); border-top: 1px solid var(--line); padding-top: 14px; }
+</style>
+</head>
+<body>
+<main id="m"><p>جارٍ التحميل…</p></main>
+<script>
+// سياسة خصوصية لتطبيق صُنع ببانِي: بيانات التطبيق كلها داخل الرابط (#...)، فلا خادم ولا تتبّع
+(function(){
+  var m = document.getElementById('m'), d;
+  try { d = JSON.parse(decodeURIComponent(escape(atob(location.hash.slice(1))))); } catch (e) { m.innerHTML = '<h1>رابط غير صالح</h1>'; return; }
+  var esc = function(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
+  var name = esc(d.n || 'التطبيق'), email = esc(d.e || '');
+  document.title = 'سياسة الخصوصية — ' + (d.n || 'التطبيق');
+  var collected = [];
+  if (d.a) collected.push('الاسم والبريد الإلكتروني عند إنشاء حساب، لتسجيل دخولك وحفظ بياناتك بين أجهزتك.');
+  if ((d.c || []).length) collected.push('البيانات التي تُدخلها بنفسك داخل التطبيق (' + esc(d.c.join('، ')) + ') لتقديم الخدمة التي طلبتها فقط.');
+  if (d.ai) collected.push('النصوص التي ترسلها لميزات الذكاء الاصطناعي تُرسل لمعالجتها وإرجاع الرد فقط، ولا تُستخدم لأي غرض آخر.');
+  if (!collected.length) collected.push('لا يجمع التطبيق أي بيانات شخصية. كل ما تُدخله يبقى محفوظاً على جهازك فقط.');
+  m.innerHTML =
+    '<h1>سياسة الخصوصية</h1><div class="meta">تطبيق «' + name + '» · آخر تحديث: ' + esc(d.d || '') + '</div>' +
+    '<p>نحترم خصوصيتك. توضح هذه الصفحة ما يجمعه تطبيق «' + name + '» من بيانات، ولماذا، وكيف نحميها.</p>' +
+    '<h2>البيانات التي نجمعها</h2><ul>' + collected.map(function(x){ return '<li>' + x + '</li>'; }).join('') + '</ul>' +
+    '<h2>كيف نستخدمها</h2><p>نستخدم البيانات فقط لتشغيل ميزات التطبيق التي تطلبها. لا نبيع بياناتك ولا نشاركها مع أي طرف لأغراض تسويقية.</p>' +
+    (d.ads ? '<h2>الإعلانات</h2><p>يعرض التطبيق إعلانات عبر Google AdMob، وقد تستخدم Google معرّف الإعلانات في جهازك لعرض إعلانات مناسبة. يمكنك التحكم في ذلك من إعدادات Google في جهازك.</p>' : '') +
+    '<h2>التخزين والحماية</h2><p>' + (d.a || (d.c || []).length ? 'تُحفظ البيانات بأمان عبر خدمات Google (Firebase) مع قواعد تمنع وصول أي مستخدم لبيانات غيره، أو على جهازك فقط حسب الميزة.' : 'تُحفظ البيانات على جهازك فقط.') + '</p>' +
+    '<h2>حقوقك</h2><p>يمكنك طلب حذف حسابك وبياناتك في أي وقت' + (email ? ' بمراسلتنا على <a href="mailto:' + email + '">' + email + '</a>' : '') + '.</p>' +
+    '<h2>الأطفال</h2><p>لا يجمع التطبيق عن قصد بيانات شخصية من الأطفال دون ١٣ عاماً.</p>' +
+    '<h2>التغييرات</h2><p>قد نحدّث هذه السياسة، وسيظهر تاريخ آخر تحديث أعلى الصفحة.</p>' +
+    (email ? '<h2>التواصل</h2><p>لأي سؤال عن الخصوصية: <a href="mailto:' + email + '">' + email + '</a></p>' : '') +
+    '<footer>صُنع هذا التطبيق ببانِي.</footer>';
+})();
+</script>
+</body>
+</html>

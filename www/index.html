@@ -4917,6 +4917,8 @@ function stAndroid(){
         : '<div class="an-cloud warn"><span><b>' + what + ' يحتاج خادم تطبيقك</b><small>اربطه في دقيقتين ليعمل في النسخة المنشورة بمفتاحك، وإلا ستظهر للمستخدم رسالة أن الميزة غير مفعّلة. <button class="link-btn" onclick="openOwnSrv()">ربط الآن</button></small></span></div>'; })() +
     '<div class="err-box" id="an-err"></div>' +
     '<button class="btn btn-primary btn-lg" id="an-apk" onclick="stAndroidZip(true)">'+ic('phone')+'ابنِ APK وثبّته على جوالك</button>' +
+    '<button class="btn btn-accent btn-lg" id="an-store" style="margin-top:8px" onclick="stAndroidZip(\'store\')">'+ic('package')+'حزمة Google Play موقّعة (AAB)</button>' +
+    (app.signing ? '<small class="hint" style="display:block;text-align:center;margin-top:4px">مفتاح التوقيع محفوظ: التحديثات تُوقَّع بنفس المفتاح تلقائياً · الإصدار التالي ' + toAr((app.signing.vc || 1) + 1) + ' · <button class="link-btn" onclick="keyBackup()">نسخة احتياطية للمفتاح</button></small>' : '') +
     '<div class="apk-st" id="apk-st" hidden></div>' +
     '<button class="btn btn-ghost btn-lg" id="an-go" style="margin-top:8px" onclick="stAndroidZip()">'+ic('download')+'تحميل المشروع (zip) للبناء بنفسك</button>' +
     '<button class="btn btn-ghost" style="margin-top:8px" onclick="closeModal(\'android-modal\')">إغلاق</button>';
@@ -4973,7 +4975,7 @@ function stAndroidZip(cloud){
                { path: 'assets/splash.png', data: img[3] }, { path: 'assets/splash-dark.png', data: img[4] });
     var blob = makeZip(files);
     window._lastZip = blob;
-    if (cloud) { btn.disabled = false; btn.innerHTML = ic('download') + 'تحميل المشروع (zip) للبناء بنفسك'; return cloudApk(app, blob, cfg); }
+    if (cloud) { btn.disabled = false; btn.innerHTML = ic('download') + 'تحميل المشروع (zip) للبناء بنفسك'; cfg.mode = cloud === 'store' ? 'store' : 'apk'; return cloudApk(app, blob, cfg); }
     saveFile(cfg.slug + '-android.zip', blob);
     app.chat.push({ role: 'ai', text: 'جهّزت مشروع أندرويد "' + cfg.slug + '-android.zip" (' + toAr(Math.round(blob.size/1024)) + ' ك.ب). الخطوات في ملف README: ارفعه لمستودع جديد على GitHub، وبعد ٥–١٠ دقائق تجد ملف APK في Releases.' });
     saveApps(); stChat();
@@ -5595,7 +5597,10 @@ function shareApp(){
 function apkSt(html, cls){ var el = document.getElementById('apk-st'); if (!el) return; el.hidden = false; el.className = 'apk-st ' + (cls || ''); el.innerHTML = html; }
 function cloudApk(app, blob, cfg){
   if (!proxyMode()) { toast('سجّل دخولك واتصل بالإنترنت للبناء السحابي', 'err'); return; }
-  var b = document.getElementById('an-apk'); if (b) b.disabled = true;
+  var store = cfg.mode === 'store', b = document.getElementById(store ? 'an-store' : 'an-apk'); if (b) b.disabled = true;
+  // مفتاح تشفير ملف التوقيع: أول مرة جديد، وبعدها نفس المفتاح مع ملف التوقيع المشفّر المحفوظ (فالتحديثات بنفس التوقيع)
+  var K = store ? (app.signing && app.signing.k) || Array.prototype.map.call(crypto.getRandomValues(new Uint8Array(32)), function(x){ return ('0' + x.toString(16)).slice(-2); }).join('') : '';
+  var vc = store ? ((app.signing && app.signing.vc) || 0) + 1 : 0;
   var id = ''; var c = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789'; for (var i = 0; i < 20; i++) id += c[Math.floor(Math.random() * c.length)];
   var uid = FB.auth.currentUser.uid, f = FB.f;
   apkSt('<span class="spin-s"></span>يرفع ملفات تطبيقك…');
@@ -5603,18 +5608,46 @@ function cloudApk(app, blob, cfg){
   .then(function(b64){
     var CH = 700000, n = Math.ceil(b64.length / CH);
     if (n > 60) throw new Error('المشروع أكبر من حد البناء السحابي، حمّله وابنه من GitHub');
-    return f.setDoc(fdoc('apk', id), { owner: uid, parts: n, appId: cfg.appId, admob: cfg.admobAppId || '', createdAt: Date.now() }).then(function(){
+    var meta = { owner: uid, parts: n, appId: cfg.appId, admob: cfg.admobAppId || '', createdAt: Date.now() };
+    if (store) { meta.vc = vc; meta.vn = cfg.version || '1.0'; if (app.signing && app.signing.kb) meta.kb = app.signing.kb; }
+    return f.setDoc(fdoc('apk', id), meta).then(function(){
       var w = []; for (var i = 0; i < n; i++) w.push(f.setDoc(fdoc('apk', id, 'parts', String(i)), { d: b64.slice(i * CH, (i + 1) * CH) }));
       return Promise.all(w);
     });
   })
-  .then(function(){ apkSt('<span class="spin-s"></span>يبدأ البناء…'); return proxyCall({ op: 'apkBuild', id: id }); })
+  .then(function(){ apkSt('<span class="spin-s"></span>يبدأ البناء…'); return proxyCall(store ? { op: 'apkBuild', id: id, mode: 'store', k: K } : { op: 'apkBuild', id: id }); })
   .then(function(r){
     if (!r || !r.ok) throw new Error((r && r.error && r.error.message) || 'تعذّر بدء البناء');
-    app.apkBuild = { id: id, at: Date.now() }; saveApps();
+    app.apkBuild = { id: id, at: Date.now(), store: store, k: K, vc: vc }; saveApps();
     apkPoll(app, id, 0);
   })
   .catch(function(e){ apkSt(esc(e.message || 'تعذّر البناء'), 'err'); if (b) b.disabled = false; });
+}
+function opensslDecrypt(b64, hexKey){
+  var raw = Uint8Array.from(atob(b64), function(c){ return c.charCodeAt(0); });
+  if (String.fromCharCode.apply(null, raw.slice(0, 8)) !== 'Salted__') return Promise.reject(new Error('صيغة غير معروفة'));
+  var salt = raw.slice(8, 16), data = raw.slice(16), enc = new TextEncoder();
+  return crypto.subtle.importKey('raw', enc.encode(hexKey), 'PBKDF2', false, ['deriveBits'])
+    .then(function(k){ return crypto.subtle.deriveBits({ name: 'PBKDF2', salt: salt, iterations: 100000, hash: 'SHA-256' }, k, 384); })
+    .then(function(bits){ var b = new Uint8Array(bits); return crypto.subtle.importKey('raw', b.slice(0, 32), 'AES-CBC', false, ['decrypt']).then(function(key){ return crypto.subtle.decrypt({ name: 'AES-CBC', iv: b.slice(32, 48) }, key, data); }); })
+    .then(function(buf){ return new Uint8Array(buf); });
+}
+function keyBackup(){
+  var app = stApp(); if (!app || !app.signing) { toast('لا يوجد مفتاح توقيع بعد: ابنِ حزمة Google Play أولاً', 'err'); return; }
+  opensslDecrypt(app.signing.kb, app.signing.k).then(function(bytes){
+    saveFile(slugify(app.name) + '-upload-key.zip', new Blob([bytes], { type: 'application/zip' }));
+    toast('احفظ هذا الملف في مكان آمن: فيه مفتاح الرفع (upload.jks) وكلمة مروره', 'suc');
+  }, function(){ toast('تعذّر فك ملف المفتاح', 'err'); });
+}
+// سياسة خصوصية مستضافة مجاناً على صفحة بانِي، بيانات التطبيق داخل الرابط نفسه (لا خادم)
+function privacyUrl(app){
+  var plan = app.ck.plan, u = usesCloud ? usesCloud(app) : {};
+  var d = { n: plan.name || app.name, e: (S.user && S.user.email) || '', a: !!plan.auth, c: (plan.collections || []).map(function(c){ return c.name; }).slice(0, 12), ai: !!u.ai, ads: !!(app.ads && app.ads.on), d: new Date().toISOString().slice(0, 10) };
+  return SHARE_BASE.replace(/\/a\/#$/, '/p/#') + btoa(unescape(encodeURIComponent(JSON.stringify(d))));
+}
+function copyPrivacy(){
+  var app = stApp(), u = privacyUrl(app);
+  (navigator.clipboard ? navigator.clipboard.writeText(u) : Promise.reject()).then(function(){ toast('نُسخ رابط سياسة الخصوصية: الصقه في Play Console ← سياسة التطبيق', 'suc'); }, function(){ prompt('رابط سياسة الخصوصية', u); });
 }
 function apkPoll(app, id, n){
   var mins = Math.max(1, 6 - Math.floor(n / 4));
@@ -5622,6 +5655,22 @@ function apkPoll(app, id, n){
   setTimeout(function(){
     proxyCall({ op: 'apkStatus', id: id }).then(function(r){
       var b = document.getElementById('an-apk');
+      var bs = app.apkBuild || {};
+      if (r && r.state === 'ready' && bs.store) {
+        var sb = document.getElementById('an-store'); if (sb) sb.disabled = false;
+        return proxyCall({ op: 'apkKeybox', id: id }).then(function(kr){
+          // أول حزمة: نحفظ ملف التوقيع المشفّر ومفتاحه، فكل تحديث قادم يُوقَّع بنفس المفتاح (شرط Google Play)
+          if (kr && kr.ok && kr.keybox) app.signing = { k: bs.k, kb: kr.keybox, vc: bs.vc, at: Date.now() };
+          else if (app.signing) app.signing.vc = bs.vc;
+          app.apkBuild = { id: id, url: r.url, files: r.files, at: Date.now(), store: true }; saveApps();
+          var F = r.files || {};
+          apkSt(ic('check') + '<b>حزمة Google Play جاهزة · الإصدار ' + toAr(bs.vc) + '</b>' +
+            (F['app.aab'] ? '<a class="btn btn-accent btn-sm" href="' + esc(F['app.aab']) + '" target="_blank" rel="noopener">تحميل AAB للمتجر</a>' : '') +
+            (F['app.apk'] ? ' <a class="btn btn-ghost btn-sm" href="' + esc(F['app.apk']) + '" target="_blank" rel="noopener">APK موقّع للتجربة</a>' : '') +
+            '<small>ارفع ملف AAB في Play Console ← الإصدارات. مفتاح التوقيع محفوظ في بانِي للتحديثات القادمة؛ <button class="link-btn" onclick="keyBackup()">احتفظ بنسخة احتياطية منه</button>. رابط سياسة الخصوصية: <button class="link-btn" onclick="copyPrivacy()">نسخ الرابط</button></small>');
+          toast('حزمة المتجر جاهزة', 'suc');
+        });
+      }
       if (r && r.state === 'ready') {
         app.apkBuild = { id: id, url: r.url, at: Date.now() }; saveApps(); if (b) b.disabled = false;
         apkSt(ic('check') + '<b>تطبيقك جاهز!</b> <a class="btn btn-accent btn-sm" href="' + esc(r.url) + '" target="_blank" rel="noopener">تحميل APK</a><small>افتح الملف على جوالك واسمح بالتثبيت من هذا المصدر.</small>', 'ok');

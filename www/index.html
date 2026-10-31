@@ -397,6 +397,20 @@
     .po-btn { width: 100%; margin-top: 12px; }
     .po-price { font-size: 20px; direction: rtl !important; } .po-price bdi { font-variant-numeric: tabular-nums; }
 
+    /* المشترك: بطاقة ذهبية وشارة وقائمة مزايا مفعّلة، حتى يشعر بالفرق فوراً */
+    #plan-card.pro { border: 0; color: #fff; background: radial-gradient(circle at 85% 0%, rgba(255,214,102,.35), transparent 55%), linear-gradient(140deg, #1E3A8A, #312E81 55%, #4C1D95); box-shadow: 0 14px 34px -14px rgba(76,29,149,.6); }
+    #plan-card.pro .plan-lbl, #plan-card.pro .plan-apps, #plan-card.pro .bar-cnt { color: rgba(255,255,255,.82); }
+    #plan-card.pro .plan-nm { color: #fff; display: flex; align-items: center; gap: 8px; }
+    #plan-card.pro .bar-wrap { display: none; }
+    #plan-card.pro #plan-btn { background: rgba(255,255,255,.16); color: #fff; box-shadow: none; border: 1px solid rgba(255,255,255,.25); }
+    .pro-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 800; padding: 3px 9px; border-radius: 100px; background: linear-gradient(135deg, #FCD34D, #F59E0B); color: #451A03; }
+    .pro-badge .i { width: 12px; height: 12px; }
+    .pro-inf { font-size: 26px; font-weight: 800; color: #fff; margin-top: 10px; display: flex; align-items: baseline; gap: 8px; }
+    .pro-inf small { font-size: 13px; font-weight: 600; color: rgba(255,255,255,.8); }
+    .pro-perks { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+    .pro-perks span { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 600; padding: 5px 10px; border-radius: 100px; background: rgba(255,255,255,.12); color: #fff; }
+    .pro-perks .i { width: 13px; height: 13px; color: #FCD34D; }
+    .credit-chip.pro { border: 0; color: #451A03; background: linear-gradient(135deg, #FCD34D, #F59E0B); font-weight: 800; }
     .credit-chip { display: inline-flex; align-items: center; gap: 6px; margin-top: 10px; height: 32px; padding: 0 12px; border-radius: 100px; border: 1px solid var(--border); background: var(--surface); color: var(--text2); font-size: 13px; cursor: pointer; }
     .credit-chip[hidden] { display: none; }
     .credit-chip b { color: var(--text); font-variant-numeric: tabular-nums; }
@@ -1111,13 +1125,14 @@
           <div class="prof-av" id="pav">م</div>
           <div style="min-width:0"><div class="prof-name" id="pname">المستخدم</div><div class="prof-email" id="pemail">email@example.com</div></div>
         </div>
-        <div class="card">
+        <div class="card" id="plan-card">
           <div class="plan-top">
             <div><div class="plan-lbl">خطتك الحالية</div><div class="plan-nm" id="plan-nm">مجانية</div><div class="plan-apps" id="plan-apps">٠ تطبيقات تم بناؤها</div></div>
-            <button class="btn btn-primary btn-sm" onclick="openUpgrade()"><svg class="i i-sm"><use href="#i-crown"/></svg>ترقية</button>
+            <button class="btn btn-primary btn-sm" id="plan-btn" onclick="openUpgrade()"><svg class="i i-sm"><use href="#i-crown"/></svg>ترقية</button>
           </div>
           <div class="bar-wrap"><div class="bar-fill" id="plan-bar" style="width:0%"></div></div>
           <div class="bar-cnt" id="plan-cnt">٠ من ١</div>
+          <div class="pro-perks" id="pro-perks" hidden></div>
         </div>
         <div class="slist">
           <button class="sitem" onclick="openUpgrade()">
@@ -1885,7 +1900,23 @@ function saveProfile(patch){
   if (CLOUD && S.user) FB.f.updateDoc(fdoc('users', S.user.uid), patch).catch(function(e){ console.error(e); });
   else { try { localStorage.setItem('bprofile', JSON.stringify(S.profile)); } catch(e){} }
 }
+function proView(){
+  var card = document.getElementById('plan-card'), perks = document.getElementById('pro-perks'), btn = document.getElementById('plan-btn');
+  var on = PROXY_URL && paidUser(); if (!card) return on;
+  card.classList.toggle('pro', !!on); if (perks) perks.hidden = !on;
+  if (btn) { btn.innerHTML = on ? '<svg class="i i-sm"><use href="#i-crown"/></svg>خطتي' : '<svg class="i i-sm"><use href="#i-crown"/></svg>ترقية'; }
+  if (!on) return false;
+  var cp = (S.profile && S.profile.plan) || (S.credits && S.credits.plan) || 'key', own = ownKeyOn();
+  document.getElementById('plan-nm').innerHTML = esc((PLANS[cp] || PLANS.key).name) + ' <span class="pro-badge"><svg class="i"><use href="#i-crown"/></svg>مشترك</span>';
+  document.getElementById('plan-apps').textContent = own ? 'المحرّك: مفتاحك الخاص' : 'المحرّك: المفتاح العام لبانِي';
+  document.getElementById('plan-cnt').innerHTML = own ? '<div class="pro-inf">∞<small>نقاط غير محدودة · بلا حد يومي</small></div>'
+    : '<div class="pro-inf">' + toAr(S.credits ? S.credits.remaining : 750) + '<small>نقطة كل ٤ ساعات (ثلاثة أضعاف المجاني)' + (localKey() ? '' : ' · أضف مفتاحك لبناء غير محدود') + '</small></div>';
+  var C = '<svg class="i"><use href="#i-check"/></svg>';
+  perks.innerHTML = ['تطبيقات بلا حد يومي', 'بلا إعلانات', 'تصميم أعلى جودة', 'وكيل إصلاح أعمق', 'مساعد أقوى', 'مزامنة سحابية'].map(function(x){ return '<span>' + C + x + '</span>'; }).join('');
+  return true;
+}
 function updatePlan() {
+  if (proView()) return;
   if (proxyMode() && S.credits) {
     var c = S.credits, pn = (PLANS[c.plan] || PLANS.free).name;
     document.getElementById('plan-nm').textContent = pn;
@@ -3745,7 +3776,7 @@ function localKey(){ try { return localStorage.getItem('bgkey') || ''; } catch(e
 function paidUser(){ return (S.credits && S.credits.plan && S.credits.plan !== 'free') || curPlan() !== 'free'; }
 // المشترك يختار محرّك البناء: مفتاحه الخاص (بلا نقاط) أو المفتاح العام لبانِي (بالنقاط، برصيد المشترك المضاعف)
 function keyMode(){ try { return localStorage.getItem('bkmode') === 'shared' ? 'shared' : 'own'; } catch(e){ return 'own'; } }
-function setKeyMode(m){ try { localStorage.setItem('bkmode', m === 'shared' ? 'shared' : 'own'); } catch(e){} keyItemSync(); updatePlan(); try { renderEngine(); } catch(e){}
+function setKeyMode(m){ try { localStorage.setItem('bkmode', m === 'shared' ? 'shared' : 'own'); } catch(e){} keyItemSync(); if (S.credits) { var c0 = S.credits; S.credits = null; setCredits(c0); } updatePlan(); try { renderEngine(); } catch(e){}
   toast(m === 'shared' ? 'تعمل الآن بالمفتاح العام لبانِي (بالنقاط)' : 'تعمل الآن بمفتاحك الخاص: بلا نقاط ولا حدود', 'suc'); }
 function ownKeyOn(){ return !!(PROXY_URL && localKey() && paidUser() && keyMode() === 'own'); }
 function getKey(){ if (ownKeyOn()) return localKey(); if (proxyMode()) return 'PROXY'; var k = null; try { k = localStorage.getItem('bgkey'); } catch(e){} return k; }
@@ -3755,6 +3786,7 @@ function proxyCall(body){
   return FB.auth.currentUser.getIdToken().then(function(tok){
     body.idToken = tok;
     body.planToken = (S.profile && S.profile.planToken) || '';
+    body.planClaim = (S.profile && S.profile.planSource === 'google_play' && S.profile.planProduct) || '';
     var ctrl = new AbortController(), timer = setTimeout(function(){ ctrl.abort(); }, 330000); // أقصى مدة Apps Script ٦ دقائق: لا نعيد الطلب والخادم ما زال يعمل عليه فيُخصم مرتين
     return fetch(PROXY_URL, { method: 'POST', body: JSON.stringify(body), signal: ctrl.signal, redirect: 'follow' })
       .then(function(r){ clearTimeout(timer); return r.json(); }, function(e){ clearTimeout(timer); throw e; });
@@ -3805,7 +3837,9 @@ function setCredits(c){
   try { planMismatch(c); } catch(e){}
   try { if (!wasSub && paidUser()) cloudPull(); syncPillRender(); } catch(e){}
   var el = document.getElementById('credit-chip');
-  if (el) { el.hidden = false; el.querySelector('b').textContent = toAr(c.remaining); el.classList.toggle('low', c.remaining < 300); }
+  if (el) { el.hidden = false; var pro = paidUser();
+    el.classList.toggle('pro', pro); el.classList.toggle('low', !pro && c.remaining < 300);
+    el.innerHTML = '<svg class="i i-sm"><use href="#i-' + (pro ? 'crown' : 'zap') + '"/></svg>' + (ownKeyOn() ? 'مشترك · <b>∞</b> غير محدود' : (pro ? 'مشترك · ' : 'رصيدك ') + '<b>' + toAr(c.remaining) + '</b> نقطة'); }
   updatePlan();
 }
 function refreshCredits(force){

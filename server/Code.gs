@@ -117,6 +117,7 @@ function doPost(e) {
     var user = verifyUser(req.idToken);
     if (!user) return out({ ok: false, error: { code: 'auth', message: 'سجّل دخولك مرة أخرى' } });
     user.planToken = typeof req.planToken === 'string' ? req.planToken.slice(0, 400) : '';
+    user.planClaim = typeof req.planClaim === 'string' ? req.planClaim.slice(0, 40) : '';
 
     if (req.refresh && user.planToken) CacheService.getScriptCache().remove('plan:' + user.uid + ':' + hash(user.planToken).slice(0, 12)); // بعد شراء أو تجديد
     if (req.op === 'balance') return out({ ok: true, credits: creditsView(user, loadState(user)) });
@@ -196,7 +197,14 @@ function userPlan(user, token) {
     }
   } catch (err) { console.warn('plan check', err); }
   // الرفض بسبب خطأ اتصال بـ Google لا يُحفظ ٦ ساعات: نعيد المحاولة في الطلب التالي
-  cache.put(ck, JSON.stringify(plan), /^play_api|unchecked/.test(plan.why) ? 60 : 21600);
+  // سماح مؤقت: إن تعذّر سؤال Google Play (خلل إعداد عندنا لا عند المشترك) نصدّق شراء الجهاز ٣ أيام لكل رمز
+  // حتى لا يُعامَل من دفع كمجاني بسبب مشكلة ليست منه. «حالة غير نشطة» من Google لا تدخل هنا أبداً.
+  if (plan.name === 'free' && token && /^play_api/.test(plan.why) && planByProduct(user.planClaim)) {
+    var gk = 'grace:' + hash(token), g = Number(prop(gk) || 0);
+    if (!g) { g = Date.now(); PropertiesService.getScriptProperties().setProperty(gk, String(g)); }
+    if (Date.now() - g < 3 * 864e5) plan = { name: planByProduct(user.planClaim), period: 'grace', why: 'grace' };
+  }
+  cache.put(ck, JSON.stringify(plan), /^play_api|unchecked|grace/.test(plan.why) ? 60 : 21600);
   return plan;
 }
 function planByProduct(id) { for (var k in PLANS) if (PLANS[k].product === id) return k; return null; }

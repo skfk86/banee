@@ -130,6 +130,10 @@ function doPost(e) {
     if (req.op === 'apkBuild') return out(apkBuild(user, req));
     if (req.op === 'apkStatus') return out(apkStatus(user, req));
     if (req.op === 'apkKeybox') return out(apkKeybox(user, req));
+    if (req.op === 'playLink') return out(playLink(user, req));
+    if (req.op === 'playStatus') { var pl = prop('play:' + user.uid); return out({ ok: true, email: pl ? JSON.parse(pl).e : '' }); }
+    if (req.op === 'playUnlink') { PropertiesService.getScriptProperties().deleteProperty('play:' + user.uid); return out({ ok: true }); }
+    if (req.op === 'playPublish') return out(playPublish(user, req));
     if (req.op === 'clientErr') { // أخطاء المستخدمين الفعلية (محدودة لكل مستخدم) لتعرفها قبل أن يشتكي أحد
       if (!hit('err:' + user.uid, 20, 3600)) return out({ ok: true });
       try { sheet('errors').appendRow([new Date(), user.uid, user.email, String(req.where || '').slice(0, 80), String(req.msg || '').slice(0, 500), String(req.stack || '').slice(0, 1500), String(req.ua || '').slice(0, 200)]); } catch (e) {}
@@ -477,6 +481,68 @@ function apkKeybox(user, req) {
   var r = UrlFetchApp.fetch(a.browser_download_url, { muteHttpExceptions: true, followRedirects: true });
   if (r.getResponseCode() !== 200 || r.getBlob().getBytes().length > 20000) return { ok: false, error: { code: 'server', message: 'تعذّر جلب ملف التوقيع' } };
   return { ok: true, keybox: Utilities.base64Encode(r.getBlob().getBytes()) };
+}
+// ═════════════ النشر على حساب Google Play الخاص بالمستخدم (مفتاح خدمة يملكه هو) ═════════════
+// المفتاح يُحفظ في خصائص السكربت باسم المستخدم فقط ولا يُرسل لأي مكان إلا Google، ولا يُستخدم إلا بطلبه ولتطبيقاته
+function saToken(sa) {
+  var b64 = function(o){ return Utilities.base64EncodeWebSafe(typeof o === 'string' ? o : JSON.stringify(o)).replace(/=+$/, ''); };
+  var now = Math.floor(Date.now() / 1000);
+  var head = b64({ alg: 'RS256', typ: 'JWT' }) + '.' + b64({ iss: sa.client_email, scope: 'https://www.googleapis.com/auth/androidpublisher', aud: 'https://oauth2.googleapis.com/token', iat: now, exp: now + 3500 });
+  var sig = Utilities.base64EncodeWebSafe(Utilities.computeRsaSha256Signature(head, sa.private_key)).replace(/=+$/, '');
+  var r = UrlFetchApp.fetch('https://oauth2.googleapis.com/token', { method: 'post', muteHttpExceptions: true,
+    payload: { grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer', assertion: head + '.' + sig } });
+  var j = {}; try { j = JSON.parse(r.getContentText()); } catch (e) {}
+  return j.access_token || null;
+}
+function playLink(user, req) {
+  var sa; try { sa = JSON.parse(String(req.key || '')); } catch (e) {}
+  if (!sa || sa.type !== 'service_account' || !/^[^@\s]+@[^@\s]+\.iam\.gserviceaccount\.com$/.test(sa.client_email || '') || !/BEGIN PRIVATE KEY/.test(sa.private_key || ''))
+    return { ok: false, error: { code: 'bad_key', message: 'هذا ليس ملف مفتاح خدمة صالحاً. حمّل ملف JSON من Google Cloud ← حسابات الخدمة ← المفاتيح' } };
+  var tok; try { tok = saToken(sa); } catch (e) { tok = null; }
+  if (!tok) return { ok: false, error: { code: 'bad_key', message: 'رفضت Google هذا المفتاح. تأكد أنه حديث ولم يُحذف من Google Cloud' } };
+  PropertiesService.getScriptProperties().setProperty('play:' + user.uid, JSON.stringify({ e: sa.client_email, k: sa.private_key, p: sa.project_id || '', at: Date.now() }));
+  return { ok: true, email: sa.client_email };
+}
+function playApi(tok, method, path, body, upload) {
+  var r = UrlFetchApp.fetch('https://androidpublisher.googleapis.com/' + (upload ? 'upload/' : '') + 'androidpublisher/v3/applications/' + path, {
+    method: method, muteHttpExceptions: true, headers: { Authorization: 'Bearer ' + tok },
+    contentType: upload ? 'application/octet-stream' : 'application/json', payload: upload ? body : (body ? JSON.stringify(body) : null) });
+  var j = {}; try { j = JSON.parse(r.getContentText() || '{}'); } catch (e) {}
+  return { code: r.getResponseCode(), json: j };
+}
+function playPublish(user, req) {
+  var raw = prop('play:' + user.uid); if (!raw) return { ok: false, error: { code: 'not_linked', message: 'اربط حساب Google Play أولاً' } };
+  var id = String(req.id || ''), pkg = String(req.pkg || ''), track = ['internal', 'alpha', 'beta', 'production'].indexOf(req.track) > -1 ? req.track : 'internal';
+  if (!/^[a-zA-Z0-9]{20}$/.test(id) || !/^[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)+$/.test(pkg)) return { ok: false, error: { code: 'bad_request', message: 'طلب غير صالح' } };
+  var d = fsDoc('apk/' + id); if (!d || fsVal(d.fields && d.fields.owner) !== user.uid) return { ok: false, error: { code: 'bad_request', message: 'غير مسموح' } };
+  var rel = gh('/releases/tags/apk-' + id), asset = rel.json && (rel.json.assets || []).filter(function(x){ return x.name === 'app.aab'; })[0];
+  if (!asset) return { ok: false, error: { code: 'no_aab', message: 'لم نجد ملف AAB لهذا البناء، ابنِ حزمة Google Play أولاً' } };
+  var sa = JSON.parse(raw), tok = saToken({ client_email: sa.e, private_key: sa.k });
+  if (!tok) return { ok: false, error: { code: 'bad_key', message: 'مفتاح الربط لم يعد صالحاً، اربط حسابك من جديد' } };
+  var aab = UrlFetchApp.fetch(asset.browser_download_url, { followRedirects: true, muteHttpExceptions: true });
+  if (aab.getResponseCode() !== 200) return { ok: false, error: { code: 'server', message: 'تعذّر جلب ملف AAB' } };
+  var ed = playApi(tok, 'post', pkg + '/edits', {});
+  var why = function(r){ var m = (r.json && r.json.error && r.json.error.message) || ''; 
+    if (/not found|No application was found/i.test(m) || r.code === 404) return 'التطبيق ' + pkg + ' غير موجود في حسابك بعد. Google تشترط رفع أول نسخة يدوياً: أنشئ التطبيق في Play Console وارفع ملف AAB مرة واحدة، وبعدها يرفع بانِي كل التحديثات.';
+    if (r.code === 401 || r.code === 403) return 'حساب الخدمة ' + sa.e + ' ليس له صلاحية على هذا التطبيق. أضفه في Play Console ← المستخدمون والأذونات بصلاحية «إصدار التطبيقات».';
+    if (/version ?code.*(already|used)/i.test(m)) return 'رقم الإصدار هذا مرفوع من قبل. ابنِ حزمة جديدة (يزيد الرقم تلقائياً) ثم ارفعها.';
+    return 'رفضت Google الرفع: ' + m.slice(0, 200); };
+  if (ed.code !== 200 || !ed.json.id) return { ok: false, error: { code: 'play', message: why(ed) } };
+  var up = playApi(tok, 'post', pkg + '/edits/' + ed.json.id + '/bundles?uploadType=media', aab.getBlob().getBytes(), true);
+  if (up.code !== 200 || !up.json.versionCode) return { ok: false, error: { code: 'play', message: why(up) } };
+  var tr = playApi(tok, 'put', pkg + '/edits/' + ed.json.id + '/tracks/' + track, { track: track, releases: [{ versionCodes: [String(up.json.versionCode)], status: 'completed',
+    releaseNotes: [{ language: 'ar', text: String(req.notes || 'تحسينات وإصلاحات').slice(0, 480) }] }] });
+  // تطبيق لم يُنشر بعد (مسودة): Google لا تقبل إلا إصداراً بحالة draft، فيكمله المستخدم من Play Console بضغطة
+  var draft = false;
+  if (tr.code !== 200 && /draft/i.test((tr.json.error && tr.json.error.message) || '')) {
+    draft = true;
+    tr = playApi(tok, 'put', pkg + '/edits/' + ed.json.id + '/tracks/' + track, { track: track, releases: [{ versionCodes: [String(up.json.versionCode)], status: 'draft' }] });
+  }
+  if (tr.code !== 200) return { ok: false, error: { code: 'play', message: why(tr) } };
+  var cm = playApi(tok, 'post', pkg + '/edits/' + ed.json.id + ':commit', {});
+  if (cm.code !== 200) return { ok: false, error: { code: 'play', message: why(cm) } };
+  logRow(user, 'PLAY', pkg + ' v' + up.json.versionCode + ' ' + track, 0, 0, 0);
+  return { ok: true, versionCode: up.json.versionCode, track: track, draft: draft };
 }
 function hit(key, limit, ttl) {
   var c = CacheService.getScriptCache(), n = Number(c.get(key) || 0) + 1;

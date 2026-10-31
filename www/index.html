@@ -419,6 +419,16 @@
     .ba img { width: 100%; border-radius: 12px; border: 1px solid var(--border); display: block; margin-bottom: 4px; cursor: zoom-in; }
     .plan-list { list-style: none; margin: 6px 0 0; padding: 0; font-size: 13px; }
     .plan-list li { display: flex; gap: 6px; align-items: flex-start; padding: 2px 0; }
+    .pl-step { display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+    .pl-step:last-of-type { border-bottom: 0; }
+    .pl-n { flex-shrink: 0; width: 28px; height: 28px; border-radius: 50%; background: var(--primary); color: #fff; font-weight: 800; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+    .pl-step > div > b:first-child { display: block; font-size: 14.5px; margin-bottom: 3px; }
+    .pl-step p { margin: 0 0 8px; font-size: 13px; color: var(--text2); line-height: 1.8; }
+    .pl-step ol { margin: 0 0 8px; padding-inline-start: 18px; font-size: 13px; color: var(--text2); line-height: 1.9; }
+    .pl-step code { direction: ltr; unicode-bidi: embed; background: var(--surface2); padding: 1px 6px; border-radius: 6px; font-size: 12px; }
+    .pl-ok { display: flex; align-items: center; gap: 10px; padding: 14px; border-radius: 14px; background: color-mix(in srgb, #10B981 12%, var(--surface)); border: 1px solid color-mix(in srgb, #10B981 40%, transparent); margin-bottom: 10px; font-size: 13.5px; }
+    .pl-ok .i { color: #10B981; width: 22px; height: 22px; flex-shrink: 0; }
+    .pl-up { display: flex; flex-direction: column; gap: 8px; padding: 12px; border-radius: 14px; border: 1px dashed var(--primary); margin-top: 10px; }
     .credit-chip.pro { border: 0; color: #451A03; background: linear-gradient(135deg, #FCD34D, #F59E0B); font-weight: 800; }
     .credit-chip { display: inline-flex; align-items: center; gap: 6px; margin-top: 10px; height: 32px; padding: 0 12px; border-radius: 100px; border: 1px solid var(--border); background: var(--surface); color: var(--text2); font-size: 13px; cursor: pointer; }
     .credit-chip[hidden] { display: none; }
@@ -1150,6 +1160,11 @@
             <span class="slbl">الخطط والأسعار<small>تطبيقات أكثر، وحزمة Google Play</small></span>
             <svg class="i"><use href="#i-chev"/></svg>
           </button>
+          <button class="sitem" onclick="openPlayLink()">
+            <span class="sico g"><svg class="i"><use href="#i-link"/></svg></span>
+            <span class="slbl">ربط حساب Google Play<small>ارفع تطبيقاتك إلى حسابك بضغطة</small></span>
+            <svg class="i"><use href="#i-chev"/></svg>
+          </button>
           <button class="sitem" id="key-item" onclick="openKeyModal()">
             <span class="sico g"><svg class="i"><use href="#i-key"/></svg></span>
             <span class="slbl">مفتاح Gemini API<small>يُحفظ على جهازك فقط</small></span>
@@ -1412,6 +1427,15 @@
   </div>
 </div>
 
+<div class="modal-bg" id="play-modal" style="z-index:466">
+  <div class="modal-sheet">
+    <div class="mhandle"></div>
+    <div class="mtitle"><svg class="i"><use href="#i-link"/></svg>ربط حسابك في Google Play</div>
+    <p class="msub">مرة واحدة فقط، ثم يرفع بانِي تحديثات تطبيقاتك إلى <b>حسابك أنت</b> بضغطة. تأخذ حوالي ٥ دقائق.</p>
+    <div id="play-body"></div>
+    <button class="btn btn-ghost" style="margin-top:8px" onclick="closeModal('play-modal')">إغلاق</button>
+  </div>
+</div>
 <div class="modal-bg" id="rules-modal" style="z-index:470">
   <div class="modal-sheet">
     <div class="mhandle"></div>
@@ -5620,7 +5644,7 @@ function cloudApk(app, blob, cfg){
   .then(function(){ apkSt('<span class="spin-s"></span>يبدأ البناء…'); return proxyCall(store ? { op: 'apkBuild', id: id, mode: 'store', k: K } : { op: 'apkBuild', id: id }); })
   .then(function(r){
     if (!r || !r.ok) throw new Error((r && r.error && r.error.message) || 'تعذّر بدء البناء');
-    app.apkBuild = { id: id, at: Date.now(), store: store, k: K, vc: vc }; saveApps();
+    app.apkBuild = { id: id, at: Date.now(), store: store, k: K, vc: vc, pkg: cfg.appId }; saveApps();
     apkPoll(app, id, 0);
   })
   .catch(function(e){ apkSt(esc(e.message || 'تعذّر البناء'), 'err'); if (b) b.disabled = false; });
@@ -5651,6 +5675,51 @@ function copyPrivacy(){
   var app = stApp(), u = privacyUrl(app);
   (navigator.clipboard ? navigator.clipboard.writeText(u) : Promise.reject()).then(function(){ toast('نُسخ رابط سياسة الخصوصية: الصقه في Play Console ← سياسة التطبيق', 'suc'); }, function(){ prompt('رابط سياسة الخصوصية', u); });
 }
+// ── ربط Google Play: مفتاح خدمة يملكه المستخدم، ثم رفع AAB لحسابه مباشرة من الخادم ──
+function openPlayLink(){
+  var b = document.getElementById('play-body'); b.innerHTML = '<div class="apk-st"><span class="spin-s"></span>يتحقق من الربط…</div>'; openModal('play-modal');
+  proxyCall({ op: 'playStatus' }).then(function(r){ S.playEmail = (r && r.email) || ''; renderPlayLink(); }, function(){ S.playEmail = ''; renderPlayLink(); });
+}
+function renderPlayLink(){
+  var b = document.getElementById('play-body'); if (!b) return;
+  var L = function(u, t){ return '<a class="btn btn-ghost btn-sm" href="' + u + '" target="_blank" rel="noopener">' + ic('link') + t + '</a>'; };
+  if (S.playEmail) {
+    b.innerHTML = '<div class="pl-ok">' + ic('check-circle') + '<div><b>حسابك مربوط ✓</b><br>حساب الخدمة: <code>' + esc(S.playEmail) + '</code><br>ابنِ «حزمة Google Play» لأي تطبيق ثم اضغط «ارفع إلى Google Play».</div></div>' +
+      '<div class="msub">لكل تطبيق جديد: أضف بريد حساب الخدمة أعلاه في Play Console ← <b>المستخدمون والأذونات</b> (إن لم تمنحه صلاحية كل التطبيقات)، وارفع أول نسخة يدوياً مرة واحدة كما تشترط Google.</div>' +
+      '<button class="btn btn-ghost btn-sm" style="color:#C42D33;margin-top:8px" onclick="playUnlink()">إلغاء الربط</button>';
+    return;
+  }
+  b.innerHTML =
+    '<div class="pl-step"><span class="pl-n">١</span><div><b>فعّل واجهة Google Play في Google Cloud</b><p>افتح الرابط بحساب Google نفسه الذي تملك به حساب المطوّر، واختر مشروعاً (أو أنشئ واحداً باسم banee-publish) ثم اضغط <b>Enable / تفعيل</b>.</p>' + L('https://console.cloud.google.com/apis/library/androidpublisher.googleapis.com', 'فتح صفحة التفعيل') + '</div></div>' +
+    '<div class="pl-step"><span class="pl-n">٢</span><div><b>أنشئ «حساب خدمة» وحمّل مفتاحه</b><ol><li>افتح الرابط واكتب اسماً مثل <code>banee</code> ثم <b>Create and continue</b> ثم <b>Done</b> (لا تحتاج أدواراً هنا).</li><li>اضغط على حساب الخدمة الجديد ← تبويب <b>Keys / المفاتيح</b> ← <b>Add key</b> ← <b>Create new key</b> ← <b>JSON</b>.</li><li>سيُحمَّل ملف ينتهي بـ <code>.json</code> على جهازك. احتفظ به.</li></ol>' + L('https://console.cloud.google.com/iam-admin/serviceaccounts/create', 'إنشاء حساب الخدمة') + '</div></div>' +
+    '<div class="pl-step"><span class="pl-n">٣</span><div><b>امنحه صلاحية النشر في Play Console</b><ol><li>افتح Play Console ← <b>المستخدمون والأذونات</b> ← <b>دعوة مستخدمين جدد</b>.</li><li>الصق بريد حساب الخدمة (تجده داخل ملف JSON بعد <code>client_email</code>، وينتهي بـ <code>iam.gserviceaccount.com</code>).</li><li>في <b>أذونات الحساب</b> فعّل: <b>إصدار التطبيقات في مسارات الاختبار</b> و<b>إصدار إلى الإنتاج</b> و<b>إدارة الإصدارات</b>، ثم <b>دعوة مستخدم</b>.</li></ol>' + L('https://play.google.com/console/users-and-permissions', 'فتح المستخدمين والأذونات') + '</div></div>' +
+    '<div class="pl-step"><span class="pl-n">٤</span><div><b>ارفع ملف المفتاح هنا</b><p>يُحفظ لدى بانِي مرتبطاً بحسابك فقط، ولا يُستخدم إلا لرفع تطبيقاتك عندما تطلب ذلك. تستطيع إلغاء الربط في أي وقت.</p>' +
+    '<div class="pl-up"><input type="file" id="pl-file" accept=".json,application/json"><button class="btn btn-primary" id="pl-go" onclick="playLinkSave()">' + ic('check') + 'تحقق واربط</button></div></div></div>';
+}
+function playLinkSave(){
+  var f = document.getElementById('pl-file'), b = document.getElementById('pl-go');
+  if (!f || !f.files || !f.files[0]) { toast('اختر ملف JSON الذي حمّلته في الخطوة ٢', 'err'); return; }
+  if (f.files[0].size > 20000) { toast('هذا الملف كبير على أن يكون مفتاح خدمة', 'err'); return; }
+  b.disabled = true; b.innerHTML = '<span class="spin-s"></span>يتحقق من المفتاح مع Google…';
+  f.files[0].text().then(function(txt){ return proxyCall({ op: 'playLink', key: txt }); }).then(function(r){
+    b.disabled = false; b.innerHTML = ic('check') + 'تحقق واربط';
+    if (!r || !r.ok) { toast((r && r.error && r.error.message) || 'تعذّر الربط', 'err'); return; }
+    S.playEmail = r.email; renderPlayLink(); toast('رُبط حسابك في Google Play ✓', 'suc');
+  }, function(){ b.disabled = false; b.innerHTML = ic('check') + 'تحقق واربط'; toast('تعذّر الاتصال، حاول مرة أخرى', 'err'); });
+}
+function playUnlink(){ proxyCall({ op: 'playUnlink' }).then(function(){ S.playEmail = ''; renderPlayLink(); toast('أُلغي الربط', 'suc'); }); }
+function playPublishGo(track){
+  var app = stApp(), bs = app && app.apkBuild; if (!bs || !bs.store) return;
+  if (!S.playEmail) { openPlayLink(); return; }
+  var st = document.getElementById('pl-pub'); if (st) st.innerHTML = '<span class="spin-s"></span>يرفع الإصدار إلى حسابك في Google Play…';
+  proxyCall({ op: 'playPublish', id: bs.id, pkg: bs.pkg, track: track, notes: (app.chat || []).filter(function(m){ return m.role === 'me'; }).slice(-3).map(function(m){ return '• ' + m.text.slice(0, 80); }).join('\n') || 'تحسينات وإصلاحات' })
+    .then(function(r){
+      if (!r || !r.ok) { if (st) st.innerHTML = '<span style="color:#C42D33">' + esc((r && r.error && r.error.message) || 'تعذّر الرفع') + '</span>'; return; }
+      var tn = { internal: 'الاختبار الداخلي', alpha: 'الاختبار المغلق', beta: 'الاختبار المفتوح', production: 'الإنتاج (بعد مراجعة Google)' }[r.track];
+      if (st) st.innerHTML = ic('check') + '<b>رُفع الإصدار ' + toAr(r.versionCode) + ' إلى «' + tn + '»</b>' + (r.draft ? '<small>تطبيقك ما زال مسودة في Play Console: افتحه واضغط «مراجعة الإصدار» لإكماله.</small>' : '<small>يظهر في Play Console خلال دقائق.</small>');
+      toast('رُفع إلى Google Play ✓', 'suc');
+    }, function(){ if (st) st.textContent = 'تعذّر الاتصال، حاول مرة أخرى'; });
+}
 function apkPoll(app, id, n){
   var mins = Math.max(1, 6 - Math.floor(n / 4));
   apkSt('<span class="spin-s"></span>يبني تطبيقك في السحابة… ' + (n < 24 ? '(حوالي ' + toAr(mins) + ' دقائق)' : 'يأخذ وقتاً أطول من المعتاد'));
@@ -5664,12 +5733,13 @@ function apkPoll(app, id, n){
           // أول حزمة: نحفظ ملف التوقيع المشفّر ومفتاحه، فكل تحديث قادم يُوقَّع بنفس المفتاح (شرط Google Play)
           if (kr && kr.ok && kr.keybox) app.signing = { k: bs.k, kb: kr.keybox, vc: bs.vc, at: Date.now() };
           else if (app.signing) app.signing.vc = bs.vc;
-          app.apkBuild = { id: id, url: r.url, files: r.files, at: Date.now(), store: true }; saveApps();
+          app.apkBuild = { id: id, url: r.url, files: r.files, at: Date.now(), store: true, pkg: bs.pkg }; saveApps();
           var F = r.files || {};
           apkSt(ic('check') + '<b>حزمة Google Play جاهزة · الإصدار ' + toAr(bs.vc) + '</b>' +
             (F['app.aab'] ? '<a class="btn btn-accent btn-sm" href="' + esc(F['app.aab']) + '" target="_blank" rel="noopener">تحميل AAB للمتجر</a>' : '') +
             (F['app.apk'] ? ' <a class="btn btn-ghost btn-sm" href="' + esc(F['app.apk']) + '" target="_blank" rel="noopener">APK موقّع للتجربة</a>' : '') +
-            '<small>ارفع ملف AAB في Play Console ← الإصدارات. مفتاح التوقيع محفوظ في بانِي للتحديثات القادمة؛ <button class="link-btn" onclick="keyBackup()">احتفظ بنسخة احتياطية منه</button>. رابط سياسة الخصوصية: <button class="link-btn" onclick="copyPrivacy()">نسخ الرابط</button></small>');
+            '<div class="pl-up" style="margin-top:10px"><b>' + ic('send') + ' ارفعه إلى حسابك في Google Play</b><div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn btn-primary btn-sm" onclick="playPublishGo(\'internal\')">الاختبار الداخلي</button><button class="btn btn-ghost btn-sm" onclick="playPublishGo(\'production\')">الإنتاج</button><button class="btn btn-ghost btn-sm" onclick="openPlayLink()">' + ic('link') + 'ربط الحساب</button></div><div id="pl-pub" class="msub"></div></div>' +
+            '<small>أو ارفع ملف AAB بنفسك في Play Console ← الإصدارات. مفتاح التوقيع محفوظ في بانِي للتحديثات القادمة؛ <button class="link-btn" onclick="keyBackup()">احتفظ بنسخة احتياطية منه</button>. رابط سياسة الخصوصية: <button class="link-btn" onclick="copyPrivacy()">نسخ الرابط</button></small>');
           toast('حزمة المتجر جاهزة', 'suc');
         });
       }

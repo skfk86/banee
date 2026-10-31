@@ -8,11 +8,6 @@
     "https://www.googleapis.com/auth/spreadsheets",
     "https://www.googleapis.com/auth/androidpublisher"
   ],
-  "dependencies": {
-    "enabledAdvancedServices": [
-      { "userSymbol": "AndroidPublisher", "serviceId": "androidpublisher", "version": "v3" }
-    ]
-  },
   "webapp": {
     "executeAs": "USER_DEPLOYING",
     "access": "ANYONE_ANONYMOUS"

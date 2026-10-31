@@ -742,3 +742,20 @@ function testGemini() {
 function hash(s) {
   return Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, s).map(function(b){ return ('0' + (b & 255).toString(16)).slice(-2); }).join('').slice(0, 32);
 }
+
+// ── اختبار ربط Google Play: شغّلها مرة من المحرر (تشغيل ▶) واقرأ النتيجة في سجل التنفيذ ──
+function testPlay() {
+  var r = UrlFetchApp.fetch('https://androidpublisher.googleapis.com/androidpublisher/v3/applications/' + CFG.PACKAGE_NAME + '/subscriptions?pageSize=1', {
+    headers: { Authorization: 'Bearer ' + ScriptApp.getOAuthToken() }, muteHttpExceptions: true
+  });
+  var code = r.getResponseCode(), body = r.getContentText().slice(0, 400);
+  var hint = code === 200 ? '✅ الربط يعمل: الخادم يستطيع سؤال Google Play عن الاشتراكات'
+    : code === 401 ? '❌ 401: أذونات ناقصة. تأكد من androidpublisher في appsscript.json ثم شغّل الدالة ووافق على الأذونات'
+    : code === 403 && /has not been used|disabled|SERVICE_DISABLED/i.test(body) ? '❌ 403: واجهة Google Play Android Developer API غير مفعّلة في مشروع Google Cloud المرتبط بالسكربت'
+    : code === 403 ? '❌ 403: حساب Google الذي يملك السكربت ليس له صلاحية في Play Console (المستخدمون والأذونات: عرض البيانات المالية + إدارة الطلبات والاشتراكات)'
+    : code === 404 ? '❌ 404: اسم الحزمة ' + CFG.PACKAGE_NAME + ' لا يطابق تطبيقك في Play Console'
+    : '❌ ' + code;
+  console.log(hint + '\n' + body);
+  return hint;
+}
+

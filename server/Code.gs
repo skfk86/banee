@@ -103,8 +103,6 @@ function doPost(e) {
   var t0 = Date.now();
   try {
     var req = JSON.parse((e && e.postData && e.postData.contents) || '{}');
-    // نسخ بانِي المرخّصة لشركات (White-label) تسأل هنا عن صلاحية ترخيصها، بلا حساب مستخدم
-    if (req.op === 'license') return out(licenseCheck(req));
     // تطبيق منشور بمشروع Firebase خاص بصاحبه: يُعرَّف بمفتاح التطبيق، ولا يصل إلا للبيانات الحية والذكاء الاصطناعي
     // التطبيقات المنشورة لها خادمها الخاص (يولّده بانِي وينشره صاحب التطبيق بمفتاحه)، فلا تمر من هنا
     if (req.appKey) return out({ ok: false, error: { code: 'own_server', message: 'هذه الميزة غير مفعّلة من صاحب التطبيق بعد' } });
@@ -850,57 +848,5 @@ function testPlay() {
     : '❌ ' + code;
   console.log(hint + '\n' + body);
   return hint;
-}
-
-// ═════════════ تراخيص النسخ الخاصة (White-label) ═════════════
-// تُدار من محرر Apps Script: شغّل الدالة المطلوبة بعد تعديل قيمها في أعلاها، والنتيجة في سجل التنفيذ.
-function licenseCheck(req) {
-  var key = String(req.key || '').trim();
-  if (!/^BNL-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$/.test(key)) return { ok: false, valid: false, reason: 'bad_key' };
-  var raw = prop('lic:' + key); if (!raw) return { ok: true, valid: false, reason: 'unknown' };
-  var L = JSON.parse(raw);
-  if (L.off) return { ok: true, valid: false, reason: 'revoked', co: L.co };
-  if (L.app && req.app && L.app !== String(req.app)) return { ok: true, valid: false, reason: 'other_app', co: L.co };
-  if (L.until && Date.now() > L.until) return { ok: true, valid: false, reason: 'expired', co: L.co, until: L.until };
-  L.seen = Date.now(); PropertiesService.getScriptProperties().setProperty('lic:' + key, JSON.stringify(L));
-  return { ok: true, valid: true, co: L.co, until: L.until || 0 };
-}
-function newLicenseKey_() {
-  var c = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789', p = function(){ var x = ''; for (var i = 0; i < 4; i++) x += c[Math.floor(Math.random() * c.length)]; return x; };
-  return 'BNL-' + p() + '-' + p() + '-' + p();
-}
-// ١) ترخيص جديد: عدّل الاسم والمدة (أشهر، 0 = مدى الحياة) ومعرّف تطبيق الشركة ثم شغّل
-function createLicense() {
-  var COMPANY = 'اسم الشركة', MONTHS = 12, APP_ID = 'com.company.app';
-  var key = newLicenseKey_();
-  var L = { co: COMPANY, app: APP_ID, at: Date.now(), until: MONTHS ? Date.now() + MONTHS * 30.44 * 864e5 : 0 };
-  PropertiesService.getScriptProperties().setProperty('lic:' + key, JSON.stringify(L));
-  console.log('✅ ترخيص جديد لـ ' + COMPANY + '\nالمفتاح: ' + key + '\nينتهي: ' + (L.until ? new Date(L.until).toISOString().slice(0, 10) : 'مدى الحياة') + '\nضع المفتاح في brand.json للشركة (license.key)');
-  return key;
-}
-// ٢) تجديد: ضع المفتاح وعدد الأشهر الإضافية
-function renewLicense() {
-  var KEY = 'BNL-XXXX-XXXX-XXXX', MONTHS = 12;
-  var raw = prop('lic:' + KEY); if (!raw) { console.log('❌ مفتاح غير موجود'); return; }
-  var L = JSON.parse(raw), from = Math.max(Date.now(), L.until || Date.now());
-  L.until = from + MONTHS * 30.44 * 864e5; L.off = false;
-  PropertiesService.getScriptProperties().setProperty('lic:' + KEY, JSON.stringify(L));
-  console.log('✅ جُدّد ترخيص ' + L.co + ' حتى ' + new Date(L.until).toISOString().slice(0, 10));
-}
-// ٣) إيقاف ترخيص (عدم دفع أو مخالفة)، ويعود بالتجديد
-function revokeLicense() {
-  var KEY = 'BNL-XXXX-XXXX-XXXX';
-  var raw = prop('lic:' + KEY); if (!raw) { console.log('❌ مفتاح غير موجود'); return; }
-  var L = JSON.parse(raw); L.off = true; PropertiesService.getScriptProperties().setProperty('lic:' + KEY, JSON.stringify(L));
-  console.log('⛔ أُوقف ترخيص ' + L.co + '. تتوقف نسخته خلال ٣ أيام على الأكثر (مدة التخزين المؤقت في أجهزتهم).');
-}
-// ٤) كل التراخيص وحالتها وآخر ظهور
-function listLicenses() {
-  var all = PropertiesService.getScriptProperties().getProperties(), rows = [];
-  Object.keys(all).filter(function(k){ return k.indexOf('lic:') === 0; }).forEach(function(k){
-    var L = JSON.parse(all[k]);
-    rows.push(k.slice(4) + ' | ' + L.co + ' | ' + L.app + ' | ' + (L.off ? 'موقوف' : L.until && L.until < Date.now() ? 'منتهي' : 'فعّال') + ' | حتى ' + (L.until ? new Date(L.until).toISOString().slice(0, 10) : 'مدى الحياة') + ' | آخر ظهور ' + (L.seen ? new Date(L.seen).toISOString().slice(0, 10) : '—'));
-  });
-  console.log(rows.length ? rows.join('\n') : 'لا توجد تراخيص بعد');
 }
 

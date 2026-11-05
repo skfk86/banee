@@ -117,6 +117,20 @@ service cloud.firestore {
       }
     }
 
+    // قناة التحديث الفوري: التطبيقات المثبتة تقرأ آخر نسخة، وصاحب التطبيق وحده ينشرها، ورقم النسخة لا ينقص
+    match /live/{id} {
+      allow read: if true;
+      allow create: if signedIn() && request.resource.data.owner == request.auth.uid;
+      allow update: if signedIn() && resource.data.owner == request.auth.uid && request.resource.data.owner == resource.data.owner
+        && request.resource.data.v >= resource.data.v;
+      allow delete: if signedIn() && resource.data.owner == request.auth.uid;
+      match /parts/{part} {
+        allow read: if true;
+        allow write: if signedIn() && get(/databases/$(database)/documents/live/$(id)).data.owner == request.auth.uid
+          && (request.method == 'delete' || request.resource.data.d.size() <= 900000);
+      }
+    }
+
     // ملفات البناء السحابي (APK): معرّف عشوائي طويل، يقرؤها سير عمل GitHub، ويكتبها صاحبها فقط
     match /apk/{id} {
       allow read: if true;

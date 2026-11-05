@@ -2,6 +2,12 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
+  <script>/* التحديث الفوري: نسخة أحدث نزّلها التطبيق سابقاً تُفتح بدل النسخة المضمّنة */
+  (function(){ var L = {{LIVE}}; window.__LIVE__ = L; window.__LIVE_SWAP__ = false; if (!L) return;
+    try { var v = +localStorage.getItem('live_v_' + L.id) || 0, h = v > L.v && localStorage.getItem('live_html_' + L.id);
+      // نكتب النسخة الجديدة مكان هذا السطر، ثم نحبس بقية النسخة القديمة داخل <plaintext> مخفي فلا يُنفَّذ منها شيء
+      if (h && h.indexOf('__LIVE__') > -1) { window.__LIVE_SWAP__ = true; document.write(h.replace(/^\s*<!DOCTYPE[^>]*>/i, '') + '<plaintext hidden style="display:none">'); }
+    } catch (e) {} })();</script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="{{PRIMARY}}">
   <title>{{TITLE}}</title>
@@ -382,7 +388,28 @@
 
   <script type="module">
     // ═════════════ إعدادات ═════════════
+    if (window.__LIVE_SWAP__) throw new Error('live-swap'); // النسخة القديمة تتوقف هنا إن وصلها المتصفح قبل الاستبدال
     const META = {{META}};
+    // ── التحديث الفوري بدون المتجر: يسأل عن نسخة أحدث نشرها صاحب التطبيق، وينزّلها في الخلفية، وتُطبَّق عند الفتح التالي ──
+    const Live = {
+      cur() { const L = window.__LIVE__; if (!L) return 0; return Math.max(L.v, +localStorage.getItem('live_v_' + L.id) || 0); },
+      async check() {
+        const L = window.__LIVE__; if (!L || META.test || META.preview) return;
+        const base = 'https://firestore.googleapis.com/v1/projects/' + L.p + '/databases/(default)/documents/live/' + L.id;
+        try {
+          const d = await (await fetch(base)).json(), f = d.fields || {}, v = +((f.v || {}).integerValue || 0), n = +((f.parts || {}).integerValue || 0);
+          const running = (window.__LIVE_RUNNING__ = window.__LIVE_RUNNING__ || this.cur());
+          if (!v || v <= running || !n || n > 40) return;
+          let h = ''; for (let i = 0; i < n; i++) { const pj = await (await fetch(base + '/parts/' + i)).json(); h += ((pj.fields || {}).d || {}).stringValue || ''; }
+          if (h.length !== +((f.size || {}).integerValue || 0) || h.indexOf('__LIVE__') < 0) return; // تحميل ناقص: نتجاهله ونعيد المحاولة لاحقاً
+          localStorage.setItem('live_html_' + L.id, h); localStorage.setItem('live_v_' + L.id, String(v));
+          const note = ((f.notes || {}).stringValue || '').slice(0, 120);
+          UI.toast('تحديث جديد جاهز' + (note ? ': ' + note : '') + ' · يُطبَّق عند فتح التطبيق مرة أخرى', 'success');
+        } catch (e) {}
+      }
+    };
+    setTimeout(() => Live.check(), 4000);
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) Live.check(); });
     try { const sh = META.shell || {}; document.body.classList.add('nav-' + (sh.nav || 'pill'), 'head-' + (sh.head || 'plain')); } catch (e) {}
 
     // قاعدة البيانات: تطبيقات بانِي المنشورة تعمل على سحابة بانِي تلقائياً (META.cloud).

@@ -1,0 +1,19 @@
+{
+  "name": "اسم المنتج",
+  "nameEn": "ProductName",
+  "maker": "اسم الشركة",
+  "appId": "com.company.builder",
+  "contact": "support@company.com",
+  "logo": "logo.png",
+  "proxyUrl": "https://script.google.com/macros/s/رابط-خادم-الشركة/exec",
+  "shareBase": "https://company.github.io/builder/a/#",
+  "firebase": {
+    "apiKey": "...",
+    "authDomain": "company-project.firebaseapp.com",
+    "projectId": "company-project",
+    "storageBucket": "company-project.firebasestorage.app",
+    "messagingSenderId": "...",
+    "appId": "..."
+  },
+  "license": { "key": "BNL-XXXX-XXXX-XXXX" }
+}

@@ -1481,6 +1481,29 @@ var FB_CONFIG = {
 var FB_VERSION = '13.0.0';
 // رابط خادم Gemini على Google Apps Script (من Deploy ← Web app). إذا تُرك فارغاً يعمل بانِي بمفتاح المستخدم.
 var PROXY_URL = 'https://script.google.com/macros/s/AKfycbzfkGenieSi64wGJCrczWqmaeKw5Ye59DlZmJDU24DPXz-CLwSnZJb2E3S1_coYUlyKsQ/exec';
+// ── ترخيص النسخة الخاصة (White-label): null في بانِي الأصلي، وتملؤه أداة tools/whitelabel.js لنسخ الشركات ──
+var LICENSE = null; /*LICENSE*/
+(function licenseGuard(){
+  if (!LICENSE || !LICENSE.key) return;
+  var C = {}; try { C = JSON.parse(localStorage.getItem('blic') || '{}'); } catch(e){}
+  var DAY = 864e5, fresh = C.key === LICENSE.key && C.valid && Date.now() - (C.at || 0) < 3 * DAY, grace = C.key === LICENSE.key && C.valid && Date.now() - (C.at || 0) < 7 * DAY;
+  var block = function(reason, co){
+    var msg = { expired: 'انتهت مدة ترخيص هذه النسخة.', revoked: 'أُوقف ترخيص هذه النسخة.', other_app: 'مفتاح الترخيص لا يخص هذا التطبيق.', unknown: 'مفتاح الترخيص غير صحيح.', bad_key: 'مفتاح الترخيص غير صحيح.', offline: 'تعذّر التحقق من الترخيص منذ أكثر من ٧ أيام. اتصل بالإنترنت ثم أعد فتح التطبيق.' }[reason] || 'الترخيص غير صالح.';
+    var show = function(){ var d = document.createElement('div');
+      d.setAttribute('style', 'position:fixed;inset:0;z-index:2147483647;background:#0E1525;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:28px;text-align:center;font-family:system-ui,Tahoma,sans-serif');
+      d.innerHTML = '<div style="font-size:44px">🔒</div><h2 style="margin:0;font-size:21px">' + msg + '</h2><p style="margin:0;max-width:320px;line-height:1.9;color:#C9D1E1;font-size:14.5px">' + (co ? 'الجهة المرخّص لها: ' + String(co).replace(/</g, '&lt;') + '. ' : '') + 'للتجديد تواصل مع مزوّد النسخة' + (LICENSE.contact ? ': <b dir="ltr">' + String(LICENSE.contact).replace(/</g, '&lt;') + '</b>' : '.') + '</p>';
+      document.body.appendChild(d); };
+    if (document.body) show(); else document.addEventListener('DOMContentLoaded', show);
+  };
+  if (fresh) return;
+  fetch(LICENSE.server, { method: 'POST', body: JSON.stringify({ op: 'license', key: LICENSE.key, app: LICENSE.app || '' }) })
+    .then(function(r){ return r.json(); })
+    .then(function(r){
+      if (r && r.valid) { try { localStorage.setItem('blic', JSON.stringify({ key: LICENSE.key, valid: true, at: Date.now(), until: r.until || 0 })); } catch(e){} return; }
+      try { localStorage.setItem('blic', JSON.stringify({ key: LICENSE.key, valid: false, at: Date.now() })); } catch(e){}
+      block((r && r.reason) || 'unknown', r && r.co);
+    }, function(){ if (!grace) block('offline'); });
+})();
 var PACKS = { banee_credits_small: { points: 1360, fallbackPrice: '$3' }, banee_credits_large: { points: 4000, fallbackPrice: '$8' } };
 // معرّفات الاشتراكات كما تنشئها في Play Console ← Monetize ← Subscriptions
 var PLANS = {

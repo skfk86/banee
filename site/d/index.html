@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>لوحة تطبيقاتي — بانِي</title>
+<style>
+  :root { --bg: #F5F7FB; --surface: #FFFFFF; --text: #0E1525; --text2: #5B6475; --line: #E3E7EF; --primary: #2C64DD; --ok: #0B7A52; --warn: #A85A06; --err: #C42D33; }
+  @media (prefers-color-scheme: dark) { :root { --bg: #0B1020; --surface: #141B2D; --text: #E8ECF4; --text2: #A3ACBD; --line: #243049; --primary: #7FA3FF; --ok: #34D399; --warn: #FBBF24; --err: #F87171; } }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font-family: system-ui, 'Segoe UI', Tahoma, sans-serif; }
+  header { display: flex; align-items: center; gap: 10px; padding: 14px 18px; background: var(--surface); border-bottom: 1px solid var(--line); position: sticky; top: 0; z-index: 5; }
+  header b { font-size: 17px; } header .sp { flex: 1; } header small { color: var(--text2); }
+  main { max-width: 1100px; margin: 0 auto; padding: 18px; }
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 16px; margin-bottom: 14px; }
+  h2 { font-size: 18px; margin: 0 0 10px; } h3 { font-size: 15px; margin: 0 0 8px; }
+  .muted { color: var(--text2); font-size: 13.5px; line-height: 1.8; }
+  input, textarea, select { width: 100%; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); color: var(--text); font: inherit; margin: 4px 0 10px; }
+  button { font: inherit; cursor: pointer; border: 0; border-radius: 10px; padding: 9px 14px; background: var(--primary); color: #fff; font-weight: 700; }
+  button.ghost { background: transparent; color: var(--primary); border: 1px solid var(--line); }
+  button.bad { background: var(--err); } button.sm { padding: 5px 10px; font-size: 12.5px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; }
+  .stat { background: var(--bg); border: 1px solid var(--line); border-radius: 12px; padding: 12px; cursor: pointer; }
+  .stat b { display: block; font-size: 24px; } .stat span { color: var(--text2); font-size: 13px; }
+  .stat.on { outline: 2px solid var(--primary); }
+  .apps { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+  .apps button { background: var(--surface); color: var(--text); border: 1px solid var(--line); }
+  .apps button.on { background: var(--primary); color: #fff; border-color: var(--primary); }
+  .tbl { overflow-x: auto; } table { border-collapse: collapse; width: 100%; font-size: 13px; }
+  th, td { text-align: right; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  th { color: var(--text2); font-weight: 600; background: var(--bg); position: sticky; top: 0; }
+  .pill { display: inline-block; font-size: 11.5px; font-weight: 700; padding: 2px 8px; border-radius: 100px; background: var(--bg); border: 1px solid var(--line); }
+  .pill.ok { color: var(--ok); } .pill.warn { color: var(--warn); }
+  .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  #auth { max-width: 380px; margin: 60px auto; }
+  .toast { position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%); background: #0E1525; color: #fff; padding: 10px 16px; border-radius: 12px; font-size: 14px; display: none; z-index: 9; }
+</style>
+</head>
+<body>
+<header><b>لوحة تطبيقاتي</b><small>بانِي</small><span class="sp"></span><span id="who" class="muted"></span><button class="ghost sm" id="out" hidden>خروج</button></header>
+<main id="main"><p class="muted">جارٍ التحميل…</p></main>
+<div class="toast" id="toast"></div>
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js';
+import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js';
+import { getFirestore, collection, query, where, getDocs, getCountFromServer, orderBy, limit, doc, updateDoc, addDoc, deleteDoc } from 'https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js';
+// لوحة صاحب التطبيق على الويب: تطبيقاته المنشورة على سحابة بانِي، بياناتها ومستخدموها وإشعاراتها. القواعد تسمح له وحده بكل هذا
+const app = initializeApp({ apiKey: 'AIzaSyADAJ2MGzx58Bh-8gudT_JUBmBExYLrn6Q', authDomain: 'bani-b28a0.firebaseapp.com', projectId: 'bani-b28a0', appId: '1:349740703131:web:743fe5721d33f47dc1153e' });
+const auth = getAuth(app), db = getFirestore(app), M = document.getElementById('main');
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const toast = t => { const e = document.getElementById('toast'); e.textContent = t; e.style.display = 'block'; clearTimeout(e._t); e._t = setTimeout(() => e.style.display = 'none', 2600); };
+const fmt = v => v == null ? '' : typeof v === 'object' ? JSON.stringify(v).slice(0, 80) : (typeof v === 'number' && v > 1e12 ? new Date(v).toLocaleString('ar-EG-u-nu-latn') : String(v));
+let APPS = [], CUR = null, COL = null;
+
+function login() {
+  M.innerHTML = `<div class="card" id="auth"><h2>دخول صاحب التطبيق</h2><p class="muted">سجّل بحساب بانِي نفسه الذي بنيت به تطبيقاتك.</p>
+    <label>البريد</label><input id="em" type="email" dir="ltr"><label>كلمة المرور</label><input id="pw" type="password" dir="ltr"><button id="go" style="width:100%">دخول</button></div>`;
+  document.getElementById('go').onclick = async () => {
+    try { await signInWithEmailAndPassword(auth, document.getElementById('em').value.trim(), document.getElementById('pw').value); }
+    catch (e) { toast('البريد أو كلمة المرور غير صحيحة'); }
+  };
+}
+async function loadApps(u) {
+  const s = await getDocs(query(collection(db, 'apps'), where('owner', '==', u.uid)));
+  APPS = s.docs.map(d => ({ id: d.id, ...d.data() })).filter(a => a.prod).sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+  if (!APPS.length) { M.innerHTML = `<div class="card"><h2>لا توجد تطبيقات منشورة بعد</h2><p class="muted">في بانِي: افتح تطبيقك ← أندرويد ← فعّل «قاعدة بيانات جاهزة على سحابة بانِي» ثم ابنِ APK أو حزمة المتجر. سيظهر هنا تلقائياً.</p></div>`; return; }
+  CUR = CUR && APPS.find(a => a.id === CUR.id) || APPS[0]; render();
+}
+async function render() {
+  const a = CUR, cols = Object.keys(a.modes || {}).filter(c => c !== 'devices');
+  const days = a.hostUntil ? Math.max(0, Math.round((a.hostUntil - Date.now()) / 864e5)) : 0;
+  M.innerHTML = `<div class="apps">${APPS.map(x => `<button data-app="${esc(x.id)}" class="${x.id === a.id ? 'on' : ''}">${esc(x.name || x.id)}</button>`).join('')}</div>
+    <div class="card"><div class="row"><h2 style="margin:0">${esc(a.name)}</h2><span class="pill ${days > 30 ? 'ok' : 'warn'}">الاستضافة: ${days} يوماً متبقية</span></div>
+      <p class="muted">تتجدد الاستضافة تلقائياً سنة كاملة كلما نشرت تحديثاً أو بنيت نسخة جديدة من بانِي.</p>
+      <div class="grid" id="stats">${cols.map(c => `<div class="stat" data-col="${esc(c)}"><b>…</b><span>${esc(c)}</span></div>`).join('')}</div></div>
+    <div class="card" id="pending" hidden></div>
+    <div class="card" id="data"><p class="muted">اختر مجموعة بالأعلى لعرض بياناتها.</p></div>
+    <div class="card"><h3>إرسال إشعار لمستخدمي التطبيق</h3><input id="nt" placeholder="العنوان"><textarea id="nb" rows="2" placeholder="النص"></textarea><button id="ns">إرسال</button></div>`;
+  M.querySelectorAll('[data-app]').forEach(b => b.onclick = () => { CUR = APPS.find(x => x.id === b.dataset.app); COL = null; render(); });
+  M.querySelectorAll('[data-col]').forEach(b => b.onclick = () => { COL = b.dataset.col; M.querySelectorAll('.stat').forEach(x => x.classList.toggle('on', x === b)); showCol(COL); });
+  document.getElementById('ns').onclick = async () => {
+    const t = document.getElementById('nt').value.trim(), body = document.getElementById('nb').value.trim(); if (!t) return toast('اكتب عنوان الإشعار');
+    await addDoc(collection(db, 'apps', a.id, 'notices'), { title: t, body, route: '/', createdAt: Date.now() }); toast('أُرسل الإشعار، يظهر في التطبيق'); document.getElementById('nt').value = document.getElementById('nb').value = '';
+  };
+  for (const c of cols) { try { const n = (await getCountFromServer(collection(db, 'apps', a.id, c))).data().count; const el = M.querySelector(`[data-col="${CSS.escape(c)}"] b`); if (el) el.textContent = n; } catch (e) {} }
+  showPending();
+}
+async function showPending() {
+  const box = document.getElementById('pending');
+  try {
+    const s = await getDocs(query(collection(db, 'apps', CUR.id, 'members'), where('status', '==', 'pending')));
+    if (!s.size) return;
+    box.hidden = false;
+    box.innerHTML = `<h3>طلبات انضمام بانتظار موافقتك (${s.size})</h3><div class="tbl"><table><tr><th>الاسم</th><th>البريد</th><th>الدور</th><th></th></tr>${s.docs.map(d => { const m = d.data(); return `<tr><td>${esc(m.name)}</td><td dir="ltr">${esc(m.email)}</td><td>${esc(m.role)}</td><td><button class="sm" data-ok="${esc(d.id)}">قبول</button> <button class="sm bad" data-no="${esc(d.id)}">رفض</button></td></tr>`; }).join('')}</table></div>`;
+    box.querySelectorAll('[data-ok]').forEach(b => b.onclick = async () => { await updateDoc(doc(db, 'apps', CUR.id, 'members', b.dataset.ok), { status: 'ok' }); toast('قُبل'); showPending(); });
+    box.querySelectorAll('[data-no]').forEach(b => b.onclick = async () => { await deleteDoc(doc(db, 'apps', CUR.id, 'members', b.dataset.no)); toast('رُفض'); showPending(); });
+  } catch (e) {}
+}
+async function showCol(c) {
+  const box = document.getElementById('data'); box.innerHTML = '<p class="muted">جارٍ التحميل…</p>';
+  let s; try { s = await getDocs(query(collection(db, 'apps', CUR.id, c), orderBy('createdAt', 'desc'), limit(100))); } catch (e) { s = await getDocs(query(collection(db, 'apps', CUR.id, c), limit(100))); }
+  const rows = s.docs.map(d => ({ id: d.id, ...d.data() }));
+  if (!rows.length) { box.innerHTML = `<h3>${esc(c)}</h3><p class="muted">لا توجد بيانات بعد.</p>`; return; }
+  const keys = [...new Set(rows.flatMap(r => Object.keys(r)))].filter(k => k !== 'id').slice(0, 8);
+  box.innerHTML = `<div class="row"><h3 style="margin:0">${esc(c)}</h3><span class="muted">آخر ${rows.length}</span><span style="flex:1"></span><button class="ghost sm" id="csv">تنزيل CSV</button></div>
+    <div class="tbl" style="max-height:60vh;margin-top:10px"><table><tr>${keys.map(k => `<th>${esc(k)}</th>`).join('')}<th></th></tr>${rows.map(r => `<tr>${keys.map(k => `<td title="${esc(fmt(r[k]))}">${esc(fmt(r[k]))}</td>`).join('')}<td><button class="sm bad" data-del="${esc(r.id)}">حذف</button></td></tr>`).join('')}</table></div>`;
+  box.querySelectorAll('[data-del]').forEach(b => b.onclick = async () => { if (!confirm('حذف هذا العنصر نهائياً؟')) return; await deleteDoc(doc(db, 'apps', CUR.id, c, b.dataset.del)); toast('حُذف'); showCol(c); });
+  document.getElementById('csv').onclick = () => {
+    const csv = [keys.join(',')].concat(rows.map(r => keys.map(k => '"' + fmt(r[k]).replace(/"/g, '""') + '"').join(','))).join('\n');
+    const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(['﻿' + csv], { type: 'text/csv' })); a.download = c + '.csv'; a.click();
+  };
+}
+onAuthStateChanged(auth, u => {
+  document.getElementById('who').textContent = u ? (u.email || '') : ''; document.getElementById('out').hidden = !u;
+  if (u) loadApps(u).catch(e => { M.innerHTML = '<div class="card"><p class="muted">تعذّر التحميل: ' + esc(e.message) + '</p></div>'; }); else login();
+});
+document.getElementById('out').onclick = () => signOut(auth);
+</script>
+</body>
+</html>

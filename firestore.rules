@@ -44,9 +44,11 @@ service cloud.firestore {
     //   shared  = مشترك بين المسجّلين (دردشة، تعليقات): يقرؤه المسجّلون، ويعدّل كلٌّ ما كتبه
     match /apps/{appId} {
       allow read: if true;
-      allow create: if signedIn() && request.resource.data.owner == request.auth.uid;
+      allow create: if signedIn() && request.resource.data.owner == request.auth.uid
+        && request.resource.data.get('hostUntil', 0) <= request.time.toMillis() + 34560000000;
       allow update: if signedIn() && resource.data.owner == request.auth.uid
-        && request.resource.data.owner == resource.data.owner;
+        && request.resource.data.owner == resource.data.owner
+        && request.resource.data.get('hostUntil', 0) <= request.time.toMillis() + 34560000000;
       allow delete: if signedIn() && resource.data.owner == request.auth.uid;
 
       function appDoc() { return get(/databases/$(database)/documents/apps/$(appId)).data; }
@@ -55,7 +57,8 @@ service cloud.firestore {
       function authorOf(d) { return d.get('userId', d.get('uid', d.get('ownerId', d.get('sellerId', d.get('providerId', d.get('teacherId', '')))))); }
       // الأدوار: apps/{appId}/members/{uid} = { role, status: ok | pending }
       // سحابة بانِي للتجربة فقط: بيانات التطبيق تتوقف إذا لم يُفتح في بانِي ٣٠ يوماً (بانِي يحدّث updatedAt عند كل معاينة)
-      function alive() { return appDoc().get('updatedAt', 0) > request.time.toMillis() - 2592000000; }
+      // التطبيق المنشور على سحابة بانِي (hostUntil): يعمل طوال مدة استضافته، والتي يجددها صاحبه مع كل تحديث
+      function alive() { return appDoc().get('updatedAt', 0) > request.time.toMillis() - 2592000000 || appDoc().get('hostUntil', 0) > request.time.toMillis(); }
       function memberPath() { return /databases/$(database)/documents/apps/$(appId)/members/$(request.auth.uid); }
       function roleCan(col) {
         return signedIn() && col != 'members' && exists(memberPath())

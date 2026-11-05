@@ -1160,6 +1160,11 @@
             <span class="slbl">الخطط والأسعار<small>تطبيقات أكثر، وحزمة Google Play</small></span>
             <svg class="i"><use href="#i-chev"/></svg>
           </button>
+          <button class="sitem" onclick="window.open(SHARE_BASE.replace(/\/a\/#$/, '/d/'), '_blank')">
+            <span class="sico b"><svg class="i"><use href="#i-database"/></svg></span>
+            <span class="slbl">لوحة تطبيقاتي على الويب<small>بيانات تطبيقاتك المنشورة ومستخدموها وإشعاراتها</small></span>
+            <svg class="i"><use href="#i-chev"/></svg>
+          </button>
           <button class="sitem" onclick="openPlayLink()">
             <span class="sico g"><svg class="i"><use href="#i-link"/></svg></span>
             <span class="slbl">ربط حساب Google Play<small>ارفع تطبيقاتك إلى حسابك بضغطة</small></span>
@@ -2984,7 +2989,8 @@ function assemble(app, opts){
     pay: plan.payments ? { methods: plan.payments.methods || ['bankak','cod'], currency: plan.payments.currency || 'ج.س', bankakAccount: plan.payments.bankakAccount || '', bankakName: plan.payments.bankakName || '' } : null,
     seed: mergedSeed(app),
     // سحابة بانِي للمعاينة داخل بانِي فقط؛ التطبيق المصدَّر يعمل بمشروع Firebase صاحبه أو محلياً
-    cloud: opts.preview && app.cloudId ? { id: app.cloudId, owner: app.cloudOwner, config: FB_CONFIG } : null, preview: !!(opts.preview && app.cloudId),
+    cloud: opts.preview && app.cloudId ? { id: app.cloudId, owner: app.cloudOwner, config: FB_CONFIG }
+      : (opts.cloud && app.hosted && app.hostId && !app.fb ? { id: app.hostId, owner: app.hostOwner, config: FB_CONFIG } : null), preview: !!(opts.preview && app.cloudId),
     own: !!(opts.cloud && !opts.preview && app.ownApi),
     fb: opts.cloud && app.fb ? app.fb.config : null, fbAdmin: opts.cloud && app.fb ? app.fb.admin : '',
     roles: (plan.roles || []).length > 1 ? plan.roles.map(function(r, i){ return { id: String(r.id), name: r.name || r.id, icon: r.icon || 'user', does: r.does || '', approve: i > 0 && r.approve !== false }; }) : [],
@@ -4937,7 +4943,7 @@ function stAndroid(){
     '<div class="field"><label for="an-admob">معرّف تطبيق AdMob</label><div class="input-wrap"><svg class="i"><use href="#i-zap"/></svg><input id="an-admob" dir="ltr" value="'+esc(a.admobAppId || 'ca-app-pub-3940256099942544~3347511713')+'"></div><small class="hint">الحالي معرّف اختبار من Google — استبدله بمعرّفك قبل النشر</small></div>' +
     '<div class="field"><label for="an-banner">معرّف إعلان الشريط (Banner)</label><div class="input-wrap"><svg class="i"><use href="#i-zap"/></svg><input id="an-banner" dir="ltr" placeholder="ca-app-pub-0000000000000000/0000000000" value="'+esc((app.ads && app.ads.banner) || '')+'"></div><small class="hint">اتركه فارغاً لإعلانات تجريبية</small></div></div>' +
     (app.fb ? '<div class="an-cloud"><span><b>قاعدة البيانات: مشروعك ' + esc(app.fb.config.projectId) + ' ✓</b><small>الحسابات والطلبات تُحفظ في مشروع Firebase الخاص بك. تأكد أنك نشرت قواعد الأمان. <button class="link-btn" onclick="showOwnRules(stApp())">عرض القواعد</button></small></span></div>'
-      : (needsData(app.ck.plan) ? '<div class="an-cloud warn"><span><b>لم تربط قاعدة بيانات</b><small>سحابة بانِي للتجربة داخل بانِي فقط. بدون ربط مشروعك سيحفظ التطبيق المنشور البيانات على جهاز كل مستخدم فقط. <button class="link-btn" onclick="openFbLink()">اربط مشروع Firebase</button></small></span></div>' : '')) +
+      : (needsData(app.ck.plan) ? '<label class="an-cloud' + (app.hosted ? '' : ' warn') + '" style="cursor:pointer"><input type="checkbox" id="an-host"' + (app.hosted !== false ? ' checked' : '') + ' style="margin-inline-end:8px"><span><b>قاعدة بيانات جاهزة على سحابة بانِي (بلا إعداد)</b><small>حسابات المستخدمين والطلبات والمحتوى تعمل فوراً في التطبيق المنشور، وتديرها من <a href="' + SHARE_BASE.replace(/\/a\/#$/, '/d/') + '" target="_blank" rel="noopener">لوحة تطبيقاتي على الويب</a>. مدة الاستضافة سنة وتتجدد مع كل تحديث.</small></span></label>' + '<div class="an-cloud warn" id="an-nodb"' + (app.hosted !== false ? ' hidden' : '') + '><span><b>لم تربط قاعدة بيانات</b><small>سحابة بانِي للتجربة داخل بانِي فقط. بدون ربط مشروعك سيحفظ التطبيق المنشور البيانات على جهاز كل مستخدم فقط. <button class="link-btn" onclick="openFbLink()">اربط مشروع Firebase</button></small></span></div>' : '')) +
     (function(){ var u = usesCloud(app); if (!u.ai && !u.net) return ''; var what = u.ai && u.net ? 'المساعد الذكي والبيانات الحية' : u.ai ? 'المساعد الذكي' : 'البيانات الحية';
       return app.ownApi ? '<div class="an-cloud"><span><b>خادم تطبيقك مربوط ✓</b><small>' + what + ' يعمل بمفتاحك من خادمك الخاص. <button class="link-btn" onclick="openOwnSrv()">تعديل</button></small></span></div>'
         : '<div class="an-cloud warn"><span><b>' + what + ' يحتاج خادم تطبيقك</b><small>اربطه في دقيقتين ليعمل في النسخة المنشورة بمفتاحك، وإلا ستظهر للمستخدم رسالة أن الميزة غير مفعّلة. <button class="link-btn" onclick="openOwnSrv()">ربط الآن</button></small></span></div>'; })() +
@@ -4953,6 +4959,7 @@ function stAndroid(){
   var sb = drawSplash(app, 400); sb.className = 'an-cv'; document.getElementById('an-splash').appendChild(sb);
   openModal('android-modal');
 }
+document.addEventListener('change', function(e){ if (e.target && e.target.id === 'an-host') { var w = document.getElementById('an-nodb'); if (w) w.hidden = e.target.checked; } });
 function stAndroidZip(cloud){
   var app = stApp(); if (!app) return;
   var cfg = {
@@ -4984,6 +4991,9 @@ function stAndroidZip(cloud){
   })
   .then(function(ok){
     if (!useCloud) { app.cloudOff = true; } else delete app.cloudOff;
+    var hb = document.getElementById('an-host'); if (hb) app.hosted = hb.checked;
+    btn.textContent = app.hosted && !app.fb ? 'يجهّز قاعدة بيانات تطبيقك...' : 'يجهّز المشروع...';
+    return (app.hosted && !app.fb && needsData(app.ck.plan) ? hostSync(app) : Promise.resolve()).then(function(){
     btn.textContent = 'يجهّز المشروع...';
     files = androidFiles(app, cfg);
     if (!app.liveId) { app.liveId = liveNewId(); app.liveVer = 0; }
@@ -4995,6 +5005,7 @@ function stAndroidZip(cloud){
         files.push({ path: 'play-store/' + f.path, data: f.data });
       });
     }) : null;
+    });
   })
   .then(function(){ return Promise.all([
     canvasBytes(drawIcon(app, 1024)), canvasBytes(drawIcon(app, 1024, 'fg')), canvasBytes(drawIcon(app, 1024, 'bg')),
@@ -5512,6 +5523,29 @@ function collModes(plan){
   if ((plan.roles || []).length > 1) m.members = 'private';
   return m;
 }
+// استضافة التطبيق المنشور على سحابة بانِي: مساحة منفصلة عن المعاينة (apps/{id}p) بموافقات الأدوار الحقيقية
+// ومدة استضافة سنة تتجدد تلقائياً مع كل تصدير أو تحديث فوري (القواعد لا تسمح بأكثر من ٤٠٠ يوم مقدماً)
+function hostSync(app){
+  if (!CLOUD || !FB || !FB.auth.currentUser) return Promise.reject(new Error('سجّل دخولك واتصل بالإنترنت لتجهيز قاعدة بيانات تطبيقك'));
+  var u = FB.auth.currentUser, f = FB.f, plan = app.ck.plan, hid = app.hostId || (u.uid.slice(0, 10) + '_' + app.id + 'p');
+  var modes = collModes(plan), seed = mergedSeed(app), done = app.hostCols || [];
+  var roles = plan.roles || [], approve = roles.filter(function(r, i){ return i > 0 && r.approve !== false; }).map(function(r){ return String(r.id); });
+  var meta = { owner: u.uid, name: plan.name || app.name, modes: modes, updatedAt: Date.now(), hostUntil: Date.now() + 365 * 864e5, prod: true,
+    roleApprove: approve, roleAccess: plan.roleAccess && typeof plan.roleAccess === 'object' ? plan.roleAccess : {} };
+  if (!app.hostId) meta.createdAt = Date.now();
+  return f.setDoc(fdoc('apps', hid), meta, { merge: true }).then(function(){
+    // المحتوى الجاهز مرة واحدة فقط: بعد النشر صاحب التطبيق يديره من لوحة الإدارة، فلا نكتب فوق تعديلاته
+    var jobs = [];
+    Object.keys(seed).filter(function(c){ return (modes[c] || 'content') === 'content' && done.indexOf(c) < 0 && (seed[c] || []).length; })
+      .forEach(function(c){ (seed[c] || []).forEach(function(x, i){ jobs.push([c, String(x.id || 's' + (i + 1)), Object.assign({ createdAt: Date.now() - i * 1000 }, x)]); }); });
+    var k = 0;
+    function next(){ var part = jobs.slice(k, k + 15); k += 15; if (!part.length) return Promise.resolve(); return Promise.all(part.map(function(j){ return f.setDoc(fdoc('apps', hid, j[0], j[1]), j[2]); })).then(next); }
+    return next().then(function(){
+      app.hostId = hid; app.hostOwner = u.uid; app.hostCols = done.concat(jobs.map(function(j){ return j[0]; }).filter(function(c, i, a){ return a.indexOf(c) === i && done.indexOf(c) < 0; }));
+      app.hostAt = Date.now(); saveApps(); return true;
+    });
+  });
+}
 function cloudSync(app, opts){
   opts = opts || {};
   if (!app || !app.ck || !app.ck.plan) return Promise.resolve(false);
@@ -5739,6 +5773,7 @@ function livePublish(undo){
   var html; try { html = assemble(app, { cloud: true, liveVer: v }); } finally { app.ck = keep; }
   var notes = undo ? 'رجوع للنسخة السابقة' : ((app.chat || []).filter(function(m){ return m.role === 'me'; }).slice(-1).map(function(m){ return m.text.split('\n')[0].slice(0, 100); })[0] || 'تحسينات');
   if (st) st.innerHTML = '<span class="spin-s"></span>ينشر النسخة ' + toAr(v) + '…';
+  if (app.hosted && app.hostId) hostSync(app).catch(function(){}); // يجدد مدة الاستضافة ويضيف مجموعات المحتوى الجديدة
   var f = FB.f, uid = FB.auth.currentUser.uid, CH = 280000, n = Math.ceil(html.length / CH);
   var parts = []; for (var i = 0; i < n; i++) parts.push(f.setDoc(fdoc('live', app.liveId, 'parts', String(i)), { d: html.slice(i * CH, (i + 1) * CH) }));
   // الأجزاء أولاً ثم المستند الأب: الجهاز لا يرى رقم النسخة الجديد قبل اكتمال أجزائها

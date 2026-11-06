@@ -116,6 +116,8 @@ jobs:
           if [ -s "$GITHUB_WORKSPACE/in/kb.b64" ]; then
             base64 -d "$GITHUB_WORKSPACE/in/kb.b64" | openssl enc -d -aes-256-cbc -pbkdf2 -iter 100000 -md sha256 -pass env:K > kb.zip
             unzip -o -q kb.zip
+            # تحديث: نعيد إرفاق ملف التوقيع المشفّر نفسه حتى يبقى متاحاً في الإصدار الجديد
+            base64 -d "$GITHUB_WORKSPACE/in/kb.b64" > "$GITHUB_WORKSPACE/keybox.enc"
           else
             PASS=$(openssl rand -hex 16); echo "$PASS" > pass.txt
             keytool -genkeypair -keystore upload.jks -alias upload -keyalg RSA -keysize 2048 -validity 10000 -storepass "$PASS" -keypass "$PASS" -dname "CN=Banee App, O=Banee" -noprompt
@@ -162,4 +164,6 @@ jobs:
         run: |
           echo "$ID" | grep -Eq '^[a-zA-Z0-9]{20}$' || exit 1
           F="app.apk"; [ -f app.aab ] && F="$F app.aab"; [ -f keybox.enc ] && F="$F keybox.enc"
+          # بناء جديد لنفس التطبيق (تحديث): نحذف الإصدار السابق أولاً وإلا يفشل الإنشاء لأن الوسم موجود
+          gh release delete "apk-$ID" --repo "$GITHUB_REPOSITORY" --cleanup-tag -y 2>/dev/null || true
           gh release create "apk-$ID" $F --repo "$GITHUB_REPOSITORY" --title "apk $ID" --notes "بناء سحابي من بانِي" --prerelease

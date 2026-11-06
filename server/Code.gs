@@ -531,9 +531,9 @@ function playPublish(user, req) {
   if (aab.getResponseCode() !== 200) return { ok: false, error: { code: 'server', message: 'تعذّر جلب ملف AAB' } };
   var ed = playApi(tok, 'post', pkg + '/edits', {});
   var why = function(r){ var m = (r.json && r.json.error && r.json.error.message) || ''; 
+    if (/version ?code.*(already|used)/i.test(m)) return 'رقم الإصدار هذا مرفوع من قبل. ابنِ حزمة جديدة (يزيد الرقم تلقائياً) ثم ارفعها.';
     if (/not found|No application was found/i.test(m) || r.code === 404) return 'التطبيق ' + pkg + ' غير موجود في حسابك بعد. Google تشترط رفع أول نسخة يدوياً: أنشئ التطبيق في Play Console وارفع ملف AAB مرة واحدة، وبعدها يرفع بانِي كل التحديثات.';
     if (r.code === 401 || r.code === 403) return 'حساب الخدمة ' + sa.e + ' ليس له صلاحية على هذا التطبيق. أضفه في Play Console ← المستخدمون والأذونات بصلاحية «إصدار التطبيقات».';
-    if (/version ?code.*(already|used)/i.test(m)) return 'رقم الإصدار هذا مرفوع من قبل. ابنِ حزمة جديدة (يزيد الرقم تلقائياً) ثم ارفعها.';
     return 'رفضت Google الرفع: ' + m.slice(0, 200); };
   if (ed.code !== 200 || !ed.json.id) return { ok: false, error: { code: 'play', message: why(ed) } };
   var up = playApi(tok, 'post', pkg + '/edits/' + ed.json.id + '/bundles?uploadType=media', aab.getBlob().getBytes(), true);

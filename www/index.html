@@ -2420,6 +2420,7 @@ var ROLES = {
 ' "shared":[{"key":"cart","shape":"{ storeId, storeName, items:[{ id, title, price, qty }] }","writes":["store"],"reads":["checkout"]}],   ← كل حالة تنتقل بين الشاشات عبر Store (سلة، اختيارات حجز...) بشكلها الدقيق\n' +
 ' "screens":[{"id":"home","route":"/","title":"الرئيسية","icon":"home","nav":true,"roles":["user"],"purpose":"..."}]}\n' +
 ' "payments":{"methods":["bankak","cod"],"currency":"ج.س"},   ← فقط إذا كان في التطبيق بيع أو حجز مدفوع\n' +
+' "adminEntry":"tap|button|account|web",   ← كيف يدخل صاحب التطبيق لوحة الإدارة، من كلام المستخدم: web إذا قال يديره من الكمبيوتر أو موقع أو متصفح، account إذا قال بحسابه أو بدون رمز أو تلقائياً، button إذا قال زر ظاهر أو سهل، وإلا tap (مخفية بـ٥ ضغطات على العنوان)\n' +
 'القدرات المتاحة في الهيكل (خطط لها عند الحاجة): بيانات حية من الإنترنت (طقس، عملات، مواقيت صلاة، قرآن)، ذكاء اصطناعي داخل التطبيق (مساعد، مصحح، ملخص)، إشعارات من صاحب التطبيق لكل المستخدمين (لوحة الإدارة جاهزة، وأضف شاشة «الإشعارات» إن كانت مفيدة)، الكاميرا والمعرض لرفع الصور، الموقع الحالي والمسافات، خرائط تفاعلية بعلامات، دردشة وتحديث حي فوري بين المستخدمين، دفع ببنكك أو عند الاستلام مع طلبات في مجموعة orders، إشعارات مجدولة، مشاركة، نطق صوتي للنصوص، اتصال وواتساب.\n' +
 'بهذا يمكن بناء: متاجر وتوصيل بتتبع، حجوزات مدفوعة، سوق إعلانات بالصور، دليل أماكن على الخريطة، دردشة ومجتمعات، حضور بالموقع، تذكيرات وعادات، تعليم بالنطق.\n' +
 'القواعد:\n' +
@@ -3041,7 +3042,7 @@ function assemble(app, opts){
     roles: (plan.roles || []).length > 1 ? plan.roles.map(function(r, i){ return { id: String(r.id), name: r.name || r.id, icon: r.icon || 'user', does: r.does || '', approve: i > 0 && r.approve !== false }; }) : [],
     access: (plan.roles || []).length > 1 ? plan.screens.reduce(function(o, s){ if (s.roles && s.roles.length && s.roles.length < plan.roles.length) o[s.route] = s.roles; return o; }, {}) : {},
     api: opts.cloud ? (app.ownApi || '') : (PROXY_URL || ''), push: false,
-    admin: { key: adminKey(app), entry: app.adminEntry || 'tap', collections: (plan.collections || []).filter(function(c){ return c && c.name; }).map(function(c){ return { name: c.name, fields: c.fields || {} }; }) } };
+    admin: { key: adminKey(app), entry: app.adminEntry || ADMIN_OK(plan.adminEntry) || 'tap', collections: (plan.collections || []).filter(function(c){ return c && c.name; }).map(function(c){ return { name: c.name, fields: c.fields || {} }; }) } };
   var body = plan.screens.map(function(s){
     var js = app.ck.screens[s.id];
     return js ? '    // ── شاشة: ' + s.title + ' ──\n' + js.split('\n').map(function(l){ return '    ' + l; }).join('\n') + '\n' : '';
@@ -6133,8 +6134,9 @@ function stTheme(){
     adminEntryBox(app);
 }
 var ADMIN_ENTRY = [['tap', 'مخفية', 'اضغط عنوان التطبيق ٥ مرات ثم أدخل الرمز'], ['button', 'زر ظاهر', 'زر ترس في أعلى التطبيق ثم الرمز'], ['account', 'بحسابي', 'يظهر الزر لك وحدك عند دخولك بحسابك، بلا رمز'], ['web', 'من الموقع', 'تدير التطبيق من لوحة الويب، ولا يظهر شيء داخله']];
+function ADMIN_OK(v){ return ['tap', 'button', 'account', 'web'].indexOf(v) > -1 ? v : ''; }
 function adminEntryBox(app){
-  var e = app.adminEntry || 'tap', cur = ADMIN_ENTRY.filter(function(x){ return x[0] === e; })[0] || ADMIN_ENTRY[0];
+  var e = app.adminEntry || ADMIN_OK(app.ck && app.ck.plan && app.ck.plan.adminEntry) || 'tap', cur = ADMIN_ENTRY.filter(function(x){ return x[0] === e; })[0] || ADMIN_ENTRY[0];
   var seg = ADMIN_ENTRY.map(function(x){ return '<button class="' + (x[0] === e ? 'on' : '') + '" onclick="stAdminEntry(\'' + x[0] + '\')">' + x[1] + '</button>'; }).join('');
   var how = e === 'web' ? 'افتح <a href="#" onclick="window.open(SHARE_BASE.replace(/\\/a\\/#$/, \'/d/\'), \'_blank\');return false">لوحة تطبيقاتي على الويب</a> وسجّل بحساب بانِي.' : e === 'account' ? 'سجّل دخولك في التطبيق بحساب بانِي نفسه (أو بريد المدير في مشروعك الخاص). الرمز الاحتياطي: <b class="ltr">' + esc(app.adminPin || '----') + '</b>' : 'الرمز: <b class="ltr">' + esc(app.adminPin || '----') + '</b>';
   return '<div class="admin-note"><b>دخولك للوحة الإدارة</b><div class="seg-mini" style="margin:8px 0">' + seg + '</div>' + esc(cur[2]) + '. ' + how + ' والرابط المباشر ‎#/admin‎ يعمل دائماً.</div>';

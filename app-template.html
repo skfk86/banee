@@ -381,6 +381,7 @@
     <button class="hbtn" id="h-back" hidden aria-label="رجوع"><i data-lucide="arrow-right"></i></button>
     <h1 id="h-title">{{TITLE}}</h1>
     <button class="role-pill" id="h-role" hidden></button>
+    <button class="hbtn" id="h-admin" hidden aria-label="لوحة الإدارة"><i data-lucide="settings"></i></button>
     <button class="hbtn" id="h-logout" hidden aria-label="تسجيل الخروج"><i data-lucide="log-out"></i></button>
   </header>
   <main id="app"></main>
@@ -1239,7 +1240,10 @@ _e(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&
     // تُفتح بالضغط على عنوان التطبيق ٥ مرات متتالية ثم إدخال الرمز
     if (META.admin && META.admin.collections && META.admin.collections.length) {
       const AK = () => { let x = 5381; const s = String(Store.get('admin_pin', '')) + '|' + META.id; for (let i = 0; i < s.length; i++) x = ((x << 5) + x + s.charCodeAt(i)) >>> 0; return x.toString(36); };
-      const isAdmin = () => AK() === META.admin.key;
+      // طريقة دخول صاحب التطبيق يختارها في بانِي: tap (٥ ضغطات على العنوان + رمز، مخفية)، button (زر ترس ظاهر + رمز)،
+      // account (يظهر الزر تلقائياً عند دخوله بحسابه، بلا رمز)، web (الإدارة من لوحة الويب فقط). الرابط ‎#/admin‎ يعمل دائماً
+      const ENTRY = META.admin.entry || 'tap';
+      const isAdmin = () => AK() === META.admin.key || (ENTRY === 'account' && LIVE && isOwnerUser(Auth.user));
       const FL = { title: 'العنوان', name: 'الاسم', price: 'السعر', description: 'الوصف', summary: 'الملخص', image: 'الصورة', photo: 'الصورة', category: 'التصنيف', status: 'الحالة', order: 'الترتيب', duration: 'المدة', minutes: 'الدقائق', phone: 'الهاتف', address: 'العنوان', body: 'المحتوى', content: 'المحتوى', question: 'السؤال', options: 'الخيارات', answer: 'الإجابة', explanation: 'الشرح', level: 'المستوى', amount: 'المبلغ', userName: 'العميل', method: 'طريقة الدفع', items: 'العناصر', receipt: 'الإشعار', date: 'التاريخ', time: 'الوقت', notes: 'ملاحظات', bio: 'نبذة', rating: 'التقييم', stock: 'المخزون', available: 'متاح' };
       const CL = { orders: 'الطلبات', products: 'المنتجات', services: 'الخدمات', lessons: 'الدروس', quizzes: 'الاختبارات', bookings: 'الحجوزات', appointments: 'المواعيد', categories: 'التصنيفات', articles: 'المقالات', experts: 'الخبراء', staff: 'الفريق', stylists: 'الفريق', users: 'المستخدمون', reviews: 'التقييمات', messages: 'الرسائل', menu: 'القائمة', items: 'العناصر', posts: 'المنشورات', courses: 'الدورات', exercises: 'التمارين', workouts: 'التمارين', doctors: 'الأطباء' };
       const label = f => FL[f] || f, colLabel = c => CL[c] || c;
@@ -1253,8 +1257,16 @@ _e(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&
           if (isAdmin()) { UI.closeSheet(); App.go('/admin'); } else { Store.set('admin_pin', prev); UI.toast('الرمز غير صحيح', 'error'); }
         });
       };
-      let taps = 0, tt = 0;
-      document.getElementById('h-title').addEventListener('click', () => { const n = Date.now(); taps = n - tt < 800 ? taps + 1 : 1; tt = n; if (taps >= 5) { taps = 0; isAdmin() ? App.go('/admin') : askPin(); } });
+      const openAdmin = () => isAdmin() ? App.go('/admin') : askPin();
+      if (ENTRY === 'tap') { let taps = 0, tt = 0;
+        document.getElementById('h-title').addEventListener('click', () => { const n = Date.now(); taps = n - tt < 800 ? taps + 1 : 1; tt = n; if (taps >= 5) { taps = 0; openAdmin(); } }); }
+      const hb = document.getElementById('h-admin');
+      if (hb && (ENTRY === 'button' || ENTRY === 'account')) {
+        hb.addEventListener('click', openAdmin);
+        // account: الزر لا يراه إلا صاحب التطبيق بعد دخوله بحسابه (وبلا سحابة يرجع لزر + رمز)
+        const showHb = () => { hb.hidden = ENTRY === 'account' && LIVE ? !isOwnerUser(Auth.user) : false; };
+        showHb(); addEventListener('hashchange', showHb); setInterval(showHb, 2500);
+      }
       // صاحب التطبيق: في سحابة بانِي حسابه في بانِي، وفي مشروع Firebase الخاص بريد المدير المحدد عند البناء
       const isOwnerUser = u => !!u && (META.cloud ? u.uid === META.cloud.owner : (u.email || '').toLowerCase() === String(META.fbAdmin || '').toLowerCase());
       const ownerOk = () => !(LIVE && (META.cloud || META.fbAdmin)) || isOwnerUser(Auth.user);
@@ -1276,7 +1288,7 @@ _e(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&
         });
         UI.icons();
       };
-      const guard = el => { if (isAdmin() && !ownerOk()) { ownerLogin(el); return false; } if (isAdmin()) return true; el.innerHTML = UI.empty('lock', 'للمسؤول فقط', 'اضغط عنوان التطبيق ٥ مرات وأدخل الرمز'); UI.icons(); return false; };
+      const guard = el => { if (isAdmin() && !ownerOk()) { ownerLogin(el); return false; } if (isAdmin()) return true; el.innerHTML = UI.empty('lock', 'للمسؤول فقط', ENTRY === 'web' ? 'إدارة هذا التطبيق من لوحة صاحب التطبيق على الويب' : ENTRY === 'account' ? 'سجّل دخولك بحساب صاحب التطبيق' : 'أدخل رمز صاحب التطبيق', `<button class="btn btn-primary" data-act="ad-pin">إدخال الرمز</button>`); App.on(el, 'click', '[data-act=ad-pin]', askPin); UI.icons(); return false; };
 
       App.screen({ id: '__admin', route: '/admin', title: 'لوحة الإدارة', public: true,
         render: () => `<div class="section"><div class="hero"><h2>لوحة الإدارة</h2><p>إدارة محتوى ${UI.esc(META.name)} وطلباته</p></div></div>${LIVE && META.cloud ? '<div class="section"><button class="btn btn-primary" data-act="ad-push"><i data-lucide="bell"></i>إرسال إشعار لكل المستخدمين</button></div>' : ''}<div class="section"><div id="ad-list" class="list">${UI.skeleton(3)}</div></div><div class="section"><button class="btn btn-ghost" data-act="ad-out">خروج من وضع الإدارة</button></div>`,

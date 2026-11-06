@@ -68,6 +68,14 @@ jobs:
               return False
           os.makedirs('p', exist_ok=True)
           assert take('www/index.html', 'p/www/index.html'), 'no index.html'
+          # الأيقونات داخل التطبيق نفسه: تظهر بلا إنترنت ومن أول فتح (بدل تحميلها من unpkg كل مرة)
+          import urllib.request
+          try:
+              js = urllib.request.urlopen('https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js', timeout=60).read()
+              open('p/www/lucide.min.js', 'wb').write(js)
+              h = open('p/www/index.html', encoding='utf-8').read().replace('https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js', 'lucide.min.js')
+              open('p/www/index.html', 'w', encoding='utf-8').write(h)
+          except Exception as e: print('lucide offline copy skipped:', e)
           for f in ['icon-only.png', 'icon-foreground.png', 'icon-background.png', 'splash.png', 'splash-dark.png']:
               take('assets/' + f, 'p/assets/' + f)
           cap = json.loads(z.read('capacitor.config.json')) if 'capacitor.config.json' in names else {}

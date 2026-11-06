@@ -844,7 +844,7 @@ _e(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&
               if (method === 'bankak' && !receipt) return UI.toast('أرفق صورة إشعار التحويل', 'error');
               UI.busy(b, true);
               try {
-                const id = await DB.add('orders', { userId: Auth.user.uid, userName: Auth.user.name, amount, title, items, method, receipt, status: method === 'cod' ? 'confirmed' : 'pending', ...extra });
+                const id = await DB.add('orders', { userId: Auth.user.uid, userName: Auth.user.name, amount, title, items, method, receipt, status: (() => { let v = []; try { v = (Data.orders && Data.orders.statuses) || []; } catch (e) {} return v.length ? v[0] : (method === 'cod' ? 'confirmed' : 'pending'); })(), ...extra });
                 UI.closeSheet(); UI.toast(method === 'cod' ? 'تم تأكيد طلبك' : 'استلمنا طلبك، سنراجع التحويل قريباً', 'success'); res(id);
               } catch (err) { UI.busy(b, false); UI.toast('تعذّر إرسال الطلب', 'error'); }
             }

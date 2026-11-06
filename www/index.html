@@ -1050,10 +1050,10 @@
         <div class="api-note" id="api-note" style="display:none">
           <svg class="i"><use href="#i-key"/></svg>
           <div style="flex:1;min-width:0">
-            <h3>أضف مفتاح Gemini للبدء</h3>
-            <p>مفتاح مجاني من aistudio.google.com، يُحفظ على جهازك فقط.</p>
+            <h3>أضف مفتاح Claude للبدء</h3>
+            <p>مفتاح Claude من console.anthropic.com، يُحفظ على جهازك فقط.</p>
             <div class="row">
-              <input type="password" id="akey" placeholder="AIza..." aria-label="مفتاح Gemini">
+              <input type="password" id="akey" placeholder="sk-ant-..." aria-label="مفتاح Claude">
               <button class="btn btn-primary btn-sm" onclick="saveKey()">حفظ</button>
             </div>
           </div>
@@ -1172,7 +1172,7 @@
           </button>
           <button class="sitem" id="key-item" onclick="openKeyModal()">
             <span class="sico g"><svg class="i"><use href="#i-key"/></svg></span>
-            <span class="slbl">مفتاح Gemini API<small>يُحفظ على جهازك فقط</small></span>
+            <span class="slbl">مفتاح Claude<small>يُحفظ على جهازك فقط</small></span>
             <svg class="i"><use href="#i-chev"/></svg>
           </button>
           <button class="sitem" onclick="openHelp()">
@@ -1456,16 +1456,16 @@
 <div class="modal-bg" id="key-modal">
   <div class="modal-sheet">
     <div class="mhandle"></div>
-    <div class="mtitle"><svg class="i"><use href="#i-key"/></svg>مفتاح Gemini API</div>
-    <p class="msub">احصل على مفتاح من aistudio.google.com ← Get API key. يُحفظ على جهازك فقط.</p>
+    <div class="mtitle"><svg class="i"><use href="#i-key"/></svg>مفتاح Claude</div>
+    <p class="msub">احصل على مفتاح من console.anthropic.com ← API Keys. يُحفظ على جهازك فقط، والطلبات تذهب من جهازك إلى Claude مباشرة.</p>
     <p class="msub" id="kmod-note"></p>
     <div id="engine-box"></div>
     <ol class="msub" style="margin:0 0 12px;padding-inline-start:20px;line-height:1.9;font-size:13px">
-      <li>افتح <b dir="ltr">aistudio.google.com</b> وسجّل بحساب Google</li>
-      <li>اضغط <b dir="ltr">Get API key</b> ثم <b dir="ltr">Create API key</b></li>
-      <li>انسخ المفتاح والصقه هنا. مجاني، ويعمل في السودان وكل الدول العربية</li>
+      <li>افتح <b dir="ltr">console.anthropic.com</b> وأنشئ حساباً واشحن رصيداً (الدفع حسب الاستخدام)</li>
+      <li>من <b dir="ltr">API Keys</b> اضغط <b dir="ltr">Create Key</b></li>
+      <li>انسخ المفتاح (يبدأ بـ <b dir="ltr">sk-ant-</b>) والصقه هنا</li>
     </ol>
-    <div class="field"><label for="kmod">المفتاح</label><div class="input-wrap"><svg class="i"><use href="#i-key"/></svg><input type="password" id="kmod" placeholder="AIza..."></div></div>
+    <div class="field"><label for="kmod">المفتاح</label><div class="input-wrap"><svg class="i"><use href="#i-key"/></svg><input type="password" id="kmod" placeholder="sk-ant-..."></div></div>
     <button class="btn btn-primary" id="kmod-btn" onclick="saveKeyModal()">حفظ المفتاح</button>
     <button class="btn btn-ghost" id="kmod-rm" hidden style="margin-top:8px;color:#C42D33" onclick="removeKey()">حذف المفتاح والرجوع للنقاط</button>
     <button class="btn btn-ghost" style="margin-top:8px" onclick="closeModal('key-modal')">إلغاء</button>
@@ -2165,6 +2165,7 @@ function checkKey() {
 function saveKey() {
   var k = document.getElementById('akey').value.trim();
   if (!k) { toast('أدخل المفتاح أولاً','err'); return; }
+  if (!/^sk-ant-/.test(k)) { toast('هذا ليس مفتاح Claude (يبدأ بـ sk-ant-). انسخه من console.anthropic.com','err'); return; }
   localStorage.setItem('bgkey', k);
   document.getElementById('api-note').style.display = 'none';
   toast('تم حفظ المفتاح','suc');
@@ -2179,7 +2180,7 @@ function openKeyModal(){
   document.getElementById('kmod').value = '';
   var n = document.getElementById('kmod-note');
   if (n) n.innerHTML = PROXY_URL && !paidUser() ? 'هذه الميزة للمشتركين. أرخص خطة: <b>مفتاحك الخاص</b> <bdi dir="ltr">' + esc(Billing.price('key')) + '</bdi> شهرياً، بلا نقاط ولا حد يومي. <button class="link-btn" onclick="closeModal(\'key-modal\');Billing.buy(\'key\')">اشترك</button>' : 'الطلبات تذهب من جهازك إلى Google مباشرة، ولا يمر المفتاح على خوادم بانِي.';
-  if (n && PROXY_URL && paidUser() && !localKey()) n.innerHTML = '<b>خطوة أخيرة لتفعيل اشتراكك:</b> أضف مفتاح Gemini المجاني من Google، فتبني بلا نقاط ولا حد يومي.<br>١. افتح <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a> وسجّل بحساب Google.<br>٢. اضغط <b>Create API key</b> وانسخه.<br>٣. الصقه هنا واضغط حفظ.';
+  if (n && PROXY_URL && paidUser() && !localKey()) n.innerHTML = '<b>خطوة أخيرة لتفعيل اشتراكك:</b> أضف مفتاح Claude الخاص بك، فتبني بلا نقاط ولا حد يومي.<br>١. افتح <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">console.anthropic.com</a> واشحن رصيداً.<br>٢. اضغط <b>Create Key</b> وانسخه.<br>٣. الصقه هنا واضغط حفظ.';
   keyItemSync(); renderEngine(); openModal('key-modal');
 }
 function renderEngine(){
@@ -2194,18 +2195,16 @@ function renderEngine(){
 function removeKey(){ try { localStorage.removeItem('bgkey'); } catch(e){} keyItemSync(); closeModal('key-modal'); toast('حُذف المفتاح، رجعت للبناء بالنقاط','suc'); }
 function saveKeyModal() {
   var k = document.getElementById('kmod').value.trim(), b = document.getElementById('kmod-btn');
-  if (!/^[\w.-]{20,}$/.test(k)) { toast('المفتاح غير صحيح، انسخه كاملاً من Google AI Studio','err'); return; }
+  if (!/^sk-ant-[\w-]{20,}$/.test(k)) { toast('هذا ليس مفتاح Claude. انسخه كاملاً من console.anthropic.com ← API Keys (يبدأ بـ sk-ant-)','err'); return; }
   if (b) { b.disabled = true; b.textContent = 'جارٍ التحقق…'; }
-  fetch('https://generativelanguage.googleapis.com/v1beta/models?pageSize=5', { headers: { 'x-goog-api-key': k } }).then(function(r){
-    if (r.status === 400 || r.status === 401 || r.status === 403) throw { bad: true };
-    localStorage.setItem('bgkey', k);
-    closeModal('key-modal'); document.getElementById('api-note').style.display = 'none'; keyItemSync();
-    toast(ownKeyOn() || !PROXY_URL ? 'تم تفعيل مفتاحك: ابنِ بلا حدود' : 'حُفظ المفتاح، ويعمل بعد الاشتراك','suc');
-  }).catch(function(e){ toast(e && e.bad ? 'Google رفضت المفتاح، تأكد منه أو أنشئ مفتاحاً جديداً' : 'تعذّر التحقق، تحقق من الاتصال','err'); })
+  fetch('https://api.anthropic.com/v1/models?limit=1', { headers: { 'x-api-key': k, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' } }).then(function(r){
+    if (r.status === 401 || r.status === 403) throw { bad: true };
+    try { localStorage.setItem('bgkey', k); } catch(e){}
+    keyItemSync(); closeModal('key-modal');
+    toast('تم تفعيل مفتاح Claude: ابنِ بلا حدود','suc');
+  }).catch(function(e){ toast(e && e.bad ? 'رفض Claude هذا المفتاح، تأكد منه أو أنشئ مفتاحاً جديداً' : 'تعذّر التحقق، تحقق من الاتصال','err'); })
     .then(function(){ if (b) { b.disabled = false; b.textContent = 'حفظ المفتاح'; } });
 }
-
-// ════ OPTIONS ════
 function pick(btn, grp) {
   document.querySelectorAll('#'+grp+'-opts .opt').forEach(function(b){ b.classList.remove('on'); });
   btn.classList.add('on');
@@ -2730,12 +2729,12 @@ function rqStart(){
 }
 
 function arErr(code, msg){
-  if (msg === 'quota-day') return 'انتهت الحصة اليومية لمفتاح Gemini. أكمل غداً من حيث توقفت، أو فعّل الفوترة في Google AI Studio';
-  if (ownKeyOn() && (code===429 || /quota|exhausted|rate limit/i.test(msg))) return 'انتهت حصة مفتاحك في Google حالياً. بدّل إلى «المفتاح العام» من الإعدادات ← مفتاح Gemini وأكمل فوراً، أو انتظر قليلاً ثم اضغط متابعة، أو فعّل الفوترة في Google AI Studio لحصة أكبر، أو احذف المفتاح من حسابي لتكمل بالنقاط';
-  if (code===503 || code===429 || /high demand|overloaded|quota|exhausted/i.test(msg)) return 'خوادم Gemini مشغولة الآن، أكمل بعد دقيقة';
-  if (code===400 && /API key|API_KEY/i.test(msg)) return 'مفتاح Gemini غير صالح، راجعه من حسابي';
+  if (msg === 'quota-day') return 'انتهت حصة مفتاح Claude الحالية. أكمل غداً من حيث توقفت، أو فعّل الفوترة في Google AI Studio';
+  if (ownKeyOn() && (code===429 || /quota|exhausted|rate limit/i.test(msg))) return 'وصل مفتاح Claude حدّ الاستخدام حالياً. بدّل إلى «المفتاح العام» من الإعدادات ← مفتاح Gemini وأكمل فوراً، أو انتظر قليلاً ثم اضغط متابعة، أو فعّل الفوترة في Google AI Studio لحصة أكبر، أو احذف المفتاح من حسابي لتكمل بالنقاط';
+  if (code===503 || code===429 || /high demand|overloaded|quota|exhausted/i.test(msg)) return 'خوادم Claude مشغولة الآن، أكمل بعد دقيقة';
+  if (code===400 && /API key|API_KEY/i.test(msg)) return 'مفتاح Claude غير صالح، راجعه من حسابي';
   if (code===403) return 'المفتاح لا يملك صلاحية، أنشئ مفتاحاً جديداً';
-  return 'تعذّر الاتصال بـ Gemini، اضغط متابعة';
+  return 'تعذّر الاتصال بـ Claude، اضغط متابعة';
 }
 function sleep(ms){ return new Promise(function(r){ setTimeout(r, ms); }); }
 
@@ -2748,9 +2747,54 @@ function retryDelayMs(e){
   var m = /retry in ([\d.]+)s/i.exec((e.error && e.error.message) || ''); return m ? Math.min(90000, parseFloat(m[1]) * 1000 + 1000) : 30000;
 }
 function firstAlive(){ for (var i = 0; i < MODELS.length; i++) if (!DEAD_MODELS[MODELS[i]]) return i; return 0; }
+// ── Claude مباشرة من الجهاز (مفتاح المستخدم sk-ant-…): بلا خادم وسيط ولا حدود وقته ──
+var CLAUDE_MODEL = 'claude-sonnet-5-5';
+// مقدمة مشتركة لكل أدوار الفريق على Claude: الحرية ومعيار الجودة، فالتعليمات بعدها حدود الهيكل لا سقف الإبداع
+var CLAUDE_PREFACE =
+'تعمل ضمن فريق بانِي الذي يبني تطبيقات أندرويد عربية حقيقية لأشخاص غير مبرمجين، وأنت Claude. صاحب التطبيق سيعرض عمله على عملائه، فالمعيار تطبيق يُنشر في المتجر بجانب أفضل التطبيقات العالمية، لا نموذج تجريبي.\n' +
+'لك حرية كاملة في الحلول والتصميم والتفاصيل داخل حدود الهيكل التقني الموصوف بعد هذه الفقرة: تلك الحدود موجودة لأن الكود يعمل داخل إطار جاهز ويُختبر آلياً، وما سواها متروك لحكمك. إذا رأيت أن الطلب ينقصه ما يجعل التجربة مكتملة (حالة فارغة، رسالة نجاح، تحقق من الإدخال، لمسة تصميم) فأضفه دون أن تسأل. وإذا وجدت تعليمة تتعارض مع مصلحة المستخدم الواضحة فاتبع المصلحة واذكر السبب باختصار حيث يُسمح بالنص.\n' +
+'اكتب عربية طبيعية سليمة، وكوداً نظيفاً كاملاً بلا اختصارات أو تعليقات «أكمل لاحقاً». التزم بصيغة الإخراج المطلوبة حرفياً لأن آلة تقرؤها.\n\n';
+var CLAUDE_EFFORT = { screen: 'high', fixer: 'high', agent: 'high', editor: 'high', planner: 'high', stylist: 'high', specwriter: 'high', reviewer: 'medium', tester: 'medium', reqcheck: 'medium', designer: 'medium', content: 'medium', judge: 'low', analyst: 'low' };
+function claudeBlocks(input){
+  if (typeof input === 'string') return input;
+  return (input.images || []).map(function(b){ return { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: b } }; }).concat([{ type: 'text', text: input.text || '' }]);
+}
+function askClaude(key, role, input, json){
+  var attempt = 0;
+  function once(){
+    var ctrl = new AbortController(), timer = setTimeout(function(){ ctrl.abort(); }, 600000);
+    return fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST', signal: ctrl.signal,
+      headers: { 'content-type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true', 'anthropic-beta': 'server-side-fallback-2026-07-01' },
+      body: JSON.stringify({ model: CLAUDE_MODEL, max_tokens: 32000, fallbacks: 'default',
+        cache_control: { type: 'ephemeral' }, // تعليمات الأدوار ثابتة بين الطلبات: تُقرأ من الذاكرة المؤقتة بعشر السعر
+        output_config: { effort: CLAUDE_EFFORT[role] || 'medium' },
+        system: CLAUDE_PREFACE + ROLES[role] + (json ? '\n\nأعد JSON صالحاً فقط، بلا أي نص قبله أو بعده وبلا ```.' : ''),
+        messages: [{ role: 'user', content: claudeBlocks(input) }] })
+    }).then(function(r){
+      clearTimeout(timer);
+      return r.json().catch(function(){ return {}; }).then(function(d){
+        if (r.ok) {
+          if (d.stop_reason === 'refusal') throw { fatal: true, msg: 'اعتذر Claude عن هذا الطلب. أعد صياغته بشكل أوضح.' };
+          var t = (d.content || []).filter(function(b){ return b.type === 'text'; }).map(function(b){ return b.text; }).join('');
+          if (!t) throw { retry: true, msg: 'رد فارغ' };
+          return t;
+        }
+        var msg = (d.error && d.error.message) || ('HTTP ' + r.status);
+        if (r.status === 401) throw { fatal: true, msg: 'مفتاح Claude غير صحيح. راجعه من الإعدادات ← مفتاح Claude' };
+        if (r.status === 400 && /credit|billing|balance/i.test(msg)) throw { fatal: true, msg: 'رصيد حسابك في Claude لا يكفي. اشحنه من console.anthropic.com' };
+        if ([429, 500, 502, 503, 504, 529].indexOf(r.status) > -1) throw { retry: true, msg: msg };
+        throw { fatal: true, msg: msg };
+      });
+    }, function(e){ clearTimeout(timer); throw { retry: true, msg: (e && e.message) || 'network' }; })
+    .catch(function(e){ if (e && e.retry && attempt++ < 4) return sleep(4000 * attempt).then(once); throw new Error((e && e.msg) || String(e)); });
+  }
+  return once();
+}
 function ask(key, role, input, json){
   var attempt = 0, mi = firstAlive();
   if (key === 'PROXY') return askProxy(role, input, json);
+  if (/^sk-ant-/.test(key)) return askClaude(key, role, input, json);
   function once(){ return coolDown().then(send); }
   function send(){
     var ctrl = new AbortController();
@@ -2805,7 +2849,7 @@ function askProxy(role, input, json){
   function once(){
     var cfg = thinkCfg(role, MODELS[mi], { temperature: json ? 0.4 : 0.5, maxOutputTokens: 12000 });
     if (json) cfg.responseMimeType = 'application/json';
-    return proxyCall({ op: 'ask', role: role, model: MODELS[mi], systemInstruction: { parts: [{ text: ROLES[role] }] },
+    return proxyCall({ op: 'ask', role: role, model: MODELS[mi], systemInstruction: { parts: [{ text: CLAUDE_PREFACE + ROLES[role] }] },
       contents: [{ role: 'user', parts: partsOf(input) }], generationConfig: cfg })
     .then(function(r){
       if (r.credits) setCredits(r.credits);
@@ -4094,7 +4138,7 @@ function writeFlowTests(app, key, again){
     // رد فارغ أو JSON مقطوع: لا نتخطى اختبار الرحلات بصمت، نعيد المحاولة مرتين
     if (!tests.length && (plan.flows || []).length && (again || 0) < 2) { app.ck.flowErr = 'رد غير صالح: ' + String(raw || '').slice(0, 120); return writeFlowTests(app, key, (again || 0) + 1); }
     app.ck.flowTests = tests; saveApps();
-  }).catch(function(e){ if (e && (e.message === '__stale' || /رصيد|حصة|الشبكة|Gemini|مشغولة/.test(e.message || ''))) throw e; app.ck.flowErr = String(e && e.message || e).slice(0, 160); if ((again || 0) < 2) return writeFlowTests(app, key, (again || 0) + 1); app.ck.flowTests = []; }); // نفاد الرصيد: يتوقف البناء ويكمل لاحقاً، لا يتخطى الاختبار
+  }).catch(function(e){ if (e && (e.message === '__stale' || /رصيد|حصة|الشبكة|Gemini|Claude|مشغولة/.test(e.message || ''))) throw e; app.ck.flowErr = String(e && e.message || e).slice(0, 160); if ((again || 0) < 2) return writeFlowTests(app, key, (again || 0) + 1); app.ck.flowTests = []; }); // نفاد الرصيد: يتوقف البناء ويكمل لاحقاً، لا يتخطى الاختبار
 }
 function reviewApp(app, key){
   var plan = app.ck.plan;
@@ -4104,7 +4148,7 @@ function reviewApp(app, key){
     var r = parseJSON(raw) || {}, iss = r.issues || {}, out = {}, n = 0;
     plan.screens.forEach(function(s){ var a = (iss[s.id] || []).filter(function(m){ return typeof m === 'string' && m.length > 8; }).slice(0, 4).map(function(m){ return 'مراجعة: ' + m.slice(0, 400); }); out[s.id] = a; n += a.length; });
     return { issues: out, count: n };
-  }).catch(function(e){ if (e && (e.message === '__stale' || /رصيد|حصة|الشبكة|Gemini|مشغولة/.test(e.message || ''))) throw e; return { issues: {}, count: 0 }; });
+  }).catch(function(e){ if (e && (e.message === '__stale' || /رصيد|حصة|الشبكة|Gemini|Claude|مشغولة/.test(e.message || ''))) throw e; return { issues: {}, count: 0 }; });
 }
 function routeScreen(plan, path){
   path = (path || '/').split('?')[0];
@@ -4327,7 +4371,7 @@ function issuesText(app, res){
   return out.length ? out.slice(0, 25).join('\n') : 'لا أخطاء وظيفية';
 }
 function agentFix(app, key, res, onStep){
-  var plan = app.ck.plan, start = {}, MAX = paidUser() ? 32 : 20, n = 0, hist = [], cur = res, best = appScore(app, res), bestScreens = null;
+  var plan = app.ck.plan, start = {}, MAX = 40, n = 0, hist = [], cur = res, best = appScore(app, res), bestScreens = null;
   plan.screens.forEach(function(s){ start[s.id] = app.ck.screens[s.id]; });
   var startSeed = JSON.stringify(plan.seed || {}), seedChanged = false, flowBackup = null;
   function numbered(js){ return String(js || '').split('\n').map(function(l, i){ return (i + 1) + '| ' + l; }).join('\n'); }
@@ -4478,7 +4522,7 @@ ROLES.judge = 'أنت مدير تصميم في شركة تطبيقات عالم�
 
 // ٧) حلقة التصميم البصرية: تصوير كل شاشة كما تظهر فعلاً ← حكم رؤية من ١٠ ← إصلاح الشاشات الضعيفة بعيوبها المحددة ← تأكد أن الإصلاح لم يكسر شيئاً
 var DESIGN_MIN = 7, DESIGN_FIX_MAX = 3; // المشترك: معيار أعلى وتحسين حتى ٦ شاشات (designLimits)
-function designLimits(){ return paidUser() ? { min: 7.5, max: 6 } : { min: DESIGN_MIN, max: DESIGN_FIX_MAX }; }
+function designLimits(){ return { min: 7.5, max: 8 }; } // Claude: معيار أعلى ويحسّن كل شاشة ضعيفة
 // html2canvas لا يفهم color(srgb ...) وoklab الناتجة من color-mix، فتُحوَّل إلى rgba في النسخة المصوّرة
 var FLAT_PROPS = ['color', 'background-color', 'background-image', 'border-top-color', 'border-right-color', 'border-bottom-color', 'border-left-color', 'box-shadow', 'outline-color', 'text-decoration-color', 'fill', 'stroke'];
 function flatColors(doc){
@@ -5423,7 +5467,7 @@ ROLES.editor =
 THINK.editor = 'low';
 
 function chatAgent(app, key, msg, onStep){
-  var plan = app.ck.plan, MAX = paidUser() ? 24 : 16, n = 0, hist = [], touched = {}, asked = null, reply = '', lastImg = null, planItems = [], checked = [];
+  var plan = app.ck.plan, MAX = 40, n = 0, hist = [], touched = {}, asked = null, reply = '', lastImg = null, planItems = [], checked = [];
   var history = (app.chat || []).slice(-9, -1).filter(function(m){ return m.role !== 'sys'; }).map(function(m){ return (m.role === 'me' ? 'المستخدم: ' : 'أنت: ') + String(m.text).slice(0, 600); }).join('\n');
   function numbered(js){ return String(js || '').split('\n').map(function(l, i){ return (i + 1) + '| ' + l; }).join('\n'); }
   function scr(id){ return plan.screens.filter(function(s){ return s.id === id; })[0]; }

@@ -18,11 +18,13 @@ var CFG = {
   CLAUDE: {
     MODEL: 'claude-sonnet-5-5',
     PRICE: { in: 2.00, out: 10.00, cacheWrite: 2.50, cacheRead: 0.20 }, // دولار لكل مليون رمز
-    ROLES: ['screen', 'fixer', 'agent', 'reviewer'],      // أدوار كتابة الكود ومراجعته
-    PLANS: ['starter', 'pro', 'business'],                 // أضف 'free' أو 'key' لتجربته على الجميع
+    ONLY: true,                                            // نسخة Claude: كل الأدوار ولكل المستخدمين على Claude، ولا رجوع إلى Gemini
+    ROLES: ['screen', 'fixer', 'agent', 'reviewer'],      // (عند ONLY: false) أدوار كتابة الكود ومراجعته فقط
+    PLANS: ['starter', 'pro', 'business'],                 // (عند ONLY: false) الخطط التي تستخدم Claude
     TESTERS: [],                                           // بريد حسابات تجرّب Claude دائماً؛ الأفضل وضعها في Script Property باسم CLAUDE_TESTERS (المستودع عام)
-    DAILY_USD: 20,                                         // سقف إنفاق Claude اليومي، بعده يعود كل شيء لـ Gemini
-    EFFORT: { screen: 'high', fixer: 'medium', agent: 'medium', reviewer: 'medium' },
+    DAILY_USD: 20,                                         // سقف إنفاق Claude اليومي للخادم كله
+    // عمق التفكير لكل دور: كتابة الشاشات والوكلاء أعلى، والمهام القصيرة (تحليل، محتوى، حكم) أقل
+    EFFORT: { screen: 'high', fixer: 'high', agent: 'high', editor: 'high', planner: 'high', stylist: 'high', reviewer: 'medium', tester: 'medium', reqcheck: 'medium', judge: 'low', analyst: 'low', designer: 'medium', content: 'medium', specwriter: 'high' },
     MAX_TOKENS: 32000
   },
   // ── مزوّد متوافق مع OpenAI (DeepSeek افتراضياً): يعمل بإضافة Script Property باسم ALT_KEY. Claude له الأولوية إن كان مفعّلاً
@@ -284,6 +286,11 @@ function askGemini(user, req, t0) {
   // Claude لأدوار الكود في الخطط المحددة؛ عند أي فشل أو رفض أو تجاوز السقف نكمل بـ Gemini كالمعتاد
   var cl = useClaude(s, req, user) ? claudeAsk(req) : null;
   if (cl) return chargeAndReturn(user, req, cl.data, CFG.CLAUDE.MODEL, cl.inT, cl.outT, cl.usd, t0, true);
+  if (CFG.CLAUDE.ONLY) {
+    if (!prop('CLAUDE_KEY')) return { ok: false, error: { code: 'server', message: 'الخادم غير مهيأ: أضف CLAUDE_KEY في خصائص السكربت' } };
+    var capped = Number(prop('claudeday:' + Utilities.formatDate(new Date(), 'UTC', 'yyyy-MM-dd')) || 0) >= CFG.CLAUDE.DAILY_USD;
+    return { ok: false, error: { code: capped ? 'daily_cap' : 'busy', message: capped ? 'وصل الخادم سقف اليوم. مشروعك محفوظ، أكمل غداً أو بمفتاح Claude الخاص بك.' : 'تعذّر الرد من Claude الآن، اضغط متابعة بعد لحظات' } };
+  }
   var alt = !cl && useProvider(CFG.ALT, 'ALT_KEY', 'ALT_TESTERS', 'altday:', s, req, user) ? altAsk(req) : null;
   if (alt) return chargeAndReturn(user, req, alt.data, CFG.ALT.MODEL, alt.inT, alt.outT, alt.usd, t0, true);
 
@@ -354,6 +361,7 @@ function chargeAndReturn(user, req, data, model, inT, outT, usd, t0, isClaude) {
 // ═════════════ Claude (Anthropic Messages API عبر HTTP مباشرة، فلا توجد مكتبة رسمية لـ Apps Script) ═════════════
 function useClaude(s, req, user) {
   if (!prop('CLAUDE_KEY')) return false;
+  if (CFG.CLAUDE.ONLY) return Number(prop('claudeday:' + Utilities.formatDate(new Date(), 'UTC', 'yyyy-MM-dd')) || 0) < CFG.CLAUDE.DAILY_USD;
   var testers = CFG.CLAUDE.TESTERS.concat(String(prop('CLAUDE_TESTERS') || '').split(/[\s,]+/)).map(function(x){ return String(x).trim().toLowerCase(); }).filter(Boolean);
   var tester = user && testers.indexOf(String(user.email || '').toLowerCase()) > -1;
   if (CFG.CLAUDE.ROLES.indexOf(req.role) < 0 || (!tester && CFG.CLAUDE.PLANS.indexOf(s.plan) < 0)) return false;

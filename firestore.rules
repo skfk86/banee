@@ -71,6 +71,13 @@ service cloud.firestore {
           || (d.get('status', '') == 'ok' && !(d.get('role', '') in appDoc().get('roleApprove', [])));
       }
 
+      // أول حالة: المجموعة التي لها حالات (first) لا يُنشئ فيها المستخدم العادي عنصراً إلا بالحالة الأولى
+      function firstOk(col, d) { return !(col in appDoc().get('first', {})) || d.get('status', '') == appDoc().first[col]; }
+      // مجموعة يديرها دور (roleAccess): صاحب العنصر لا يغيّر مبلغه بعد الإنشاء
+      function managed(col) { return appDoc().get('roleAccess', {}).get(col, []).size() > 0; }
+      function moneySame() { return request.resource.data.get('price', null) == resource.data.get('price', null)
+        && request.resource.data.get('amount', null) == resource.data.get('amount', null); }
+
       // عدّادات عامة (Tally): عدد العناصر القائمة لكل قيمة ربط، يقرؤها الجميع ويغيّرها المسجّل بمقدار عنصر واحد في كل مرة
       match /_tally/{id} {
         allow read: if appOwner() || alive();
@@ -87,9 +94,10 @@ service cloud.firestore {
         allow create: if appOwner() || (alive() && (false
           // دور معتمد ينشر محتواه في مجموعة عامة (بائع يضيف منتجاته، معلم يضيف دروسه) باسمه هو فقط
           || (mode(col) == 'content' && roleCan(col) && authorOf(request.resource.data) == request.auth.uid)
-          || (mode(col) == 'shared' && signedIn())
+          || (mode(col) == 'shared' && signedIn() && firstOk(col, request.resource.data))
           || (mode(col) == 'private' && signedIn()
               && (authorOf(request.resource.data) == request.auth.uid || id == request.auth.uid)
+              && (firstOk(col, request.resource.data) || roleCan(col))
               && (col != 'members' || (id == request.auth.uid && memberOk(request.resource.data))))));
         allow update: if appOwner() || (alive() && (false
           || (roleCan(col) && authorOf(request.resource.data) == authorOf(resource.data)
@@ -97,6 +105,7 @@ service cloud.firestore {
           || (mode(col) != 'content' && signedIn()
               && (authorOf(resource.data) == request.auth.uid || id == request.auth.uid)
               && authorOf(request.resource.data) == authorOf(resource.data)
+              && (!managed(col) || moneySame())
               && (col != 'members' || memberOk(request.resource.data)
                   || (request.resource.data.get('role', '') == resource.data.get('role', '')
                       && request.resource.data.get('status', '') == resource.data.get('status', ''))))));

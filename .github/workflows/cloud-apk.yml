@@ -32,11 +32,18 @@ jobs:
         env:
           ID: ${{ github.event.client_payload.id }}
           MODE: ${{ github.event.client_payload.mode }}
-          K: ${{ github.event.client_payload.k }}
         run: |
           echo "$ID" | grep -Eq '^[a-zA-Z0-9]{20}$' || { echo "bad id"; exit 1; }
-          # مفتاح تشفير ملف التوقيع: لا يظهر في السجل أبداً
-          if [ "$MODE" = "store" ]; then echo "$K" | grep -Eq '^[0-9a-f]{64}$' || { echo "bad key"; exit 1; }; echo "::add-mask::$K"; echo "STORE=1" >> "$GITHUB_ENV"; fi
+          # مفتاح تشفير ملف التوقيع: يُقرأ من ملف الحدث مباشرة (لا يمر بمتغيرات env ولا بنص الأوامر، فلا يُطبع في السجل العام)
+          # ويُحفظ في ملف مؤقت بصلاحية صاحبه فقط تقرؤه خطوة التوقيع ثم يُحذف
+          if [ "$MODE" = "store" ]; then
+            set +x
+            K=$(jq -r '.client_payload.k // ""' "$GITHUB_EVENT_PATH")
+            echo "::add-mask::$K"
+            echo "$K" | grep -Eq '^[0-9a-f]{64}$' || { echo "bad key"; exit 1; }
+            umask 077; printf '%s' "$K" > "$RUNNER_TEMP/kfile"; unset K
+            echo "STORE=1" >> "$GITHUB_ENV"
+          fi
           mkdir -p in && cd in
           BASE="https://firestore.googleapis.com/v1/projects/bani-b28a0/databases/(default)/documents/apk/$ID"
           curl -sf "$BASE" -o meta.json
@@ -122,7 +129,7 @@ jobs:
           # ── حزمة Google Play: مفتاح رفع ثابت لكل تطبيق (يُولَّد أول مرة، ويُعاد في كل تحديث) ──
           mkdir -p "$RUNNER_TEMP/kb" && cd "$RUNNER_TEMP/kb"
           if [ -s "$GITHUB_WORKSPACE/in/kb.b64" ]; then
-            base64 -d "$GITHUB_WORKSPACE/in/kb.b64" | openssl enc -d -aes-256-cbc -pbkdf2 -iter 100000 -md sha256 -pass env:K > kb.zip
+            base64 -d "$GITHUB_WORKSPACE/in/kb.b64" | openssl enc -d -aes-256-cbc -pbkdf2 -iter 100000 -md sha256 -pass "file:$RUNNER_TEMP/kfile" > kb.zip
             unzip -o -q kb.zip
             # تحديث: نعيد إرفاق ملف التوقيع المشفّر نفسه حتى يبقى متاحاً في الإصدار الجديد
             base64 -d "$GITHUB_WORKSPACE/in/kb.b64" > "$GITHUB_WORKSPACE/keybox.enc"
@@ -130,7 +137,7 @@ jobs:
             PASS=$(openssl rand -hex 16); echo "$PASS" > pass.txt
             keytool -genkeypair -keystore upload.jks -alias upload -keyalg RSA -keysize 2048 -validity 10000 -storepass "$PASS" -keypass "$PASS" -dname "CN=Banee App, O=Banee" -noprompt
             zip -q kb.zip upload.jks pass.txt
-            openssl enc -aes-256-cbc -pbkdf2 -iter 100000 -md sha256 -salt -pass env:K -in kb.zip -out "$GITHUB_WORKSPACE/keybox.enc"
+            openssl enc -aes-256-cbc -pbkdf2 -iter 100000 -md sha256 -salt -pass "file:$RUNNER_TEMP/kfile" -in kb.zip -out "$GITHUB_WORKSPACE/keybox.enc"
           fi
           PASS=$(cat pass.txt); echo "::add-mask::$PASS"
           cd "$GITHUB_WORKSPACE/p/android"
@@ -144,7 +151,7 @@ jobs:
           ./gradlew bundleRelease assembleRelease --no-daemon
           cp app/build/outputs/bundle/release/app-release.aab "$GITHUB_WORKSPACE/app.aab"
           cp app/build/outputs/apk/release/app-release.apk "$GITHUB_WORKSPACE/app.apk"
-          rm -rf "$RUNNER_TEMP/kb"
+          rm -rf "$RUNNER_TEMP/kb" "$RUNNER_TEMP/kfile"
 
       - uses: actions/upload-artifact@v4
         with:

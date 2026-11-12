@@ -185,6 +185,7 @@ function userPlan(user, token) {
       var owner = prop('tokOwner:' + hash(token));
       if (owner && owner !== user.uid) plan.why = 'token_other_user';
       if (!owner || owner === user.uid) {
+        PLAY_LAST = '';
         var sub = playGet('purchases/subscriptionsv2/tokens/' + encodeURIComponent(token));
         plan.why = !sub ? 'play_api:' + (PLAY_LAST || '?') : !/SUBSCRIPTION_STATE_(ACTIVE|IN_GRACE_PERIOD)/.test(sub.subscriptionState || '') ? 'state:' + sub.subscriptionState : 'ok';
         var active = sub && /SUBSCRIPTION_STATE_(ACTIVE|IN_GRACE_PERIOD)/.test(sub.subscriptionState || '');
@@ -207,8 +208,11 @@ function userPlan(user, token) {
   // الرفض بسبب خطأ اتصال بـ Google لا يُحفظ ٦ ساعات: نعيد المحاولة في الطلب التالي
   // سماح مؤقت: إن تعذّر سؤال Google Play (خلل إعداد عندنا لا عند المشترك) نصدّق شراء الجهاز ٣ أيام لكل رمز
   // حتى لا يُعامَل من دفع كمجاني بسبب مشكلة ليست منه. «حالة غير نشطة» من Google لا تدخل هنا أبداً.
-  if (plan.name === 'free' && token && /^play_api/.test(plan.why) && planByProduct(user.planClaim)) {
-    var gk = 'grace:' + hash(token), g = Number(prop(gk) || 0);
+  // الحماية: السماح فقط عند خلل صلاحيات أو عطل عند Google (401/403/5xx)، لا عند رمز غير معروف (400/404/410 = رمز مزوّر أو منتهٍ)،
+  // ومرة واحدة لكل حساب لا لكل رمز، فلا يتجدد بإرسال رموز عشوائية
+  var pl = Number(String(plan.why).split(':')[1] || 0);
+  if (plan.name === 'free' && token && /^play_api/.test(plan.why) && (pl === 401 || pl === 403 || pl >= 500) && planByProduct(user.planClaim)) {
+    var gk = 'grace:u:' + user.uid, g = Number(prop(gk) || 0);
     if (!g) { g = Date.now(); PropertiesService.getScriptProperties().setProperty(gk, String(g)); }
     if (Date.now() - g < 3 * 864e5) plan = { name: planByProduct(user.planClaim), period: 'grace', why: 'grace' };
   }
@@ -256,7 +260,9 @@ function creditsView(user, s) {
 
 // ═════════════ الطلب إلى Gemini ═════════════
 function askGemini(user, req, t0) {
-  var lock = LockService.getScriptLock(); lock.waitLock(10000);
+  // سؤال Google Play عن الاشتراك (اتصال شبكة) يتم قبل القفل العام ويُحفظ في الذاكرة المؤقتة، فلا ينتظره بقية المستخدمين
+  try { userPlan(user, user.planToken || ''); } catch (e) {}
+  var lock = LockService.getScriptLock(); lock.waitLock(20000);
   var s, now = new Date();
   try {
     s = loadState(user);
@@ -356,6 +362,7 @@ function chargeAndReturn(user, req, data, model, inT, outT, usd, t0, isClaude) {
     s = s2;
   } finally { lock2.releaseLock(); }
   logRow(user, model, req.role || '', inT, outT, usd);
+  try { cleanupProps(); } catch (e) {}
   return { ok: true, data: data, model: model, cost: { points: Math.round(pts), ms: Date.now() - t0 }, credits: creditsView(user, s) };
 }
 
@@ -555,6 +562,18 @@ function playPublish(user, req) {
   if (cm.code !== 200) return { ok: false, error: { code: 'play', message: why(cm) } };
   logRow(user, 'PLAY', pkg + ' v' + up.json.versionCode + ' ' + track, 0, 0, 0);
   return { ok: true, versionCode: up.json.versionCode, track: track, draft: draft };
+}
+// تنظيف يومي للعدّادات القديمة: خصائص السكربت محدودة الحجم (~٥٠٠ك.ب) والعدّادات اليومية كانت تتراكم بلا نهاية
+function cleanupProps() {
+  var P = PropertiesService.getScriptProperties(), today = Utilities.formatDate(new Date(), 'UTC', 'yyyy-MM-dd');
+  if (P.getProperty('cleanDay') === today) return 0;
+  P.setProperty('cleanDay', today);
+  var cut = Utilities.formatDate(new Date(Date.now() - 14 * 864e5), 'UTC', 'yyyy-MM-dd'), n = 0;
+  P.getKeys().forEach(function(k){
+    var m = /^(day|claudeday|freeday|altday):(\d{4}-\d{2}-\d{2})$/.exec(k);
+    if (m && m[2] < cut) { P.deleteProperty(k); n++; }
+  });
+  return n;
 }
 function hit(key, limit, ttl) {
   var c = CacheService.getScriptCache(), n = Number(c.get(key) || 0) + 1;

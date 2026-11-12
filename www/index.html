@@ -2753,7 +2753,7 @@ function firstAlive(){ for (var i = 0; i < MODELS.length; i++) if (!DEAD_MODELS[
 var CLAUDE_MODEL = 'claude-sonnet-5-5';
 // مقدمة مشتركة لكل أدوار الفريق على Claude: الحرية ومعيار الجودة، فالتعليمات بعدها حدود الهيكل لا سقف الإبداع
 var CLAUDE_PREFACE =
-'تعمل ضمن فريق بانِي الذي يبني تطبيقات أندرويد عربية حقيقية لأشخاص غير مبرمجين، وأنت Claude. صاحب التطبيق سيعرض عمله على عملائه، فالمعيار تطبيق يُنشر في المتجر بجانب أفضل التطبيقات العالمية، لا نموذج تجريبي.\n' +
+'تعمل ضمن فريق بانِي الذي يبني تطبيقات أندرويد عربية حقيقية لأشخاص غير مبرمجين. صاحب التطبيق سيعرض عمله على عملائه، فالمعيار تطبيق يُنشر في المتجر بجانب أفضل التطبيقات العالمية، لا نموذج تجريبي.\n' +
 'لك حرية كاملة في الحلول والتصميم والتفاصيل داخل حدود الهيكل التقني الموصوف بعد هذه الفقرة: تلك الحدود موجودة لأن الكود يعمل داخل إطار جاهز ويُختبر آلياً، وما سواها متروك لحكمك. إذا رأيت أن الطلب ينقصه ما يجعل التجربة مكتملة (حالة فارغة، رسالة نجاح، تحقق من الإدخال، لمسة تصميم) فأضفه دون أن تسأل. وإذا وجدت تعليمة تتعارض مع مصلحة المستخدم الواضحة فاتبع المصلحة واذكر السبب باختصار حيث يُسمح بالنص.\n' +
 'اكتب عربية طبيعية سليمة، وكوداً نظيفاً كاملاً بلا اختصارات أو تعليقات «أكمل لاحقاً». التزم بصيغة الإخراج المطلوبة حرفياً لأن آلة تقرؤها.\n\n';
 var CLAUDE_EFFORT = { screen: 'high', fixer: 'high', agent: 'high', editor: 'high', planner: 'high', stylist: 'high', specwriter: 'high', reviewer: 'medium', tester: 'medium', reqcheck: 'medium', designer: 'medium', content: 'medium', judge: 'low', analyst: 'low' };
@@ -5571,12 +5571,14 @@ function collModes(plan){
 }
 // استضافة التطبيق المنشور على سحابة بانِي: مساحة منفصلة عن المعاينة (apps/{id}p) بموافقات الأدوار الحقيقية
 // ومدة استضافة سنة تتجدد تلقائياً مع كل تصدير أو تحديث فوري (القواعد لا تسمح بأكثر من ٤٠٠ يوم مقدماً)
+// أول حالة لكل مجموعة لها حالات: قواعد Firestore تفرضها عند الإنشاء (الزبون لا ينشئ حجزاً «مكتملاً»)
+function firstStatuses(plan){ var o = {}, C = contractOf(plan); Object.keys(C).forEach(function(k){ if (C[k].statuses && C[k].statuses.length) o[k] = C[k].statuses[0]; }); return o; }
 function hostSync(app){
   if (!CLOUD || !FB || !FB.auth.currentUser) return Promise.reject(new Error('سجّل دخولك واتصل بالإنترنت لتجهيز قاعدة بيانات تطبيقك'));
   var u = FB.auth.currentUser, f = FB.f, plan = app.ck.plan, hid = app.hostId || (u.uid.slice(0, 10) + '_' + app.id + 'p');
   var modes = collModes(plan), seed = mergedSeed(app), done = app.hostCols || [];
   var roles = plan.roles || [], approve = roles.filter(function(r, i){ return i > 0 && r.approve !== false; }).map(function(r){ return String(r.id); });
-  var meta = { owner: u.uid, name: plan.name || app.name, modes: modes, updatedAt: Date.now(), hostUntil: Date.now() + 365 * 864e5, prod: true,
+  var meta = { owner: u.uid, name: plan.name || app.name, modes: modes, updatedAt: Date.now(), hostUntil: Date.now() + 365 * 864e5, prod: true, first: firstStatuses(plan),
     roleApprove: approve, roleAccess: plan.roleAccess && typeof plan.roleAccess === 'object' ? plan.roleAccess : {} };
   if (!app.hostId) meta.createdAt = Date.now();
   return f.setDoc(fdoc('apps', hid), meta, { merge: true }).then(function(){
@@ -5599,7 +5601,7 @@ function cloudSync(app, opts){
   var u = FB.auth.currentUser, f = FB.f, plan = app.ck.plan;
   var cid = app.cloudId || (u.uid.slice(0, 10) + '_' + app.id);
   var modes = collModes(plan), seed = mergedSeed(app), done = app.cloudCols || [];
-  var meta = { owner: u.uid, name: plan.name || app.name, modes: modes, updatedAt: Date.now(),
+  var meta = { owner: u.uid, name: plan.name || app.name, modes: modes, updatedAt: Date.now(), first: firstStatuses(plan),
     roleApprove: [], // سحابة التجربة: تبديل الأدوار مباشرة لتجربة كل دور؛ الموافقة تُفرض في مشروع صاحب التطبيق المنشور
     roleAccess: plan.roleAccess && typeof plan.roleAccess === 'object' ? plan.roleAccess : {} };
   if (!app.cloudId) meta.createdAt = Date.now();

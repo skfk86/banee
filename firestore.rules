@@ -78,11 +78,29 @@ service cloud.firestore {
       function moneySame() { return request.resource.data.get('price', null) == resource.data.get('price', null)
         && request.resource.data.get('amount', null) == resource.data.get('amount', null); }
 
-      // عدّادات عامة (Tally): عدد العناصر القائمة لكل قيمة ربط، يقرؤها الجميع ويغيّرها المسجّل بمقدار عنصر واحد في كل مرة
+      // عدّادات عامة (Tally): عدد العناصر القائمة لكل قيمة ربط (مواعيد محجوزة، مقاعد...). يقرؤها الجميع.
+      // الكتابة مربوطة بعنصر حقيقي في نفس العملية (batch): العدّاد c__k__v لا يزيد إلا إذا أُنشئ/فُعّل في هذه العملية
+      // عنصر في المجموعة c حقله k يساوي v، ولا ينقص إلا إذا حُذف أو أُلغي. فلا يستطيع أحد تزوير الأعداد أو «حجز» المواعيد وهمياً.
+      function tLive(d) { return !(d.get('status', '') in ['cancelled', 'canceled', 'rejected', 'returned', 'expired', 'refunded', 'failed']); }
+      function tPath(ref) { return /databases/$(database)/documents/apps/$(appId)/$(ref.split('/')[0])/$(ref.split('/')[1]); }
+      function tBefore(d) { return exists(tPath(d.ref)) && tLive(get(tPath(d.ref)).data) && get(tPath(d.ref)).data.get(d.k, '') == d.v; }
+      function tAfter(d) { return existsAfter(tPath(d.ref)) && tLive(getAfter(tPath(d.ref)).data) && getAfter(tPath(d.ref)).data.get(d.k, '') == d.v; }
+      function tNum(data) { return data.get('amount', 0) is number ? data.get('amount', 0) : 0; }
+      function tAmtB(d) { return tBefore(d) ? tNum(get(tPath(d.ref)).data) : 0; }
+      function tAmtA(d) { return tAfter(d) ? tNum(getAfter(tPath(d.ref)).data) : 0; }
+      function tallyOk(id, d, oldN, oldA) {
+        return d.keys().hasOnly(['n', 'amount', 'ref', 'k', 'v'])
+          && d.ref is string && d.k is string && d.v is string && d.ref.split('/').size() == 2 && d.k != 'userId'
+          && id == (d.ref.split('/')[0] + '__' + d.k + '__' + d.v).replace('[/\\s]', '_')
+          && ((d.n - oldN == 1 && tAfter(d) && !tBefore(d))
+            || (d.n - oldN == -1 && tBefore(d) && !tAfter(d))
+            || (d.n - oldN == 0 && tBefore(d) && tAfter(d)))
+          && d.get('amount', 0) - oldA == tAmtA(d) - tAmtB(d);
+      }
       match /_tally/{id} {
         allow read: if appOwner() || alive();
-        allow create: if appOwner() || (signedIn() && alive() && request.resource.data.keys().hasOnly(['n', 'amount']) && request.resource.data.n in [-1, 0, 1]);
-        allow update: if appOwner() || (signedIn() && alive() && request.resource.data.keys().hasOnly(['n', 'amount']) && request.resource.data.n - resource.data.get('n', 0) in [-1, 0, 1]);
+        allow create: if appOwner() || (signedIn() && alive() && tallyOk(id, request.resource.data, 0, 0));
+        allow update: if appOwner() || (signedIn() && alive() && tallyOk(id, request.resource.data, resource.data.get('n', 0), resource.data.get('amount', 0)));
       }
 
       match /{col}/{id} {

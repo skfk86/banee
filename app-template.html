@@ -610,14 +610,25 @@ _e(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&
       keys: o => Object.keys(o || {}).filter(k => /Id$/.test(k) && k !== 'userId' && typeof o[k] === 'string' && o[k]),
       live: o => !!o && !Tally.FREE.test(String(o.status || '')),
       id: (c, k, v) => (c + '__' + k + '__' + v).replace(/[\/\s]/g, '_').slice(0, 400),
-      async bump(c, before, after) {
-        if (!LIVE || c === '_tally') return;
+      // فروق العدّادات بين حالة العنصر قبل الكتابة وبعدها: { tallyId: { n, amount, k, v } }
+      diff(c, before, after) {
         const d = {};
-        const put = (o, sg) => { if (!Tally.live(o)) return; Tally.keys(o).forEach(k => { const id = Tally.id(c, k, o[k]); d[id] = d[id] || { n: 0, amount: 0 }; d[id].n += sg; d[id].amount += sg * (Number(o.amount) || 0); }); };
+        const put = (o, sg) => { if (!Tally.live(o)) return; Tally.keys(o).forEach(k => { const id = Tally.id(c, k, o[k]); if ((c + '__' + k + '__' + o[k]).length > 400) return; d[id] = d[id] || { n: 0, amount: 0, k, v: o[k] }; d[id].n += sg; d[id].amount += sg * (Number(o.amount) || 0); }); };
         put(before, -1); put(after, 1);
-        const { doc, setDoc, increment } = FS.m;
-        await Promise.all(Object.keys(d).filter(id => d[id].n || d[id].amount).map(id =>
-          setDoc(doc(FS.db, ...ROOT, '_tally', id), { n: increment(d[id].n), amount: increment(d[id].amount) }, { merge: true }).catch(e => console.warn('tally', e && e.message))));
+        Object.keys(d).forEach(id => { if (!d[id].n && !d[id].amount) delete d[id]; });
+        return d;
+      },
+      // الكتابة والعدّادات في عملية واحدة (batch): قواعد Firestore لا تقبل تغيير عدّاد إلا مع عنصره الحقيقي في نفس العملية
+      async write(c, id, before, after, op) {
+        const { doc, writeBatch, increment } = FS.m, d = c === '_tally' ? {} : Tally.diff(c, before, after), ids = Object.keys(d);
+        if (ids.length) {
+          try {
+            const b = writeBatch(FS.db); op(b);
+            ids.forEach(t => b.set(doc(FS.db, ...ROOT, '_tally', t), { n: increment(d[t].n), amount: increment(d[t].amount), ref: c + '/' + id, k: d[t].k, v: d[t].v }, { merge: true }));
+            await b.commit(); return;
+          } catch (e) { if (!/permission|PERMISSION/.test(String((e && (e.code || e.message)) || ''))) throw e; console.warn('tally', e && e.message); }
+        }
+        const b = writeBatch(FS.db); op(b); await b.commit(); // بلا عدّاد (أو رُفض العدّاد): الكتابة الأساسية لا تتعطل
       },
       async get(c, field, value) {
         if (!LIVE) { const a = await LocalDB.list(c, {}); const m = a.filter(o => o[field] === value && Tally.live(o)); return { n: m.length, amount: m.reduce((t, o) => t + (Number(o.amount) || 0), 0) }; }
@@ -631,12 +642,13 @@ _e(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&
         await Promise.all(Object.keys(out).map(id => FS.m.setDoc(FS.m.doc(FS.db, ...ROOT, '_tally', id), out[id]).catch(() => {})));
       }
     };
-    { // كل كتابة في السحابة تحدّث العدّادات (حتى DB المباشر من الشاشات)
-      const A = DB.add, U = DB.update, R = DB.remove, S = DB.set;
-      DB.add = async (c, d) => { const id = await A(c, d); if (LIVE) Tally.bump(c, null, d); return id; };
-      DB.update = async (c, id, p) => { const b = LIVE ? await CloudDB.get(c, id).catch(() => null) : null; await U(c, id, p); if (b) Tally.bump(c, b, { ...b, ...p }); };
-      DB.set = async (c, id, d) => { const b = LIVE ? await CloudDB.get(c, id).catch(() => null) : null; await S(c, id, d); if (LIVE) Tally.bump(c, b, { ...(b || {}), ...d }); };
-      DB.remove = async (c, id) => { const b = LIVE ? await CloudDB.get(c, id).catch(() => null) : null; await R(c, id); if (b) Tally.bump(c, b, null); };
+    { // كل كتابة في السحابة تحدّث العدّادات في نفس العملية (حتى DB المباشر من الشاشات)
+      const A = DB.add, U = DB.update, R = DB.remove, S = DB.set, ref = (c, id) => FS.m.doc(FS.db, ...ROOT, c, String(id));
+      const prev = (c, id) => CloudDB.get(c, id).catch(() => null);
+      DB.add = async (c, d) => { if (!LIVE) return A(c, d); const r = FS.m.doc(FS.m.collection(FS.db, ...ROOT, c)), data = { ...d, createdAt: Date.now() }; await Tally.write(c, r.id, null, data, b => b.set(r, data)); return r.id; };
+      DB.update = async (c, id, p) => { if (!LIVE) return U(c, id, p); const b0 = await prev(c, id); await Tally.write(c, id, b0, b0 ? { ...b0, ...p } : null, b => b.update(ref(c, id), { ...p, updatedAt: Date.now() })); };
+      DB.set = async (c, id, d) => { if (!LIVE) return S(c, id, d); const b0 = await prev(c, id); await Tally.write(c, id, b0, { ...(b0 || {}), ...d }, b => b.set(ref(c, id), { createdAt: Date.now(), ...d }, { merge: true })); };
+      DB.remove = async (c, id) => { if (!LIVE) return R(c, id); const b0 = await prev(c, id); await Tally.write(c, id, b0, null, b => b.delete(ref(c, id))); };
     }
 
     // ═════════════ تحديثات حيّة (دردشة، طلبات، إشعارات داخلية) ═════════════

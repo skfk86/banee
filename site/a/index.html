@@ -42,8 +42,27 @@
   }).then(function(parts){
     var html = parts.map(function(p){ return (p.fields && p.fields.d && p.fields.d.stringValue) || ''; }).join('');
     if (!html) throw 404;
+    // ── العزل الأمني: التطبيق المشارَك كتبه شخص آخر، فيعمل في إطار معزول (sandbox بلا allow-same-origin) لا يرى
+    // تخزين هذا الموقع ولا جلسة دخول لوحة التطبيقات. تخزينه الخاص يمر عبر وسيط: مفاتيح بادئتها sb:<slug>: فقط
+    var PRE = 'sb:' + slug + ':', data = {};
+    try { for (var i = 0; i < localStorage.length; i++) { var k = localStorage.key(i); if (k.indexOf(PRE) === 0) data[k.slice(PRE.length)] = localStorage.getItem(k); } } catch (e) {}
+    var shim = '<script>(function(){var D=' + JSON.stringify(data).replace(/</g, '\\u003c') + ';' +
+      'function post(o,k,v){try{parent.postMessage({__sb:1,op:o,k:k,v:v},"*")}catch(e){}}' +
+      'function mk(M,live){var api={getItem:function(k){k=String(k);return Object.prototype.hasOwnProperty.call(M,k)?M[k]:null},setItem:function(k,v){k=String(k);M[k]=String(v);if(live)post("set",k,M[k])},removeItem:function(k){k=String(k);delete M[k];if(live)post("del",k)},clear:function(){Object.keys(M).forEach(function(k){delete M[k];if(live)post("del",k)})},key:function(i){return Object.keys(M)[i]||null}};' +
+      'return new Proxy(M,{get:function(t,p){if(p==="length")return Object.keys(M).length;if(Object.prototype.hasOwnProperty.call(api,p))return api[p];return typeof p==="string"&&Object.prototype.hasOwnProperty.call(M,p)?M[p]:undefined},set:function(t,p,v){api.setItem(p,v);return true},deleteProperty:function(t,p){api.removeItem(p);return true}})}' +
+      'try{Object.defineProperty(window,"localStorage",{value:mk(D,true),configurable:true});Object.defineProperty(window,"sessionStorage",{value:mk({},false),configurable:true})}catch(e){}})();<\/script>';
+    var at = html.search(/<head[^>]*>/i), hl = at < 0 ? 0 : at + html.match(/<head[^>]*>/i)[0].length;
+    html = at < 0 ? shim + html : html.slice(0, hl) + shim + html.slice(hl);
     var fr = document.createElement('iframe'); fr.id = 'app'; fr.title = document.title;
-    fr.setAttribute('allow', 'geolocation; camera; clipboard-write');
+    fr.setAttribute('sandbox', 'allow-scripts allow-forms allow-modals allow-popups allow-popups-to-escape-sandbox allow-downloads');
+    fr.setAttribute('allow', 'geolocation *; camera *; clipboard-write *');
+    window.addEventListener('message', function(e){
+      var m = e.data; if (e.source !== fr.contentWindow || !m || m.__sb !== 1 || typeof m.k !== 'string' || m.k.length > 300) return;
+      try {
+        if (m.op === 'del') return localStorage.removeItem(PRE + m.k);
+        if (m.op === 'set' && typeof m.v === 'string' && m.v.length <= 2000000) localStorage.setItem(PRE + m.k, m.v);
+      } catch (err) {}
+    });
     fr.srcdoc = html; document.body.insertBefore(fr, msg); fr.onload = function(){ msg.remove(); };
   }).catch(function(){ fail('لم نجد هذا التطبيق، ربما حذفه صاحبه'); });
 })();

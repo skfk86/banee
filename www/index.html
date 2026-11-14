@@ -6,6 +6,8 @@
   <title>بانِي</title>
   <!-- الخط وFirebase مضمّنان محلياً (vendor/): إقلاع أسرع ولا اعتماد على CDN -->
   <style>
+    /* المحرر: الحروف العربية فقط من خط عربي متصل (خطوط الكود الثابتة تعرضها منفصلة)، والباقي من خط الكود */
+    @font-face { font-family: 'EdArabic'; font-weight: 400; font-display: swap; src: url(vendor/fonts/ibm-plex-sans-arabic-arabic-400-normal.woff2) format('woff2'); unicode-range: U+0600-06FF, U+0750-077F, U+0870-088E, U+0890-0891, U+0897-08E1, U+08E3-08FF, U+200C-200E, U+2010-2011, U+204F, U+2E41, U+FB50-FDFF, U+FE70-FE74, U+FE76-FEFC; }
     @font-face { font-family: 'IBM Plex Sans Arabic'; font-weight: 400; font-display: swap; src: url(vendor/fonts/ibm-plex-sans-arabic-arabic-400-normal.woff2) format('woff2'); unicode-range: U+0600-06FF, U+0750-077F, U+0870-088E, U+0890-0891, U+0897-08E1, U+08E3-08FF, U+200C-200E, U+2010-2011, U+204F, U+2E41, U+FB50-FDFF, U+FE70-FE74, U+FE76-FEFC; }
     @font-face { font-family: 'IBM Plex Sans Arabic'; font-weight: 400; font-display: swap; src: url(vendor/fonts/ibm-plex-sans-arabic-latin-400-normal.woff2) format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
     @font-face { font-family: 'IBM Plex Sans Arabic'; font-weight: 500; font-display: swap; src: url(vendor/fonts/ibm-plex-sans-arabic-arabic-500-normal.woff2) format('woff2'); unicode-range: U+0600-06FF, U+0750-077F, U+0870-088E, U+0890-0891, U+0897-08E1, U+08E3-08FF, U+200C-200E, U+2010-2011, U+204F, U+2E41, U+FB50-FDFF, U+FE70-FE74, U+FE76-FEFC; }
@@ -178,6 +180,8 @@
     }
     textarea.desc:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 4px var(--primary-ring); }
     textarea.desc::placeholder { color: var(--text3); }
+    /* العدّاد تحت الحقل لا فوق النص */
+    .desc-wrap .desc-count { position: static; display: block; text-align: left; margin-top: 6px; }
     .desc-count { position: absolute; bottom: 10px; left: 12px; font-size: 12px; color: var(--text3); font-variant-numeric: tabular-nums; }
 
     .chips-label { font-size: 12px; font-weight: 600; color: var(--text3); margin: 14px 0 8px; }
@@ -480,6 +484,12 @@
     .st-tabs { display: flex; background: var(--surface); border-bottom: 1px solid var(--border); }
     .st-tabs button { flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; height: 44px; border: none; background: none; color: var(--text3); font-size: 13px; font-weight: 600; cursor: pointer; position: relative; }
     .st-tabs button .i { width: 17px; height: 17px; }
+    /* الهاتف: اسم التطبيق مقروء (المشاركة والفحص في قائمة المزيد)، والتبويبات أيقونة فوق كلمة فلا تُقطع */
+    @media (max-width: 599px) {
+      #st-share, #st-test { display: none; }
+      .st-title b { font-size: 15.5px; }
+      .st-tabs button { flex-direction: column; gap: 2px; height: 52px; font-size: 11.5px; }
+    }
     .st-tabs button.on { color: var(--primary-ink); }
     .st-tabs button.on::after { content: ''; position: absolute; bottom: -1px; left: 20%; right: 20%; height: 2px; background: var(--primary); border-radius: 2px; }
     .st-body { flex: 1; min-height: 0; display: flex; }
@@ -500,9 +510,9 @@
     .ed-head .btn-ghost { background: #21262D; color: #C9D1D9; border-color: #30363D; }
     .ed { flex: 1; min-height: 0; display: flex; direction: ltr; position: relative; overflow: hidden; }
     .ed-gut-w { width: 48px; flex-shrink: 0; overflow: hidden; background: #0D1117; border-right: 1px solid #1F2733; }
-    .ed-gut { margin: 0; padding: 12px 10px 12px 0; text-align: right; color: #7D8590; font: 12.5px/1.7 'JetBrains Mono', ui-monospace, monospace; user-select: none; will-change: transform; }
+    .ed-gut { margin: 0; padding: 12px 10px 12px 0; text-align: right; color: #7D8590; font: 12.5px/1.7 'EdArabic', 'JetBrains Mono', ui-monospace, monospace; user-select: none; will-change: transform; }
     .ed-wrap { flex: 1; position: relative; overflow: hidden; }
-    .ed-hl, .ed-ta { position: absolute; inset: 0; margin: 0; padding: 12px 14px; font: 12.5px/1.7 'JetBrains Mono', ui-monospace, monospace; white-space: pre; tab-size: 2; letter-spacing: 0; text-align: left; }
+    .ed-hl, .ed-ta { position: absolute; inset: 0; margin: 0; padding: 12px 14px; font: 12.5px/1.7 'EdArabic', 'JetBrains Mono', ui-monospace, monospace; white-space: pre; tab-size: 2; letter-spacing: 0; text-align: left; }
     .ed-hl { color: #E6EDF3; pointer-events: none; overflow: visible; will-change: transform; }
     .ed-ta { width: 100%; height: 100%; border: 0; outline: 0; resize: none; background: transparent; color: transparent; caret-color: #fff; overflow: auto; -webkit-text-fill-color: transparent; }
     .ed-ta::selection { background: rgba(56,139,253,.4); -webkit-text-fill-color: transparent; }
@@ -748,6 +758,11 @@
       opacity: 0; transition: all .25s; z-index: 9999; pointer-events: none; }
     .toast .i { width: 18px; height: 18px; }
     .toast.on { opacity: 1; transform: translateX(-50%) translateY(0); }
+    /* فوق النوافذ السفلية والاستوديو: الرسالة في الأعلى حتى لا تغطي الزر الأساسي */
+    .toast.top, body:has(.modal-bg.on) .toast, body.in-studio .toast { top: calc(14px + env(safe-area-inset-top, 0px)); bottom: auto; transform: translateX(-50%) translateY(-16px); }
+    .toast.top.on, body:has(.modal-bg.on) .toast.on, body.in-studio .toast.on { transform: translateX(-50%) translateY(0); }
+    .rq-slow { display: flex; align-items: center; gap: 8px; justify-content: center; margin: -4px 0 12px; padding: 10px 12px; border-radius: 12px; background: var(--warning-soft); color: var(--warning); font-size: 13.5px; line-height: 1.6; }
+    .rq-slow[hidden] { display: none; }
     .toast.suc .i { color: #3DDBA4; }
     .toast.err .i { color: #FF7A7E; }
     /* ═════ RESPONSIVE ═════ */
@@ -795,7 +810,7 @@
 
     /* زر البناء يبقى ظاهراً أسفل الشاشة على الجوال بدل أن يختفي تحت الأمثلة والخيارات */
     @media (max-width: 899px) {
-      #bld-btn { position: sticky; bottom: 10px; z-index: 5; box-shadow: 0 8px 24px rgba(14,21,37,.28); }
+      #bld-btn { position: sticky; bottom: 10px; z-index: 5; box-shadow: 0 8px 24px rgba(14,21,37,.28), 0 -12px 0 6px var(--surface), 0 12px 0 6px var(--surface); }
     }
 
     @media (min-width: 900px) {
@@ -820,8 +835,10 @@
       .build-aside .card { margin-bottom: 0; }
       .card { padding: 24px; }
       textarea.desc { min-height: 170px; }
+      /* صفحة الترحيب على الكمبيوتر: عمود واحد متوسط بدل زر بعرض الشاشة */
+      #onb > * { width: 100%; max-width: 440px; margin-inline: auto; }
 
-      #s-prof { display: grid; grid-template-columns: 1fr 1fr; gap: 0 22px; align-items: start; }
+      #s-prof.on { display: grid; grid-template-columns: 1fr 1fr; gap: 0 22px; align-items: start; }
       #s-prof .prof-head { grid-column: 1 / -1; }
       #s-prof .prof-av { width: 72px; height: 72px; font-size: 28px; }
 
@@ -1272,7 +1289,7 @@
       <div class="chat-log" id="chat-log"></div>
       <div class="pick-chip" id="pick-chip" hidden></div>
       <div class="chat-box">
-        <textarea id="chat-in" rows="1" placeholder="اطلب تعديلاً… مثلاً: أضف زر مشاركة في صفحة المنتج" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();stSend()}"></textarea>
+        <textarea id="chat-in" rows="1" placeholder="اطلب تعديلاً… مثلاً: أضف زر مشاركة" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();stSend()}"></textarea>
         <button class="send" id="chat-send" onclick="stSend()" aria-label="إرسال"><svg class="i"><use href="#i-send"/></svg></button>
       </div>
     </section>
@@ -1962,7 +1979,7 @@ function updatePlan() {
     var c = S.credits, pn = (PLANS[c.plan] || PLANS.free).name;
     document.getElementById('plan-nm').textContent = pn;
     document.getElementById('plan-apps').textContent = 'رصيدك: ' + toAr(c.remaining) + ' نقطة' + (c.bonus ? ' (منها ' + toAr(c.bonus) + ' إضافية)' : '');
-    document.getElementById('plan-bar').style.width = Math.min(100, c.used / Math.max(1, c.allowance) * 100) + '%';
+    document.getElementById('plan-bar').style.width = Math.min(100, c.used / Math.max(1, c.allowance) * 100) + '%'; document.getElementById('plan-bar').parentNode.style.display = '';
     document.getElementById('plan-cnt').textContent = c.plan === 'key' ? 'بمفتاحك الخاص · بلا حد يومي' : toAr(c.used) + ' من ' + toAr(c.allowance) + (c.plan === 'free' ? (c.founder ? ' · رصيد المؤسسين' : ' نقطة · تتجدد ' + refillTxt()) : ' نقطة هذا الشهر');
     return;
   }
@@ -1977,9 +1994,10 @@ function updatePlan() {
   var lim = P.limit === Infinity ? '∞' : toAr(P.limit);
   document.getElementById('plan-nm').textContent = P.name;
   document.getElementById('plan-apps').textContent = P.perMonth ? 'تطبيقات هذا الشهر' : 'تطبيق تجريبي مجاني';
-  document.getElementById('plan-bar').style.width = (P.limit === Infinity ? 8 : Math.min(100, used / P.limit * 100)) + '%';
+  document.getElementById('plan-bar').style.width = (P.limit === Infinity ? 0 : Math.min(100, used / P.limit * 100)) + '%';
+  document.getElementById('plan-bar').parentNode.style.display = P.limit === Infinity ? 'none' : '';
   var until = S.profile && S.profile.planUntil && plan !== 'free' ? ' · يتجدد ' + new Date(S.profile.planUntil).toLocaleDateString('ar-EG', { month: 'long', day: 'numeric' }) : '';
-  document.getElementById('plan-cnt').textContent = toAr(used) + ' من ' + lim + until;
+  document.getElementById('plan-cnt').textContent = (P.limit === Infinity ? 'غير محدود · بنيت ' + toAr(used) : toAr(used) + ' من ' + lim) + until;
 }
 
 // ════ اشتراكات Google Play ════
@@ -2682,7 +2700,9 @@ function rqRender(){
   var box = document.getElementById('req-content');
   if (!RQ.data) {
     box.innerHTML = '<div class="rq-load"><div class="bld-orb">'+ic('brain')+'</div><h3>يحلل فكرتك</h3><p>يحدد الميزات ويتأكد إن كانت هناك تفاصيل مهمة ناقصة</p></div>' +
+      '<p class="rq-slow" id="rq-slow" hidden>'+ic('clock','i-sm')+'الخدمة مزدحمة الآن، نعيد المحاولة تلقائياً. يمكنك الانتظار أو تخطي التحليل.</p>' +
       '<button class="btn btn-ghost" onclick="rqStart()">تخطَّ وابنِ مباشرة</button>';
+    var tk = RQ.tok; setTimeout(function(){ var e = document.getElementById('rq-slow'); if (e && RQ && RQ.tok === tk && !RQ.data) e.hidden = false; }, 20000);
     return;
   }
   var d = RQ.data;
@@ -6655,7 +6675,7 @@ function renderApps() {
     if (st === 'building') {
       cls += ' building';
       ico = '<div class="app-ico" style="background:linear-gradient(140deg,'+p[1]+','+p[2]+')"><span class="ring"></span>'+ic(p[0],'i-lg')+'</div>';
-      meta = '<div class="app-now">'+esc(a.now||'جارٍ البدء')+'</div><div class="mini-bar"><div style="width:'+(a.progress||0)+'%"></div></div>';
+      meta = '<div class="app-now">'+esc(a.now||'جارٍ البدء')+' · '+toAr(Math.round(a.progress||0))+'٪</div><div class="mini-bar"><div style="width:'+Math.max(4, a.progress||0)+'%"></div></div>';
     } else if (st === 'review') {
       ico = '<div class="app-ico" style="background:linear-gradient(140deg,'+p[1]+','+p[2]+')">'+ic('grid','i-lg')+'</div>';
       meta = '<div class="app-meta"><span class="app-appr wait">'+ic('clock')+'المخطط جاهز · اضغط للمراجعة</span></div>';
@@ -6668,7 +6688,7 @@ function renderApps() {
       meta = '<div class="app-meta"><span>'+fmtDate(a.date)+'</span><span>·</span>' + (a.ck && a.ck.plan ? (a.approved ? '<span class="app-appr ok">'+ic('check-circle')+'معتمد</span>' : '<span class="app-appr wait">'+ic('clock')+'بانتظار اعتمادك</span>') : '<span class="app-ok">'+ic('check')+'جاهز</span>') + '</div>';
     }
     return '<div class="'+cls+'" onclick="reopenApp(\''+i+'\')">' + ico +
-      '<div class="app-info"><div class="app-name">'+esc(a.name||'تطبيق')+'</div>' +
+      '<div class="app-info"><div class="app-name">'+esc(a.name && a.name !== 'تطبيق جديد' ? a.name : (st === 'building' && a.desc ? a.desc.replace(/^(تطبيق|منصة|نظام)\s+/, '').split(/[،,.\n]/)[0].slice(0, 40) : (a.name || 'تطبيق')))+'</div>' +
       (st==='building' ? '' : '<div class="app-desc">'+esc((a.desc||'').slice(0,70))+'</div>') + meta +
       '</div>' + (st === 'building' ? '' : '<button class="app-del" onclick="event.stopPropagation();askDeleteApp(\''+esc(a.id)+'\')" aria-label="حذف التطبيق" title="حذف">'+ic('trash')+'</button>') + ic('chev')+'</div>';
   }).join('');
@@ -6701,7 +6721,7 @@ function toast(msg, type) {
   var old = document.querySelector('.toast');
   if (old) old.remove();
   var t = document.createElement('div');
-  t.className = 'toast' + (type ? ' '+type : '');
+  t.className = 'toast' + (type ? ' '+type : '') + (document.querySelector('.modal-bg.on') || document.body.classList.contains('in-studio') ? ' top' : '');
   t.innerHTML = ic(type==='err' ? 'x-circle' : type==='suc' ? 'check-circle' : 'info') + '<span></span>';
   t.lastChild.textContent = msg;
   document.body.appendChild(t);

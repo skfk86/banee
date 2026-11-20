@@ -604,6 +604,83 @@
       #st-chat { flex: 0 0 340px; border-right: 1px solid var(--border); }
     }
 
+    /* ══ الاستوديو: تصميم جديد ══ */
+    .studio { background: var(--surface2); }
+    .st-top { gap: 10px; padding: 10px 14px; box-shadow: 0 1px 0 var(--border), 0 4px 16px rgba(14,21,37,.04); border-bottom: 0; position: relative; z-index: 2; }
+    .st-ico { width: 38px; height: 38px; border-radius: 12px; flex-shrink: 0; display: grid; place-items: center; color: #fff; box-shadow: 0 4px 12px rgba(14,21,37,.18), inset 0 1px 0 rgba(255,255,255,.25); }
+    .st-ico .i { width: 20px; height: 20px; }
+    .st-title b { font-size: 16px; font-weight: 800; letter-spacing: -.1px; }
+    .st-title span { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; white-space: nowrap; overflow: hidden; }
+    .st-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--warning); box-shadow: 0 0 0 3px var(--warning-soft); }
+    .st-dot.ok { background: var(--success); box-shadow: 0 0 0 3px var(--success-soft); }
+    .st-approve { border-radius: 11px; height: 36px; padding: 0 14px; font-weight: 700; }
+    .st-tabs { margin: 10px 12px 0; padding: 4px; gap: 4px; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; }
+    .st-tabs button { border-radius: 10px; height: 40px; color: var(--text2); transition: background .15s, color .15s; }
+    .st-tabs button.on { background: var(--primary); color: #fff; box-shadow: 0 4px 12px var(--primary-ring); }
+    .st-tabs button.on::after { display: none; }
+    .st-body { padding: 10px 12px 12px; gap: 12px; }
+    .st-pane { border-radius: 18px; overflow: hidden; border: 1px solid var(--border); box-shadow: var(--shadow-md); }
+    /* الملفات */
+    #st-files { padding: 8px; }
+    .fl-head { padding: 14px 10px 6px; font-size: 11px; letter-spacing: .04em; }
+    .fl-item { padding: 8px 10px; gap: 10px; border-radius: 11px; transition: background .12s; }
+    .fl-item.on { background: var(--primary-soft); box-shadow: inset 3px 0 0 var(--primary); }
+    .fl-ic { width: 28px; height: 28px; border-radius: 8px; display: grid; place-items: center; flex-shrink: 0; font-style: normal; }
+    .fl-ic.s { background: #FFF6D6; color: #9A6B00; } .fl-ic.j { background: #E8F0FF; color: #2C64DD; } .fl-ic.h { background: #FDE9E4; color: #C4462B; }
+    :root[data-theme="dark"] .fl-ic { background: rgba(255,255,255,.06) !important; }
+    @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .fl-ic { background: rgba(255,255,255,.06) !important; } }
+    .fl-item small { font-size: 11.5px; }
+    /* المحرر */
+    #st-editor { border-color: #1F2733; }
+    .ed-head { padding: 0 10px 0 8px; height: 46px; gap: 10px; }
+    .ed-tab { display: inline-flex; align-items: center; gap: 8px; height: 46px; padding: 0 14px; background: #0D1117; border-top: 2px solid #58A6FF; margin-bottom: -1px; border-radius: 8px 8px 0 0; }
+    .ed-dot { width: 9px; height: 9px; border-radius: 3px; background: #E3B341; font-style: normal; } .ed-dot.j { background: #58A6FF; } .ed-dot.h { background: #F0883E; }
+    .ed-head .btn-primary { border-radius: 9px; height: 32px; }
+    .ed-gut-w { background: #0B0F14; border-right-color: #161B22; }
+    .ed-gut { color: #4B5563; }
+    .ed-status { display: flex; align-items: center; gap: 14px; height: 28px; padding: 0 12px; background: #161B22; border-top: 1px solid #1F2733; color: #7D8590; font-size: 11.5px; direction: rtl; flex-shrink: 0; }
+    .ed-status .ok { color: #3FB950; } .ed-status .w { color: #E3B341; }
+    /* المعاينة */
+    #st-preview { background: radial-gradient(circle at 1px 1px, color-mix(in srgb, var(--text3) 22%, transparent) 1px, transparent 0) 0 0 / 18px 18px, var(--surface); }
+    #st-preview .pv-bar { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 6px; box-shadow: var(--shadow-sm); }
+    #st-preview .phone { box-shadow: 0 30px 60px rgba(14,21,37,.22), 0 8px 18px rgba(14,21,37,.12); }
+    /* المساعد */
+    #st-chat { background: var(--surface); }
+    .chat-head { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-bottom: 1px solid var(--border); background: linear-gradient(180deg, var(--primary-soft), var(--surface)); }
+    .chat-head .msg-av { width: 34px; height: 34px; border-radius: 11px; }
+    .chat-head b { display: block; font-size: 14.5px; }
+    .chat-head small { display: block; font-size: 12px; color: var(--text2); line-height: 1.5; }
+    .chat-log { background: var(--bg); padding: 16px 14px; gap: 14px; }
+    .msg.ai .msg-b { background: var(--surface); border: 1px solid var(--border); box-shadow: var(--shadow-sm); border-radius: 18px 18px 18px 6px; }
+    .msg.me .msg-b { background: linear-gradient(135deg, var(--primary), #4F46E5); border-radius: 18px 18px 6px 18px; box-shadow: 0 6px 16px var(--primary-ring); }
+    .msg-b { padding: 11px 14px; }
+    .chat-sugg { display: flex; gap: 8px; overflow-x: auto; padding: 10px 12px 2px; scrollbar-width: none; background: var(--surface); }
+    .chat-sugg::-webkit-scrollbar { display: none; }
+    .chat-sugg button { flex-shrink: 0; height: 32px; padding: 0 12px; border-radius: 100px; border: 1px solid var(--border); background: var(--surface2); color: var(--text2); font: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer; transition: all .15s; }
+    .chat-sugg button:hover { border-color: var(--primary); color: var(--primary-ink); background: var(--primary-soft); }
+    .chat-box { border-top: 0; padding: 10px 12px calc(12px + env(safe-area-inset-bottom, 0px)); background: var(--surface); }
+    .chat-field { flex: 1; border: 1.5px solid var(--border-strong); border-radius: 18px; background: var(--surface); transition: border-color .15s, box-shadow .15s; }
+    .chat-field:focus-within { border-color: var(--primary); box-shadow: 0 0 0 4px var(--primary-ring); }
+    .chat-field textarea { display: block; width: 100%; border: 0 !important; box-shadow: none !important; background: transparent; padding: 12px 14px 4px; min-height: 46px; max-height: 140px; }
+    .chat-tools { display: flex; align-items: center; gap: 6px; padding: 4px 6px 6px 8px; }
+    .chat-tool { display: inline-flex; align-items: center; gap: 5px; height: 32px; padding: 0 10px; border-radius: 10px; border: 0; background: var(--surface2); color: var(--text2); font: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer; }
+    .chat-tool:hover { color: var(--primary-ink); background: var(--primary-soft); }
+    .chat-tools .send { width: 38px; height: 38px; border-radius: 12px; background: linear-gradient(135deg, var(--primary), #4F46E5); box-shadow: 0 4px 12px var(--primary-ring); }
+    @media (max-width: 599px) {
+      .st-ico { width: 34px; height: 34px; border-radius: 11px; }
+      #st-undo { display: none; }
+      .st-tabs button { height: 46px; }
+      .st-body { padding: 8px; }
+      .st-pane { border-radius: 16px; }
+    }
+    @media (min-width: 900px) {
+      .st-body { padding: 12px; gap: 12px; }
+      #st-files { flex: 0 0 236px; border-left: 1px solid var(--border); }
+      #st-preview { flex: 0 0 380px; border-right: 1px solid var(--border); }
+      #st-preview .pv-bar { flex-wrap: wrap; justify-content: center; max-width: 100%; }
+      #st-chat { flex: 0 0 380px; border-right: 1px solid var(--border); }
+    }
+
     /* ── RESULT ── */
     .res-head { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 16px; }
     .res-badge { width: 48px; height: 48px; border-radius: 14px; display: grid; place-items: center; background: var(--success-soft); color: var(--success); flex-shrink: 0; }
@@ -1239,6 +1316,7 @@
 <div id="studio" class="studio" hidden data-tab="editor">
   <div class="st-top">
     <button class="icon-btn" onclick="closeStudio()" aria-label="رجوع"><svg class="i"><use href="#i-arrow-right"/></svg></button>
+    <span class="st-ico" id="st-ico"></span>
     <div class="st-title"><b id="st-name"></b><span id="st-ver"></span></div>
     <button class="btn btn-sm st-approve" id="st-approve" onclick="stApproveOpen()"></button>
     <button class="btn btn-ghost btn-sm st-check" id="st-test" onclick="stTest()"><svg class="i i-sm"><use href="#i-search"/></svg><span>فحص</span></button>
@@ -1256,7 +1334,7 @@
     <aside class="st-pane" id="st-files"></aside>
     <section class="st-pane" id="st-editor">
       <div class="ed-head">
-        <span class="ed-name" id="ed-name"></span><span class="ed-state" id="ed-state"></span>
+        <span class="ed-tab"><i class="ed-dot" id="ed-dot"></i><span class="ed-name" id="ed-name"></span></span><span class="ed-state" id="ed-state"></span>
         <span class="spacer"></span>
         <button class="btn btn-ghost btn-sm" id="ed-revert" onclick="stRevert()" hidden>تراجع</button>
         <button class="btn btn-primary btn-sm" id="ed-save" onclick="stSave()"><svg class="i i-sm"><use href="#i-save"/></svg>حفظ</button>
@@ -1271,6 +1349,7 @@
         </div>
       </div>
       <div class="ed-issues" id="ed-issues"></div>
+      <div class="ed-status" id="ed-status"></div>
     </section>
     <section class="st-pane" id="st-preview">
       <div class="pv-bar" id="pv-bar">
@@ -1286,11 +1365,25 @@
       <div class="st-theme" id="st-theme"></div>
     </section>
     <section class="st-pane" id="st-chat">
+      <div class="chat-head"><span class="msg-av"><svg class="i i-sm"><use href="#i-sparkles"/></svg></span><div><b>المساعد الذكي</b><small>اطلب أي تعديل بكلامك وأنفّذه في الكود مباشرة</small></div></div>
       <div class="chat-log" id="chat-log"></div>
       <div class="pick-chip" id="pick-chip" hidden></div>
+      <div class="chat-sugg" id="chat-sugg">
+        <button onclick="stSuggest(this)">غيّر الألوان لهوية أفخم</button>
+        <button onclick="stSuggest(this)">أضف شاشة إحصائيات برسوم بيانية</button>
+        <button onclick="stSuggest(this)">حسّن تصميم الرئيسية</button>
+        <button onclick="stSuggest(this)">أضف بحثاً في القوائم</button>
+        <button onclick="stSuggest(this)">افحص التطبيق وأصلح أي خطأ</button>
+      </div>
       <div class="chat-box">
-        <textarea id="chat-in" rows="1" placeholder="اطلب تعديلاً… مثلاً: أضف زر مشاركة" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();stSend()}"></textarea>
-        <button class="send" id="chat-send" onclick="stSend()" aria-label="إرسال"><svg class="i"><use href="#i-send"/></svg></button>
+        <div class="chat-field">
+          <textarea id="chat-in" rows="1" placeholder="اطلب تعديلاً… مثلاً: أضف زر مشاركة" oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,140)+'px'" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();stSend()}"></textarea>
+          <div class="chat-tools">
+            <button class="chat-tool" onclick="stTab('preview');pickMode()" title="حدّد عنصراً من المعاينة"><svg class="i i-sm"><use href="#i-target"/></svg><span>حدّد عنصراً</span></button>
+            <span class="spacer"></span>
+            <button class="send" id="chat-send" onclick="stSend()" aria-label="إرسال"><svg class="i"><use href="#i-send"/></svg></button>
+          </div>
+        </div>
       </div>
     </section>
   </div>
@@ -1301,6 +1394,7 @@
   <div class="modal-sheet">
     <div class="mhandle"></div>
     <div class="slist" style="margin:0">
+      <button class="sitem" onclick="closeModal('more-modal');stUndo()"><span class="sico b"><svg class="i"><use href="#i-undo"/></svg></span><span class="slbl">تراجع عن آخر تعديل<small>يعيد النسخة السابقة من التطبيق</small></span></button>
       <button class="sitem" onclick="closeModal('more-modal');shareApp()"><span class="sico g"><svg class="i"><use href="#i-share"/></svg></span><span class="slbl">رابط مشاركة<small>يفتحه أي شخص من المتصفح بدون تثبيت</small></span></button>
       <button class="sitem" onclick="closeModal('more-modal');stTest()"><span class="sico b"><svg class="i"><use href="#i-search"/></svg></span><span class="slbl">فحص التطبيق<small>تشغيل كل شاشة وتجربة كل زر</small></span></button>
       <button class="sitem" onclick="closeModal('more-modal');stApproveOpen()"><span class="sico g"><svg class="i"><use href="#i-check-circle"/></svg></span><span class="slbl">الاعتماد والتحويل إلى أندرويد<small>بعد المراجعة</small></span></button>
@@ -5897,7 +5991,8 @@ function stApp(){ return findApp(ST.id); }
 function stRender(){
   var app = stApp(); if (!app) return;
   document.getElementById('st-name').textContent = app.name;
-  document.getElementById('st-ver').textContent = 'النسخة ' + toAr(verNo(app));
+  document.getElementById('st-ver').innerHTML = '<i class="st-dot' + (app.approved ? ' ok' : '') + '"></i>' + (app.approved ? 'معتمد' : 'مسودة') + ' · النسخة ' + toAr(verNo(app));
+  try { var pi = pickIcon(app); document.getElementById('st-ico').innerHTML = ic(pi[0]); document.getElementById('st-ico').style.background = 'linear-gradient(140deg,' + pi[1] + ',' + pi[2] + ')'; } catch (e) {}
   document.getElementById('st-undo').disabled = !(app.versions && app.versions.length);
   var ab = document.getElementById('st-approve');
   ab.className = 'btn btn-sm st-approve' + (app.approved ? ' ok' : '');
@@ -5908,15 +6003,15 @@ function stRender(){
 function stFiles(){
   var app = stApp(), plan = app.ck.plan;
   var html = '<div class="fl-head">ملفات التطبيق</div>' +
-    '<button class="fl-item'+(ST.file==='plan'?' on':'')+'" onclick="stOpenFile(\'plan\')">'+ic('layers','i-sm')+'<span>plan.json</span><small>الخطة والبيانات</small></button>' +
+    '<button class="fl-item'+(ST.file==='plan'?' on':'')+'" onclick="stOpenFile(\'plan\')"><i class="fl-ic j">'+ic('layers','i-sm')+'</i><span>plan.json</span><small>الخطة والبيانات</small></button>' +
     '<div class="fl-head">الشاشات</div>' +
     plan.screens.map(function(s){
       var errs = checkScreen(app.ck.screens[s.id]||'', s, plan);
-      return '<button class="fl-item'+(ST.file===s.id?' on':'')+'" onclick="stOpenFile(\''+s.id+'\')">'+ic('code','i-sm')+'<span>'+esc(s.id)+'.js</span><small>'+esc(s.title)+'</small>' +
+      return '<button class="fl-item'+(ST.file===s.id?' on':'')+'" onclick="stOpenFile(\''+s.id+'\')"><i class="fl-ic s">'+ic('code','i-sm')+'</i><span>'+esc(s.id)+'.js</span><small>'+esc(s.title)+'</small>' +
         (errs.length ? '<em class="fl-warn" title="'+esc(errs[0])+'">'+toAr(errs.length)+'</em>' : '') + '</button>';
     }).join('') +
     '<div class="fl-head">الناتج</div>' +
-    '<button class="fl-item'+(ST.file==='index'?' on':'')+'" onclick="stOpenFile(\'index\')">'+ic('package','i-sm')+'<span>index.html</span><small>للقراءة فقط</small></button>';
+    '<button class="fl-item'+(ST.file==='index'?' on':'')+'" onclick="stOpenFile(\'index\')"><i class="fl-ic h">'+ic('package','i-sm')+'</i><span>index.html</span><small>للقراءة فقط</small></button>';
   document.getElementById('st-files').innerHTML = html;
 }
 
@@ -5948,7 +6043,12 @@ function edSync(){
   for (var i=1;i<=n;i++) g += i + '\n';
   document.getElementById('ed-gut').textContent = g;
   edScroll();
+  var f = ST && ST.file, lang = f === 'plan' ? 'JSON' : f === 'index' ? 'HTML' : 'JavaScript', dt = document.getElementById('ed-dot');
+  if (dt) dt.className = 'ed-dot ' + (f === 'plan' ? 'j' : f === 'index' ? 'h' : 's');
+  var st = document.getElementById('ed-status');
+  if (st) st.innerHTML = '<span>' + lang + '</span><span>' + toAr(n) + ' سطر</span><span>' + toAr(v.length) + ' حرف</span><span class="spacer"></span><span class="' + (ST && ST.dirty ? 'w' : 'ok') + '">' + (f === 'index' ? 'للقراءة فقط' : ST && ST.dirty ? 'تعديلات غير محفوظة' : 'محفوظ') + '</span>';
 }
+function stSuggest(b){ var t = document.getElementById('chat-in'); t.value = b.textContent; t.focus(); t.dispatchEvent(new Event('input')); }
 function edScroll(){
   var ta = document.getElementById('ed-ta');
   document.getElementById('ed-hl').style.transform = 'translate(' + (-ta.scrollLeft) + 'px,' + (-ta.scrollTop) + 'px)';
